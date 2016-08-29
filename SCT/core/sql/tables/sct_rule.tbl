@@ -1,0 +1,30 @@
+create table sct_rule(
+  sru_id number, 
+	sru_sgr_id number, 
+	sru_name varchar2(50 char), 
+	sru_condition clob, 
+	sru_sort_seq number, 
+	sru_firing_items varchar2(300 byte), 
+  constraint pk_sct_rules primary key (sru_id, sru_sgr_id),
+  constraint fk_sru_sgr_id foreign key (sru_sgr_id)
+	  references sct_group (sgr_id) on delete cascade
+) organization index;
+
+create index idx_fk_sru_sgr_id(sru_sgr_id, sru_id);
+
+create or replace editionable trigger trg_bri_sct_rule 
+  before insert on sct_rule
+  for each row
+begin
+  /* TODO: refactor to IDENTITY-COLUMN if version 12c can be assumed! */
+  :new.sru_id := coalesce(:new.sru_id, sct_seq.nextval);
+end;
+/
+
+comment on table sct_rule is 'Table to store a single rule';
+comment on column sct_rule.sru_id is 'PK, technical key';
+comment on column sct_rule.sru_sgr_id is 'FK, reference to SCT_GROUP';
+comment on column sct_rule.sru_name is 'Descriptive Name';
+comment on column sct_rule.sru_condition is 'Condition, syntactically in the form of a partial where-clause';
+comment on column sct_rule.sru_firing_items is 'List of page items that are referenced within sru_condition';
+comment on column sct_rule.sru_sort_seq is 'Sort criteria, defines execution sequence';

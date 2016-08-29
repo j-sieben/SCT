@@ -1,0 +1,35 @@
+define sql_dir=plugin/sql/
+define seq_dir=$sql_dir./sequences
+define table_dir=$sql_dir./tables
+define type_dir=$sql_dir./types
+define view_dir=$sql_dir./views
+define plsql_dir=plugin/plsql/
+
+prompt &h3.Check installation prerquisites
+@core/check_prerequisites.sql
+
+prompt &h3.Remove existing installation
+@core/clean_up_install.sql
+
+prompt &h3.Setting compile flags
+@core/set_compile_flags.sql
+
+
+prompt &h3.CREATE SEQUENCES
+
+
+prompt &h3.CREATE TABLES
+
+
+prompt &h3.CREATE PACKAGES
+prompt &s1.Create package PLUGIN_SCT
+@&plsql_dir.plugin_sct.pks
+show errors
+
+prompt &s1.Create package body PLUGIN_SCT
+@&plsql_dir.plugin_sct.pkb
+show errors
+
+--prompt &h3.Install plugin SCT
+--prompt &s1.Plugin with embedded JS file
+--@&sql_dir.dynamic_action_plugin_de_condes_plugin_sct.sql
