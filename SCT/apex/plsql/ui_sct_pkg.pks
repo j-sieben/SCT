@@ -3,7 +3,7 @@ create or replace package ui_sct_pkg
 as 
 
   /* Package SCT_ADMIN zur Verwaltung von State Charts
-   * %author Jürgen Sieben, ConDeS Gmbh & Co. KG
+   * %author Jürgen Sieben, ConDeS GmbH
    * %usage Das Package dient als Schnittstelle zu einer APEX-Anwendung, um das SCT
    *        zu administrieren
    */
