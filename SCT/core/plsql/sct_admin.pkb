@@ -624,11 +624,7 @@ q'±
   -- RULE ACTIONS
 ');
       dbms_lob.append(l_stmt, l_rule_action);
-      dbms_lob.append(l_stmt, '
-  commit;
-end;
-/
-');
+      dbms_lob.append(l_stmt, chr(13) || '  commit;' || chr(13) || 'end;' || chr(13) || '/');
     l_file_name := 'SCT_GROUP_' || sgr.sgr_id || '.sql';
     dbms_xslprocessor.clob2file(l_stmt, c_directory, l_file_name);
     end loop;
