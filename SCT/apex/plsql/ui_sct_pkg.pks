@@ -1,13 +1,14 @@
-create or replace package sct_pkg
+create or replace package ui_sct_pkg
   authid current_user
-as
+as 
 
-  /* Package SCT_PKG zur Unterstuetzung der Anwendung zur Verwaltung des SCT
-   * %author Jürgen Sieben, ConDeS GmbH
-   * %usage Das Package implementiert die datenbankseitige Anwendungslogikogik der SCT-APEX-Anwendung
+  /* Package SCT_ADMIN zur Verwaltung von State Charts
+   * %author Jürgen Sieben, ConDeS Gmbh & Co. KG
+   * %usage Das Package dient als Schnittstelle zu einer APEX-Anwendung, um das SCT
+   *        zu administrieren
    */
 
-  /* Erzegut eine neue oder aendert eine bestehende Regelgruppe
+  /* Erzeugt eine neue oder aendert eine bestehende Regelgruppe
    * %param p_sgr_app_id Anwendungs-ID, auf die sich die Regelruppe bezieht
    * %param p_sgr_page_id Seiten-ID, auf die sich die Regelgruppe bezieht
    * %param p_sgr_id ID der Regelgruppe
@@ -15,6 +16,8 @@ as
    * %param p_sgr_description Bescchreibung der Regelgruppe
    * %usage Wird von der Oberflaeche aufgerufen, um eine neue Regelgruppe zu erzeugen
    *        oder eine bestehende Regelgruppe zu aendern.
+   *        Wird derzeit nicht verwendet, da ein Standard-APEX-Prozess zur Speicherung
+   *        eingesetzt wird.
    */
   procedure merge_rule_group(
     p_sgr_app_id in sct_group.sgr_app_id%type,
@@ -23,41 +26,55 @@ as
     p_sgr_name in sct_group.sgr_name%type,
     p_sgr_description in sct_group.sgr_description%type);
     
-    
+  
+  /* Loescht eine bestehende Regelgruppe
+   * %param p_sgr_id ID der Regelgruppe, die geloescht werden soll
+   * %usage Wird verwendet, um eine bestehende Regelgruppe zu loeschen.
+   */
   procedure delete_rule_group(
     p_sgr_id in sct_group.sgr_id%type);
     
   
+  /* Kopiert eine Regelgruppe auf eine andere Anwendung/Anwendungsseite
+   * %param p_sgr_id ID der Regelgruppe, die kopiert werden soll
+   * %param p_sgr_app_id ID der Anwendung, in die kopiert werden soll
+   * %param p_sgr_page_id Optional, Anwendungsseite, auf die sich die Regelgruppe
+   *        bezieht. Falls NULL, wird die aktuelle Seite verwendet
+   * %usage Soll eine Anwendung kopiert werden, koennen mit dieser Funktion
+   *        die definierten Regelgruppen in die neue Anwendung uebernommen werden.
+   */
   procedure copy_rule_group(
     p_sgr_id in sct_group.sgr_id%type,
     p_sgr_app_id sct_group.sgr_app_id%type,
     p_sgr_page_id sct_group.sgr_page_id%type default null);
     
-  
-  /* Method to resequence columns SRU_SORT_SEQ and SRA_SORT_SEQ.
-   * %param p_sgr_id ID of the rule group to resequence. Optional. If null,
-   *                 all rule groups get resequenced.
-   * %usage Is called by the APEX application. Wrapper for SCT_ADMIN.RESEQUENCE_RULE_GROUP.
-   *        Details see there.
+    
+  /* Re-sequenziert die Ausfuehrungsreihenfolge der Einzelregeln
+   * %param p_sgr_id ID der Regelgruppe, die resequenziert werden soll
+   * %usage Wird aufgerufen, um alle Einzelregeln nach Aenderung der Reihenfolge
+   *        erneut in 10er-Schritten zu nummerieren.
    */
   procedure resequence_rule_group(
     p_sgr_id in sct_group.sgr_id%type);
     
   
-  /* Method executes tasks necessary after changing a rule or rule group definition.
-   * %param p_sgr_id ID of the rule group that has changed
-   * %usage Is triggered by the APEX application after a change at a rule or rule group
-   *        Wrapper for SCT_ADMIN.PROPAGATE_RULE_CHANGE. Details see there.
+  /* Propagiert das Speichern einer Einzelregel
+   * %param p_sgr_id ID der betroffenen Regelgruppe
+   * %usage Wird nach dem Aendern von Regelgruppen oder Einzelregeln aufgerufen.
+   *        Die Prozedur hat folgende Aufgaben:
+   *        - Tabelle SCT_PAGE_ITEM aktualisieren
+   *        - SCT_RULES_GROUP_n-View aktualisieren
+   *        - Regeln auf die erforderlichen Events einstellen
    */
-  procedure persist_rule_change(
+  procedure process_rule_change(
     p_sgr_id in sct_group.sgr_id%type);
     
   
-  /* Validates whether an entered condition is syntactically correct
-   * %param p_sgr_id ID of the rule group p_sru_condition refers to
-   * %param p_sru_condition Condition that needs to get validated
-   * %usage This method constructs a view with all available page items as columns
-   *        and parses the entered condition at the where clause.
+  /* Validierungsfunktion fuer Einzelregeln
+   * %param p_sgr_id ID der Regelgruppe
+   * %param p_sru_rule Bedingung der Einzelregel
+   * %usage Wird als Validierung aufgerufen, wenn eine Regel erstellt oder geandert
+   *        wird. Prueft, ob die Bedingung gegen SCT_RULES_GROUP_n ausfuehrbar ist.
    */
   function validate_rule_is_valid(
     p_sgr_id in sct_group.sgr_id%type,
@@ -65,5 +82,5 @@ as
     return varchar2;
     
     
-end sct_pkg;
+end ui_sct_pkg;
 /
