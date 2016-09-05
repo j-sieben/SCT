@@ -40,6 +40,8 @@ prompt &s1.Create table SCT_RULE_ACTION
 prompt &s1.Create view SCT_BL_RULES
 @&view_dir.sct_bl_rules.vw
 
+prompt &s1.Create view SCT_BL_PAGE_TARGETS
+@&view_dir.sct_bl_page_targets.vw
 
 prompt &h3.Create packages
 prompt &s1.Create package SCT_ADMIN
