@@ -1,4 +1,5 @@
 create or replace package body ui_sct_pkg 
+as
   
   procedure merge_rule_group(
     p_sgr_app_id in sct_group.sgr_app_id%type,
@@ -44,12 +45,12 @@ create or replace package body ui_sct_pkg
   end copy_rule_group;
     
   
-  procedure persist_rule_change(
+  procedure process_rule_change(
     p_sgr_id in sct_group.sgr_id%type)
   as
   begin
     sct_admin.propagate_rule_change(p_sgr_id);
-  end persist_rule_change; 
+  end process_rule_change; 
   
   
   function validate_rule_is_valid(

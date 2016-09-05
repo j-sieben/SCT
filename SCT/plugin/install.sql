@@ -1,18 +1,18 @@
 define sql_dir=plugin/sql/
-define seq_dir=$sql_dir./sequences
-define table_dir=$sql_dir./tables
-define type_dir=$sql_dir./types
-define view_dir=$sql_dir./views
+define seq_dir=&sql_dir./sequences/
+define table_dir=&sql_dir./tables/
+define type_dir=&sql_dir./types/
+define view_dir=&sql_dir./views/
 define plsql_dir=plugin/plsql/
 
 prompt &h3.Check installation prerquisites
-@core/check_prerequisites.sql
+@plugin/check_prerequisites.sql
 
 prompt &h3.Remove existing installation
-@core/clean_up_install.sql
+@plugin/clean_up_install.sql
 
 prompt &h3.Setting compile flags
-@core/set_compile_flags.sql
+@plugin/set_compile_flags.sql
 
 
 prompt &h3.CREATE SEQUENCES

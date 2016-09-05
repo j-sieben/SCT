@@ -1,12 +1,29 @@
 define sql_dir=apex/sql/
-define seq_dir=$sql_dir./sequences
-define table_dir=$sql_dir./tables
-define type_dir=$sql_dir./types
-define view_dir=$sql_dir./views
+define seq_dir=&sql_dir./sequences/
+define table_dir=&sql_dir./tables/
+define type_dir=&sql_dir./types/
+define view_dir=&sql_dir./views/
 define plsql_dir=apex/plsql/
 define apex_dir=apex/apex/
 
 
+prompt &h3.Check installation prerquisites
+@apex/check_prerequisites.sql
+
+prompt &h3.Remove existing installation
+@apex/clean_up_install.sql
+
+prompt &h3.Setting compile flags
+@apex/set_compile_flags.sql
+
+
+prompt &h3.CREATE SEQUENCES
+
+
+prompt &h3.CREATE TABLES
+
+
+prompt &h3.CREATE VIEWS
 prompt &s1.Create view UI_SCT_ACTION_TYPE
 @&view_dir.ui_sct_action_type.vw
 

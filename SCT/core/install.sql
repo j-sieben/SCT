@@ -1,11 +1,11 @@
 define sql_dir=core/sql/
-define seq_dir=$sql_dir./sequences
-define table_dir=$sql_dir./tables
-define type_dir=$sql_dir./types
-define view_dir=$sql_dir./views
+define seq_dir=&sql_dir./sequences/
+define table_dir=&sql_dir./tables/
+define type_dir=&sql_dir./types/
+define view_dir=&sql_dir./views/
 define plsql_dir=core/plsql/
 
-prompt &h3.Check installation prerquisites
+prompt &h3.Check installation prerequisites
 @core/check_prerequisites.sql
 
 prompt &h3.Remove existing installation

@@ -2,6 +2,11 @@ create or replace package sct_pkg
   authid current_user
 as
 
+  /* Package SCT_PKG zur Unterstuetzung der Anwendung zur Verwaltung des SCT
+   * %author Jürgen Sieben, ConDeS GmbH
+   * %usage Das Package implementiert die datenbankseitige Anwendungslogikogik der SCT-APEX-Anwendung
+   */
+
   /* Erzegut eine neue oder aendert eine bestehende Regelgruppe
    * %param p_sgr_app_id Anwendungs-ID, auf die sich die Regelruppe bezieht
    * %param p_sgr_page_id Seiten-ID, auf die sich die Regelgruppe bezieht

@@ -2,7 +2,7 @@ create or replace package plugin_sct
 as 
 
   /* Package PLUGIN_SCT zur Verwaltung von State Charts
-   * %author Jürgen Sieben, ConDeS Gmbh & Co. KG
+   * %author Jürgen Sieben, ConDeS GmbH
    * %usage Das Package implementiert die datenbankseitige Logik des SCT-APEX-Plugins
    */
   

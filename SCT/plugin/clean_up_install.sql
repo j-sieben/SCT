@@ -12,11 +12,11 @@ declare
             from all_objects
            where object_name in (
                  '', -- Typen
-                 'SCT_ADMIN', -- Packages
-                 'SCT_BL_RULES', -- Views
-                 'SCT_RULE_ACTION', 'SCT_RULE', 'SCT_PAGE_ITEM', 'SCT_ACTION_TYPE', 'SCT_GROUP',   -- Tabellen
+                 'PLUGIN_SCT', -- Packages
+                 '', -- Views
+                 '',   -- Tabellen
                  '',  -- Synonyme
-                 'SCT_SEQ' -- Sequenzen
+                 '' -- Sequenzen
                  )
              and object_type not like '%BODY'
              and owner = upper('&INSTALL_USER.')

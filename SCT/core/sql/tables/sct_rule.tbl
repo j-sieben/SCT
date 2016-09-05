@@ -10,7 +10,7 @@ create table sct_rule(
 	  references sct_group (sgr_id) on delete cascade
 ) organization index;
 
-create index idx_fk_sru_sgr_id(sru_sgr_id, sru_id);
+create index idx_fk_sru_sgr_id on sct_rule(sru_sgr_id, sru_id);
 
 create or replace editionable trigger trg_bri_sct_rule 
   before insert on sct_rule

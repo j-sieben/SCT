@@ -3,14 +3,14 @@ create or replace package sct_admin
 as
 
   /* Package SCT_ADMIN maintenance package for State Chart Toolkit SCT
-   * %author Jürgen Sieben, ConDeS Gmbh & Co. KG
+   * %author Jürgen Sieben, ConDeS Gmbh
    * %usage Used to maintain metadata for the SCT
    *        The methods provided here are called using the packages
    *        - UI_SCT_PKG as an interface for the APEX application for SCT
    *        - PLUGIN_SCT as an interface for the APEX Dynamic Action Plugin
    */
     
-  
+  /* GETTER-METHODEN */
   /* Funktion zur Ermittlung des View-Namens fuer eine gegebene Regelgruppe
    * %param p_sgr_name Name der Regelgruppe
    * %return Name der durch dieses Package erzeugten View
@@ -64,7 +64,7 @@ as
     
   
   /* Bereich Verwaltung der Regeln und Regelgruppen */
-  
+  /* REGELGRUPPEN */
   /* Prozedur zur Anlage oder Aenderung einer Regelgruppe 
    * %param p_sgr_app_id ID der APEX-Anwendung, fuer die die Regelgruppe gelten soll
    * %param p_sgr_page_id ID der APEX-Anwendungsseite, fuer die die Regelgruppe gelten soll
@@ -111,6 +111,34 @@ as
     p_sgr_app_id sct_group.sgr_app_id%type,
     p_sgr_page_id sct_group.sgr_page_id%type);
     
+  
+  /* Prozedur zum Exportieren bestehender Regeln
+   * %param p_sgr_id ID der Regelgruppe, optional. Falls nicht gesetzt, werden 
+   *        alle Regelgruppen exportiert
+   * %usage Wird verwendet, um bestehende Regelgruppen in eine Datei zu exportieren
+   *        um sie ausliefern zu koennen.
+   */
+  procedure export_rule_group(
+    p_sgr_id in sct_group.sgr_id%type default null);
+    
+  
+  /* REGELN */
+  /* Prozedur zum Anlegen oder Aendern einer Einzelregel
+   * %param p_sru_id ID der Einzelregel. Optional, wird durch SCT_SEQ erzeugt, falls NULL
+   * %param p_sru_sgr_id Referenz auf SCT_GROUP.SGR_ID
+   * %param p_sru_name Sprechender Name der Einzelregel
+   * %param p_sru_condition Bedingung, die fuer diese Einzelregel gilt
+   * %param p_sru_sort_seq Ausfuehrungsreihenfolge der Einezelregel
+   * %usage Wird aufgerufen, um eine Einzelregel anzulegen oder zu aendern.
+   *        Kann von APEX aufgerufen werden oder von einem Export
+   */
+  procedure merge_rule(
+    p_sru_id in sct_rule.sru_id%type default null,
+    p_sru_sgr_id in sct_group.sgr_id%type,
+    p_sru_name in sct_rule.sru_name%type,
+    p_sru_condition in sct_rule.sru_condition%type,
+    p_sru_sort_seq in sct_rule.sru_sort_seq%type);
+    
     
   /* Prozedur zur Nachbereitung einer Regelaenderung
    * %param p_sgr_id ID der Regelgruppe
@@ -135,6 +163,45 @@ as
     p_sgr_id in sct_group.sgr_id%type,
     p_sru_condition in sct_rule.sru_condition%type,
     p_error out nocopy varchar2);
-
+    
+  
+  /* RULE_ACTION */
+  /* Prozedur zum Erstellen einer RULE ACTION
+   * %param p_sra_sru_id ID der Einzelregel
+   * %param p_sra_sgr_id ID der Regelgruppe
+   * %param p_sra_spi_id ID des betroffenen Seitenelements
+   * %param p_sra_sat_id ID des Aktionstyps
+   * %param p_sra_attribute Optionale Attribute fuer die Aktion
+   * %param p_sra_sort_seq Ausfuehrungsreihenfolge der Aktion
+   * %usage Wird verwendet, um eine RULE ACTION anzulegen oder zu aendern.
+   *        Kann von APEX aufgerufen werden oder durch einen Import-Skript.
+   */
+  procedure merge_rule_action(
+    p_sra_sru_id in sct_rule.sru_id%type,
+    p_sra_sgr_id in sct_group.sgr_id%type,
+    p_sra_spi_id in sct_page_item.spi_id%type,
+    p_sra_sat_id in sct_action_type.sat_id%type,
+    p_sra_attribute in sct_rule_action.sra_attribute%type,
+    p_sra_sort_seq in sct_rule_action.sra_sort_seq%type);
+  
+  
+  /* ACTION_TYPE */
+  /* Prozedur zur Erzeugung eines ACTION_TYPE
+   * %param p_sat_id ID des Actiontyps
+   * %param p_sat_name Name des Actiontyps
+   * %param p_sat_pl_sql PL/SQL-Code, der fuer diesen Actionstyp ausgefuehrt werden soll
+   * %param p_sta_js JavaScript-Code, der fuer diesen Actionstyp ausgefuehrt werden soll
+   * %param p_sta_changes_value Flag, das anzeigt, ob der ausgefuehrte Code den Wert
+   *        des betroffenen Elements aendern wird
+   * %usage Wird verwendet, um einen ACTION_TYPE anzulegen.
+   *        Kann durch die APEX-Anwendung oder durch einen Import-Skript aufgerufen werden.
+   */
+  procedure merge_action_type(
+    p_sat_id in sct_action_type.sat_id%type,
+    p_sat_name in sct_action_type.sat_name%type,
+    p_sat_pl_sql in sct_action_type.sat_pl_sql%type,
+    p_sat_js in sct_action_type.sat_js%type,
+    p_sat_changes_value in sct_action_type.sat_changes_value%type);
+    
 end sct_admin;
 /

@@ -124,21 +124,16 @@ q'±<script id="RULE_#SRU_SORT_SEQ#">
     -- um anzuzeigen, dass dieses Element in den Regeln referenziert wird
     merge into sct_page_item spi
     using (select distinct 
-                  api.item_name spi_id,
+                  spt.target_name spi_id,
                   sgr.sgr_id spi_sgr_id,
-                  api.spi_conversion, 
+                  spt.spi_conversion, 
                   case when sru.sru_id is null then c_false else c_true end spi_is_required
-             from (select application_id, page_id, item_name, 
-                          case 
-                          when regexp_like(format_mask, '(^|(FM))[09DGL]+$') then replace(q'±to_number(v('#ITEM#'), '#MASK#')±', '#MASK#', format_mask)
-                          when format_mask is not null then replace(q'±to_date(v('#ITEM#'), '#MASK#')±', '#MASK#', format_mask)
-                          else q'±v('#ITEM#')±' end spi_conversion
-                     from apex_application_page_items) api
+             from sct_bl_page_targets spt
              join sct_group sgr
-               on api.application_id = sgr.sgr_app_id
-              and api.page_id = sgr.sgr_page_id
+               on spt.application_id = sgr.sgr_app_id
+              and spt.page_id = sgr.sgr_page_id
              left join sct_rule sru
-               on regexp_instr(upper(sru.sru_condition), replace(c_regex_item, '#ITEM#', api.item_name)) > 0
+               on regexp_instr(upper(sru.sru_condition), replace(c_regex_item, '#ITEM#', spt.target_name)) > 0
               and sgr.sgr_id = sru.sru_sgr_id
             where sgr.sgr_id = p_sgr_id) v
        on (spi.spi_id = v.spi_id and spi.spi_sgr_id = v.spi_sgr_id)
@@ -151,11 +146,11 @@ q'±<script id="RULE_#SRU_SORT_SEQ#">
     -- Ueberzaehlige Elemente entfernen
     delete from sct_page_item
      where spi_id not in (
-           select api.item_name
-             from apex_application_page_items api
+           select spt.target_name
+             from sct_bl_page_targets spt
              join sct_group sgr
-               on api.application_id = sgr.sgr_app_id
-              and api.page_id = sgr.sgr_page_id);
+               on spt.application_id = sgr.sgr_app_id
+              and spt.page_id = sgr.sgr_page_id);
   end harmonize_sct_page_item;
   
   
@@ -174,14 +169,13 @@ q'±<script id="RULE_#SRU_SORT_SEQ#">
     /* TODO: Pruefen, ob eine Tabelle SCT_RULE_FIRING_ITEMS nicht die bessere Loesung waere */
     merge into sct_rule sru
     using (select sru.sru_id, 
-                  listagg(api.item_name, ':') within group (order by api.item_name) sru_firing_items
-             from (select distinct application_id, page_id, item_name
-                     from apex_application_page_items) api
+                  listagg(spt.target_name, ':') within group (order by spt.target_name) sru_firing_items
+             from sct_bl_page_targets spt
              join sct_group sgr
-               on api.application_id = sgr.sgr_app_id
-              and api.page_id = sgr.sgr_page_id
+               on spt.application_id = sgr.sgr_app_id
+              and spt.page_id = sgr.sgr_page_id
              join sct_rule sru
-               on regexp_instr(upper(sru.sru_condition), replace(c_regex_item, '#ITEM#', api.item_name)) > 0
+               on regexp_instr(upper(sru.sru_condition), replace(c_regex_item, '#ITEM#', spt.target_name)) > 0
             where sgr.sgr_id = p_sgr_id
             group by sru.sru_id) v
        on (sru.sru_id = v.sru_id)
@@ -481,6 +475,194 @@ q'±<script id="RULE_#SRU_SORT_SEQ#">
   end copy_rule_group;
   
   
+  procedure export_rule_group(
+    p_sgr_id in sct_group.sgr_id%type default null)
+  as
+    cursor action_type_cur is
+      select sat_id, sat_name, sat_pl_sql, sat_js, sat_changes_value
+        from sct_action_type;
+        
+    cursor group_cur(p_sgr_id in sct_group.sgr_id%type) is
+      select sgr_id, sgr_name, sgr_description, sgr_app_id, sgr_page_id
+        from sct_group sgr
+       where sgr_id = p_sgr_id or p_sgr_id is null;
+    
+    cursor rule_cur(p_sgr_id in sct_group.sgr_id%type) is
+      select sru_id, sru_sgr_id, sru_name, sru_condition, sru_sort_seq, sru_firing_items
+        from sct_rule sru
+       where sru.sru_sgr_id = p_sgr_id;
+       
+    cursor action_cur(p_sru_id in sct_rule.sru_id%type, p_sgr_id in sct_group.sgr_id%type) is
+      select sra_sru_id, sra_sgr_id, sra_spi_id, sra_sat_id, sra_attribute, sra_sort_seq
+        from sct_rule_action sra
+       where sra.sra_sru_id = p_sru_id
+         and sra.sra_sgr_id = p_sgr_id;
+    l_stmt clob;
+    l_action_type clob;
+    l_group clob;
+    l_rule clob;
+    l_rule_action clob;
+
+  c_action_type_template constant varchar2(32767) :=
+q'±
+  sct_admin.merge_action_type(
+    p_sat_id => '#SAT_ID#',
+    p_sat_name => '#SAT_NAME#',
+    p_sat_pl_sql => q'~#SAT_PL_SQL#~',
+    p_sat_js => q'~#SAT_JS#~',
+    p_sat_changes_value => '#SAT_CHANGES_VALUE#');
+
+±';
+
+  c_group_template constant varchar2(32767) :=
+q'±
+  sct_admin.merge_rule_group(
+    p_sgr_app_id => #SGR_APP_ID#,
+    p_sgr_page_id => #SGR_PAGE_ID#,
+    p_sgr_id => #SGR_ID#,
+    p_sgr_name => q'~#SGR_NAME#~',
+    p_sgr_description => q'~#SGR_DESCRIPTION#~');
+
+±';
+
+  c_rule_template constant varchar2(32767) :=
+q'±
+  sct_admin.merge_rule(
+    p_sru_id => #SRU_ID#,
+    p_sru_sgr_id => #SGR_ID#,
+    p_sru_name => q'~#SRU_NAME#~',
+    p_sru_condition => q'~#SRU_CONDITION#~',
+    p_sru_sort_seq => '#SRU_SORT_SEQ#');
+
+±';
+
+  c_rule_action_template constant varchar2(32767) :=
+q'±
+  sct_admin.merge_rule_action(
+    p_sra_sru_id => #SRU_ID#,
+    p_sra_sgr_id => #SGR_ID#,
+    p_sra_spi_id => '#SPI_ID#',
+    p_sra_sat_id => '#SAT_ID#',
+    p_sra_attribute q'~#SRA_ATTRIBUTE#~',
+    p_sra_sort_seq => '#SRA_SORT_SEQ#');
+
+±';
+
+    c_directory constant varchar2(30 byte) := 'SCT_DIR';
+    l_file_name varchar2(100);
+  begin
+    -- Initialisierung
+    dbms_lob.createtemporary(l_stmt, false, dbms_lob.call);
+    dbms_lob.createtemporary(l_action_type, false, dbms_lob.call);
+    dbms_lob.createtemporary(l_group, false, dbms_lob.call);
+    dbms_lob.createtemporary(l_rule, false, dbms_lob.call);
+    dbms_lob.createtemporary(l_rule_action, false, dbms_lob.call);
+    
+    -- Exportiere Aktionstypen
+    for sat in action_type_cur loop
+      dbms_lob.append(
+        l_action_type, 
+        utl_text.bulk_replace(c_action_type_template, char_table(
+          '#SAT_ID#', sat.sat_id,
+          '#SAT_NAME#', sat.sat_name, 
+          '#SAT_PL_SQL#', sat.sat_pl_sql,
+          '#SAT_JS#', sat.sat_js,
+          '#SAT_CHANGES_VALUE#', sat.sat_changes_value)));
+    end loop;
+    
+    /* Geschachtelte CURSOR-FOR-LOOPS, weil:
+       - einfacherer Code
+       - kein Nebenlaeufigkeitsproblem (Stammdaten)
+       - kein Performanzproblem
+       - deutlich weniger Variablen (%ROWTYPE unetrstuetzt keine CURSOR-Ausdruecke)
+     */
+    for sgr in group_cur(p_sgr_id) loop
+      -- Entweder nur fuer eine oder alle SCT_GROUPs
+      dbms_lob.append(
+        l_group, 
+        utl_text.bulk_replace(c_group_template, char_table(
+          '#SGR_APP_ID#', to_char(sgr.sgr_app_id),
+          '#SGR_PAGE_ID#', to_char(sgr.sgr_page_id),
+          '#SGR_ID#', to_char(sgr.sgr_id),
+          '#SGR_NAME#', sgr.sgr_name,
+          '#SGR_DESCRIPTION#', sgr.sgr_description)));
+      for sru in rule_cur(sgr.sgr_id) loop
+        dbms_lob.append(
+          l_rule, 
+          utl_text.bulk_replace(c_rule_template, char_table(
+            '#SRU_ID#', to_char(sru.sru_id),
+            '#SGR_ID#', to_char(sru.sru_sgr_id),
+            '#SRU_NAME#', sru.sru_name,
+            '#SRU_CONDITION#', sru.sru_condition,
+            '#SRU_SORT_SEQ#', to_char(sru.sru_sort_seq))));
+        for sra in action_cur(sru.sru_id, sru.sru_sgr_id) loop
+          dbms_lob.append(
+            l_rule_action, 
+            utl_text.bulk_replace(c_rule_action_template, char_table(
+              '#SRU_ID#', to_char(sra.sra_sru_id),
+              '#SGR_ID#', to_char(sra.sra_sgr_id),
+              '#SPI_ID#', sra.sra_spi_id,
+              '#SAT_ID#', sra.sra_sat_id,
+              '#SRA_ATTRIBUTE#', sra.sra_attribute,
+              '#SRA_SORT_SEQ#', to_char(sra.sra_sort_seq))));
+        end loop;
+      end loop;
+      dbms_lob.append(l_stmt, 
+    'begin
+  -- ACTION TYPES
+');
+      dbms_lob.append(l_stmt, l_action_type);
+      dbms_lob.append(l_stmt, '
+  -- RULE GROUPS
+');
+      dbms_lob.append(l_stmt, l_group);
+      dbms_lob.append(l_stmt, '
+  -- RULES
+');
+      dbms_lob.append(l_stmt, l_rule);
+      dbms_lob.append(l_stmt, '
+  -- RULE ACTIONS
+');
+      dbms_lob.append(l_stmt, l_rule_action);
+      dbms_lob.append(l_stmt, '
+  commit;
+end;
+/
+');
+    l_file_name := 'SCT_GROUP_' || sgr.sgr_id || '.sql';
+    dbms_xslprocessor.clob2file(l_stmt, c_directory, l_file_name);
+    end loop;
+    
+  end export_rule_group;
+  
+  
+  procedure merge_rule(
+    p_sru_id in sct_rule.sru_id%type default null,
+    p_sru_sgr_id in sct_group.sgr_id%type,
+    p_sru_name in sct_rule.sru_name%type,
+    p_sru_condition in sct_rule.sru_condition%type,
+    p_sru_sort_seq in sct_rule.sru_sort_seq%type)
+  as
+  begin
+    merge into sct_rule sru
+    using (select p_sru_id sru_id,
+                  p_sru_sgr_id sru_sgr_id,
+                  p_sru_name sru_name,
+                  p_sru_condition sru_condition,
+                  p_sru_sort_seq sru_sort_seq
+             from dual) v
+       on (sru.sru_id = v.sru_id
+       and sru.sru_sgr_id = v.sru_sgr_id)
+     when matched then update set
+          sru_name = v.sru_name,
+          sru_condition = v.sru_condition,
+          sru_sort_seq = v.sru_sort_seq
+     when not matched then insert(sru_id, sru_sgr_id, sru_name, sru_condition, sru_sort_seq)
+          values(v.sru_id, v.sru_sgr_id, v.sru_name, v.sru_condition, v.sru_sort_seq);
+    propagate_rule_change(p_sru_sgr_id);
+  end merge_rule;
+  
+  
   procedure propagate_rule_change(
     p_sgr_id in sct_group.sgr_id%type)
   as
@@ -527,6 +709,61 @@ q'±<script id="RULE_#SRU_SORT_SEQ#">
     when others then
       p_error := 'Fehler beim Validieren der Regel: <br>' || sqlerrm;
   end validate_rule;
+  
+  
+  procedure merge_rule_action(
+    p_sra_sru_id in sct_rule.sru_id%type,
+    p_sra_sgr_id in sct_group.sgr_id%type,
+    p_sra_spi_id in sct_page_item.spi_id%type,
+    p_sra_sat_id in sct_action_type.sat_id%type,
+    p_sra_attribute in sct_rule_action.sra_attribute%type,
+    p_sra_sort_seq in sct_rule_action.sra_sort_seq%type)
+  as
+  begin
+    merge into sct_rule_action sra
+    using (select p_sra_sru_id sra_sru_id,
+                  p_sra_sgr_id sra_sgr_id,
+                  p_sra_spi_id sra_spi_id,
+                  p_sra_sat_id sra_sat_id,
+                  p_sra_attribute sra_attribute,
+                  p_sra_sort_seq sra_sort_seq
+             from dual) v
+       on (sra.sra_sru_id = v.sra_sru_id
+      and sra.sra_sgr_id = v.sra_sgr_id
+      and sra.sra_spi_id = v.sra_spi_id
+      and sra.sra_sat_id = v.sra_sat_id)
+     when matched then update set
+          sra_attribute = v.sra_attribute,
+          sra_sort_seq = v.sra_sort_seq
+     when not matched then insert(sra_sru_id, sra_sgr_id, sra_spi_id, sra_sat_id, sra_attribute, sra_sort_seq)
+          values(v.sra_sru_id, v.sra_sgr_id, v.sra_spi_id, v.sra_sat_id, v.sra_attribute, v.sra_sort_seq);
+  end merge_rule_action;
+  
+  
+  procedure merge_action_type(
+    p_sat_id in sct_action_type.sat_id%type,
+    p_sat_name in sct_action_type.sat_name%type,
+    p_sat_pl_sql in sct_action_type.sat_pl_sql%type,
+    p_sat_js in sct_action_type.sat_js%type,
+    p_sat_changes_value in sct_action_type.sat_changes_value%type)
+  as
+  begin
+    merge into sct_action_type sat
+    using (select p_sat_id sat_id,
+                  p_sat_name sat_name,
+                  p_sat_pl_sql sat_pl_sql,
+                  p_sat_js sat_js,
+                  p_sat_changes_value sat_changes_value
+             from dual) v
+       on (sat.sat_id = v.sat_id)
+     when matched then update set
+          sat_name = v.sat_name,
+          sat_pl_sql = v.sat_pl_sql,
+          sat_js = v.sat_js,
+          sat_changes_value = v.sat_changes_value
+     when not matched then insert(sat_id, sat_name, sat_pl_sql, sat_js, sat_changes_value)
+          values(v.sat_id, v.sat_name, v.sat_pl_sql, v.sat_js, v.sat_changes_value);
+  end merge_action_type;
   
 begin
   initialize;
