@@ -65,7 +65,7 @@ prompt &s1.Install application
 
 -- After APEX installation, reset output settings
 alter session set current_schema=&INSTALL_USER.;
-set define &
+set define on
 set verify off
 set serveroutput on
 set echo off
