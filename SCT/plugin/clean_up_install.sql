@@ -21,11 +21,6 @@ declare
              and object_type not like '%BODY'
              and owner = upper('&INSTALL_USER.')
            order by object_type, object_name;
-  cursor context_cur is
-    select namespace
-      from dba_context
-     where schema = upper('&INSTALL_USER.')
-       and namespace in ('PIT_CTX');
 begin
   for obj in delete_object_cur loop
     begin
@@ -42,10 +37,6 @@ begin
       when others then
         raise;
     end;
-  end loop;
-  for ctx in context_cur loop
-    execute immediate 'drop context ' || ctx.namespace;
-    dbms_output.put_line('&s1.Context ' || ctx.namespace || ' deleted.');
   end loop;
 end;
 /

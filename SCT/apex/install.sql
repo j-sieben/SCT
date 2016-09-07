@@ -60,8 +60,8 @@ prompt &h3.Install APEX application
 prompt &s1.Prepare APEX import
 @&apex_dir.prepare_apex_import.sql
 
-prompt &s1.Import SCT rules
-@&apex_dir.sct_rules.sql
-
 prompt &s1.Install application
 @&apex_dir.sct.sql
+
+prompt &s1.Import SCT rules
+@&apex_dir.sct_rules.sql
