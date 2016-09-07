@@ -63,5 +63,11 @@ prompt &s1.Prepare APEX import
 prompt &s1.Install application
 @&apex_dir.sct.sql
 
+alter session set current_schema=&INSTALL_USER.;
+begin
+  utl_recomp.compile('&INSTALL_USER.');
+end;
+/
+
 prompt &s1.Import SCT rules
 @&apex_dir.sct_rules.sql
