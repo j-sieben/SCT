@@ -46,7 +46,14 @@ prompt &s1.Create view SCT_BL_RULES
 prompt &s1.Create view SCT_BL_PAGE_TARGETS
 @&view_dir.sct_bl_page_targets.vw
 
+prompt &h3.Create PIT messages
+@core/create_messages.sql
+
 prompt &h3.Create packages
+prompt &s1.Create package SCT_CONST
+@&plsql_dir.sct_const.pks
+show errors
+
 prompt &s1.Create package SCT_ADMIN
 @&plsql_dir.sct_admin.pks
 show errors
