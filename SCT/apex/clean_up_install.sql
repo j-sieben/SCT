@@ -40,23 +40,27 @@ begin
     end;
   end loop;
   
-  -- Check whether app already exist. Replace
-  declare
-    l_app_id number;
-    l_ws number;
-    c_app_alias constant varchar2(30 byte) := 'SCT_ADMIN';  
-  begin
-    select application_id, workspace_id
-      into l_app_id, l_ws
-      from apex_applications
-     where alias = 'SCT_ADMIN';
-     
-    dbms_output.put_line('&s1.Remove existing application ' || c_app_alias);
-    wwv_flow_api.set_security_group_id(l_ws);
-    wwv_flow_api.remove_flow(l_app_id);
-  exception
-    when others then
-      dbms_output.put_line('&s1.Application ' || c_app_alias || ' does not exist');
-  end;
 end;
 /
+
+
+prompt &h3.Checking whether app already exist. Replace
+
+declare
+  l_app_id number;
+  l_ws number;
+  c_app_alias constant varchar2(30 byte) := 'SCT_ADMIN';  
+begin
+  select application_id, workspace_id
+    into l_app_id, l_ws
+    from apex_applications
+   where alias = c_app_alias;
+   
+  dbms_output.put_line('&s1.Remove existing application ' || c_app_alias);
+  wwv_flow_api.set_security_group_id(l_ws);
+  wwv_flow_api.remove_flow(l_app_id);
+exception
+  when others then
+    dbms_output.put_line('&s1.Application ' || c_app_alias || ' does not exist');
+end;
+ /
