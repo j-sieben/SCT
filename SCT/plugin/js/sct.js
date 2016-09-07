@@ -1,4 +1,4 @@
-// Namespace
+ï»¿// Namespace
 var de = de || {}
 de.condes = de.condes || {}
 de.condes.plugin = de.condes.plugin || {}
@@ -14,6 +14,7 @@ de.condes.plugin.sct = {};
   C_ERROR_LIST_ID = 'fehlerListe'
   C_ERROR_LIST_ID_SEL = `#${C_ERROR_LIST_ID}`
   C_BIND_EVENT = 'change'
+  C_CLICK_EVENT = 'click'
   C_APEX_BEFORE_REFRESH = 'apexbeforerefresh'
   C_APEX_AFTER_REFRESH = 'apexafterrefresh'
   C_NO_TRIGGERING_ITEM = 'DOCUMENT'
@@ -28,7 +29,7 @@ de.condes.plugin.sct = {};
   // Die Methode setItemValues wird von Response aufgerufen und darf daher nicht umbenannt oder entfernt werden
   sct.setRuleName = (ruleName) => {
     apex.debug.log(`Rule used: ${ruleName}`)
-    // TODO: Benutze Regel auf Seitenelement kopieren? Eventuell zusätzlicher Parameter für diesen Zweck
+    // TODO: Verwendete Regel auf Seitenelement kopieren? Eventuell zusÃ¤tzlicher Parameter fÃ¼r diesen Zweck
   }
   
   
@@ -47,7 +48,7 @@ de.condes.plugin.sct = {};
   
   
   // Die Methode setErrors wird von Response aufgerufen und darf daher nicht umbenannt oder entfernt werden
-  // Spezifisch für die aktuelle Version der Anwendung. Muss wahrscheinlich überarbeitet werden,
+  // Spezifisch fÃ¼r die aktuelle Version der Anwendung. Muss wahrscheinlich Ã¼berarbeitet werden,
   // wenn der neue StyleGuide eingesetzt wird
   sct.setErrors = (data) => {
     let $item
@@ -84,7 +85,7 @@ de.condes.plugin.sct = {};
     Hilfsmethoden 
    */
   // Hilfsfunktion zum Bereinigen der Seite von Fehlermeldungen
-  // Spezifisch für die aktuelle Version der Anwendung. Muss wahrscheinlich überarbeitet werden,
+  // Spezifisch fÃ¼r die aktuelle Version der Anwendung. Muss wahrscheinlich Ã¼berarbeitet werden,
   // wenn der neue StyleGuide eingesetzt wird
   sct.removeErrors = () => {
     $(C_APEX_ERROR_CLASS_SEL)
@@ -97,35 +98,44 @@ de.condes.plugin.sct = {};
   
   
   // Bindet an alle Seitenelemente aus SCT.BIND_ITEMS an den CHANGE-Event,
-  // um die Verarbeitung des Plugins auszulösen
+  // um die Verarbeitung des Plugins auszulÃ¶sen
   sct.bindEvents = () => {
     $.each(sct.bindItems, 
       function(){
-        $('#' + this)
-        .on(C_BIND_EVENT, function(e){
-          sct.execute(e, sct.ajaxIdentifier, sct.pageItems)
-        })
-        .on(C_APEX_BEFORE_REFRESH, function(e){
-          $(this).off(C_BIND_EVENT)
-        })
-        .on(C_APEX_AFTER_REFRESH, function(e){
-          $(this).on(C_BIND_EVENT, function(e){
+        $this = $('#' + this)
+        if ($this.is(':button')){
+            $this
+            .on(C_CLICK_EVENT, function(e){
+              sct.execute(e, sct.ajaxIdentifier, sct.pageItems)
+            })
+        }
+        else{
+          $this
+          .on(C_BIND_EVENT, function(e){
             sct.execute(e, sct.ajaxIdentifier, sct.pageItems)
           })
-        })
+          .on(C_APEX_BEFORE_REFRESH, function(e){
+            $(this).off(C_BIND_EVENT)
+          })
+          .on(C_APEX_AFTER_REFRESH, function(e){
+            $(this).on(C_BIND_EVENT, function(e){
+              sct.execute(e, sct.ajaxIdentifier, sct.pageItems)
+            })
+          })          
+        }
     })
     apex.debug.log(`Change event bound to ${sct.bindItems}`)
   }
   
   
   /*
-    Implementierung der Plugin-Funktionalität
+    Implementierung der Plugin-FunktionalitÃ¤t
    */
   sct.execute = (e) => {
     let callback = (data) => {
-      // Nimmt das Ergebnis entgegen und fügt es als Dokument-Fragment ein.
-      // Dies führt den enthaltenen JavaSrcipt-Code direkt aus, so dass das eingefügte 
-      // Element anschließend direkt wieder gelöscht werden kann
+      // Nimmt das Ergebnis entgegen und fÃ¼gt es als Dokument-Fragment ein.
+      // Dies fÃ¼hrt den enthaltenen JavaSrcipt-Code direkt aus, so dass das eingefÃ¼gte 
+      // Element anschlieÃŸend direkt wieder gelÃ¶scht werden kann
       if (data) {
         apex.debug.log('Response received')
         let id = $(data).attr('id')
@@ -135,7 +145,7 @@ de.condes.plugin.sct = {};
       }
     }
     
-    // ID des auslösenden Elements. Falls PageLoad, wird "document" verwendet
+    // ID des auslÃ¶senden Elements. Falls PageLoad, wird "document" verwendet
     let triggeringElement = C_NO_TRIGGERING_ITEM
     if (typeof e.target != 'undefined'){
       triggeringElement = e.target.id
@@ -158,12 +168,16 @@ de.condes.plugin.sct = {};
   
   
   sct.init = (me) => {
-    // Binde auslösende Events an Elemente, die über Attribut 01 übergeben werden
+    // Binde auslÃ¶sende Events an Elemente, die Ã¼ber Attribut 01 Ã¼bergeben werden
     sct.bindItems = me.action.attribute01.split(',');
-    // Vermerke alle relevanten Elemente der Seite als Übergabeobjekte, um die Werte
-    // beim Auslösen mit dem SessionState zu synchronisieren
+    // Vermerke alle relevanten Elemente der Seite als Ãœbergabeobjekte, um die Werte
+    // beim AuslÃ¶sen mit dem SessionState zu synchronisieren
     if (me.action.attribute02){
       sct.pageItems = [...new Set([...me.action.attribute01.split(','), ...me.action.attribute02.split(',')])];
+      // Entferne alle Button-Elemente, um nicht buttons im Session State zu setzen
+      sct.pageItems = $.grep(sct.pageItems, function( n, i ) {
+        return !($('#' + n).is(':button'));
+      });
     }
     else{
       sct.pageItems = me.action.attribute01.split(',');
@@ -174,7 +188,7 @@ de.condes.plugin.sct = {};
     sct.bindEvents()
     apex.debug.log('SCT initialized')
     
-    // Löse beim Seitenladen explizit Verarbeitung des Plugins aus
+    // LÃ¶se beim Seitenladen explizit Verarbeitung des Plugins aus
     apex.debug.log(`Triggering element: document`)
     sct.execute(me)
   }
