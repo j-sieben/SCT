@@ -1,11 +1,11 @@
 create table sct_rule_action(
-  sra_sru_id number, 
 	sra_sgr_id number, 
+  sra_sru_id number, 
 	sra_spi_id varchar2(50 char), 
 	sra_sat_id varchar2(20 char), 
 	sra_attribute clob, 
 	sra_sort_seq number, 
-	constraint pk_sct_rule_action primary key (sra_sru_id, sra_sgr_id, sra_spi_id, sra_sat_id),
+	constraint pk_sct_rule_action primary key (sra_sgr_id, sra_sru_id, sra_spi_id, sra_sat_id),
   constraint fk_sra_sat_id foreign key (sra_sat_id)
 	  references sct_action_type (sat_id) on delete cascade,
   constraint fk_sra_spi_id foreign key (sra_spi_id, sra_sgr_id)
@@ -18,8 +18,8 @@ create index idx_sra_spi_id on sct_rule_action(sra_spi_id);
 create index idx_sra_sat_id on sct_rule_action(sra_sat_id);
 
 comment on table sct_rule_action  is 'Table to store activities per rule';
-comment on column sct_rule_action.sra_sru_id is 'PK, references SCT_RULE';
 comment on column sct_rule_action.sra_sgr_id is 'PK, references SCT_RULE';
+comment on column sct_rule_action.sra_sru_id is 'PK, references SCT_RULE';
 comment on column sct_rule_action.sra_spi_id is 'PK, references SCT_PAGE_ITEM';
 comment on column sct_rule_action.sra_sat_id is 'PK, references SCT_ACTION_TYPE';
 comment on column sct_rule_action.sra_attribute is 'Optimonal parameter, passed to ACTION_TYPE';

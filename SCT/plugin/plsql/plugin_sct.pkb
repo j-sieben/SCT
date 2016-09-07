@@ -29,7 +29,8 @@ as
     select sgr_id
       into g_param.sgr_id
       from sct_group
-     where upper(sct_group.sgr_name) = upper(p_dynamic_action.attribute_01);
+     where upper(sct_group.sgr_name) = upper(p_dynamic_action.attribute_01)
+       and sgr_app_id = (select v('APP_ID') from dual);
     g_param.firing_item := apex_application.g_x01;
     
     if p_is_render then
@@ -38,9 +39,12 @@ as
       select listagg(spi_id, ',') within group (order by spi_id)
         into g_param.bind_items
         from sct_page_item spi
+        join sct_page_item_type sit
+          on spi.spi_sit_id = sit.sit_id
         join sct_group sgr
           on spi.spi_sgr_id = sgr.sgr_id
        where spi.spi_is_required = 'Y'
+         and sit.sit_event is not null
          and sgr.sgr_id = g_param.sgr_id;
                
       select listagg(spi_id, ',') within group (order by spi_id) item_list
@@ -49,9 +53,14 @@ as
                 from sct_rule_action sra
                 join sct_action_type sat
                   on sra.sra_sat_id = sat.sat_id
+                join sct_page_item spi
+                  on sra.sra_spi_id = spi.spi_id
+                join sct_page_item_type sit
+                  on spi.spi_sit_id = sit.sit_id
                 join sct_group sgr
                   on sra.sra_sgr_id = sgr.sgr_id
                where sat.sat_changes_value = c_true
+                 and sit.sit_has_value = c_true
                  and sgr.sgr_id = g_param.sgr_id);
     end if;
   exception

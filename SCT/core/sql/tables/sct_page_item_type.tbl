@@ -1,0 +1,35 @@
+create table sct_page_item_type(
+  sit_id varchar2(50 char),
+  sit_name varchar2(50 char),
+  sit_has_value char(1 byte) default 'Y',
+  sit_event varchar2(30 byte),
+  constraint pk_sct_page_item_type primary key(sit_id),
+  constraint chk_sit_has_value check(sit_has_value in ('Y', 'N'))
+) organization index;
+
+comment on table sct_page_item_type is 'Tabelle zur Speicherung der Elementtypen, die durch SCT unterstützt werden.';
+comment on column sct_page_item_type.sit_id is 'Primärschlüssel';
+comment on column sct_page_item_type.sit_name is 'Name des Elementtyps zur Darstellung auf der Seite';
+comment on column sct_page_item_type.sit_has_value is 'Flag, das anzeigt, ob der Elementtyp einen Sessionwert haben kann';
+comment on column sct_page_item_type.sit_event is 'Event, der an das Element gebunden wird, um Aktionen auszulösen';
+
+delete from sct_page_item_type;
+
+merge into sct_page_item_type s
+using (select 'ITEM' sit_id,
+              'Element' sit_name,
+              'Y' sit_has_value,
+              'change' sit_event
+         from dual
+        union all 
+       select 'BUTTON', 'Schaltfläche', 'N', 'click' from dual union all
+       select 'REGION', 'Region', 'N', null from dual) v
+   on (s.sit_id = v.sit_id)
+ when matched then update set
+      sit_name = v.sit_name,
+      sit_has_value = v.sit_has_value,
+      sit_event = v.sit_event
+ when not matched then insert(sit_id, sit_name, sit_has_value, sit_event)
+      values (v.sit_id, v.sit_name, v.sit_has_value, v.sit_event);
+      
+commit;

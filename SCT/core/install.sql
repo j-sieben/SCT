@@ -27,6 +27,9 @@ prompt &s1.Create table SCT_GROUP
 prompt &s1.Create table SCT_ACTION_TYPE
 @&table_dir.sct_action_type.tbl
 
+prompt &s1.Create table SCT_PAGE_ITEM_TYPE
+@&table_dir.sct_page_item_type.tbl
+
 prompt &s1.Create table SCT_PAGE_ITEM
 @&table_dir.sct_page_item.tbl
 

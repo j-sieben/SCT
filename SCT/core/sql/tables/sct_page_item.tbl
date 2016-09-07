@@ -1,15 +1,19 @@
 create table sct_page_item(
-  spi_id varchar2(50 char), 
 	spi_sgr_id number, 
+  spi_id varchar2(50 char), 
+  spi_sit_id varchar2(50 char),
 	spi_conversion varchar2(100 char), 
 	spi_is_required char(1 byte) default 'N', 
-	constraint pk_sru_rule_item primary key (spi_id, spi_sgr_id),
+	constraint pk_sru_rule_item primary key (spi_sgr_id, spi_id),
+  constraint fk_spi_sit_id foreign key (spi_sit_id)
+    references sct_page_item_type(sit_id) on delete cascade,
   constraint fk_spi_sgr_id foreign key (spi_sgr_id)
-    references sct_group(sgr_id),
+    references sct_group(sgr_id) on delete cascade,
   constraint chk_spi_is_required check (spi_is_required in ('Y', 'N'))
 ) organization index;
 
-create index idx_fk_spi_sgr_id on sct_page_item(spi_sgr_id, spi_id);
+create index idx_fk_spi_sit_id on sct_page_item(spi_sit_id);
+create index idx_fk_spi_sgr_id on sct_page_item(spi_id, spi_sgr_id);
 
 comment on table sct_page_item is 'Table to store all page items of the referenced page';
 comment on column sct_page_item.spi_id is 'PK, technical key';
