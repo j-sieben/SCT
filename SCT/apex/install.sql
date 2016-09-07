@@ -63,9 +63,20 @@ prompt &s1.Prepare APEX import
 prompt &s1.Install application
 @&apex_dir.sct.sql
 
+-- After APEX installation, reset output settings
 alter session set current_schema=&INSTALL_USER.;
+set define &
+set verify off
+set serveroutput on
+set echo off
+set feedback off
+set lines 120
+set pages 9999
+whenever sqlerror exit
+
+prompt &s1.Recompiling schema to prepare SCT rules import
 begin
-  utl_recomp.compile('&INSTALL_USER.');
+  dbms_utility.compile_schema('&INSTALL_USER.');
 end;
 /
 

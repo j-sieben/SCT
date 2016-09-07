@@ -21,14 +21,14 @@ apex.item('#ITEM#').disable();~',
 
   sct_admin.merge_action_type(
     p_sat_id => 'JAVA_SCRIPT_CODE',
-    p_sat_name => 'JavaScript-Code ausführen',
+    p_sat_name => 'JavaScript-Code ausfÃ¼hren',
     p_sat_pl_sql => q'~~',
     p_sat_js => q'~#ATTRIBUTE#~',
     p_sat_changes_value => 'N');
 
   sct_admin.merge_action_type(
     p_sat_id => 'PLSQL_CODE',
-    p_sat_name => 'PL/SQL-Code ausführen',
+    p_sat_name => 'PL/SQL-Code ausfÃ¼hren',
     p_sat_pl_sql => q'~begin #ATTRIBUTE# end;~',
     p_sat_js => q'~~',
     p_sat_changes_value => 'Y');
@@ -89,14 +89,14 @@ apex.item('#ITEM#').enable();~',
   sct_admin.merge_rule(
     p_sru_id => sct_admin.map_id(2),
     p_sru_sgr_id => sct_admin.map_id(1),
-    p_sru_name => q'~Keine Regelgruppe gewählt~',
+    p_sru_name => q'~Keine Regelgruppe gewÃ¤hlt~',
     p_sru_condition => q'~P1_SGR_ID is null~',
     p_sru_sort_seq => '20');
 
   sct_admin.merge_rule(
     p_sru_id => sct_admin.map_id(3),
     p_sru_sgr_id => sct_admin.map_id(1),
-    p_sru_name => q'~Regelgruppe gewählt~',
+    p_sru_name => q'~Regelgruppe gewÃ¤hlt~',
     p_sru_condition => q'~P1_SGR_ID is not null~',
     p_sru_sort_seq => '10');
 
