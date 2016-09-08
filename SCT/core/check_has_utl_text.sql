@@ -1,5 +1,5 @@
 column script new_value SCRIPT
-select case when count(*) = 1
+select case when count(*) = 0
             then '&1.' 
             else 'null.sql' end script
   from all_objects

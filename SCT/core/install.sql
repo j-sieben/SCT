@@ -52,8 +52,8 @@ prompt &h3.Create PIT messages
 
 
 prompt &h3.Create packages
-prompt $s1.Checking UTL_TEXT exists
-@core/check_has_utl_text.sql utl_text.sql
+prompt &s1.Checking UTL_TEXT exists
+@core/check_has_utl_text.sql core/utl_text.sql
 
 prompt &s1.Create package SCT_CONST
 @&plsql_dir.sct_const.pks
