@@ -132,7 +132,7 @@ This request is answered as follows:
 
 The answer tells us that
 
-- Rule `Parent has no children` has been chosen for the reply. The rule is referenced by showing their sort sequence number rather their ID. This makes it easier to spot the rule.
+- Rule `Parent has no children` has been chosen for the reply. The rule is referenced by `RULE_<sort_seq>`, not their ID. This makes it easier to spot the rule. Additionally, the rule name is provided to enable the plugin to show the rule name on the package if required.
 - Item `P1_CHILD` is set to `NULL`
 - No errors have ocurred
 - Item `P1_CHILD`gets hidden and item `P1_PLACEHOLDER` gets shown
