@@ -40,9 +40,9 @@ Also, keep in mind that the child select list will refresh anyway, regardless of
 
 ## The SCT approach
 
-In SCT, you define a rule group using a dedicated APEX application. You define the Application- and Page ID of the rule group references and give it a descriptive name.
+In SCT, you define a rule group using a dedicated APEX application. You define the Application- and Page ID the rule group references and give it a descriptive name.
 
-Next, you define two rules for this rule group: *<item> has children* and *<item> has no children*. As a rule to decide whether the parent item has children or not, you create a small function, taking the parent items actual value und retrieving `Y` or `N` to indicate whether child records exist. Image a function called `has_children(p_parent_id)` for that. Based on this function, you define the rules condition to be `has_children(item) = 'Y'` and `has_children(item) = 'N'` respectively.
+Next, you define two rules for this rule group: `<item> has children` and `<item> has no children`. As a rule to decide whether the parent item has children or not, you create a small function, taking the parent items actual value und retrieving `Y` or `N` to indicate whether child records exist. Image a function called `has_children(p_parent_id)` for that. Based on this function, you define the rules condition to be `has_children(item) = 'Y'` and `has_children(item) = 'N'` respectively.
 
 The column `item` in the example are column names derived from the item name on the page. So fi, if the page item is called `P2_PARENT`, a column named `parent` is provided with the item's actual content as its column value.
 
