@@ -100,7 +100,7 @@ The rules are evaluated using plain SQL. To allow for this, all rules get conver
 ```
   with session_state as(
        select ':' || sct_admin.get_firing_item || ':' firing_item,
-              to_number(v('P1_PARENT'), '9990') PARENT
+              to_number(v('P1_PARENT'), '9990') P1_PARENT
          from dual)
 select /*+ NO_MERGE(s) */ 
        r.sru_id, r.sru_name, r.sru_firing_items,
@@ -108,8 +108,8 @@ select /*+ NO_MERGE(s) */
   from sct_bl_rules r
   join session_state s
     on instr(r.sru_firing_items, s.firing_item) > 0
- where (r.sru_id = 97 and (has_children(parent) = 'Y'))
-    or (r.sru_id = 98 and (has_children(parent) = 'N'))
+ where (r.sru_id = 98 and (has_children(p1_parent) = 'Y'))
+    or (r.sru_id = 99 and (has_children(p1_parent) = 'N'))
  order by r.sru_sort_seq
  fetch first 1 row only
 ```
@@ -132,7 +132,7 @@ This request is answered as follows:
 
 The answer tells us that
 
-- Rule `Parent has no children` has been chosen for the reply
+- Rule `Parent has no children` has been chosen for the reply. The rule is referenced by showing their sort sequence number rather their ID. This makes it easier to spot the rule.
 - Item `P1_CHILD` is set to `NULL`
 - No errors have ocurred
 - Item `P1_CHILD`gets hidden and item `P1_PLACEHOLDER` gets shown
