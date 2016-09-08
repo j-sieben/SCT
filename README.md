@@ -44,7 +44,7 @@ In SCT, you define a rule group using a dedicated APEX application. You define t
 
 Next, you define two rules for this rule group: `<item> has children` and `<item> has no children`. As a rule to decide whether the parent item has children or not, you create a small function, taking the parent items actual value und retrieving `Y` or `N` to indicate whether child records exist. Image a function called `has_children(p_parent_id)` for that. Based on this function, you define the rules condition to be `has_children(item) = 'Y'` and `has_children(item) = 'N'` respectively.
 
-The column `item` in the example are column names derived from the item name on the page. So fi, if the page item is called `P2_PARENT`, a column named `parent` is provided with the item's actual content as its column value.
+The column `item` in the example are column names derived from the item name on the page. So fi, if the page item is called `P2_PARENT`, a column named `p2_parent` is provided with the item's actual content as its column value.
 
 As actions for rule *<item> has children* you define that three things are going to happen:
 
@@ -59,17 +59,15 @@ And the second rule reads:
 
 That's all there is to it. No hidden element on the page, no sepcialized DA anymore. If you run the page, you will see that the items behave as expected.
 
-How could this happen?
-
 ## How it works
 
 ### General flow
 
-On every page you want SCT to take control for, you implement a single DA per rule group you define for that page. This DA fires on *Page Load* and does not require any parameterization beside the name of the rule group it belongs to. No event handlers, no additional JavaScript code is required on the page.
+On every page you want SCT to take control for, you implement a single DA per rule group you define for that page. This DA fires on `Page Load` and does not require any parameterization beside the name of the rule group it belongs to. No event handlers, no additional JavaScript code is required on the page.
 
-If the DA initializes, it is told which elements to bind by the database. Plus, it is told which element values the database is interested in. On any occurence of a change event on any bound element, all actual element values of all fields of interested are sent to the database plus the information of which element caused the execution. After initialization, the plugin fires one time to allow the database to initialize the state of the elements based on the actual content of the items (Keep in mind that the session state might be out of sync when initially showing the page. A default value for an item is known to the browser but not to the session state, for example).
+If the DA initializes, it is told which elements to bind by the database. Plus, it is told which element values the database is interested in. On any occurence of a change event on any bound element, all actual element values of all fields of interest are sent to the database plus the name of the triggering element. After initialization, the plugin fires one time to allow the database to initialize the state of the elements based on the actual content of the items (Keep in mind that the session state might be out of sync when initially showing the page. A default value for an item is known to the browser but not to the session state, for example).
 
-This information is the basis for the meta data to decide upon the next actions to take. It will calculate the necessary actions and perform all PL/SQL actions defined within the database. After that, and probably based on the outcome of this execution, JavaScript actions are defined, bundled in a `<script>` tag and resent to the plugin. Plus, all element values calculated or changed at the database are sent to the plugin again, refreshing the values shown at the client.
+This information is the basis for the rules within the database to decide upon the next actions to take. It will calculate the necessary actions and perform all PL/SQL actions. After that, and probably based on the outcome of this execution, JavaScript actions are defined, bundled in a `<script>` tag and resent to the plugin. Plus, all element values calculated or changed at the database are sent to the plugin again, refreshing the values shown at the client.
 
 Should any errors occur during execution they are collected within an error object and passed to the plugin as well. The plugin renders all errors according to the standard AEPX behaviour at the notification box and with the page item.
 
@@ -79,9 +77,9 @@ The plugin executes the script by appending it to the document and immediately a
 
 If a request comes in, all item values the plugin is interested in were sent to the session state of APEX already. Therefore, it's easy for the database part to get access to the element values in SQL. These values are collected in a dedicated view and presented as columns for the view.
 
-All rule conditions entered were converted to the `where` clause of this view. Based on the item values, one or more conditions may apply. Now the first matching condition (based on a `SORT_SEQ` column for each rule) is retrieved and all defined actions that are connected to this rule.
+All rule conditions entered were converted to the `where` clause of this view. Based on the item values, one or more conditions may apply. Now the first matching condition (based on a `SORT_SEQ` column for each rule) is retrieved along with all defined actions connected to this rule.
 
-Should PL/SQL actions be defined for the matching rule, they are executed and the result is persisted at the session state. This sets the session state into a central communication position, allowing for simple API access and maintaining security and session awareness. After all PL/SQL code has been executed, a JavaScript script is put together based on the JavaScript portions of the matching rule actions. This script is sent back as the resonse to the calling plugin.
+Should PL/SQL actions be defined for the matching rule, they are executed and the result is persisted at the session state. This puts the session state into a central communication position, allowing for simple API access and maintaining security and session awareness. After all PL/SQL code has been executed, a JavaScript script is put together based on the JavaScript portions of the matching rule actions. This script is sent back to the calling plugin.
 
 As an example of the SQL created, review the following code snippet that was created for the scenario in our example (code is for database version 12c, 11g is supported as well):
 
@@ -99,7 +97,7 @@ select /*+ NO_MERGE(s) */
  where (r.sru_id = 97 and (has_children(parent) = 'Y'))
     or (r.sru_id = 98 and (has_children(parent) = 'N'))
  order by r.sru_sort_seq
- fetch first 1 row with ties
+ fetch first 1 row only
 ```
 
 ### Advantages of this approach
@@ -107,18 +105,22 @@ select /*+ NO_MERGE(s) */
 Some important advanteges are realized using this approach:
 
 #### Easier logic control
-As all decision logic is presented at a single table within the database (or, even easier, on a page of a dedicated APEX application), it's easier to control complex logic and to see interdependencies
+As all decision logic is maintained in a single table within the database, it's easier to control complex logic and to see interdependencies. To make maintenance even easier, the plugin ships with a small APEX application allowing to review, create and change the rules.
+
+The plugin may be triggered by `change` events of page items as well as `click` events on page buttons. At the moment, only buttons and regions with a static ID are seen by the plugin, so you need to set this attribute if you want the plugin to control the button or region. Declaratively, you are allowed to
+
+- set values of page items
+- refresh page items such as select lists as well as regions such as reports
+- control visibility of page items, buttons and regions
 
 #### Better execution control
-A rule is checked only if the triggering element is referenced within the rule condition. This way, only conditions are evaluated that may potentially change based on the triggering element. This avoids unwanted side effects of existing rules.
+A rule is checked only if the triggering element is referenced within the rule condition. This way, only conditions that may potentially change the outcome of that rule are executed. This avoids unwanted side effects of existing rules.
 
 #### No unrequired DA activities
 Nor is it required to create PL/SQL actions with a `NULL` action in order to pass an element value to the database, nor do you need any hidden helper fields on the page to store temporary information. Roundtrips to the database are limited to a total of one per plugin call. Almost no additional roundtrip is required. Additional roundtrips may occur if you want to stick to some declarative functionality APEX exposes, such as when you trigger the `apexrefresh` event. This, in turn, may cause a roundtrip to the database to refresh a report or a select list.
 
 #### Better logic control
-Any call to the plugin results in a response from the database that includes the name of the rule that has been chosen for the given state. Plus, in the post to the database, you see each item value that got sent to the database. With this information, it's very easy to follow the logic stream and pin down potential logic flaws.
+Any call to the plugin results in a response from the database that includes the name of the rule that has been chosen for the given state. Plus, in the request (`post`) to the database, you see each item value that got sent to the database. With this information, it's very easy to follow the logic stream and pin down potential logic flaws.
 
 #### Automatic type detection
-If you compare values entered on the page, it's hard to do so because you need to treat date values different than number values and these different to string values. Based on the fact, that each page item is allowed to have a format mask to define the item's appearance on the page, SCT converts the item value to the respective data type using this format mask.
-
-This, on the other hand, means that if you want to treat an item value as a number, you should define a format mask to pass information to SCT on what the item's data type is. Recall that on the APEX page, each item is of type string, as it is in the session state.
+If you compare values entered on the page, it's hard to do so because you need to treat date values different than number values and these different to string values. Based on the fact, that each page item is allowed to have a format mask to define the item's appearance on the page, SCT converts the item value to the respective data type using this format mask. In order to make this work, you have to set the format mask of the respective page items. If the format mask is null, the element will be treated as string.
