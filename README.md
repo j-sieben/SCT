@@ -48,14 +48,14 @@ The column `item` in the example are column names derived from the item name on 
 
 As actions for rule *<item> has children* you define that three things are going to happen:
 
-- *<child_item>* shall refresh
-- *<child_item>* shall show
-- *<placeholder_item>* shall hide
+- `<child_item>` shall refresh
+- `<child_item>` shall show
+- `<placeholder_item>` shall hide
 
 And the second rule reads:
 
-- *<placeholder_item>* shall show
-- *<child_item>* shall be set to NULL and hidden
+- `<placeholder_item>` shall show
+- `<child_item>` shall be set to NULL and hidden
 
 That's all there is to it. No hidden element on the page, no sepcialized DA anymore. If you run the page, you will see that the items behave as expected.
 
