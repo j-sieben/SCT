@@ -38,7 +38,7 @@ Although this is not overly complex, you see that the following extras are requi
 
 Also, keep in mind that the child select list will refresh anyway, regardless of whether child records exist or not. Even if you optimize refresh this will only avoid a roundtrip if the parent select list changes to NULL.
 
-## The SCT approach
+### The SCT approach
 
 In SCT, you define a rule group using a dedicated APEX application. You define the Application- and Page ID the rule group references and give it a descriptive name.
 
@@ -163,7 +163,7 @@ A rule is checked only if the triggering element is referenced within the rule c
 ### No unrequired DA activities
 Nor is it required to create PL/SQL actions with a `NULL` action in order to pass an element value to the database, nor do you need any hidden helper fields on the page to store temporary information. Roundtrips to the database are limited to a total of one per plugin call. Almost no additional roundtrip is required. Additional roundtrips may occur if you want to stick to some declarative functionality APEX exposes, such as when you trigger the `apexrefresh` event. This, in turn, may cause a roundtrip to the database to refresh a report or a select list.
 
-####Better logic control
+### Better logic control
 Any call to the plugin results in a response from the database that includes the name of the rule that has been chosen for the given state. Plus, in the request (`post`) to the database, you see each item value that got sent to the database. With this information, it's very easy to follow the logic stream and pin down potential logic flaws.
 
 ### Automatic type detection
