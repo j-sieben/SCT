@@ -81,7 +81,7 @@ All rule conditions entered were converted to the `where` clause of this view. B
 
 Should PL/SQL actions be defined for the matching rule, they are executed and the result is persisted at the session state. This puts the session state into a central communication position, allowing for simple API access and maintaining security and session awareness. After all PL/SQL code has been executed, a JavaScript script is put together based on the JavaScript portions of the matching rule actions. This script is sent back to the calling plugin.
 
-As an example of the SQL created, review the following code snippet that was created for the scenario in our example (code is for database version 12c, 11g is supported as well):
+As an example of the SQL created, review the following query the plugin created based on the rule of our example (code is for database version 12c, 11g is supported as well):
 
 ```
   with session_state as(
