@@ -1,26 +1,27 @@
-﻿// Namespace
-var de = de || {}
-de.condes = de.condes || {}
-de.condes.plugin = de.condes.plugin || {}
-de.condes.plugin.sct = {};
+"use strict";
 
+// Namespace
+var de = de || {},
+de.condes = de.condes || {},
+de.condes.plugin = de.condes.plugin || {},
+de.condes.plugin.sct = {};
 
 (function(sct, $, server){
   
-  C_NO_ERROR_CLASS_SEL = '.keinFehlerBereich'
-  C_APEX_ERROR_CLASS = 'apex-page-item-error'
-  C_APEX_ERROR_CLASS_SEL = `.${C_APEX_ERROR_CLASS}`
-  C_ERROR_CLASS_SEL = '.fehlerBereich'
-  C_ERROR_LIST_ID = 'fehlerListe'
-  C_ERROR_LIST_ID_SEL = `#${C_ERROR_LIST_ID}`
-  C_BIND_EVENT = 'change'
-  C_CLICK_EVENT = 'click'
-  C_APEX_BEFORE_REFRESH = 'apexbeforerefresh'
-  C_APEX_AFTER_REFRESH = 'apexafterrefresh'
-  C_NO_TRIGGERING_ITEM = 'DOCUMENT'
+  const C_NO_ERROR_CLASS_SEL = '.keinFehlerBereich';
+  const C_APEX_ERROR_CLASS = 'apex-page-item-error';
+  const C_APEX_ERROR_CLASS_SEL = `.${C_APEX_ERROR_CLASS}`;
+  const C_ERROR_CLASS_SEL = '.fehlerBereich';
+  const C_ERROR_LIST_ID = 'fehlerListe';
+  const C_ERROR_LIST_ID_SEL = `#${C_ERROR_LIST_ID}`;
+  const C_BIND_EVENT = 'change';
+  const C_CLICK_EVENT = 'click';
+  const C_APEX_BEFORE_REFRESH = 'apexbeforerefresh';
+  const C_APEX_AFTER_REFRESH = 'apexafterrefresh';
+  const C_NO_TRIGGERING_ITEM = 'DOCUMENT';
   
-  sct.pageItems = {}
-  sct.ajaxIdentifier = {}
+  var sct.pageItems = {};
+  var sct.ajaxIdentifier = {};
   
   
   /*
@@ -28,56 +29,56 @@ de.condes.plugin.sct = {};
    */  
   // Die Methode setItemValues wird von Response aufgerufen und darf daher nicht umbenannt oder entfernt werden
   sct.setRuleName = (ruleName) => {
-    apex.debug.log(`Rule used: ${ruleName}`)
+    apex.debug.log(`Rule used: ${ruleName}`);
     // TODO: Verwendete Regel auf Seitenelement kopieren? Eventuell zusätzlicher Parameter für diesen Zweck
-  }
+  };
   
   
   // Die Methode setItemValues wird von Response aufgerufen und darf daher nicht umbenannt oder entfernt werden
   sct.setItemValues = (pageItems) => {
     // Entnehme die neuen Elementwerte und setze sie auf der Seite
     $.each(pageItems.item, function(){
-      let value = this.value
-      let id = this.id
+      let value = this.value;
+      let id = this.id;
       if ((value || 'FOO') != ($v(id) || 'FOO')){
-        apex.item(id).setValue(value, value, true)
-        apex.debug.log(`Item "${id}" set to "${value}"`)
-      }
-    })
-  }
+        apex.item(id).setValue(value, value, true);
+        apex.debug.log(`Item "${id}" set to "${value}"`);
+      };
+    });
+  };
   
   
   // Die Methode setErrors wird von Response aufgerufen und darf daher nicht umbenannt oder entfernt werden
   // Spezifisch für die aktuelle Version der Anwendung. Muss wahrscheinlich überarbeitet werden,
   // wenn der neue StyleGuide eingesetzt wird
   sct.setErrors = (data) => {
-    let $item
-    let $errorList = $('<ul>').attr('id', C_ERROR_LIST_ID)
+    let $item;
+    let $errorList = $('<ul>').attr('id', C_ERROR_LIST_ID);
     
-    sct.removeErrors()
+    sct.removeErrors();
     
     function getErrors(amount){
       if (amount != 1){
-          return `${amount} errors received`
+          return `${amount} errors received`;
       }
       else{
-          return `${amount} error received`
+          return `${amount} error received`;
       }
-    }
+    };
     
     if (data.count > 0){
-       apex.debug.log(getErrors(data.count))
+      apex.debug.log(getErrors(data.count));
       $.each(data.errors, function() {
-        $item = $('#' + this.item)
-        $item.addClass(C_APEX_ERROR_CLASS)
-        $item.siblings('span').remove()
-        $item.parent().append(`<span class='t-Form-error'>${this.message}</span>`)
-        $errorList.append($('<li>').html(this.message))
-      })
-      $(C_NO_ERROR_CLASS_SEL).hide()
-      $(C_ERROR_CLASS_SEL).show()
-      $(C_ERROR_LIST_ID_SEL).replaceWith($errorList)
-    }
+        $item = $('#' + this.item);
+        $item.addClass(C_APEX_ERROR_CLASS);
+        $item.siblings('span').remove();
+        $item.parent().append(`<span class='t-Form-error'>${this.message}</span>`);
+        $errorList.append($('<li>').html(this.message));
+      });
+      $(C_NO_ERROR_CLASS_SEL).hide();
+      $(C_ERROR_CLASS_SEL).show();
+      $(C_ERROR_LIST_ID_SEL).replaceWith($errorList);
+    };
   }
   
   
@@ -91,9 +92,9 @@ de.condes.plugin.sct = {};
     $(C_APEX_ERROR_CLASS_SEL)
     .removeClass(C_APEX_ERROR_CLASS)
     .siblings('span')
-    .remove()
-    $(C_NO_ERROR_CLASS_SEL).show()
-    $(C_ERROR_CLASS_SEL).hide()
+    .remove();
+    $(C_NO_ERROR_CLASS_SEL).show();
+    $(C_ERROR_CLASS_SEL).hide();
   }
   
   
@@ -106,25 +107,25 @@ de.condes.plugin.sct = {};
         if ($this.is(':button')){
             $this
             .on(C_CLICK_EVENT, function(e){
-              sct.execute(e, sct.ajaxIdentifier, sct.pageItems)
-            })
+              sct.execute(e, sct.ajaxIdentifier, sct.pageItems);
+            });
         }
         else{
           $this
           .on(C_BIND_EVENT, function(e){
-            sct.execute(e, sct.ajaxIdentifier, sct.pageItems)
+            sct.execute(e, sct.ajaxIdentifier, sct.pageItems);
           })
           .on(C_APEX_BEFORE_REFRESH, function(e){
-            $(this).off(C_BIND_EVENT)
+            $(this).off(C_BIND_EVENT);
           })
           .on(C_APEX_AFTER_REFRESH, function(e){
             $(this).on(C_BIND_EVENT, function(e){
-              sct.execute(e, sct.ajaxIdentifier, sct.pageItems)
+              sct.execute(e, sct.ajaxIdentifier, sct.pageItems);
             })
-          })          
-        }
-    })
-    apex.debug.log(`Change event bound to ${sct.bindItems}`)
+          });
+        };
+    });
+    apex.debug.log(`Change event bound to ${sct.bindItems}`);
   }
   
   
@@ -138,19 +139,19 @@ de.condes.plugin.sct = {};
       // Element anschließend direkt wieder gelöscht werden kann
       if (data) {
         apex.debug.log('Response received')
-        let id = $(data).attr('id')
-        sct.removeErrors()
-        $('body').append(data)
-        $('#' + id).remove()
-      }
-    }
+        let id = $(data).attr('id');
+        sct.removeErrors(),
+        $('body').append(data);
+        $('#' + id).remove();
+      };
+    };
     
     // ID des auslösenden Elements. Falls PageLoad, wird "document" verwendet
-    let triggeringElement = C_NO_TRIGGERING_ITEM
+    let triggeringElement = C_NO_TRIGGERING_ITEM;
     if (typeof e.target != 'undefined'){
-      triggeringElement = e.target.id
-      apex.debug.log(`Triggering element: ${triggeringElement}`)
-    }
+      triggeringElement = e.target.id;
+      apex.debug.log(`Triggering element: ${triggeringElement}`);
+    };
     
     server.plugin(
       sct.ajaxIdentifier,
@@ -163,8 +164,8 @@ de.condes.plugin.sct = {};
         'dataType':'html',
         'success':callback
       }
-    )  
-  }
+    );
+  };
   
   
   sct.init = (me) => {
@@ -181,17 +182,17 @@ de.condes.plugin.sct = {};
     }
     else{
       sct.pageItems = me.action.attribute01.split(',');
-    }
-    sct.ajaxIdentifier = me.action.ajaxIdentifier
+    };
+    sct.ajaxIdentifier = me.action.ajaxIdentifier;
     
     // Bereite Einsatz des Plugins vor
-    sct.bindEvents()
-    apex.debug.log('SCT initialized')
+    sct.bindEvents();
+    apex.debug.log('SCT initialized');
     
     // Löse beim Seitenladen explizit Verarbeitung des Plugins aus
-    apex.debug.log(`Triggering element: document`)
-    sct.execute(me)
-  }
+    apex.debug.log(`Triggering element: document`);
+    sct.execute(me);
+  };
   
 })(de.condes.plugin.sct, apex.jQuery, apex.server);
 
@@ -199,5 +200,5 @@ de.condes.plugin.sct = {};
 // Schnittstelle zum APEX-Plugin-Mechanismus, die aus einem mir nicht bekannten Grund
 // Schwierigkeiten mit der Verwendung eines Namensraumobjekts haben
 function de_condes_plugin_sct(){
-  de.condes.plugin.sct.init(this)
+  de.condes.plugin.sct.init(this);
 }
