@@ -1,9 +1,9 @@
 "use strict";
 
 // Namespace
-var de = de || {},
-de.condes = de.condes || {},
-de.condes.plugin = de.condes.plugin || {},
+var de = de || {};
+de.condes = de.condes || {};
+de.condes.plugin = de.condes.plugin || {};
 de.condes.plugin.sct = {};
 
 
@@ -21,8 +21,8 @@ de.condes.plugin.sct = {};
   const C_APEX_AFTER_REFRESH = 'apexafterrefresh';
   const C_NO_TRIGGERING_ITEM = 'DOCUMENT';
   
-  var sct.pageItems = {};
-  var sct.ajaxIdentifier = {};
+  sct.pageItems = {};
+  sct.ajaxIdentifier = {};
   
   
   /*
