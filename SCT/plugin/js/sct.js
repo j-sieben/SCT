@@ -6,6 +6,7 @@ de.condes = de.condes || {},
 de.condes.plugin = de.condes.plugin || {},
 de.condes.plugin.sct = {};
 
+
 (function(sct, $, server){
   
   const C_NO_ERROR_CLASS_SEL = '.keinFehlerBereich';
@@ -63,15 +64,15 @@ de.condes.plugin.sct = {};
       }
       else{
           return `${amount} error received`;
-      }
+      };
     };
     
     if (data.count > 0){
-      apex.debug.log(getErrors(data.count));
+       apex.debug.log(getErrors(data.count));
       $.each(data.errors, function() {
-        $item = $('#' + this.item);
-        $item.addClass(C_APEX_ERROR_CLASS);
-        $item.siblings('span').remove();
+        $item = $('#' + this.item)
+        .addClass(C_APEX_ERROR_CLASS)
+        .siblings('span').remove()
         $item.parent().append(`<span class='t-Form-error'>${this.message}</span>`);
         $errorList.append($('<li>').html(this.message));
       });
@@ -79,7 +80,7 @@ de.condes.plugin.sct = {};
       $(C_ERROR_CLASS_SEL).show();
       $(C_ERROR_LIST_ID_SEL).replaceWith($errorList);
     };
-  }
+  };
   
   
   /* 
@@ -95,10 +96,10 @@ de.condes.plugin.sct = {};
     .remove();
     $(C_NO_ERROR_CLASS_SEL).show();
     $(C_ERROR_CLASS_SEL).hide();
-  }
+  };
   
   
-  // Bindet an alle Seitenelemente aus SCT.BIND_ITEMS an den CHANGE-Event,
+  // Bindet an alle Seitenelemente aus SCT.BIND_ITEMS,
   // um die Verarbeitung des Plugins auszulösen
   sct.bindEvents = () => {
     $.each(sct.bindItems, 
@@ -106,27 +107,30 @@ de.condes.plugin.sct = {};
         $this = $('#' + this)
         if ($this.is(':button')){
             $this
+            // Binde click-Event bei Schaltflächen
             .on(C_CLICK_EVENT, function(e){
               sct.execute(e, sct.ajaxIdentifier, sct.pageItems);
             });
         }
         else{
           $this
+          // Binde change-Event bei Seitenelementen
           .on(C_BIND_EVENT, function(e){
             sct.execute(e, sct.ajaxIdentifier, sct.pageItems);
           })
+          // setze change-Event aus, wenn APEX-refresh ausgelöst wird, um Nebenwirkungen zu vermeiden
           .on(C_APEX_BEFORE_REFRESH, function(e){
             $(this).off(C_BIND_EVENT);
           })
           .on(C_APEX_AFTER_REFRESH, function(e){
             $(this).on(C_BIND_EVENT, function(e){
               sct.execute(e, sct.ajaxIdentifier, sct.pageItems);
-            })
-          });
+            });
+          });          
         };
     });
     apex.debug.log(`Change event bound to ${sct.bindItems}`);
-  }
+  };
   
   
   /*
@@ -138,9 +142,9 @@ de.condes.plugin.sct = {};
       // Dies führt den enthaltenen JavaSrcipt-Code direkt aus, so dass das eingefügte 
       // Element anschließend direkt wieder gelöscht werden kann
       if (data) {
-        apex.debug.log('Response received')
+        apex.debug.log('Response received');
         let id = $(data).attr('id');
-        sct.removeErrors(),
+        sct.removeErrors();
         $('body').append(data);
         $('#' + id).remove();
       };
@@ -151,7 +155,7 @@ de.condes.plugin.sct = {};
     if (typeof e.target != 'undefined'){
       triggeringElement = e.target.id;
       apex.debug.log(`Triggering element: ${triggeringElement}`);
-    };
+    }
     
     server.plugin(
       sct.ajaxIdentifier,
@@ -175,14 +179,14 @@ de.condes.plugin.sct = {};
     // beim Auslösen mit dem SessionState zu synchronisieren
     if (me.action.attribute02){
       sct.pageItems = [...new Set([...me.action.attribute01.split(','), ...me.action.attribute02.split(',')])];
-      // Entferne alle Button-Elemente, um nicht buttons im Session State zu setzen
+      // Entferne alle Button-Elemente, um nicht Schaltflächen im Session State zu setzen
       sct.pageItems = $.grep(sct.pageItems, function( n, i ) {
         return !($('#' + n).is(':button'));
       });
     }
     else{
       sct.pageItems = me.action.attribute01.split(',');
-    };
+    }
     sct.ajaxIdentifier = me.action.ajaxIdentifier;
     
     // Bereite Einsatz des Plugins vor
@@ -201,4 +205,4 @@ de.condes.plugin.sct = {};
 // Schwierigkeiten mit der Verwendung eines Namensraumobjekts haben
 function de_condes_plugin_sct(){
   de.condes.plugin.sct.init(this);
-}
+};
