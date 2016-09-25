@@ -4,10 +4,12 @@ create table sct_rule(
 	sru_name varchar2(50 char), 
 	sru_condition clob, 
 	sru_sort_seq number, 
-	sru_firing_items varchar2(300 byte), 
+	sru_firing_items varchar2(300 byte),
+  sru_active number(1,0) default 1,
   constraint pk_sct_rules primary key (sru_id, sru_sgr_id),
   constraint fk_sru_sgr_id foreign key (sru_sgr_id)
-	  references sct_group (sgr_id) on delete cascade
+	  references sct_group (sgr_id) on delete cascade,
+  constraint chk_sru_active check(sru_active in (0,1))
 ) organization index;
 
 create index idx_fk_sru_sgr_id on sct_rule(sru_sgr_id, sru_id);
@@ -28,3 +30,4 @@ comment on column sct_rule.sru_name is 'Descriptive Name';
 comment on column sct_rule.sru_condition is 'Condition, syntactically in the form of a partial where-clause';
 comment on column sct_rule.sru_firing_items is 'List of page items that are referenced within sru_condition';
 comment on column sct_rule.sru_sort_seq is 'Sort criteria, defines execution sequence';
+comment on column sct_rule.sru_active is 'Flag to indicate whether Rule is in use';

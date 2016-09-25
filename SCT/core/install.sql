@@ -66,3 +66,6 @@ show errors
 prompt &s1.Create package Body SCT_ADMIN
 @&plsql_dir.sct_admin.pkb
 show errors
+
+prompt &h3.Create base rules
+@core/create_base_rules.sql

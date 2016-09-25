@@ -13,48 +13,65 @@ as
   function not_empty(
     p_text in varchar2)
     return boolean;
-    
+
   function append(
     p_text in varchar2,
     p_chunk in varchar2,
     p_delimiter in varchar2 default null,
     p_before in varchar2 default 'N')
     return varchar2;
-  
+
   procedure append(
     p_text in out nocopy varchar2,
     p_chunk in varchar2,
     p_delimiter in varchar2 default null,
     p_before in varchar2 default 'N');
-    
+
   function concatenate(
     p_chunks in char_table,
     p_delimiter in varchar2 default ':',
     p_ignore_nulls in boolean default true)
     return varchar2;
-    
+
   procedure concatenate(
     p_text in out nocopy varchar2,
     p_chunks in char_table,
     p_delimiter in varchar2 default ':',
     p_ignore_nulls in boolean default true);
-    
-    
+
+
   procedure bulk_replace(
     p_text in out nocopy varchar2,
     p_chunks in char_table);
-    
+
   function bulk_replace(
     p_text in varchar2,
     p_chunks in char_table)
     return varchar2;
-    
+
   function string_to_table(
     p_string in varchar2,
     p_delimiter in varchar2 default ':')
     return char_table
     pipelined;
     
+  function contains(
+    p_string in varchar2,
+    p_pattern in varchar2,
+    p_delimiter in varchar2 default ',')
+    return number;
+    
+  procedure merge(
+    p_string in out nocopy varchar2,
+    p_pattern in varchar2,
+    p_delimiter in varchar2 default ',');
+    
+  function merge(
+    p_string in varchar2,
+    p_pattern in varchar2,
+    p_delimiter in varchar2 default ',')
+    return varchar2;
+
 end utl_text;
 /
 show errors
@@ -69,7 +86,7 @@ as
   begin
     return length(trim(p_text)) > 0;
   end not_empty;
-  
+
 
   function append(
     p_text in varchar2,
@@ -89,8 +106,8 @@ as
     end if;
     return l_result;
   end append;
- 
- 
+
+
   procedure append(
     p_text in out nocopy varchar2,
     p_chunk in varchar2,
@@ -100,8 +117,8 @@ as
   begin
     p_text := append(p_text, p_chunk, p_delimiter, p_before);
   end append;
-  
-  
+
+
   function concatenate(
     p_chunks in char_table,
     p_delimiter in varchar2 default ':',
@@ -113,7 +130,7 @@ as
     for i in p_chunks.first .. p_chunks.last loop
       if (not_empty(p_chunks(i)) and p_ignore_nulls) or (not(p_ignore_nulls)) then
         append(
-          p_text => l_result, 
+          p_text => l_result,
           p_chunk => p_chunks(i),
           p_delimiter => p_delimiter
         );
@@ -121,8 +138,8 @@ as
     end loop;
     return trim(p_delimiter from l_result);
   end concatenate;
-  
-  
+
+
   procedure concatenate(
     p_text in out nocopy varchar2,
     p_chunks in char_table,
@@ -132,8 +149,8 @@ as
   begin
     p_text := concatenate(p_chunks, p_delimiter, p_ignore_nulls);
   end concatenate;
-  
-  
+
+
   procedure bulk_replace(
     p_text in out nocopy varchar2,
     p_chunks in char_table)
@@ -145,8 +162,8 @@ as
       end if;
     end loop;
   end bulk_replace;
-  
-  
+
+
   function bulk_replace(
     p_text in varchar2,
     p_chunks in char_table)
@@ -157,9 +174,9 @@ as
     l_result := p_text;
     bulk_replace(l_result, p_chunks);
     return l_result;
-  end bulk_replace;  
-  
-    
+  end bulk_replace;
+
+
   function string_to_table(
     p_string in varchar2,
     p_delimiter in varchar2 default ':')
@@ -176,6 +193,42 @@ as
     end loop;
     return;
   end string_to_table;
+  
+  
+  function contains(
+    p_string in varchar2,
+    p_pattern in varchar2,
+    p_delimiter in varchar2 default ',')
+    return number
+  as
+    l_result number := 0;
+  begin
+    if instr(p_delimiter || p_string || p_delimiter, p_delimiter || p_pattern || p_delimiter) > 0 then
+      l_result := 1;
+    end if;
+    return l_result;
+  end contains;
+  
+  
+  procedure merge(
+    p_string in out nocopy varchar2,
+    p_pattern in varchar2,
+    p_delimiter in varchar2 default ',')
+  as
+  begin
+    p_string := utl_text.merge(p_string, p_pattern, p_delimiter);
+  end merge;
+  
+    
+  function merge(
+    p_string in varchar2,
+    p_pattern in varchar2,
+    p_delimiter in varchar2 default ',')
+    return varchar2
+  as
+  begin
+    return replace(p_string, p_delimiter || p_pattern) || p_delimiter || p_pattern;
+  end merge;
 
 end utl_text;
 /

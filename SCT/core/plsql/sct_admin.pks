@@ -1,221 +1,145 @@
 create or replace package sct_admin
   authid current_user
-as
+as 
 
-  /* Package SCT_ADMIN maintenance package for State Chart Toolkit SCT.
-   * @author Jürgen Sieben, ConDeS GmbH
-   * Used to maintain metadata for the SCT.
-   * The methods provided here are called using the packages ...
-   * <ul>
-   *   <li>UI_SCT_PKG as an interface for the APEX application for SCT</li>
-   *   <li>PLUGIN_SCT as an interface for the APEX Dynamic Action Plugin</li>
-   * </ul>
-   * @headcom
-   */
-    
-  /* Method to retrieve the view name SCT generated for a given rule group.
-   * Is called by UI_SCT_PKG to request the rule view name.
-   * @param p_sgr_name Name of the rule group
-   * @return Name of the view for the requested rule group
-   */
-  function get_view_name(
-    p_sgr_id sct_group.sgr_id%type)
-    return varchar2;
-    
-    
-  /* Method to get the name of the JS script function of the plugin SCT.
-   * Set and retrieved here as the name of the JS function has to be known
-   * here to be able to generate JS code for the page.
-   * @return Fully qualified name of the JS function
-   */
-  function get_js_function
-    return varchar2;
-    
-    
-  /* Method to get the namespace of the JS function
-   * @return Name des Namensraums
-   * @usage Wird hier gesetzt, weil der Name auch bei der Erzeugung von JavaScript
-   *        Skripten genutzt wird
-   */
-  function get_js_namespace
-    return varchar2;
-    
-    
-  /* Funktion zur Ermittlung des ausloesenden Elements
-   * @usage Wird verwendet, um aus SQL Zugriff auf den Namen des Elements zu erhalten,
-   *        das die Regelberechnung ausgeloest hat.
+  /* getter-Funktionen fuer das PLUGIN_SCT und UI_SCT_PKG */
+  /* Funktion liefert den Namen des ausloesenden APEX-Elements. Falls kein Element
+   * ausgeloest hat, wird DOCUMENT geliefert.
    */
   function get_firing_item
     return varchar2;
-  
-  
-  /* Prozedur zur Erzeugung der PL/SQL- und JavaScript-Aktion fuer den aktuellen
-   * Sessionstatus
-   * @param p_sgr_id ID der Regelgruppe
-   * @param p_plsql_action Reuckgabeparameter fuer die PL/SQL-Aktion
-   * @param p_js_action Reuckgabeparameter fuer die JavaScript-Aktion
-   * @usage Wird vom Plugin aufgerufen, um fuer den aktuellen Sessionstatus die
-   *        folgenden Aktionen zu berechnen
+    
+    
+  /* Prozedur erzeugt eine Antwort auf eine gegebene Situation im Session State 
+   * fuer eine Regelgruppe
+   * %param p_sgr_id ID der Regelgruppe, die ausgewertet werden soll
+   * %param p_firing_item Element, das die Auswertung ausgeloest hat
+   * %param p_firing_items Ausgabe aller Item-Namen, die durch das feuernde Element
+   *        in einer Regel verbunden sind. Wird gebraucht, um selektiv Fehlermeldungen 
+   *        zu entfernen
+   * %param p_plsql_action List der PL/SQL-Aktionen, die in der Datenbank als
+   *        Ergebnis der Auswertung ausgefuehrt werden sollen
+   * %param p_js_action Liste der JavaScript-Aktionen, die auf der APEX-Seite als
+   *        Ergebnis der Auswertung ausgefuehrt werden sollen
+   * %usage Wird aus dem Plugin SCT aufgerufen, um fuer eine gegebene Seitensituation
+   *        (die vorab im Session State hinterlegt wurde) die passende Regel zu
+   *        finden und aus dieser Handlungsanweisungen fuer die weitere Bearbeitung
+   *        abzuleiten.
    */
   procedure create_action(
-    p_sgr_id in sct_group.sgr_id%type,
-    p_firing_item in varchar2,
+    p_sgr_id in sct_rule_group.sgr_id%type,
+    p_firing_item in varchar2,    
+    p_firing_items out nocopy varchar2,
     p_plsql_action out nocopy varchar2,
     p_js_action out nocopy varchar2);
     
   
-  /* Bereich Verwaltung der Regeln und Regelgruppen */
-  /* REGELGRUPPEN */
-  /* Prozedur zur Anlage oder Aenderung einer Regelgruppe 
-   * @param p_sgr_app_id ID der APEX-Anwendung, fuer die die Regelgruppe gelten soll
-   * @param p_sgr_page_id ID der APEX-Anwendungsseite, fuer die die Regelgruppe gelten soll
-   * @param p_sgr_id ID der Regelgruppe
-   * @param p_sgr_name Klartextbezeichnung der Regelgruppe
-   * @param p_sgr_description Beschreibung der Regelgruppe
-   * @usage Wird von UI_SCT_PKG aufgerufen, um Regelgruppen anzulegen oder zu aendern
+  /* Administration von Regelgruppen
+   * %usage Diese Methoden werden stand heute nicht von der APEX-Anwendung verwendet,
+   *        Um die Daten in der Datenbank zu pflegen, sondern von Import-Skripten.
    */
+  /* Erstellt eine Regelgruppe */
   procedure merge_rule_group(
-    p_sgr_app_id in sct_group.sgr_app_id%type,
-    p_sgr_page_id in sct_group.sgr_page_id%type,
-    p_sgr_id in sct_group.sgr_id%type default null,
-    p_sgr_name in sct_group.sgr_name%type,
-    p_sgr_description in sct_group.sgr_description%type);
+    p_sgr_app_id in sct_rule_group.sgr_app_id%type,
+    p_sgr_page_id in sct_rule_group.sgr_page_id%type,
+    p_sgr_id in sct_rule_group.sgr_id%type,
+    p_sgr_name in sct_rule_group.sgr_name%type,
+    p_sgr_description in sct_rule_group.sgr_description%type,
+    p_sgr_active in sct_rule_group.sgr_active%type default sct_const.c_true);
+    
+    
+  /* Entfernt eine Regelgruppe 
+   * %param p_sgr_id ID der Regelgruppe, die entfernt werden soll
+   * %usage Wird von UI_SCT_PKG aufgerufen, um eine Regelgruppe zu entfernen
+   */
+  procedure delete_rule_group(
+    p_sgr_id in sct_rule_group.sgr_id%type);
     
   
-  procedure delete_rule_group(
-    p_sgr_id in sct_group.sgr_id%type);
-    
-    
-  /* Prozedur zur erneuten Nummerierung der Spalten SGR_SORT_SEQ und SRU_SORT_SEQ
-   * @usage Wird verwendet, um die Spalte SGR_SORT_SEQ der Tabelle SCT_GROUP
-   *        sowie Spalte SRU_SORT_SEQ der Tabelle SCT_RULE neu zu nummerieren.
-   *        Sortiert nach den bisherigen Spaltenwerten, erhalten die Spalten eine
-   *        um 10 aufsteigende Nummerierung, um weitere Umsortierungen zu ermoeglichen.
-   *        Wird duch das Package UI_SCT_PKG aufgerufen
+  /* Prozedur zum erneuten Nummerieren der Spalten SORT_SEQ in einer Regelgruppe
+   * %param p_sgr_id ID der Regelgruppe, die erneut nummeriert werden soll
+   * %usage Wird von UI_SCT_PKG aufgerufen, um die Spalten SORT_SEQ der Tabellen
+   *        SCT_RULE und SCT_RULE_ACTION auf 10er Schrittweite einzustellen.
    */
   procedure resequence_rule_group(
-    p_sgr_id in sct_group.sgr_id%type);
+    p_sgr_id in sct_rule_group.sgr_id%type);
     
     
-  /* Prozedur zum Kopieren einer Regelgruppe auf eine andere APEX-Anwendung(sseite)
-   * @param p_sgr_id ID der Regelgruppe
-   * @param p_sgr_app_id ID der Anwendung, in die die Regelgruppe kopiert werden soll
-   * @param p_sgr_page_id ID der Anwendungsseite, fuer die die Regelgruppe gelten soll
-   * @usage Wird vom Package UI_SCT_PKG aufgerufen, um eine Regelgruppe inkl. aller
-   *        Einzelregeln und -Aktionen auf eine neue Anwendung bzw. Anwendungsseite
-   *        umzukopieren.
-   *        Wird verwendet, um Regelgruppen bei Neuanlagen von Seiten oder Kopien
-   *        von Anwendungen mitziehen zu lassen
+  /* Prozdur zum Kopieren einer Regelgruppe innerhalb oder zwischen APEX-Anwendungen
+   * %param p_sgr_app_id Anwendungs-ID der Anwendung, aus der die Regelgruppe kopiert werden soll
+   * %param p_sgr_page_id Seiten-ID der Anwendungsseite, aus der die Regelgruppe kopiert werden soll
+   * %param p_sgr_name Name der Regelgruppe, die kopiert werden soll
+   * %param p_sgr_app_to Anwendungs-ID der Anwendung, in die die Regelgruppe kopiert werden soll
+   * %param p_sgr_page_to Seiten-ID der Anwendungsseite, auf die die Regelgruppe kopiert werden soll
+   * %usage Wird verwendet, um eine Regelgruppe zwischen Anwendungen oder innerhalb einer Anwendung
+   *        zwischen Seiten zu kopieren
    */
   procedure copy_rule_group(
-    p_sgr_id in sct_group.sgr_id%type,
-    p_sgr_app_id sct_group.sgr_app_id%type,
-    p_sgr_page_id sct_group.sgr_page_id%type);
+    p_sgr_app_id in sct_rule_group.sgr_app_id%type,
+    p_sgr_page_id in sct_rule_group.sgr_app_id%type,
+    p_sgr_name in sct_rule_group.sgr_name%type,
+    p_sgr_app_to in sct_rule_group.sgr_app_id%type,
+    p_sgr_page_to in sct_rule_group.sgr_page_id%type);
+    
+    
+  -- Exportiert alle Regelgruppen einer Anwendung
+  function export_rule_groups(
+    p_sgr_app_id in sct_rule_group.sgr_app_id%type)
+    return clob;
     
   
-  /* Prozedur zum Exportieren bestehender Regeln
-   * @param p_sgr_id ID der Regelgruppe, optional. Falls nicht gesetzt, werden 
-   *        alle Regelgruppen exportiert
-   * @usage Wird verwendet, um bestehende Regelgruppen in eine Datei zu exportieren
-   *        um sie ausliefern zu koennen.
-   */
-  procedure export_rule_group(
-    p_sgr_id in sct_group.sgr_id%type default null);
+  -- Export einer Regelgruppe nach ID
+  function export_rule_group(
+    p_sgr_id in sct_rule_group.sgr_id%type)
+    return clob;
     
     
-  /* Hilfsfunktion zum Mapping von IDs
-   * @param p_id Original-ID der Regelgruppe oder der Einzelregel. Optional.
-   *        Falls NULL wird die Liste bekannter ID zurueckgesetzt
-   * @return Gemappte ID des Zielsystems
-   * @usage Beim Importieren einer exportierten Regelgruppe sind auf dem Zielsystem
-   *        die Primaerschluesselwerte nicht bekannt. Daher werden fuer alle ID
-   *        des Quellsystems unter der alten ID neue generiert und verwendet.
-   */
   function map_id(
     p_id in number default null)
     return number;
     
-  
-  /* REGELN */
-  /* Prozedur zum Anlegen oder Aendern einer Einzelregel
-   * @param p_sru_id ID der Einzelregel. Optional, wird durch SCT_SEQ erzeugt, falls NULL
-   * @param p_sru_sgr_id Referenz auf SCT_GROUP.SGR_ID
-   * @param p_sru_name Sprechender Name der Einzelregel
-   * @param p_sru_condition Bedingung, die fuer diese Einzelregel gilt
-   * @param p_sru_sort_seq Ausfuehrungsreihenfolge der Einezelregel
-   * @usage Wird aufgerufen, um eine Einzelregel anzulegen oder zu aendern.
-   *        Kann von APEX aufgerufen werden oder von einem Export
-   */
+    
+  /* Administration von Regeln */
   procedure merge_rule(
     p_sru_id in sct_rule.sru_id%type default null,
-    p_sru_sgr_id in sct_group.sgr_id%type,
+    p_sru_sgr_id in sct_rule_group.sgr_id%type,
     p_sru_name in sct_rule.sru_name%type,
     p_sru_condition in sct_rule.sru_condition%type,
-    p_sru_sort_seq in sct_rule.sru_sort_seq%type);
+    p_sru_sort_seq in sct_rule.sru_sort_seq%type,
+    p_sru_active in sct_rule.sru_active%type default sct_const.c_true);
     
     
-  /* Prozedur zur Nachbereitung einer Regelaenderung
-   * @param p_sgr_id ID der Regelgruppe
-   * @usage Nachdem eine Regelgruppe in einem Aspekt geaendert wurde muss diese
-   *        Aenderung propagiert werden, um z.B. die Regelview anzupassen und 
-   *        weitere interne Anpassungen vorzunehmen.
-   *        Die Prozedur wird vom Package UI_SCT_PKG aufegerufen, insbesondere dann,
-   *        wenn APEX direkt auf die Tabellen des SCT schreibt.
+  /* Methode zur Nachbereitung einer Regelaenderung, falls diese ueber eine
+   * APEX-Seite durchgefuehrt wurde (Assistent-basierte Seite)
    */
   procedure propagate_rule_change(
-    p_sgr_id in sct_group.sgr_id%type);
+    p_sgr_id in sct_rule_group.sgr_id%type);
     
-    
-  /* Prozedur zur Validierung einer Einzelregel
-   * @param p_sgr_id ID der Regelgruppe
-   * @param p_sru_condition Regelbedingung, die geprueft werden soll
-   * @param p_error Ausgabetext im Fehlerfall, ansonsten NULL
-   * @usage Wird vom Package UI_SCT_PKG als Validierungsfunktion verwendet,
-   *        um Regelbedingungen gegen die Regelgruppe zu validieren.
-   */
   procedure validate_rule(
-    p_sgr_id in sct_group.sgr_id%type,
+    p_sgr_id in sct_rule_group.sgr_id%type,
     p_sru_condition in sct_rule.sru_condition%type,
     p_error out nocopy varchar2);
     
-  
-  /* RULE_ACTION */
-  /* Prozedur zum Erstellen einer RULE ACTION
-   * @param p_sra_sru_id ID der Einzelregel
-   * @param p_sra_sgr_id ID der Regelgruppe
-   * @param p_sra_spi_id ID des betroffenen Seitenelements
-   * @param p_sra_sat_id ID des Aktionstyps
-   * @param p_sra_attribute Optionale Attribute fuer die Aktion
-   * @param p_sra_sort_seq Ausfuehrungsreihenfolge der Aktion
-   * @usage Wird verwendet, um eine RULE ACTION anzulegen oder zu aendern.
-   *        Kann von APEX aufgerufen werden oder durch einen Import-Skript.
-   */
+    
+  /* Administration von Regelaktivitaeten */
   procedure merge_rule_action(
     p_sra_sru_id in sct_rule.sru_id%type,
-    p_sra_sgr_id in sct_group.sgr_id%type,
+    p_sra_sgr_id in sct_rule_group.sgr_id%type,
     p_sra_spi_id in sct_page_item.spi_id%type,
     p_sra_sat_id in sct_action_type.sat_id%type,
     p_sra_attribute in sct_rule_action.sra_attribute%type,
-    p_sra_sort_seq in sct_rule_action.sra_sort_seq%type);
-  
-  
-  /* ACTION_TYPE */
-  /* Prozedur zur Erzeugung eines ACTION_TYPE
-   * @param p_sat_id ID des Actiontyps
-   * @param p_sat_name Name des Actiontyps
-   * @param p_sat_pl_sql PL/SQL-Code, der fuer diesen Actionstyp ausgefuehrt werden soll
-   * @param p_sta_js JavaScript-Code, der fuer diesen Actionstyp ausgefuehrt werden soll
-   * @param p_sta_changes_value Flag, das anzeigt, ob der ausgefuehrte Code den Wert
-   *        des betroffenen Elements aendern wird
-   * @usage Wird verwendet, um einen ACTION_TYPE anzulegen.
-   *        Kann durch die APEX-Anwendung oder durch einen Import-Skript aufgerufen werden.
-   */
+    p_sra_attribute_2 in sct_rule_action.sra_attribute_2%type,
+    p_sra_sort_seq in sct_rule_action.sra_sort_seq%type,
+    p_sra_active in sct_rule_action.sra_active%type default sct_const.c_true);
+    
+    
+  /* Administration von Aktionstypen */
   procedure merge_action_type(
     p_sat_id in sct_action_type.sat_id%type,
     p_sat_name in sct_action_type.sat_name%type,
     p_sat_pl_sql in sct_action_type.sat_pl_sql%type,
     p_sat_js in sct_action_type.sat_js%type,
-    p_sat_changes_value in sct_action_type.sat_changes_value%type);
+    p_sat_is_editable in sct_action_type.sat_is_editable%type default sct_const.c_true);
     
 end sct_admin;
 /

@@ -1,29 +1,30 @@
 create table sct_page_item_type(
   sit_id varchar2(50 char),
   sit_name varchar2(50 char),
-  sit_has_value char(1 byte) default 'Y',
+  sit_has_value number(1,0) default 1,
   sit_event varchar2(30 byte),
   constraint pk_sct_page_item_type primary key(sit_id),
-  constraint chk_sit_has_value check(sit_has_value in ('Y', 'N'))
+  constraint chk_sit_has_value check(sit_has_value in (0,1))
 ) organization index;
 
-comment on table sct_page_item_type is 'Tabelle zur Speicherung der Elementtypen, die durch SCT unterstützt werden.';
-comment on column sct_page_item_type.sit_id is 'Primärschlüssel';
-comment on column sct_page_item_type.sit_name is 'Name des Elementtyps zur Darstellung auf der Seite';
-comment on column sct_page_item_type.sit_has_value is 'Flag, das anzeigt, ob der Elementtyp einen Sessionwert haben kann';
-comment on column sct_page_item_type.sit_event is 'Event, der an das Element gebunden wird, um Aktionen auszulösen';
+comment on table sct_page_item_type is 'Table to store page item types which are supported by SCT.';
+comment on column sct_page_item_type.sit_id is 'PK, alphanumerical key';
+comment on column sct_page_item_type.sit_name is 'Display name of element type';
+comment on column sct_page_item_type.sit_has_value is 'Flag to indicate whether element type maintains a value in Session State';
+comment on column sct_page_item_type.sit_event is 'JavaScript event to be bound to this element type by the plugin. If null, SCT won''t react on changes.';
 
 delete from sct_page_item_type;
 
 merge into sct_page_item_type s
 using (select 'ITEM' sit_id,
               'Element' sit_name,
-              'Y' sit_has_value,
+              1 sit_has_value,
               'change' sit_event
          from dual
         union all 
-       select 'BUTTON', 'Schaltfläche', 'N', 'click' from dual union all
-       select 'REGION', 'Region', 'N', null from dual) v
+       select 'APP_ITEM', 'Anwendungselement', 1, 'change' from dual union all
+       select 'BUTTON', 'Schaltfläche', 0, 'click' from dual union all
+       select 'REGION', 'Region', 0, null from dual) v
    on (s.sit_id = v.sit_id)
  when matched then update set
       sit_name = v.sit_name,
