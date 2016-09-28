@@ -115,11 +115,21 @@ apex.item('#ITEM#').enable();~',
   -- RULE GROUP SCT_GLOBAL (ID 0
   sct_admin.merge_rule_group(
     p_sgr_app_id => null,
-    p_sgr_page_id => ,
+    p_sgr_page_id => null,
     p_sgr_id => 0,
     p_sgr_name => q'~SCT_GLOBAL~',
     p_sgr_description => q'~Globale Regeln, werden immer angewendet~',
     p_sgr_active => 1);
+    
+  merge into sct_page_item spi
+  using (select 0 spi_sgr_id,
+                'ALL' spi_id,
+                'ITEM' spi_sit_id,
+                q'~v(('#ITEM#')~' spi_conversion
+           from dual) v
+     on (spi.spi_sgr_id = v.spi_sgr_id and spi.spi_id = v.spi_id)
+   when not matched then insert (spi_sgr_id, spi_id, spi_sit_id, spi_conversion)
+        values (v.spi_sgr_id, v.spi_id, v.spi_sit_id, v.spi_conversion);
 
   -- RULES~
   sct_admin.merge_rule(

@@ -93,6 +93,11 @@ as
     p_sgr_id in sct_rule_group.sgr_id%type)
     return clob;
     
+  
+  -- Bereite Import einer Regegruppe in APEX-Anwendung vor
+  procedure prepare_rule_group_import(
+    p_app_alias in varchar2);
+    
     
   function map_id(
     p_id in number default null)

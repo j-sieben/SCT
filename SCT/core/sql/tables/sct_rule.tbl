@@ -8,13 +8,13 @@ create table sct_rule(
   sru_active number(1,0) default 1,
   constraint pk_sct_rules primary key (sru_id, sru_sgr_id),
   constraint fk_sru_sgr_id foreign key (sru_sgr_id)
-	  references sct_group (sgr_id) on delete cascade,
+	  references sct_rule_group (sgr_id) on delete cascade,
   constraint chk_sru_active check(sru_active in (0,1))
 ) organization index;
 
 create index idx_fk_sru_sgr_id on sct_rule(sru_sgr_id, sru_id);
 
-create or replace editionable trigger trg_bri_sct_rule 
+create or replace trigger trg_bri_sct_rule 
   before insert on sct_rule
   for each row
 begin

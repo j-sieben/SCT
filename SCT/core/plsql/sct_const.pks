@@ -85,25 +85,21 @@ q'~select sru.sru_id, sru.sru_sort_seq, sru.sru_name, sru.sru_firing_items, sra_
     on srg.sra_sat_id = sat.sat_id~';
 
   c_js_action_template constant varchar2(300) :=
-q'±<script>
-  #JS_FILE#.setItemValues(#ITEM_JSON#);
-  #JS_FILE#.setErrors(#ERROR_JSON#);
-#CODE#
-</script>±';
+q'!<script>~#JS_FILE#.setItemValues(#ITEM_JSON#);~  #JS_FILE#.setErrors(#ERROR_JSON#);#CODE#~</script>!';
 
   c_bind_json_template constant varchar2(100) := '[#JSON#]';
   c_bind_json_element constant varchar2(100) := '{"id":"#ID#","event":"#EVENT#"}';
   c_page_json_element constant varchar2(100) := '{"id":"#ID#","value":"#VALUE#"}';
   c_error_json_template constant varchar2(200) := 
-q'±{"count":#COUNT#,"errorDependentButtons":"#DEPENDENT_BUTTONS#","firingItems":"#FIRING_ITEMS#","errors":[#ERRORS#]}±';
-  c_error_json_element constant varchar2(100) := q'±{"item":"#ITEM#","message":"#MESSAGE#","additionalInfo":"INFO"}±';
+q'!{"count":#COUNT#,"errorDependentButtons":"#DEPENDENT_BUTTONS#","firingItems":"#FIRING_ITEMS#","errors":[#ERRORS#]}!';
+  c_error_json_element constant varchar2(100) := q'!{"item":"#ITEM#","message":"#MESSAGE#","additionalInfo":"INFO"}!';
 
   c_no_js_action constant varchar2(100) := '// No JavaScript Action';
 
   c_js_code_template constant varchar2(300) :=
-q'±
+q'!
   //Recursion #RECURSION#: #SRU_SORT_SEQ# (#SRU_NAME#), Firing Item: #FIRING_ITEM#
-  #CODE#±';
+  #CODE#!';
     
   c_plsql_template constant varchar2(20 byte) := '#PLSQL#';
   c_js_template constant varchar2(20 byte) := '#SCRIPT#';
@@ -111,22 +107,23 @@ q'±
   -- Templates zum Export von Regelgruppen
   c_export_start_template constant varchar2(200) :=
      'declare' || c_cr 
-  || '  l_foo binary_integer;' || c_cr 
+  || '  l_foo number;' || c_cr 
   || 'begin' || c_cr 
-  || '  l_foo := sct_admin.map_id;' || c_cr;
+  || '  l_foo := sct_admin.map_id;' || c_cr
+  || '  sct_admin.prepare_rule_group_import(''#ALIAS#'');' || c_cr;
   c_export_end_template constant varchar2(200) := c_cr || '  commit;' || c_cr || 'end;' || c_cr || '/';
   c_action_type_template constant varchar2(32767) :=
-q'±
+q'!
   sct_admin.merge_action_type(
     p_sat_id => '#SAT_ID#',
     p_sat_name => '#SAT_NAME#',
     p_sat_pl_sql => q'~#SAT_PL_SQL#~',
     p_sat_js => q'~#SAT_JS#~',
     p_sat_is_editable => #SAT_IS_EDITABLE#);
-±';
+!';
 
   c_rule_group_template constant varchar2(32767) :=
-q'±
+q'!
   sct_admin.merge_rule_group(
     p_sgr_app_id => coalesce(apex_application_install.get_application_id, #SGR_APP_ID#),
     p_sgr_page_id => #SGR_PAGE_ID#,
@@ -134,10 +131,10 @@ q'±
     p_sgr_name => q'~#SGR_NAME#~',
     p_sgr_description => q'~#SGR_DESCRIPTION#~',
     p_sgr_active => #SGR_ACTIVE#);
-±';
+!';
 
   c_rule_template constant varchar2(32767) := 
-q'±~
+q'!
   sct_admin.merge_rule(
     p_sru_id => sct_admin.map_id(#SRU_ID#),
     p_sru_sgr_id => sct_admin.map_id(#SGR_ID#),
@@ -145,12 +142,12 @@ q'±~
     p_sru_condition => q'~#SRU_CONDITION#~',
     p_sru_sort_seq => #SRU_SORT_SEQ#,
     p_sru_active => #SRU_ACTIVE#);
-±';
+!';
 
   c_rule_action_template constant varchar2(32767) := 
-q'±
+q'!
   sct_admin.merge_rule_action(
-    p_ra_sru_id => sct_admin.map_id(#SRU_ID#),
+    p_sra_sru_id => sct_admin.map_id(#SRU_ID#),
     p_sra_sgr_id => sct_admin.map_id(#SGR_ID#),
     p_sra_spi_id => '#SPI_ID#',
     p_sra_sat_id => '#SAT_ID#',
@@ -158,7 +155,7 @@ q'±
     p_sra_attribute_2 => q'~#SRA_ATTRIBUTE_2#~',
     p_sra_sort_seq => #SRA_SORT_SEQ#,
     p_sra_active => #SRA_ACTIVE#);
-±';
+!';
 
   c_directory constant varchar2(30 byte) := 'SCT_DIR';
   

@@ -77,6 +77,7 @@ alter session set current_schema=&INSTALL_USER.;
 prompt &h3.Recompiling schema to prepare SCT rules import
 begin
   dbms_utility.compile_schema('&INSTALL_USER.');
+  dbms_session.reset_package;
 end;
 /
 

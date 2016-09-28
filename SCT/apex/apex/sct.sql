@@ -297,7 +297,7 @@ wwv_flow_api.create_list_of_values(
 '  from apex_applications app',
 '  join sct_rule_group sgr',
 '    on app.application_id = sgr.sgr_app_id',
-'-- where sgr.sgr_app_id != (select v(''APP_ID'') from dual)',
+' where sgr.sgr_app_id != (select v(''APP_ID'') from dual)',
 ' order by 2'))
 );
 wwv_flow_api.create_list_of_values(
@@ -7672,14 +7672,14 @@ wwv_flow_api.create_user_interface(
 ,p_use_auto_detect=>false
 ,p_is_default=>true
 ,p_theme_id=>42
-,p_home_url=>'f?p=&APP_ID.:1:&SESSION.'
+,p_home_url=>'f?p=&APP_ID.:MAIN:&SESSION.'
 ,p_login_url=>'f?p=&APP_ID.:LOGIN_DESKTOP:&SESSION.'
 ,p_navigation_list_id=>wwv_flow_api.id(99595885612233570)
 ,p_navigation_list_position=>'SIDE'
 ,p_navigation_list_template_id=>wwv_flow_api.id(99631682517233615)
 ,p_nav_list_template_options=>'#DEFAULT#'
-,p_css_file_urls=>'../condes/kismonitor/plugins/sct/js/ek-tool.css'
-,p_javascript_file_urls=>'../condes/kismonitor/plugins/sct/js/ekasse.js'
+,p_css_file_urls=>'ek-tool.css'
+,p_javascript_file_urls=>'ekasse.js'
 ,p_nav_bar_type=>'LIST'
 ,p_nav_bar_list_id=>wwv_flow_api.id(99637933360233640)
 ,p_nav_bar_list_template_id=>wwv_flow_api.id(99629255050233613)
@@ -8187,7 +8187,7 @@ wwv_flow_api.create_page_item(
 '  from apex_applications app',
 '  join sct_rule_group sgr',
 '    on app.application_id = sgr.sgr_app_id',
-'-- where sgr.sgr_app_id != (select v(''APP_ID'') from dual)',
+' where sgr.sgr_app_id != (select v(''APP_ID'') from dual)',
 ' order by 2'))
 ,p_lov_display_null=>'YES'
 ,p_lov_null_text=>'- Anwendung wählen -'
@@ -10466,7 +10466,7 @@ wwv_flow_api.create_page_item(
 '  from apex_applications app',
 '  join sct_rule_group sgr',
 '    on app.application_id = sgr.sgr_app_id',
-'-- where sgr.sgr_app_id != (select v(''APP_ID'') from dual)',
+' where sgr.sgr_app_id != (select v(''APP_ID'') from dual)',
 ' order by 2'))
 ,p_lov_display_null=>'YES'
 ,p_lov_null_text=>'- Anwendung wählen -'

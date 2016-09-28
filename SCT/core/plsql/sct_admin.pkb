@@ -573,11 +573,19 @@ as
         from sct_rule_group
        where sgr_app_id = p_sgr_app_id;
     l_stmt clob;
+    l_app_alias apex_applications.alias%type;
   begin
     dbms_lob.createtemporary(l_stmt, false, dbms_lob.call);
 
+    -- Import-Rahmenbedingungen fuer APEX schaffen
+    select alias
+      into l_app_alias
+      from apex_applications
+     where application_id = p_sgr_app_id;
+    dbms_lob.append(
+      l_stmt, replace(sct_const.c_export_start_template, '#ALIAS#', l_app_alias));
+    
     -- Aktionstypen berechnen
-    dbms_lob.append(l_stmt, sct_const.c_export_start_template);
     dbms_lob.append(l_stmt, read_action_type);
 
     -- Einzelne Regelgruppen berechnen
@@ -607,6 +615,22 @@ as
 
     return l_stmt;
   end export_rule_group;
+  
+  
+  procedure prepare_rule_group_import(
+    p_app_alias in varchar2)
+  as
+    l_ws_id number;
+    l_app_id number;
+  begin
+    select workspace_id, application_id
+      into l_ws_id, l_app_id
+      from apex_applications
+     where alias = p_app_alias;
+     
+    apex_application_install.set_workspace_id(l_ws_id);
+    apex_application_install.set_application_id(l_app_id);
+  end prepare_rule_group_import;
 
 
   function map_id(

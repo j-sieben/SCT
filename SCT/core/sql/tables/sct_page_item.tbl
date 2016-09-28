@@ -5,12 +5,12 @@ create table sct_page_item(
 	spi_conversion varchar2(100 char), 
 	spi_is_required number(1,0) default 0, 
 	spi_is_mandatory number(1,0) default 0, 
-	spi_is_mandatory_message varchar2(200 char), 
+	spi_mandatory_message varchar2(200 char), 
 	constraint pk_sru_rule_item primary key (spi_sgr_id, spi_id),
   constraint fk_spi_sit_id foreign key (spi_sit_id)
     references sct_page_item_type(sit_id) on delete cascade,
   constraint fk_spi_sgr_id foreign key (spi_sgr_id)
-    references sct_group(sgr_id) on delete cascade,
+    references sct_rule_group(sgr_id) on delete cascade,
   constraint chk_spi_is_required check (spi_is_required in (0,1)),
   constraint chk_spi_is_mandatory check (spi_is_mandatory in (0,1))
 ) organization index;
@@ -24,4 +24,4 @@ comment on column sct_page_item.spi_sgr_id is 'FK, reference to SCT_GROUP';
 comment on column sct_page_item.spi_conversion is 'Conversion pattern to convert item value to required data type. Requires format mask in APEX to function.';
 comment on column sct_page_item.spi_is_required is 'Flag to indicate whether rule conditions reference this item and therefore must be bound by SCT';
 comment on column sct_page_item.spi_is_mandatory is 'Flag to indicate whether item is mandatory element and therefore must be checked prior to submitting the page';
-comment on column sct_page_item.spi_is_mandatory_message is 'Message that is emitted if this element is null';
+comment on column sct_page_item.spi_mandatory_message is 'Message that is emitted if this element is null';

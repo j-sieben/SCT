@@ -412,6 +412,7 @@ as
     -- Bereite Anwort als JS vor
     l_js_action := coalesce(process_rule, sct_const.c_no_js_action);
     l_js_action := utl_text.bulk_replace(sct_const.c_js_action_template, char_table(
+      '~', sct_const.c_cr,
       '#ITEM_JSON#', get_json_from_items,
       '#ERROR_JSON#', get_json_from_errors,
       '#FIRING_ITEMS#', trim(sct_const.c_delimiter from coalesce(g_param.firing_items, l_firing_item)),
