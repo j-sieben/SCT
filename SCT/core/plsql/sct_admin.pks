@@ -28,7 +28,8 @@ as
    */
   procedure create_action(
     p_sgr_id in sct_rule_group.sgr_id%type,
-    p_firing_item in varchar2,    
+    p_firing_item in sct_page_item.spi_id%type,
+    p_is_recursive in number,    
     p_firing_items out nocopy varchar2,
     p_plsql_action out nocopy varchar2,
     p_js_action out nocopy varchar2);
@@ -77,7 +78,7 @@ as
   procedure copy_rule_group(
     p_sgr_app_id in sct_rule_group.sgr_app_id%type,
     p_sgr_page_id in sct_rule_group.sgr_app_id%type,
-    p_sgr_name in sct_rule_group.sgr_name%type,
+    p_sgr_id in sct_rule_group.sgr_id%type,
     p_sgr_app_to in sct_rule_group.sgr_app_id%type,
     p_sgr_page_to in sct_rule_group.sgr_page_id%type);
     
@@ -144,7 +145,8 @@ as
     p_sat_name in sct_action_type.sat_name%type,
     p_sat_pl_sql in sct_action_type.sat_pl_sql%type,
     p_sat_js in sct_action_type.sat_js%type,
-    p_sat_is_editable in sct_action_type.sat_is_editable%type default sct_const.c_true);
+    p_sat_is_editable in sct_action_type.sat_is_editable%type default sct_const.c_true,
+    p_sat_raise_recursive in sct_action_type.sat_raise_recursive%type default sct_const.c_true);
     
 end sct_admin;
 /

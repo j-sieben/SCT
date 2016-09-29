@@ -218,7 +218,8 @@ as
           '#SAT_NAME#', sat.sat_name,
           '#SAT_PL_SQL#', sat.sat_pl_sql,
           '#SAT_JS#', sat.sat_js,
-          '#SAT_IS_EDITABLE#', sat.sat_is_editable)));
+          '#SAT_IS_EDITABLE#', sat.sat_is_editable,
+          '#SAT_RAISE_RECURSIVE#', sat.sat_raise_recursive)));
     end loop;
 
     return l_action_type;
@@ -342,7 +343,8 @@ as
 
   procedure create_action(
     p_sgr_id in sct_rule_group.sgr_id%type,
-    p_firing_item in varchar2,
+    p_firing_item in sct_page_item.spi_id%type,
+    p_is_recursive in number,
     p_firing_items out nocopy varchar2,
     p_plsql_action out nocopy varchar2,
     p_js_action out nocopy varchar2)
@@ -366,7 +368,9 @@ as
     l_js_code varchar2(32767);
   begin
     g_firing_item := p_firing_item;
-    l_stmt := replace(sct_const.c_stmt_template, '#RULE_VIEW#', sct_const.c_view_name_prefix|| p_sgr_id);
+    l_stmt := utl_text.bulk_replace(sct_const.c_stmt_template, char_table(
+                '#RULE_VIEW#', sct_const.c_view_name_prefix || p_sgr_id,
+                '#IS_RECURSIVE#', p_is_recursive));
 
     -- Explizite Cursorkontrolle wegen dynamischen SQLs
     open l_action_cur for l_stmt;
@@ -430,7 +434,7 @@ as
                   p_sgr_page_id sgr_page_id,
                   p_sgr_active sgr_active
              from dual) v
-       on (s.sgr_id = v.sgr_id)
+       on (s.sgr_id = v.sgr_id and s.sgr_app_id = v.sgr_app_id)
      when matched then update set
           sgr_name = v.sgr_name,
           sgr_description = v.sgr_description,
@@ -485,7 +489,7 @@ as
   procedure copy_rule_group(
     p_sgr_app_id in sct_rule_group.sgr_app_id%type,
     p_sgr_page_id in sct_rule_group.sgr_app_id%type,
-    p_sgr_name in sct_rule_group.sgr_name%type,
+    p_sgr_id in sct_rule_group.sgr_id%type,
     p_sgr_app_to in sct_rule_group.sgr_app_id%type,
     p_sgr_page_to in sct_rule_group.sgr_page_id%type)
   as
@@ -526,41 +530,44 @@ as
         from sct_rule_group
        where sgr_app_id = p_sgr_app_id
          and sgr_page_id = p_sgr_page_id
-         and sgr_name = p_sgr_name;
+         and sgr_id = p_sgr_id;
     exception
       when no_data_found then
         raise_application_error(-20000, 'Regelgruppe existiert nicht');
     end;
-       
-    -- Loesche existierende Regelgruppe in Zielanwendung
-    delete from sct_rule_group
-     where sgr_app_id = p_sgr_app_to
-       and sgr_page_id = p_sgr_page_to
-       and sgr_name = p_sgr_name;
-       
-    -- Lese Regelgruppendetails
-    insert into sct_rule_group(sgr_id, sgr_name, sgr_description, sgr_app_id, sgr_page_id)
-    select map_id(sgr_id), sgr_name, sgr_description, p_sgr_app_to, p_sgr_page_to
-      from sct_rule_group
-     where sgr_id = l_sgr_id;
+      
+    -- Schliesse aus, dass Regel ueber sich selbst kopiert wird (hat zur Folge, dass die Regelgruppe geloescht wuerde)
+    if (p_sgr_app_id != p_sgr_app_to or p_sgr_page_id != p_sgr_page_to) then
+      -- Loesche existierende Regelgruppe in Zielanwendung
+      delete from sct_rule_group
+       where sgr_app_id = p_sgr_app_to
+         and sgr_page_id = p_sgr_page_to
+         and sgr_id = p_sgr_id;
+         
+      -- Lese Regelgruppendetails
+      insert into sct_rule_group(sgr_id, sgr_name, sgr_description, sgr_app_id, sgr_page_id)
+      select map_id(sgr_id), sgr_name, sgr_description, p_sgr_app_to, p_sgr_page_to
+        from sct_rule_group
+       where sgr_id = l_sgr_id;
+  
+      insert into sct_rule(sru_id, sru_sgr_id, sru_name, sru_condition, sru_firing_items, sru_sort_seq)
+      select map_id(sru_id), map_id(sru_sgr_id), sru_name,
+             replace(upper(sru_condition), 'P' || p_sgr_page_id || '_',  'P' || p_sgr_page_to || '_'),
+             sru_firing_items,
+             sru_sort_seq
+        from sct_rule
+       where sru_sgr_id = l_sgr_id;
+  
+      propagate_rule_change(map_id(l_sgr_id));
 
-    insert into sct_rule(sru_id, sru_sgr_id, sru_name, sru_condition, sru_firing_items, sru_sort_seq)
-    select map_id(sru_id), map_id(sru_sgr_id), sru_name,
-           replace(upper(sru_condition), 'P' || p_sgr_page_id || '_',  'P' || p_sgr_page_to || '_'),
-           sru_firing_items,
-           sru_sort_seq
-      from sct_rule
-     where sru_sgr_id = l_sgr_id;
-
-    propagate_rule_change(map_id(l_sgr_id));
-
-   insert into sct_rule_action(sra_sgr_id, sra_sru_id, sra_spi_id, sra_sat_id, sra_attribute, sra_attribute_2, sra_sort_seq, sra_active)
-    select map_id(sra_sgr_id), map_id(sra_sru_id), sra_spi_id, sra_sat_id, 
-           replace(upper(sra_attribute), 'P' || p_sgr_page_id || '_',  'P' || p_sgr_page_to || '_'),
-           replace(upper(sra_attribute_2), 'P' || p_sgr_page_id || '_',  'P' || p_sgr_page_to || '_'),
-           sra_sort_seq, sra_active
-      from sct_rule_action
-     where sra_sgr_id = l_sgr_id;
+     insert into sct_rule_action(sra_sgr_id, sra_sru_id, sra_spi_id, sra_sat_id, sra_attribute, sra_attribute_2, sra_sort_seq, sra_active)
+      select map_id(sra_sgr_id), map_id(sra_sru_id), sra_spi_id, sra_sat_id, 
+             replace(upper(sra_attribute), 'P' || p_sgr_page_id || '_',  'P' || p_sgr_page_to || '_'),
+             replace(upper(sra_attribute_2), 'P' || p_sgr_page_id || '_',  'P' || p_sgr_page_to || '_'),
+             sra_sort_seq, sra_active
+        from sct_rule_action
+       where sra_sgr_id = l_sgr_id;
+    end if;
   end copy_rule_group;
 
 
@@ -755,7 +762,8 @@ as
     p_sat_name in sct_action_type.sat_name%type,
     p_sat_pl_sql in sct_action_type.sat_pl_sql%type,
     p_sat_js in sct_action_type.sat_js%type,
-    p_sat_is_editable in sct_action_type.sat_is_editable%type default sct_const.c_true)
+    p_sat_is_editable in sct_action_type.sat_is_editable%type default sct_const.c_true,
+    p_sat_raise_recursive in sct_action_type.sat_raise_recursive%type default sct_const.c_true)
   as
   begin
     merge into sct_action_type sat
@@ -763,16 +771,18 @@ as
                   p_sat_name sat_name,
                   p_sat_pl_sql sat_pl_sql,
                   p_sat_js sat_js,
-                  p_sat_is_editable sat_is_editable
+                  p_sat_is_editable sat_is_editable,
+                  p_sat_raise_recursive sat_raise_recursive
              from dual) v
        on (sat.sat_id = v.sat_id)
      when matched then update set
           sat_name = v.sat_name,
           sat_pl_sql = v.sat_pl_sql,
           sat_js = v.sat_js,
-          sat_is_editable = v.sat_is_editable
-     when not matched then insert(sat_id, sat_name, sat_pl_sql, sat_js, sat_is_editable)
-          values (v.sat_id, v.sat_name, v.sat_pl_sql, v.sat_js, v.sat_is_editable);
+          sat_is_editable = v.sat_is_editable,
+          sat_raise_recursive = v.sat_raise_recursive
+     when not matched then insert(sat_id, sat_name, sat_pl_sql, sat_js, sat_is_editable, sat_raise_recursive)
+          values (v.sat_id, v.sat_name, v.sat_pl_sql, v.sat_js, v.sat_is_editable, v.sat_raise_recursive);
   end merge_action_type;
 
 

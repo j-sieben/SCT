@@ -7,7 +7,6 @@ as
     p_file_name in varchar2)
   as
     l_blob blob;
-    l_sql_delimiter varchar2(30);
     l_lang_context  integer := DBMS_LOB.DEFAULT_LANG_CTX;
     l_warning       integer := DBMS_LOB.WARN_INCONVERTIBLE_CHAR;
     l_dest_offset   integer := 1;
@@ -78,7 +77,7 @@ as
     sct_admin.copy_rule_group(
       p_sgr_app_id => v('P4_SGR_APP_ID'),
       p_sgr_page_id => v('P4_SGR_PAGE_ID'),
-      p_sgr_name => v('P4_SGR_NAME'),
+      p_sgr_id => v('P4_SGR_ID'),
       p_sgr_app_to => v('P4_SGR_APP_TO'),
       p_sgr_page_to => v('P4_SGR_PAGE_TO'));
   end copy_rule_group;

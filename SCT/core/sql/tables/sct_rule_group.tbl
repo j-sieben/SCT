@@ -12,7 +12,7 @@ create table sct_rule_group (
 ) organization index;
 
 
-create or replace editionable trigger trg_bri_sct_rule_group
+create or replace trigger trg_bri_sct_rule_group
   before insert on sct_rule_group
   for each row
 begin

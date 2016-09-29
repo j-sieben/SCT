@@ -82,7 +82,8 @@ q'~select sru.sru_id, sru.sru_sort_seq, sru.sru_name, sru.sru_firing_items, sra_
   join sct_rule sru
     on srg.sru_id = sru.sru_id
   join sct_action_type sat
-    on srg.sra_sat_id = sat.sat_id~';
+    on srg.sra_sat_id = sat.sat_id
+ where sat.sat_raise_recursive >= #IS_RECURSIVE#~';
 
   c_js_action_template constant varchar2(300) :=
 q'!<script>~#JS_FILE#.setItemValues(#ITEM_JSON#);~  #JS_FILE#.setErrors(#ERROR_JSON#);#CODE#~</script>!';
@@ -92,7 +93,7 @@ q'!<script>~#JS_FILE#.setItemValues(#ITEM_JSON#);~  #JS_FILE#.setErrors(#ERROR_J
   c_page_json_element constant varchar2(100) := '{"id":"#ID#","value":"#VALUE#"}';
   c_error_json_template constant varchar2(200) := 
 q'!{"count":#COUNT#,"errorDependentButtons":"#DEPENDENT_BUTTONS#","firingItems":"#FIRING_ITEMS#","errors":[#ERRORS#]}!';
-  c_error_json_element constant varchar2(100) := q'!{"item":"#ITEM#","message":"#MESSAGE#","additionalInfo":"INFO"}!';
+  c_error_json_element constant varchar2(100) := q'!{"item":"#ITEM#","message":"#MESSAGE#","additionalInfo":"#INFO#"}!';
 
   c_no_js_action constant varchar2(100) := '// No JavaScript Action';
 
@@ -119,7 +120,8 @@ q'!
     p_sat_name => '#SAT_NAME#',
     p_sat_pl_sql => q'~#SAT_PL_SQL#~',
     p_sat_js => q'~#SAT_JS#~',
-    p_sat_is_editable => #SAT_IS_EDITABLE#);
+    p_sat_is_editable => #SAT_IS_EDITABLE#,
+    p_sat_raise_recursive => #SAT_RAISE_RECURSIVE#);
 !';
 
   c_rule_group_template constant varchar2(32767) :=

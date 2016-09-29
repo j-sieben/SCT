@@ -2,7 +2,7 @@ create table sct_rule_action(
 	sra_sgr_id number, 
   sra_sru_id number, 
 	sra_spi_id varchar2(50 char), 
-	sra_sat_id varchar2(20 char), 
+	sra_sat_id varchar2(50 char), 
 	sra_attribute clob, 
   sra_attribute_2 clob,
 	sra_sort_seq number, 

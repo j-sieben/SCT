@@ -226,8 +226,17 @@ as
     p_delimiter in varchar2 default ',')
     return varchar2
   as
+    l_result varchar2(32767);
+    l_chunk varchar2(32767);
   begin
-    return replace(p_string, p_delimiter || p_pattern) || p_delimiter || p_pattern;
+    l_result := p_string;
+    if p_pattern is not null then
+      for i in 1 .. regexp_count(p_pattern, '\' || p_delimiter) + 1 loop
+        l_chunk := regexp_substr(p_pattern, '[^\' || p_delimiter || ']+', 1, i);
+        l_result := trim(p_delimiter from replace(p_delimiter || l_result, p_delimiter || l_chunk) || p_delimiter || l_chunk);
+      end loop;
+    end if;
+    return l_result;
   end merge;
 
 end utl_text;

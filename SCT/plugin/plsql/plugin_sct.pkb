@@ -92,7 +92,7 @@ as
       -- die aktuellen Seitenwerte dieser Elemente übermittelt werden
       -- (diese Aufgabe uebernimmt anschliessend REGISTER_ITEM)
       if item.sit_has_value = 1 then
-        utl_text.append(g_param.page_items, item.spi_id, sct_const.c_delimiter, 'Y');
+        utl_text.merge(g_param.page_items, item.spi_id, sct_const.c_delimiter);
       end if;
     end loop;
     
@@ -184,13 +184,14 @@ as
           sct_admin.create_action(
             p_sgr_id => g_param.sgr_id,
             p_firing_item => g_param.firing_item,
+            p_is_recursive => case g_recursive_level when 1 then sct_const.c_false else sct_const.c_true end,
             p_firing_items => l_firing_items,
             p_plsql_action => l_plsql_action,
             p_js_action => l_js_action);
           
           -- Rekursionsebene setzen und Firing Items vermerken
           l_js_action := replace(l_js_action, '#RECURSION#', l_old_level);
-          utl_text.append(g_param.firing_items, l_firing_items, sct_const.c_delimiter, 'Y');
+          utl_text.merge(g_param.firing_items, l_firing_items, sct_const.c_delimiter);
         exception
           when others then
             register_error(g_param.firing_item, 'Fehler bei Pluginverarbeitung: ' || sqlerrm);
@@ -266,7 +267,7 @@ as
     if p_error_msg is not null then
       l_error.page_item_name := p_spi_id;
       l_error.message := p_error_msg;
-      l_error.additional_info := p_internal_error;
+      l_error.additional_info := replace(dbms_utility.format_error_backtrace, chr(10), '<br/>');
       g_error_stack(g_error_stack.count + 1) := l_error;
     end if;
   end register_error;
@@ -415,7 +416,7 @@ as
       '~', sct_const.c_cr,
       '#ITEM_JSON#', get_json_from_items,
       '#ERROR_JSON#', get_json_from_errors,
-      '#FIRING_ITEMS#', trim(sct_const.c_delimiter from coalesce(g_param.firing_items, l_firing_item)),
+      '#FIRING_ITEMS#', g_param.firing_items,
       '#JS_FILE#', sct_const.c_js_namespace,
       '#CODE#', l_js_action));
     htp.p(l_js_action);
