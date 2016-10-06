@@ -106,9 +106,17 @@ de.condes.plugin.sct = {};
     // ID des auslösenden Elements. Falls PageLoad, wird "document" verwendet
     var triggeringElement = C_NO_TRIGGERING_ITEM
     if (typeof e.target != 'undefined'){
-      triggeringElement = e.target.id;
+      if (e.target.id != '') {
+         triggeringElement = e.target.id;
+      }
+      else {
+         // If button has an accesskey, some browsers report that instead of the button itself
+         // get parent button's id in this case
+         triggeringElement = $(e.target).parents('button').attr('id');
+      }
       $triggeringElement = $('#' + triggeringElement)
       if($triggeringElement.attr('type') == 'radio'){
+        // Radio groups carry their own id per radio button. We need the fieldset id 
         triggeringElement = $triggeringElement.parents('fieldset').attr('id');
       }
       apex.debug.log(`Triggering element: ${triggeringElement}`);
