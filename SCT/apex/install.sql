@@ -74,12 +74,8 @@ set pages 9999
 whenever sqlerror exit
 alter session set current_schema=&INSTALL_USER.;
 
-prompt &h3.Recompiling schema to prepare SCT rules import
-begin
-  dbms_utility.compile_schema('&INSTALL_USER.');
-  dbms_session.reset_package;
-end;
-/
+prompt &h3.Recompiling SCT_ADMIN to prepare SCT rules import
+alter package sct_admin compile package;
 
 prompt &s1.Import SCT rules
 @&apex_dir.sct_rules.sql

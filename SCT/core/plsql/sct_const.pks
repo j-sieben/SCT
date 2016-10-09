@@ -111,13 +111,14 @@ q'!
   || '  l_foo number;' || c_cr 
   || 'begin' || c_cr 
   || '  l_foo := sct_admin.map_id;' || c_cr
-  || '  sct_admin.prepare_rule_group_import(''#ALIAS#'');' || c_cr;
+  || '  sct_admin.prepare_rule_group_import(''&APEX_WS.'', ''#ALIAS#'');' || c_cr;
   c_export_end_template constant varchar2(200) := c_cr || '  commit;' || c_cr || 'end;' || c_cr || '/';
   c_action_type_template constant varchar2(32767) :=
 q'!
   sct_admin.merge_action_type(
     p_sat_id => '#SAT_ID#',
     p_sat_name => '#SAT_NAME#',
+    p_sat_description => q'~#SAT_DESCRIPTION#~',
     p_sat_pl_sql => q'~#SAT_PL_SQL#~',
     p_sat_js => q'~#SAT_JS#~',
     p_sat_is_editable => #SAT_IS_EDITABLE#,
@@ -159,6 +160,11 @@ q'!
     p_sra_active => #SRA_ACTIVE#);
 !';
 
+  c_rule_group_validation constant varchar2(200) := 
+q'!
+  sct_admin.propagate_rule_change(sct_admin.map_id(#SGR_ID#));
+!';
+
   c_directory constant varchar2(30 byte) := 'SCT_DIR';
   
   -- Templates uzuir Validierung von Regelgruppen
@@ -170,6 +176,13 @@ q'~  with session_state as(
 select *
   from session_state
  where #CONDITION#~';
+ 
+  c_rule_group_error constant varchar2(200 char) := q'!<p>Regelgruppe »#SGR_NAME#« kann nicht exportiert werden:</p><ul>#ERROR_LIST#</ul>!';
+  c_page_item_error constant varchar2(200 char) := q'!<li>#SIT_NAME# »#SPI_ID#« existiert in Anwendung #SGR_APP_ID# nicht</li>!';
+  
+  c_action_type_help_template constant varchar2(200 char) := q'±<h2>Hilfe zu Aktionstypen</h2><dl>#HELP_LIST#</dl>±';
+
+  c_action_type_help_entry constant varchar2(200 char) := q'±<dt class="sct-dt">#SAT_NAME# #SAT_IS_EDITABLE#</dt><dd>#SAT_DESCRIPTION#</dd>±';
  
 end sct_const;
 /

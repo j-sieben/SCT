@@ -2,8 +2,12 @@
 
 alter session set current_schema=&INSTALL_USER.;
 
-
-create or replace type char_table as table of varchar2(4000);
+begin
+  execute immediate 'create or replace type char_table as table of varchar2(4000)';
+exception
+  when others then 
+    dbms_output.put_line('&s1.CHAR_TABLE exists already.');
+end;
 /
 show errors
 

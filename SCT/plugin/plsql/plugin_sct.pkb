@@ -3,12 +3,12 @@ as
   
   -- Record zur Aufnahme der Plugin-Attribute
   type param_rec is record(
-    sgr_id sct_rule_group.sgr_id%type,    -- ID der Regelgruppe
-    firing_item varchar2(50 char),        -- Element das die Bearbeitung auslöst (oder DOCUMENT)
-    error_dependent_buttons varchar2(50), -- Liste der Buttons, die im Fehlerfall deaktiviert werden
-    bind_items varchar2(32767),           -- Liste der Elemente, deren Events gebunden werden
-    page_items varchar2(32767),           -- Liste der Elemente, deren Wert sich im Session State veraendert hat
-    firing_items varchar2(32767));        -- Liste der Elemente, die mit FIRING_ITEM durch Regeln verbunden sind
+    sgr_id sct_rule_group.sgr_id%type,      -- ID der Regelgruppe
+    firing_item sct_page_item.spi_id%type,  -- Element das die Bearbeitung ausloest (oder DOCUMENT)
+    error_dependent_buttons varchar2(200),  -- Liste der Buttons, die im Fehlerfall deaktiviert werden
+    bind_items varchar2(32767),             -- Liste der Elemente, deren Events gebunden werden
+    page_items varchar2(32767),             -- Liste der Elemente, deren Wert sich im Session State veraendert hat
+    firing_items varchar2(32767));          -- Liste der Elemente, die mit FIRING_ITEM durch Regeln verbunden sind
   g_param param_rec;
   
   -- Fehlerstack
@@ -16,32 +16,31 @@ as
   g_error_stack error_stack;
   
   -- Rekursionsstack
-  type recursive_stack is table of number index by varchar2(50 char);
+  type recursive_stack is table of number index by sct_page_item.spi_id%type;
   g_recursive_stack recursive_stack;
-  g_recursive_level number;
-  c_recursive_limit constant number := 10;
-  
+  g_recursive_level binary_integer;
+  /* TODO: Auslagern in Parameter */
+  c_recursive_limit constant binary_integer := 10;
+  /* TODO: Vereinheitlichen BOOL as Zahl oder CHAR */
+  c_yes constant char(1 byte) := 'Y';
   
   /* Hilfsprozedur zum Umkopieren der Attribute auf einen globalen Record
    * %param p_dynamic_action Uebergebene Attribute des Plugins
    * %usage wird vor dem Rendern und Refresh aufgerufen
    */
   procedure read_settings(
-    p_dynamic_action in apex_plugin.t_dynamic_action,
-    p_is_render in boolean default true)
+    p_dynamic_action in apex_plugin.t_dynamic_action)
   as
-    c_radio_group constant varchar2(30) := 'NATIVE_RADIOGROUP';
   begin
-    
     select sgr_id
       into g_param.sgr_id
       from sct_rule_group
      where upper(sct_rule_group.sgr_name) = upper(p_dynamic_action.attribute_01)
-       and sgr_app_id = (select v('APP_ID') from dual);
+       and sgr_app_id = apex_application.g_flow_id;
 
     -- Aufrufparameter
     g_param.error_dependent_buttons := p_dynamic_action.attribute_02;
-    g_param.firing_item := apex_application.g_x01;        
+    g_param.firing_item := apex_application.g_x01;   
         
     -- Initialisierung
     g_param.page_items := null;
@@ -52,7 +51,7 @@ as
     g_recursive_level := 1;
   exception
     when no_data_found then
-      raise_application_error(-20000, 'Die Regelgruppe ' || p_dynamic_action.attribute_01 || ' existiert nicht' || apex_application.g_x01);
+      raise_application_error(-20000, 'Die Regelgruppe ' || p_dynamic_action.attribute_01 || ' existiert nicht');
   end read_settings;
   
   
@@ -87,7 +86,7 @@ as
         utl_text.bulk_replace(sct_const.c_bind_json_element, char_table(
           '#ID#', item.spi_id,
           '#EVENT#', item.sit_event)),
-        sct_const.c_delimiter, 'Y');
+        sct_const.c_delimiter, c_yes);
       -- relevante Elemente mit Session State registrieren, damit beim initialen Aufruf
       -- die aktuellen Seitenwerte dieser Elemente übermittelt werden
       -- (diese Aufgabe uebernimmt anschliessend REGISTER_ITEM)
@@ -103,7 +102,7 @@ as
   end get_json_from_bind_items;
   
   
-  /* Hilfsfunktion zum Auslesen alle geaenderten Seitenelemente im Session State.
+  /* Hilfsfunktion zum Auslesen aller geaenderter Seitenelemente im Session State.
    * %return JSON-Instanz aller Elemente und Elementwerte, die im Session State
    *         veraendert wurden
    * %usage Die Funktion izeriert ueber alle Elemente, die waehrend der Aktualisierung
@@ -124,7 +123,7 @@ as
         utl_text.bulk_replace(sct_const.c_page_json_element, char_table(
           '#ID#', l_items(i),
           '#VALUE#', htf.escape_sc(v(l_items(i))))),
-        sct_const.c_delimiter, 'Y');
+        sct_const.c_delimiter, c_yes);
     end loop;
     return replace(sct_const.c_bind_json_template, '#JSON#', l_json);
   end get_json_from_items;
@@ -145,7 +144,7 @@ as
           '#ITEM#', g_error_stack(i).page_item_name,
           '#MESSAGE#', htf.escape_sc(g_error_stack(i).message),
           '#INFO#', htf.escape_sc(g_error_stack(i).additional_info))),
-        sct_const.c_delimiter, 'Y');
+        sct_const.c_delimiter, c_yes);
     end loop;
     l_json := utl_text.bulk_replace(sct_const.c_error_json_template, char_table(
                 '#COUNT#', g_error_stack.count,
@@ -169,46 +168,68 @@ as
   as
     l_firing_items sct_rule.sru_firing_items%type;
     l_plsql_action varchar2(32767);
+    l_js_action_chunk varchar2(32767);
     l_js_action varchar2(32767);
-    l_has_events boolean := false;
-    l_old_level number := g_recursive_level;
+    l_needs_recursive_call boolean := false;
+    l_actual_recursive_level binary_integer;
+    l_is_recursive number(1,0);
+    l_processed_item sct_page_item.spi_id%type;
   begin
+    -- Initialisierung
+    l_actual_recursive_level := g_recursive_level;
+    -- is_recursive wird verwendet, um Aktionen, die nicht rekursiv ausgefuehrt werden sollen, auszusondern
+    l_is_recursive := case l_actual_recursive_level when 1 then sct_const.c_false else sct_const.c_true end;
+    -- Setze Rekursionslevel hoch, damit zukuenftige Eintraege in Rekursionsstack separiert werden
+    g_recursive_level := g_recursive_level + 1;
+    
+    -- Iteriere ueber Rekursionsstack
     g_param.firing_item := g_recursive_stack.first;
     while g_param.firing_item is not null loop
-      if g_recursive_stack(g_param.firing_item) = l_old_level then
-        l_has_events := true;
-        g_recursive_level := g_recursive_level + 1;
+      --  fuehre alle »Events« auf aktuellem Rekursionslevel aus
+      if g_recursive_stack(g_param.firing_item) = l_actual_recursive_level then
+        -- Speichere Name des Elements zum spaeteren Loeschen des Elements aus dem Rekursionsstack
+        l_processed_item := g_param.firing_item;
+        l_needs_recursive_call := true;
         
         -- Session State auswerten und neue Aktion berechnen
         begin
           sct_admin.create_action(
             p_sgr_id => g_param.sgr_id,
             p_firing_item => g_param.firing_item,
-            p_is_recursive => case g_recursive_level when 1 then sct_const.c_false else sct_const.c_true end,
+            p_is_recursive => l_is_recursive,
             p_firing_items => l_firing_items,
             p_plsql_action => l_plsql_action,
-            p_js_action => l_js_action);
+            p_js_action => l_js_action_chunk);
           
-          -- Rekursionsebene setzen und Firing Items vermerken
-          l_js_action := replace(l_js_action, '#RECURSION#', l_old_level);
+          -- Rekursionsebene und Firing Items vermerken
+          l_js_action_chunk := replace(l_js_action_chunk, '#RECURSION#', l_actual_recursive_level);
           utl_text.merge(g_param.firing_items, l_firing_items, sct_const.c_delimiter);
         exception
           when others then
             register_error(g_param.firing_item, 'Fehler bei Pluginverarbeitung: ' || sqlerrm);
         end;
+        -- JavaScript dieser Rekursionsebene erstellen
+        l_js_action := l_js_action || l_js_action_chunk;        
         
         -- Fuehre alle serverseitigen Aktionen aus. 
         -- Fehler werden in G_ERROR_STACK gesammelt
         if l_plsql_action is not null then
           execute immediate l_plsql_action;
         end if;
-        
       end if;
+
+      -- Naechstes Element verarbeiten
       g_param.firing_item := g_recursive_stack.next(g_param.firing_item);
+      
+      if l_processed_item is not null then
+        -- verarbeitetes Element aus Rekursionsstack entfernen
+        g_recursive_stack.delete(l_processed_item);
+      end if;
     end loop;
     
     -- Rekursion, endet, wenn keine weiteren Aktivitaeten registriert wurden
-    if l_has_events then
+    if l_needs_recursive_call then
+      -- Javascript um rekursiv erzeugtes JavaScript erweitern
       l_js_action := l_js_action || process_rule;
     end if;
     
@@ -235,11 +256,9 @@ as
      where exists(
            select 1
              from sct_page_item
-            where -- Element ist relevant
-                 spi_id = p_item   
-             and spi_is_required = 1
-                 -- und ruft sich nicht selbst auf
-             and p_item != g_param.firing_item);
+            where spi_id = p_item     -- Element ist relevant  
+              and spi_is_required = 1 -- und ruft sich nicht selbst auf
+              and p_item != g_param.firing_item);
        
     if l_has_rule > 0 then
       if g_recursive_level <= c_recursive_limit then
@@ -262,12 +281,12 @@ as
     p_error_msg in varchar2,
     p_internal_error in varchar2 default null)
   as
-    l_error apex_error.t_error;
+    l_error apex_error.t_error;  -- APEX-Fehler-Record
   begin
     if p_error_msg is not null then
       l_error.page_item_name := p_spi_id;
       l_error.message := p_error_msg;
-      l_error.additional_info := replace(dbms_utility.format_error_backtrace, chr(10), '<br/>');
+      l_error.additional_info := coalesce(p_internal_error, replace(dbms_utility.format_error_backtrace, chr(10), '<br/>'));
       g_error_stack(g_error_stack.count + 1) := l_error;
     end if;
   end register_error;
@@ -383,6 +402,7 @@ as
     -- Methode GET_JSON_FROM_BIND_ITEMS registriert beim Initialisieren auch PAGE_ITEMS
     l_result.attribute_01 := get_json_from_bind_items;
     l_result.attribute_02 := g_param.page_items;
+    l_result.attribute_03 := p_plugin.attribute_01;
     
     return l_result;
   end render;
@@ -395,7 +415,6 @@ as
   as
     l_result apex_plugin.t_dynamic_action_ajax_result;
     l_js_action varchar2(32767);
-    l_firing_item sct_page_item.spi_id%type;
   begin
     if wwv_flow.g_debug then
       apex_plugin_util.debug_dynamic_action(
@@ -407,7 +426,6 @@ as
     read_settings(p_dynamic_action);    
     
     -- Registriere FIRING_ELEMENT auf Rekursionebene 1
-    l_firing_item := g_param.firing_item;
     g_recursive_stack(g_param.firing_item) := g_recursive_level;
     
     -- Bereite Anwort als JS vor
@@ -422,5 +440,6 @@ as
     htp.p(l_js_action);
     return l_result;
   end ajax;
+  
 end plugin_sct;
 /

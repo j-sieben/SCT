@@ -5,6 +5,38 @@ de.condes.plugin = de.condes.plugin || {};
 de.condes.plugin.sct = {};
 
 
+/*!
+  Plugin zur Steuerung komplexer APEX-Formulare
+ */
+/**
+ * @fileOverview
+ * Das Plugin delegiert die Berechnung des Status von Formularelementen einer APEX-Seite an die Datenbank.
+ * Hierzu spricht es in der Datenbank eine Regelgruppe an, die Regeln enthält. Diese Regeln berechnen
+ * den Status der Anwendungselemente der aktuellen Seite, basierend auf dem momentanen Sessionstatus.
+ *
+ * Das Plugin benötigt nur wenige Parameter:
+ * ajaxIdentifier: APEX-generierter Identifier
+ * bindItems: Liste von Seitenelementen, an die an Events gebunden wird. Die Liste wird durch die Datenbank
+ *            berechnet (basierend auf den Einzelregeln) und als JSON-Objekt geliefert. Zu jedem Seitenelement
+ *            wird die ID und der Event angegeben, der gebunden werden soll.
+ * pageItems: Liste von Seitenelementen, deren aktueller Elementwert beim Auslösen eines Events auf einem 
+ *            gebundenen Element ausgelesen und an die Datenbank geschickt werden soll.
+ *            Die Liste wird von der Datenbank berechnet und bei der Initialisierung vermerkt
+ * ApexJS:    Objekt, das die Visualisierung von Pluginfunktionen auf der Oberfläche kapselt.
+ *            Dieser Parameter wird als Application-Parameter des Plugins verwaltet und gestattet es, die JavaScript-
+ *            Library, die für die Darstellung verwendet wird, einzustellen.
+ *            Die konkrete Implementierung kann durch differierende Anforderungen, geänderte Templates oder sonstige
+ *            Gründe nicht generisch definiert werden. Standardmäßig wird de.condes.plugin.sct.apex_42_5_0 verwendet.
+ *            Details zu einer Überschreibung dieser Datei findet sich in der Dokumentation der Datei sctApex.js
+ *            - setNoficitation
+ *                Die Methode setzt eine Nachricht auf der Oberfläche.
+ *            Wird eine eigene Implementierung vorgenommen, empfiehlt es sich, von der existierenden sctApex.js abzuleiten.
+ *
+ * Das Plugin wird auf der Seite als Dynamic Action zum Zeitpunkt PAGE_LOAD eingebunden. 
+ * Beim Einfügen wird der Name der referenzierten Regelgruppe angegeben sowie optional eine Liste von Seitenelementen,
+ * die deaktiviert werden sollen, wenn ein Fehler auf der Seite angezeigt wird.
+ * Weitere administrative Arbeit ist nicht erforderlich
+ */
 (function(sct, $, server){
    
   C_BIND_EVENT = 'change';
@@ -14,8 +46,6 @@ de.condes.plugin.sct = {};
   C_NO_TRIGGERING_ITEM = 'DOCUMENT';
   
   sct.ajaxIdentifier = {};
-  sct.options = {};
-  
   
   /*
     Funktionen, die durch Script aus Response aufgerufen werden.
@@ -43,35 +73,37 @@ de.condes.plugin.sct = {};
   // Die Methode setErrors wird von Response aufgerufen und darf daher nicht umbenannt oder entfernt werden
   // Spezifisch für die aktuelle Version der Anwendung. Muss wahrscheinlich überarbeitet werden,
   // wenn der neue StyleGuide eingesetzt wird
-  sct.setErrors = function(fehlerListe) {
-    drv.ek.verwalteExterneFehler(fehlerListe);
+  sct.setErrors = function(errorList) {
+    sct.ApexJS.maintainErrors(errorList);
   };
    
   /* 
-    Hilfsmethoden 
+    Private Hilfsmethoden 
    */
   // Bindet an alle Seitenelemente aus SCT.BIND_ITEMS an den CHANGE-Event,
   // um die Verarbeitung des Plugins auszulösen
   // Alle relevanten Elemente werden in pageItems hinterlegt, um beim Auslösen Elementwerte
   // an die Datenbank zu senden.
-  sct.bindEvents = function() {
+  function bindEvents() {
     $.each(sct.bindItems, function(){
       var $this = $('#' + this.id);
       var event = this.event;
       $this
-      .on(this.event, function(e){
+      .on(event, function(e){
         sct.execute(e, sct.ajaxIdentifier, sct.pageItems);
-        apex.debug.log(`${event} bound to ${this.id}`);
+        apex.debug.log(`Event »${event}« raised at ${this.id}`);
       });
-      if($this.event == C_BIND_EVENT){
+      if(event == C_BIND_EVENT){
         $this
         .on(C_APEX_BEFORE_REFRESH, function(e){
           $(this).off(C_BIND_EVENT);
+          apex.debug.log(`Event »${C_BIND_EVENT}« paused at ${this.id}`);
         })
         .on(C_APEX_AFTER_REFRESH, function(e){
           $(this).on(C_BIND_EVENT, function(e){
             sct.execute(e, sct.ajaxIdentifier, sct.pageItems);
           });
+          apex.debug.log(`Event »${C_BIND_EVENT}« re-established at ${this.id}`);
         });
       };
     });
@@ -81,13 +113,18 @@ de.condes.plugin.sct = {};
   /*
     Implementierung der Plugin-Funktionalität
    */
-  sct.submit = function(request){
-    drv.ek.submit(request);
+  sct.submit = function(request, message){
+    sct.ApexJS.submitPage(request, message);
   }
   
   
   sct.setMandatory = function(item, mandatory){
-    drv.ek.setMandatory(item, mandatory);
+    sct.ApexJS.setFieldMandatory(item, mandatory);
+  }
+  
+  
+  sct.notify = function(message){
+    sct.ApexJS.setNotification(message);
   }
    
    
@@ -145,8 +182,11 @@ de.condes.plugin.sct = {};
     };
     sct.ajaxIdentifier = me.action.ajaxIdentifier;
     
+    // Registriere APEX-JavaScript Objekt
+    sct.ApexJS = eval(me.action.attribute03);
+    
     // Bereite Einsatz des Plugins vor
-    sct.bindEvents();
+    bindEvents();
     apex.debug.log('SCT initialized');
     
     // Löse beim Seitenladen explizit Verarbeitung des Plugins aus

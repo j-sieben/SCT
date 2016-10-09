@@ -24,7 +24,8 @@ using (select 'ITEM' sit_id,
         union all 
        select 'APP_ITEM', 'Anwendungselement', 1, 'change' from dual union all
        select 'BUTTON', 'Schaltfläche', 0, 'click' from dual union all
-       select 'REGION', 'Region', 0, null from dual) v
+       select 'REGION', 'Region', 0, null from dual union all
+       select 'DOCUMENT', 'Dokument', 0, null from dual) v
    on (s.sit_id = v.sit_id)
  when matched then update set
       sit_name = v.sit_name,

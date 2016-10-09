@@ -4,7 +4,7 @@ declare
   table_does_not_exist exception;
   pragma exception_init(table_does_not_exist, -942);
   sequence_does_not_exist exception;
-  pragma exception_init(sequence_does_not_exist, -2282);
+  pragma exception_init(sequence_does_not_exist, -2289);
   synonym_does_not_exist exception;
   pragma exception_init(synonym_does_not_exist, -1434);
   cursor delete_object_cur is

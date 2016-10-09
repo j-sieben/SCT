@@ -8,25 +8,6 @@ as
    *        zu administrieren
    */
 
-  /* Erzeugt eine neue oder aendert eine bestehende Regelgruppe
-   * %param p_sgr_app_id Anwendungs-ID, auf die sich die Regelruppe bezieht
-   * %param p_sgr_page_id Seiten-ID, auf die sich die Regelgruppe bezieht
-   * %param p_sgr_name Klartextname der Regelgruppe
-   * %param p_sgr_description Bescchreibung der Regelgruppe
-   * %usage Wird von der Oberflaeche aufgerufen, um eine neue Regelgruppe zu erzeugen
-   *        oder eine bestehende Regelgruppe zu aendern.
-   *        Wird derzeit nicht verwendet, da ein Standard-APEX-Prozess zur Speicherung
-   *        eingesetzt wird.
-   */
-  procedure merge_rule_group(
-    p_sgr_app_id in sct_rule_group.sgr_app_id%type,
-    p_sgr_page_id in sct_rule_group.sgr_page_id%type,
-    p_sgr_id in sct_rule_group.sgr_id%type,
-    p_sgr_name in sct_rule_group.sgr_name%type,
-    p_sgr_description in sct_rule_group.sgr_description%type,
-    p_sgr_active in sct_rule_group.sgr_active%type default sct_const.c_true);
-
-
   /* Loescht eine bestehende Regelgruppe
    * %param p_sgr_id ID der Regelgruppe, die geloescht werden soll
    * %usage Wird verwendet, um eine bestehende Regelgruppe zu loeschen.
@@ -41,6 +22,22 @@ as
    */
   procedure copy_rule_group;
   
+  
+  /* Funktion zur Pruefung einer Regelgruppe vor dem Export
+   * %return Fehlermeldung, falls existent
+   * %usage Die Methode wird vor dem Export einer Regelgruppe aufgerufen, um 
+   *        sicherzustellen, dass sie fehlerfrei exportiert werden kann.
+   */
+  procedure validate_rule_group;
+  
+  
+  /* Ueberladung fuer eine konkrete Regelgruppe
+   * %param p_sgr_id ID der Regelgruppe, die geprueft werden soll
+   * %usage Wird verwendet, um eine Regelgruppe explizit zu pruefen
+   */
+  procedure validate_rule_group(
+    p_sgr_id in sct_rule_group.sgr_id%type);
+    
   
   /* Prozedur veranlasst den Export einer oder mehrerer Regelgruppen. Die Regelgruppen
    * werden als Datei auf den Client-rechner geladen
@@ -99,6 +96,11 @@ as
     p_sgr_id in sct_rule_group.sgr_id%type,
     p_sru_id in sct_rule.sru_id%type)
     return number;
+    
+  /* Hilfsfunktionen fuer Aktionstypen
+   * %usage Liefert einen Hilfstext fuer Aktionstypen
+   */
+  procedure get_action_type_help;
 
 end ui_sct_pkg;
 /

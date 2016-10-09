@@ -1,7 +1,12 @@
 create or replace package body ui_sct_pkg
 as
 
-  /* Hilfmethode zum Speichern eines CLOB auf dem Client-rechner */
+  /* Hilfmethode zum Speichern eines CLOB auf dem Client-rechner 
+   * %param p_clob CLOB-Instanz, die heruntergeladen werden soll
+   * %param p_file_name Dateiname der geladenen Instanz
+   * %usage Wird verwendet, um CLOB-Instanzen ueber einen Speichern-Dialog auf 
+   *        den Clientrechner zu laden
+   */
   procedure download_clob(
     p_clob in clob,
     p_file_name in varchar2)
@@ -35,26 +40,9 @@ as
     htp.p('error: ' || sqlerrm);
     apex_application.stop_apex_engine;
   end download_clob;
-  
-
-  procedure merge_rule_group(
-    p_sgr_app_id in sct_rule_group.sgr_app_id%type,
-    p_sgr_page_id in sct_rule_group.sgr_page_id%type,
-    p_sgr_id in sct_rule_group.sgr_id%type,
-    p_sgr_name in sct_rule_group.sgr_name%type,
-    p_sgr_description in sct_rule_group.sgr_description%type,
-    p_sgr_active in sct_rule_group.sgr_active%type default sct_const.c_true)
-  as
-  begin
-    sct_admin.merge_rule_group(
-      p_sgr_app_id => p_sgr_app_id,
-      p_sgr_page_id => p_sgr_page_id,
-      p_sgr_id => p_sgr_id,
-      p_sgr_name => p_sgr_name,
-      p_sgr_description => p_sgr_description);
-  end merge_rule_group;
 
 
+  /* INTERFACE */
   procedure delete_rule_group(
     p_sgr_id in sct_rule_group.sgr_id%type)
   as
@@ -81,13 +69,41 @@ as
       p_sgr_app_to => v('P4_SGR_APP_TO'),
       p_sgr_page_to => v('P4_SGR_PAGE_TO'));
   end copy_rule_group;
+  
+  
+  procedure validate_rule_group
+  as
+    cursor rule_group_cur(
+      p_sgr_app_id in sct_rule_group.sgr_app_id%type,
+      p_sgr_id in sct_rule_group.sgr_id%type) is
+      select sgr_id
+        from sct_rule_group
+       where sgr_app_id = p_sgr_app_id
+         and (sgr_id = p_sgr_id or p_sgr_id is null);
+    l_error_list varchar2(32767);
+  begin
+    for sgr in rule_group_cur(v('P8_SGR_APP_ID'), v('P8_SGR_ID')) loop
+      l_error_list := l_error_list || sct_admin.validate_rule_group(sgr.sgr_id);
+    end loop;
+    if l_error_list is not null then
+      plugin_sct.register_error('B8_EXPORT', l_error_list);
+    end if;
+  end validate_rule_group;
+  
+  
+  procedure validate_rule_group(
+    p_sgr_id in sct_rule_group.sgr_id%type)
+  as
+    l_result varchar2(4000);
+  begin
+    l_result := sct_admin.validate_rule_group(p_sgr_id);
+  end;
 
 
   procedure export_rule_group
   as
     l_sgr_app_id sct_rule_group.sgr_app_id%type;
     l_sgr_id sct_rule_group.sgr_id%type;
-    l_file_name varchar2(200);
     l_export_file clob;
   begin
     l_sgr_app_id := to_number(v('P8_SGR_APP_ID'));
@@ -153,6 +169,30 @@ as
        and sra_sru_id = p_sru_id;
     return coalesce(l_sra_sort_seq, 10);
   end get_sra_sort_seq;
+  
+  
+  procedure get_action_type_help
+  as
+    cursor action_type_help_cur is
+      select sat_name, sat_description,
+             case sat_is_editable
+               when sct_const.c_false then '(nicht editierbar)'
+             end sat_is_editable
+        from sct_action_type
+       order by sat_name;
+    l_help_text varchar2(32767);
+  begin
+    for ath in action_type_help_cur loop
+      utl_text.append(
+        l_help_text, 
+        utl_text.bulk_replace(sct_const.c_action_type_help_entry, char_table(
+          '#SAT_NAME#', ath.sat_name,
+          '#SAT_IS_EDITABLE#', ath.sat_is_editable,
+          '#SAT_DESCRIPTION#', coalesce(ath.sat_description, '- keine Hilfe vorhanden') )));
+    end loop;
+    l_help_text := replace(sct_const.c_action_type_help_template, '#HELP_LIST#', l_help_text);
+    htp.p(l_help_text);
+  end get_action_type_help;
 
 end ui_sct_pkg;
 /

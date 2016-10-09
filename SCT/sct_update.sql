@@ -7,8 +7,13 @@
 @init.sql &1. &2.
 
 prompt &section.
-prompt &h1.ATTENTION! Make sur that all rule groups you want to keep have been exported successfully before running this script!
-prompt Hit any key to resume this script. Press CTRL-C to cancel this script if you need to extract business rules first.
+prompt &h1.ATTENTION! 
+prompt Make sure that all rule groups you want to keep 
+prompt have been exported successfully before running this script!
+prompt
+prompt - Hit any key to resume this script. 
+prompt - Press CTRL-C to cancel this script if you need to extract business rules first.
+prompt
 pause
 
 
