@@ -8,9 +8,9 @@ as
   
   /* Prozedur zum Registrieren von Fehlern
    * %param p_spi_id Name des Feldes, das den Fehler enthaelt
-   * %param Fehlermeldung, die registriert werden soll
-   * %param Optionale zweite, technische Fehlermeldung
-   * %usage Wird automatisiert aufegrufen, wenn eine Aktivitaet ausgefuehrt wird.
+   * %param p_error_msg Fehlermeldung, die registriert werden soll
+   * %param p_internal_error Optionale zweite, technische Fehlermeldung
+   * %usage Wird automatisiert aufgerufen, wenn eine Aktivitaet ausgefuehrt wird.
    *        Existiert eine technische Fehlermeldung und wird eine anwendungsseitige
    *        Fehlermeldung produziert kann die technische Fehlermeldung als
    *        Parameter P_INTERNAL_ERROR uebergeben werden. In jedem Fall muss
@@ -20,7 +20,21 @@ as
     p_spi_id in varchar2,
     p_error_msg in varchar2,
     p_internal_error in varchar2 default null);
-    
+  
+  
+  /* Ueberladung als Schnittstelle zu PIT
+   * %param p_spi_id Name des Feldes, das den Fehler enthaelt
+   * %param p_message_name Fehlermeldung, Referenz auf PIT-Nachricht
+   * %param p_arg_list Liste von PIT-Meldungsparametern
+   * %usage Wird automatisiert aufgerufen, wenn eine Aktivitaet ausgefuehrt wird.
+   *        Es wird eine, in PIT definierte Meldung aufgerufen und optional
+   *        die erforderlichen Parameter uebergeben.
+   *        Die Ausgabe wird in den Error-Stack des Plugins integriert.
+   */
+  procedure register_error(
+    p_spi_id in varchar2,
+    p_message_name in varchar2,
+    p_arg_list in msg_args default null);
     
   /* Prozedur zur (De-)Registrierung von Pflichtelementen auf der Seite
    * %param p_spi_id Name des Pflichelements

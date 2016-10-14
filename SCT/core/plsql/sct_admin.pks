@@ -159,6 +159,12 @@ as
     p_id in number default null)
     return number;
     
+  /* Prozedur zum Initialisieren der Mapping-Funktion
+   * %usage Wird aufgerufen, bevor ein Mapping von Primaerschluesselwerten 
+   *        erfolgen soll.
+   */
+  procedure init_map;
+    
     
   /* Administration von Regeln */
   /* Methode zur Erzeugung einer Einzelregel

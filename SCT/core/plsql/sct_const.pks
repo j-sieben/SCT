@@ -15,13 +15,19 @@ as
   c_js_namespace constant varchar2(50 byte) := 'de.condes.plugin.sct';
   c_regex_item constant varchar2(50 byte) := q'~(^|[ '\(])#ITEM#([ ',=<!>\)]|$)~';
   c_null constant varchar2(10 byte) := 'null;';
+  c_no_firing_item constant varchar2(30 byte) := 'DOCUMENT';
   
   -- Ersatzseitennummer fuer Anwendungselemente
   c_app_item_page constant number(1,0) := 0;
   
   -- Templates zur Erzeugung der Spaltenliste der Regelview
   c_col_delimiter constant varchar2(100 byte) := ',' || c_cr || '              ';
-  c_item_col_template constant varchar2(100 byte) := c_col_delimiter || '#CONVERSION# #ITEM#';
+  c_item_col_template constant varchar2(100 byte) := c_col_delimiter || q'~v('#ITEM#') #ITEM#~';
+  c_date_item_col_template constant varchar2(100 byte) := c_col_delimiter || q'~to_date(v('#ITEM#'), '#CONVERSION#') #ITEM#~';
+  c_number_item_col_template constant varchar2(100 byte) := c_col_delimiter || q'~to_number(v('#ITEM#'), '#CONVERSION#') #ITEM#~';
+  c_number_conversion_template constant varchar2(200 byte) := q'~begin :x := to_number(v('#ITEM#'), '#CONVERSION#'); end;~';
+  c_date_conversion_template constant varchar2(200 byte) := q'~begin :x := to_date(v('#ITEM#'), '#CONVERSION#'); end;~';
+  
   c_region_col_template constant varchar2(100 byte) := c_col_delimiter || 'null #ITEM#';
   c_button_col_template constant varchar2(100 byte) := c_col_delimiter ||  q'~case sct_admin.get_firing_item when '#ITEM#' then 1 else 0 end #ITEM#~';
   c_column_delimiter constant varchar2(20 byte) := ',' || c_cr || '              ';
@@ -38,7 +44,8 @@ as
   c_create_view_template constant varchar2(100 byte) := q'~create or replace force view #NAME# as~' || c_cr;
   $IF dbms_db_version.ver_le_11 $THEN
   c_rule_view_template constant varchar2(1000 byte) := 
-q'~  with session_state as(
+q'~create or replace force view #NAME# as
+  with session_state as(
        select sct_admin.get_firing_item firing_item,
               case sct_admin.get_firing_item when 'DOCUMENT' then 1 else 0 end initializing#DATA_COLS#
          from dual),
@@ -57,7 +64,8 @@ select sru_id, sru_name, sra_spi_id, sra_sat_id, sra_attribute, sra_attribute_2
  where rang = 1~';
   $ELSE
   c_rule_view_template constant varchar2(1000 byte) := 
-q'~  with session_state as(
+q'~create or replace force view #NAME# as
+  with session_state as(
        select sct_admin.get_firing_item firing_item,
               case sct_admin.get_firing_item when 'DOCUMENT' then 1 else 0 end initializing#DATA_COLS#
          from dual)

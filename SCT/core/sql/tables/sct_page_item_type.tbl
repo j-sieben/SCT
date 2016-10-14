@@ -22,6 +22,8 @@ using (select 'ITEM' sit_id,
               'change' sit_event
          from dual
         union all 
+       select 'NUMBER_ITEM', 'Element (Zahl)', 1, 'change' from dual union all
+       select 'DATE_ITEM', 'Element (Datum)', 1, 'change' from dual union all
        select 'APP_ITEM', 'Anwendungselement', 1, 'change' from dual union all
        select 'BUTTON', 'Schaltfläche', 0, 'click' from dual union all
        select 'REGION', 'Region', 0, null from dual union all

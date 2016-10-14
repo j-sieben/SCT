@@ -16,22 +16,108 @@ as
   g_error_stack error_stack;
   
   -- Rekursionsstack
+  -- Der Rekursionsstack speichert die Seitenelemente, die durch die Regeln geaendert wurden,
+  -- um anschließend auch fuer diese Elemente die Regelpruefung aufzurufen.
   type recursive_stack is table of number index by sct_page_item.spi_id%type;
   g_recursive_stack recursive_stack;
   g_recursive_level binary_integer;
-  /* TODO: Auslagern in Parameter */
-  c_recursive_limit constant binary_integer := 10;
+  g_recursion_limit binary_integer;
+  
+  /* Package-Konstanten */
+  c_pkg constant varchar2(30 byte) := $$PLSQL_UNIT;
+  c_param_group constant varchar2(30 byte) := 'SCT';
+  
   /* TODO: Vereinheitlichen BOOL as Zahl oder CHAR */
   c_yes constant char(1 byte) := 'Y';
+  c_number_item constant sct_page_item_type.sit_id%type := 'NUMBER_ITEM';
+  c_date_item constant sct_page_item_type.sit_id%type := 'DATE_ITEM';
+  
+
+  /* Hilfsprozedur zum Formatieren von ausloesenden Elementen.
+   * %usage Die Methode analysiert, ob das ausloesende Element eine Formatmaske
+   *        hinterlegt hat. Falls ja,
+   *        - Wird das Element testweise konvertiert, um Fehler abzufangen
+   *        - Wird das konvertierte Element mit der Formatierung in eine Zeichen-
+   *          kette konvertiert und im Session State gespeichert, um auf der 
+   *          Oberflaeche formatiert angezeigt zu werden.
+   */
+  procedure format_firing_item
+  as
+    l_spi_sit_id sct_page_item.spi_sit_id%type;
+    l_spi_conversion sct_page_item.spi_conversion%type;
+    l_number_val number;
+    l_date_val date;
+  begin
+    pit.enter_optional('format_firing_item', c_pkg);
+    
+    -- Sollte fuer das ausloesende Element eine Formatierungsvorlage existieren,
+    -- wird diese hier angewendet und geprueft
+    select spi_sit_id, spi_conversion
+      into l_spi_sit_id, l_spi_conversion
+      from sct_page_item
+     where spi_sgr_id = g_param.sgr_id
+       and spi_id = g_param.firing_item
+       and spi_conversion is not null;
+    
+    case l_spi_sit_id
+      when C_NUMBER_ITEM then
+        begin
+          -- Konvertiere in Zahl
+          execute immediate 
+            utl_text.bulk_replace(
+              sct_const.c_number_conversion_template, char_table(
+                '#CONVERSION#', l_spi_conversion,
+                '#ITEM#', g_param.firing_item))
+            using out l_number_val;
+          -- Konvertierung erfolgreich, setze formatierten String in Session State
+          set_session_state(g_param.firing_item, to_char(l_number_val, l_spi_conversion));
+        exception
+          when msg.SCT_INVALID_FORMAT_ERR then
+            register_error(g_param.firing_item, msg.SCT_EXPECTED_FORMAT, msg_args(l_spi_conversion));
+          when others then
+            register_error(g_param.firing_item, msg.SCT_GENERIC_ERROR, msg_args(substr(sqlerrm, instr(sqlerrm, ':', 1) + 2)));
+        end;
+      when C_DATE_ITEM then
+        begin
+          -- Konvertiere in Datum
+          execute immediate 
+            utl_text.bulk_replace(
+              sct_const.c_date_conversion_template, char_table(
+                '#CONVERSION#', l_spi_conversion,
+                '#ITEM#', g_param.firing_item))
+            using out l_date_val;
+          -- Konvertierung erfolgreich, setze formatierten String in Session State
+          set_session_state(g_param.firing_item, to_char(l_date_val, l_spi_conversion));
+        exception
+          when INVALID_NUMBER then
+            register_error(g_param.firing_item, msg.SCT_INVALID_NUMBER, msg_args(l_spi_conversion));
+          when others then
+            register_error(g_param.firing_item, msg.SCT_GENERIC_ERROR, msg_args(substr(sqlerrm, instr(sqlerrm, ':', 1) + 2)));
+        end;
+      else
+        pit.stop(msg.SCT_UNEXPECTED_CONV_TYPE, msg_args(l_spi_sit_id));
+    end case;
+    pit.leave_optional;
+  exception
+    when no_data_found then
+      -- Keine Formatmaske gefunden, ignorieren
+      pit.leave_optional;
+      null;
+  end format_firing_item;
+  
   
   /* Hilfsprozedur zum Umkopieren der Attribute auf einen globalen Record
    * %param p_dynamic_action Uebergebene Attribute des Plugins
-   * %usage wird vor dem Rendern und Refresh aufgerufen
+   * %usage Wird vor dem Rendern und Refresh aufgerufen, um an zentraler Stelle
+   *        die APEX-Parameter auf lokale Variablen zu kopieren
    */
   procedure read_settings(
     p_dynamic_action in apex_plugin.t_dynamic_action)
   as
+    l_stmt varchar2(200 char);
   begin
+    pit.enter_optional('read_settings', c_pkg);
+    
     select sgr_id
       into g_param.sgr_id
       from sct_rule_group
@@ -40,7 +126,7 @@ as
 
     -- Aufrufparameter
     g_param.error_dependent_buttons := p_dynamic_action.attribute_02;
-    g_param.firing_item := apex_application.g_x01;   
+    g_param.firing_item := apex_application.g_x01;
         
     -- Initialisierung
     g_param.page_items := null;
@@ -49,9 +135,13 @@ as
     g_error_stack.delete;
     g_recursive_stack.delete;
     g_recursive_level := 1;
+    
+    -- Pruefe und formatiere das ausloesende Element
+    format_firing_item;
+    pit.leave_optional;
   exception
     when no_data_found then
-      raise_application_error(-20000, 'Die Regelgruppe ' || p_dynamic_action.attribute_01 || ' existiert nicht');
+      pit.stop(msg.SCT_RULE_DOES_NOT_EXIST, msg_args(p_dynamic_action.attribute_01));
   end read_settings;
   
   
@@ -60,7 +150,7 @@ as
    * %return JSON-Instanz mit ID und Event fuer alle relevanten Seitenelemente
    * %usage Wird aufgerufen, wenn das Plugin initialisiert wird.
    *        Ermittelt alle relevanten Elemente der Regelgruppe, die einen Event
-   *        binden sollen und erstellen aus der Liste eine JSON-Instanz, die durch
+   *        binden sollen und erstellt aus der Liste eine JSON-Instanz, die durch
    *        das Pugin zur Initialisierung ausgefuehrt wird.
    */
   function get_json_from_bind_items
@@ -80,6 +170,8 @@ as
          and sgr.sgr_id = p_sgr_id;
     l_json varchar2(32767);
   begin
+    pit.enter_optional('get_json_from_bind_items', c_pkg);
+    
     for item in rule_group_items(g_param.sgr_id) loop
       utl_text.append(
         l_json,
@@ -98,14 +190,17 @@ as
     -- Elemente werden mit '~' als Ersatz fuer '"' erzeugt, da APEX dieses Zeichen
     -- durch eine Escape-Sequenz maskiert. Andernfalls kann in JavaScript daraus 
     -- kein JSON-Objekt mehr erzeugt werden.
-    return utl_text.bulk_replace(sct_const.c_bind_json_template, char_table('#JSON#', l_json, '"', '~'));
+    l_json := utl_text.bulk_replace(sct_const.c_bind_json_template, char_table('#JSON#', l_json, '"', '~'));
+    
+    pit.leave_optional;
+    return l_json;
   end get_json_from_bind_items;
   
   
   /* Hilfsfunktion zum Auslesen aller geaenderter Seitenelemente im Session State.
    * %return JSON-Instanz aller Elemente und Elementwerte, die im Session State
    *         veraendert wurden
-   * %usage Die Funktion izeriert ueber alle Elemente, die waehrend der Aktualisierung
+   * %usage Die Funktion iteriert ueber alle Elemente, die waehrend der Aktualisierung
    *        durch REGISTER_ITEM vermerkt wurden und stellt sie mit aktuellem Elementwert
    *        zu einer JSON-Instanz zusammen, die als Teil der Antwort gesendet wird.
    *        Die Funktion wird bei jedem Refresh aufgerufen
@@ -116,6 +211,8 @@ as
     l_json varchar2(32767);
     l_items apex_application_global.vc_arr2;
   begin
+    pit.enter_optional('get_json_from_items', c_pkg);
+    
     l_items := apex_util.string_to_table(trim(sct_const.c_delimiter from g_param.page_items), sct_const.c_delimiter);
     for i in 1 .. l_items.count loop
       utl_text.append(
@@ -125,7 +222,11 @@ as
           '#VALUE#', htf.escape_sc(v(l_items(i))))),
         sct_const.c_delimiter, c_yes);
     end loop;
-    return replace(sct_const.c_bind_json_template, '#JSON#', l_json);
+    
+    l_json := replace(sct_const.c_bind_json_template, '#JSON#', l_json);
+    
+    pit.leave_optional;
+    return l_json;
   end get_json_from_items;
   
   
@@ -137,6 +238,7 @@ as
   as
     l_json varchar2(32767);
   begin
+    pit.enter_optional('get_json_from_errors', c_pkg);
     for i in 1 .. g_error_stack.count loop
       utl_text.append(
         l_json,
@@ -150,6 +252,8 @@ as
                 '#COUNT#', g_error_stack.count,
                 '#DEPENDENT_BUTTONS#', g_param.error_dependent_buttons,
                 '#ERRORS#', l_json));
+                
+    pit.leave_optional;
     return l_json;
   end get_json_from_errors;
   
@@ -175,11 +279,13 @@ as
     l_is_recursive number(1,0);
     l_processed_item sct_page_item.spi_id%type;
   begin
+    pit.enter_mandatory('process_rule', c_pkg);
     -- Initialisierung
     l_actual_recursive_level := g_recursive_level;
     -- is_recursive wird verwendet, um Aktionen, die nicht rekursiv ausgefuehrt werden sollen, auszusondern
     l_is_recursive := case l_actual_recursive_level when 1 then sct_const.c_false else sct_const.c_true end;
-    -- Setze Rekursionslevel hoch, damit zukuenftige Eintraege in Rekursionsstack separiert werden
+    -- Inkrementiert Rekursionslevel, damit zukuenftige Eintraege auf eigenem Level liegen
+    -- Wird benoetigt, um »breadth first« zu arbeiten: Alle Rekursionsaufrufe einer Ebene, danach die naechste Ebene etc.
     g_recursive_level := g_recursive_level + 1;
     
     -- Iteriere ueber Rekursionsstack
@@ -206,7 +312,7 @@ as
           utl_text.merge(g_param.firing_items, l_firing_items, sct_const.c_delimiter);
         exception
           when others then
-            register_error(g_param.firing_item, 'Fehler bei Pluginverarbeitung: ' || sqlerrm);
+            null;
         end;
         -- JavaScript dieser Rekursionsebene erstellen
         l_js_action := l_js_action || l_js_action_chunk;        
@@ -233,6 +339,7 @@ as
       l_js_action := l_js_action || process_rule;
     end if;
     
+    pit.leave_mandatory;
     return l_js_action;
   end process_rule;  
     
@@ -246,6 +353,7 @@ as
   as
     l_has_rule number;
   begin
+    pit.enter_mandatory('register_item', c_pkg);
     -- Vermerke, dass p_item an den Browser gesendet werden muss
     utl_text.merge(g_param.page_items, p_item, sct_const.c_delimiter);
     
@@ -261,18 +369,26 @@ as
               and p_item != g_param.firing_item);
        
     if l_has_rule > 0 then
-      if g_recursive_level <= c_recursive_limit then
+      if g_recursive_level <= g_recursion_limit then
         if not g_recursive_stack.exists(p_item) then
           -- Element wurde rekursiv noch nicht aufgerufen, vermerken
           g_recursive_stack(p_item) := g_recursive_level;
         else
-          register_error(p_item, 'Element hat rekursive Schleife erzeugt und wurde daher ignoriert.');
+          register_error(p_item, msg.SCT_RECURSION_LOOP, msg_args(p_item));
         end if;
       else
-        register_error(p_item, 'Element hat Rekursionstiefe von ' || c_recursive_limit || ' ueberschritten.');
+        register_error(p_item, msg.SCT_RECURSION_LIMIT, msg_args(p_item, to_char(g_recursion_limit)));
       end if;
     end if;
+    pit.leave_mandatory;
   end register_item;
+  
+  
+  procedure initialize
+  as
+  begin
+    g_recursion_limit := param.get_integer('RECURSION_LIMIT', c_param_group);
+  end initialize;
   
   
   /* INTERFACE */
@@ -282,13 +398,48 @@ as
     p_internal_error in varchar2 default null)
   as
     l_error apex_error.t_error;  -- APEX-Fehler-Record
+    l_sqlcode number := sqlcode;
+    l_sqlerrm varchar2(2000) := substr(sqlerrm, instr(sqlerrm, ':', 1) + 2);
   begin
-    if p_error_msg is not null then
+    pit.enter_mandatory('register_error', c_pkg);
+    utl_text.merge(g_param.firing_items, p_spi_id, sct_const.c_delimiter);
+    l_error.message := p_error_msg;
+    
+    if l_error.message is not null then
       l_error.page_item_name := p_spi_id;
-      l_error.message := p_error_msg;
       l_error.additional_info := coalesce(p_internal_error, replace(dbms_utility.format_error_backtrace, chr(10), '<br/>'));
       g_error_stack(g_error_stack.count + 1) := l_error;
     end if;
+    pit.leave_mandatory;
+  end register_error;
+  
+  
+  procedure register_error(
+    p_spi_id in varchar2,
+    p_message_name in varchar2,
+    p_arg_list in msg_args default null)
+  as
+    l_message message_type;
+    l_error apex_error.t_error;  -- APEX-Fehler-Record
+    l_sqlcode number := sqlcode;
+    l_sqlerrm varchar2(2000) := substr(sqlerrm, instr(sqlerrm, ':', 1) + 2);
+  begin
+    pit.enter_mandatory('register_error', c_pkg);
+    utl_text.merge(g_param.firing_items, p_spi_id, sct_const.c_delimiter);
+    l_message := message_type(
+                   p_message_name => p_message_name,
+                   p_message_language => null,
+                   p_affected_id => p_spi_id,
+                   p_session_id => null,
+                   p_user_name => v('APP_USER'),
+                   p_arg_list => p_arg_list);
+    
+    if l_message.message_text is not null then
+      l_error.page_item_name := l_message.affected_id;
+      l_error.additional_info := replace(l_message.backtrace, chr(10), '<br/>');
+      g_error_stack(g_error_stack.count + 1) := l_error;
+    end if;
+    pit.leave_mandatory;
   end register_error;
   
   
@@ -299,10 +450,23 @@ as
   as
     l_is_mandatory sct_page_item.spi_is_mandatory%type;
     l_mandatory_message sct_page_item.spi_mandatory_message%type;
+    l_label varchar2(100 char);
   begin
+    pit.enter_mandatory('register_mandatory', c_pkg);
     if p_is_mandatory then 
+      if p_spi_mandatory_message is null then
+        select pit.get_message_text(msg.SCT_ITEM_IS_MANDATORY, msg_args(label))
+          into l_mandatory_message
+          from apex_application_page_items aai
+          join sct_rule_group sgr
+            on aai.application_id = sgr.sgr_app_id 
+           and page_id = sgr.sgr_page_id
+           and item_name = p_spi_id
+         where sgr.sgr_id = g_param.sgr_id;
+      else
+        l_mandatory_message := p_spi_mandatory_message;
+      end if;
       l_is_mandatory := sct_const.c_true;
-      l_mandatory_message := coalesce(p_spi_mandatory_message, p_spi_id || ' ist ein Pflichtfeld. Bitte geben Sie eine Information ein.');
     else 
       l_is_mandatory := sct_const.c_false;
       l_mandatory_message := null;
@@ -313,6 +477,7 @@ as
            spi_mandatory_message = l_mandatory_message
      where spi_sgr_id = g_param.sgr_id
        and spi_id = p_spi_id;
+    pit.leave_mandatory;
   end register_mandatory;
   
   
@@ -321,6 +486,7 @@ as
   as
     l_message sct_page_item.spi_mandatory_message%type;
   begin
+    pit.enter_mandatory('check_mandatory', c_pkg);
     -- Die Abfrage registriert eine Fehlermeldung, wenn
     -- - Das Element aktuell Pflichtfeld ist
     -- - Das Element keinen Wert im Session State besitzt
@@ -330,25 +496,34 @@ as
      where spi_id = p_firing_item
        and spi_is_mandatory = sct_const.c_true
        and (select v(p_firing_item) from dual) is null;
-    register_error(p_firing_item, l_message);
+    register_error(p_firing_item, l_message, '');
+    pit.leave_mandatory;
   exception
     when no_data_found then
-      -- Keine Pflichtfelder mit Fehlern auf der Seite, ignorieren
-      null;
+      -- Pflichtfeld hat einen Wert, registrieren um eventuelle Fehlermeldung zu entfernen
+      utl_text.merge(g_param.firing_items, p_firing_item, sct_const.c_delimiter);
+      pit.leave_mandatory;
   end check_mandatory;
   
   
   procedure submit_page
   as
     cursor mandatory_items is
-      select spi_id
+      select spi_id, spi_mandatory_message
         from sct_page_item
-       where spi_is_mandatory = sct_const.c_true
-         and spi_sgr_id = g_param.sgr_id;
+       where spi_sgr_id = g_param.sgr_id
+         and spi_is_mandatory = sct_const.c_true;
   begin
+    pit.enter_mandatory('submit_page', c_pkg);
     for itm in mandatory_items loop
-      check_mandatory(itm.spi_id);
+      -- Registriere alle Pflichtfelder, damit eventuelle Fehlermeldungen korrekt entfernt werden
+      utl_text.merge(g_param.firing_items, itm.spi_id, sct_const.c_delimiter);
+      if v(itm.spi_id) is null then
+        -- Pflichtfeld hat keinen Sessionstatus, Fehler werfen
+        register_error(itm.spi_id, itm.spi_mandatory_message, '');
+      end if;
     end loop;
+    pit.leave_mandatory;
   end submit_page;
   
   
@@ -357,8 +532,10 @@ as
     p_value in varchar2)
   as
   begin
+    pit.enter_mandatory('set_session_state', c_pkg);
     register_item(p_item);
     apex_util.set_session_state(p_item, p_value);
+    pit.leave_mandatory;
   end set_session_state;
   
     
@@ -367,8 +544,10 @@ as
     p_value in date)
   as
   begin
+    pit.enter_mandatory('set_session_state', c_pkg);
     register_item(p_item);
     apex_util.set_session_state(p_item, p_value);
+    pit.leave_mandatory;
   end set_session_state;
   
     
@@ -377,8 +556,10 @@ as
     p_value in number)
   as
   begin
+    pit.enter_mandatory('set_session_state', c_pkg);
     register_item(p_item);
     apex_util.set_session_state(p_item, p_value);
+    pit.leave_mandatory;
   end set_session_state;
   
   
@@ -389,6 +570,8 @@ as
   as
     l_result apex_plugin.t_dynamic_action_render_result;
   begin
+    pit.enter_mandatory('render', c_pkg);
+    
     if wwv_flow.g_debug then
       apex_plugin_util.debug_dynamic_action(
         p_plugin => p_plugin,
@@ -404,6 +587,7 @@ as
     l_result.attribute_02 := g_param.page_items;
     l_result.attribute_03 := p_plugin.attribute_01;
     
+    pit.leave_mandatory;
     return l_result;
   end render;
   
@@ -416,6 +600,8 @@ as
     l_result apex_plugin.t_dynamic_action_ajax_result;
     l_js_action varchar2(32767);
   begin
+    pit.enter_mandatory('ajax', c_pkg);
+    
     if wwv_flow.g_debug then
       apex_plugin_util.debug_dynamic_action(
         p_plugin => p_plugin,
@@ -438,8 +624,12 @@ as
       '#JS_FILE#', sct_const.c_js_namespace,
       '#CODE#', l_js_action));
     htp.p(l_js_action);
+    
+    pit.leave_mandatory;
     return l_result;
   end ajax;
   
+begin
+  initialize;
 end plugin_sct;
 /

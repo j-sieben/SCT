@@ -1,7 +1,9 @@
 begin 
-  sct_admin.prepare_rule_group_import('DOAG_SEMINAR_SH', 'TOOL');
+  sct_admin.prepare_rule_group_import('&INSTALL_USER.', 'TOOL');
 end;
 /
+
+set define off
 
 declare
   l_foo number;
@@ -1154,3 +1156,5 @@ apex.item('#ITEM#').enable();~',
   commit;
 end;
 /
+
+set define on

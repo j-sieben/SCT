@@ -40,6 +40,6 @@ prompt &h1.Finalize installation
 prompt &h2.Revoke user rights
 @revoke_grants.sql
 
-prompt &h1.Finished PIT-Installation
+prompt &h1.Finished SCT-Installation
 
 exit

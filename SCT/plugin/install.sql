@@ -15,11 +15,12 @@ prompt &h3.Setting compile flags
 @plugin/set_compile_flags.sql
 
 
-prompt &h3.CREATE SEQUENCES
+prompt &h3.CREATE MESSAGES and PARAMETERS
+prompt &s1.Create MESSAGES
+@plugin/create_messages.sql
 
-
-prompt &h3.CREATE TABLES
-
+prompt &s1.Create PARAMETERS
+@plugin/create_parameters.sql
 
 prompt &h3.CREATE PACKAGES
 prompt &s1.Create package PLUGIN_SCT

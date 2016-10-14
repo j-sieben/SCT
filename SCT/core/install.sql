@@ -6,7 +6,7 @@ define view_dir=&sql_dir./views/
 define plsql_dir=core/plsql/
 
 prompt &h3.Check installation prerequisites
---@core/check_prerequisites.sql
+@core/check_prerequisites.sql
 
 prompt &h3.Remove existing installation
 @core/clean_up_install.sql
@@ -18,7 +18,6 @@ prompt &h3.Setting compile flags
 prompt &h3.Create sequences
 prompt &s1.Create sequence SCT_SEQ
 @&seq_dir.sct_seq.seq
-
 
 prompt &h3.Create tables and initial data
 prompt &s1.Create table SCT_RULE_GROUP
@@ -47,8 +46,8 @@ prompt &s1.Create view SCT_BL_PAGE_TARGETS
 @&view_dir.sct_bl_page_targets.vw
 
 
-prompt &h3.Create PIT messages
---@core/create_messages.sql
+prompt &h3.Create SCT messages
+@core/create_messages.sql
 
 
 prompt &h3.Create packages

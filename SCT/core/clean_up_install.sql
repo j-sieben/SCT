@@ -22,6 +22,11 @@ declare
              and object_type not like '%BODY'
              and owner = upper('&INSTALL_USER.')
            order by object_type, object_name;
+  cursor message_cur is
+    select message_name
+      from message
+     where message_name like 'SCT%'
+       and message_id is not null;
 begin
   for obj in delete_object_cur loop
     begin
@@ -39,5 +44,12 @@ begin
         raise;
     end;
   end loop;
+  
+  for msg in message_cur loop
+    pit_admin.remove_message(msg.message_name);
+    dbms_output.put_line('&s1.Message ' || msg.message_name || ' deleted.');
+  end loop;
+  commit;
+  pit_admin.create_message_package;
 end;
 /

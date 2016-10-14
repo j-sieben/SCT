@@ -11,21 +11,21 @@ with params as (
               '<br/>' br
          from sct_rule_group),
        actions as(
-       select sru.rowid row_id, sru.sru_id, p.sgr_id, 
+       select sru.rowid row_id, sru.sru_id, p.sgr_id,
               case
                 when spi.spi_id is not null then p.span_error || sru.sru_name || p.close_span
                 else sru.sru_name
               end sru_name,
               p.sgr_app_id, p.sgr_page_id,
               replace(replace(dbms_lob.substr(sru.sru_condition, 4000, 1), ' and ', p.br || 'and '), ' or ', p.br || 'or ') sru_condition,
-              case 
+              case
                 when sru.sru_firing_items is not null then p.sgr_page_prefix
-                else '- Alle - ' 
-              end 
+                else '- Alle - '
+              end
               ||
               replace(
-              case 
-                when spi.spi_id is not null then 
+              case
+                when spi.spi_id is not null then
                   replace(p.delimiter || sru.sru_firing_items || p.delimiter, p.delimiter || spi_id || p.delimiter, p.span_error || spi_id || p.close_span)
                 else sru.sru_firing_items
               end, p.delimiter, p.br || p.sgr_page_prefix) sru_firing_items,
@@ -33,9 +33,9 @@ with params as (
               case
                 when sra.spi_has_error = 1 then p.span_error || p.sgr_page_prefix || sra_spi_id || ': ' || sat_name || p.close_span
                 when sra.sra_active = 0 then p.span_disabled || p.sgr_page_prefix || sra_spi_id || ': ' || sat_name || p.close_span
-                else p.sgr_page_prefix || sra_spi_id || ': ' || sat_name 
+                else p.sgr_page_prefix || sra_spi_id || ': ' || sat_name
               end sra_name,
-              case sru.sru_active 
+              case sru.sru_active
                 when 1 then p.fa_check
                 else p.fa_uncheck
               end sru_active
@@ -65,7 +65,7 @@ select distinct a.row_id,
          within group (order by sra_sort_seq) sru_action,
        sru_active
   from actions a
-  join apex_applications app 
+  join apex_applications app
     on a.sgr_app_id = app.application_id
   join apex_application_pages pag
     on a.sgr_app_id = pag.application_id
