@@ -11,7 +11,7 @@ This all leads to the best practice to try and avoid overly complex forms in APE
 
 ## The approach of State Chart Toolkit
 
-Here, SCT steps in with a new approach. Rather than trying to control many DA on a page, all of them are replace by a single DA, controlling a greater number of items in one go. Despite the DA approach of implementing logic outside the server in JavaScript, SCT implements the logic within the database, moving case trees to a SQL expression.
+Here, SCT steps in with a new approach. Rather than trying to control many DA on a page, all of them are replaced by a single DA, controlling a greater number of items in one go. Despite the DA approach of implementing logic outside the server in JavaScript, SCT implements the logic within the database, moving case trees to a SQL expression.
 
 The basic principle is already known as a [Decision Table](https://en.wikipedia.org/wiki/Decision_table) pattern. But SCT is not an implementation of that pattern in PL/SQL or SQL but lends some basic ideas of this pattern to allow for a meta data driven approach to controling complex state on an APEX page.
 
