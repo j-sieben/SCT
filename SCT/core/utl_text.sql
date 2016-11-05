@@ -1,6 +1,3 @@
-@init.sql
-
-alter session set current_schema=&INSTALL_USER.;
 
 begin
   execute immediate 'create or replace type char_table as table of varchar2(4000)';
@@ -190,11 +187,13 @@ as
     l_chunk varchar2(32767);
     l_delimiter varchar2(30);
   begin
-    l_delimiter := '\' || p_delimiter;
-    for i in 1 .. regexp_count(p_string, l_delimiter) + 1 loop
-      l_chunk := regexp_substr(p_string, '[^' || l_delimiter || ']+', 1, i);
-      pipe row (l_chunk);
-    end loop;
+    if p_string is not null then
+      l_delimiter := '\' || p_delimiter;
+      for i in 1 .. regexp_count(p_string, l_delimiter) + 1 loop
+        l_chunk := regexp_substr(p_string, '[^' || l_delimiter || ']+', 1, i);
+        pipe row (l_chunk);
+      end loop;
+    end if;
     return;
   end string_to_table;
   

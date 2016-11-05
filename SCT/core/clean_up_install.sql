@@ -23,10 +23,10 @@ declare
              and owner = upper('&INSTALL_USER.')
            order by object_type, object_name;
   cursor message_cur is
-    select message_name
-      from message
-     where message_name like 'SCT%'
-       and message_id is not null;
+    select pms_name
+      from pit_message
+     where pms_name like 'SCT%'
+       and pms_id is not null;
 begin
   for obj in delete_object_cur loop
     begin
@@ -46,10 +46,11 @@ begin
   end loop;
   
   for msg in message_cur loop
-    pit_admin.remove_message(msg.message_name);
-    dbms_output.put_line('&s1.Message ' || msg.message_name || ' deleted.');
+    pit_admin.remove_message(msg.pms_name);
+    dbms_output.put_line('&s1.Message ' || msg.pms_name || ' deleted.');
   end loop;
   commit;
+  dbms_session.reset_package;
   pit_admin.create_message_package;
 end;
 /

@@ -6,9 +6,9 @@ create table sct_action_type(
 	sat_js varchar2(200 char), 
 	sat_is_editable number(1,0) default 1, 
 	sat_raise_recursive number(1,0) default 1, 
-	constraint pk_sct_action_type primary key (sat_id),
-  constraint chk_sat_is_editable check (sat_is_editable in (0,1)),
-  constraint chk_sat_raise_recursive check(sat_raise_recursive in (0,1))
+	constraint sct_action_type_pk primary key (sat_id),
+  constraint sat_is_editable_chk check (sat_is_editable in (0,1)),
+  constraint sat_raise_recursive_chk check(sat_raise_recursive in (0,1))
 ) organization index;
 
 comment on table sct_action_type is 'Tabel to store different action types as template for actions';

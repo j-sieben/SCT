@@ -1,4 +1,5 @@
 prompt &h2.Checking user &INSTALL_USER.
+
 declare
   user_exists exception;
   pragma exception_init(user_exists, -1920);

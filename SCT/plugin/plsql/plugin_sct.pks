@@ -91,6 +91,21 @@ as
   procedure set_session_state(
     p_item in sct_page_item.spi_id%type,
     p_value in number);
+    
+    
+  /* Prozedur zum Setzen des Session Status, falls kein Fehler vorliegt.
+   * %param p_item Name des Feldes, das gesetzt werden soll
+   * %param p_value Wert, der gesetzt werden soll
+   * %param p_error Fehlermeldung. Falls NULL, wird Session State gesetzt, sonst Fehler
+   * %usage Wird verwendet, um als Ergebnis einer externen Validierung mit Fehlertext
+   *        eine Hilfsfunktion anzubieten, die selbststaendig zwischen Fehlermeldung und
+   *        Session State entscheidet.
+   */
+  procedure set_session_state_or_error(
+    p_item in sct_page_item.spi_id%type,
+    p_value in varchar2,
+    p_error in varchar2);
+    
 
   /* RENDER-Funktion des Plugins gem. APEX-Vorgaben */
   function render(

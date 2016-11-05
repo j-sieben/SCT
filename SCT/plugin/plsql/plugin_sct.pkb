@@ -117,12 +117,6 @@ as
     l_stmt varchar2(200 char);
   begin
     pit.enter_optional('read_settings', c_pkg);
-    
-    select sgr_id
-      into g_param.sgr_id
-      from sct_rule_group
-     where upper(sct_rule_group.sgr_name) = upper(p_dynamic_action.attribute_01)
-       and sgr_app_id = apex_application.g_flow_id;
 
     -- Aufrufparameter
     g_param.error_dependent_buttons := p_dynamic_action.attribute_02;
@@ -136,12 +130,18 @@ as
     g_recursive_stack.delete;
     g_recursive_level := 1;
     
+    select sgr_id
+      into g_param.sgr_id
+      from sct_rule_group
+     where upper(sct_rule_group.sgr_name) = upper(p_dynamic_action.attribute_01)
+       and sgr_app_id = apex_application.g_flow_id;
+    
     -- Pruefe und formatiere das ausloesende Element
     format_firing_item;
     pit.leave_optional;
   exception
     when no_data_found then
-      pit.stop(msg.SCT_RULE_DOES_NOT_EXIST, msg_args(p_dynamic_action.attribute_01));
+      register_error('DOCUMENT', msg.SCT_RULE_DOES_NOT_EXIST, msg_args(p_dynamic_action.attribute_01));
   end read_settings;
   
   
@@ -435,6 +435,7 @@ as
                    p_arg_list => p_arg_list);
     
     if l_message.message_text is not null then
+      l_error.message := l_message.message_text;
       l_error.page_item_name := l_message.affected_id;
       l_error.additional_info := replace(l_message.backtrace, chr(10), '<br/>');
       g_error_stack(g_error_stack.count + 1) := l_error;
@@ -561,6 +562,24 @@ as
     apex_util.set_session_state(p_item, p_value);
     pit.leave_mandatory;
   end set_session_state;
+  
+  
+  procedure set_session_state_or_error(
+    p_item in sct_page_item.spi_id%type,
+    p_value in varchar2,
+    p_error in varchar2)
+  as
+  begin
+    if p_error is not null then
+      register_error(
+        p_spi_id => p_item,
+        p_error_msg => p_error);
+    else
+      set_session_state(
+        p_item => p_item, 
+        p_value => p_value);
+    end if;
+  end set_session_state_or_error;
   
   
   function render(

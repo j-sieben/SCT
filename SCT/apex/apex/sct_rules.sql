@@ -1,10 +1,7 @@
-begin 
-  sct_admin.prepare_rule_group_import('&INSTALL_USER.', 'TOOL');
-end;
-/
+call sct_admin.prepare_rule_group_import('&APEX_WS.', '&APEX_ALIAS.');
+
 
 set define off
-
 declare
   l_foo number;
 begin
@@ -430,7 +427,7 @@ apex.item('#ITEM#').enable();~',
     p_sra_sgr_id => sct_admin.map_id(1),
     p_sra_spi_id => 'DOCUMENT',
     p_sra_sat_id => 'PLSQL_CODE',
-    p_sra_attribute => q'~ui_sct_pkg.validate_rule_group;~',
+    p_sra_attribute => q'~sct_ui_pkg.validate_rule_group;~',
     p_sra_attribute_2 => q'~~',
     p_sra_sort_seq => 10,
     p_sra_active => 1);
@@ -775,7 +772,7 @@ apex.item('#ITEM#').enable();~',
     p_sra_sgr_id => sct_admin.map_id(13),
     p_sra_spi_id => 'P1_SGR_ID',
     p_sra_sat_id => 'PLSQL_CODE',
-    p_sra_attribute => q'~ui_sct_pkg.resequence_rule_group(v('#ITEM#'));~',
+    p_sra_attribute => q'~sct_ui_pkg.resequence_rule_group(v('#ITEM#'));~',
     p_sra_attribute_2 => q'~~',
     p_sra_sort_seq => 10,
     p_sra_active => 1);
@@ -925,7 +922,7 @@ apex.item('#ITEM#').enable();~',
     p_sra_sgr_id => sct_admin.map_id(13),
     p_sra_spi_id => 'P1_SGR_ID',
     p_sra_sat_id => 'PLSQL_CODE',
-    p_sra_attribute => q'~ui_sct_pkg.validate_rule_group(v('#ITEM#'));~',
+    p_sra_attribute => q'~sct_ui_pkg.validate_rule_group(v('#ITEM#'));~',
     p_sra_attribute_2 => q'~~',
     p_sra_sort_seq => 10,
     p_sra_active => 1);

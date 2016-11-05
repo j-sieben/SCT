@@ -21,6 +21,7 @@ declare
              and object_type not like '%BODY'
              and owner = upper('&INSTALL_USER.')
            order by object_type, object_name;
+  
 begin
   for obj in delete_object_cur loop
     begin

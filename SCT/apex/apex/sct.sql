@@ -248,7 +248,7 @@ wwv_flow_api.create_list_of_values(
 ,p_lov_name=>'LOV_ACTION_TYPE'
 ,p_lov_query=>wwv_flow_utilities.join(wwv_flow_t_varchar2(
 'select d, r',
-'  from ui_sct_list_action_type',
+'  from SCT_UI_list_action_type',
 ' order by d'))
 );
 wwv_flow_api.create_list_of_values(
@@ -267,7 +267,7 @@ wwv_flow_api.create_list_of_values(
 ,p_lov_name=>'LOV_APPLICATION_ITEMS'
 ,p_lov_query=>wwv_flow_utilities.join(wwv_flow_t_varchar2(
 'select d, r',
-'  from ui_sct_lov_page_items lpi',
+'  from SCT_UI_lov_page_items lpi',
 '  join sct_rule_group sgr',
 '    on lpi.app_id = sgr.sgr_app_id',
 ' where sgr.sgr_id = :P1_SGR_ID',
@@ -7984,7 +7984,7 @@ wwv_flow_api.create_page_plug(
 '       "SRU_SORT_SEQ",',
 '       "SRU_ACTION",',
 '       "SRU_ACTIVE"',
-'  from "UI_SCT_MAIN_RULES" ',
+'  from "SCT_UI_MAIN_RULES" ',
 ' where "SGR_ID" = :P1_SGR_ID'))
 ,p_plug_source_type=>'NATIVE_IR'
 ,p_ajax_items_to_submit=>'P1_SGR_ID'
@@ -8212,7 +8212,7 @@ wwv_flow_api.create_page_plug(
 '"PAGE_NAME",',
 '"SRU_AMOUNT",',
 '"SGR_ACTIVE"',
-'from "#OWNER#"."UI_SCT_MAIN_GROUPS" ',
+'from "#OWNER#"."SCT_UI_MAIN_GROUPS" ',
 '  ',
 ''))
 ,p_plug_source_type=>'NATIVE_IR'
@@ -8655,7 +8655,7 @@ wwv_flow_api.create_page_plug(
 '       "SAT_DESCRIPTION",',
 '       "SAT_PL_SQL",',
 '       "SAT_JS"',
-'  from UI_SCT_ACTION_TYPE',
+'  from SCT_UI_ACTION_TYPE',
 '  ',
 ''))
 ,p_plug_source_type=>'NATIVE_IR'
@@ -9475,7 +9475,7 @@ wwv_flow_api.create_page_process(
 ,p_process_point=>'AFTER_SUBMIT'
 ,p_process_type=>'NATIVE_PLSQL'
 ,p_process_name=>'Copy RULE_GROUP'
-,p_process_sql_clob=>'ui_sct_pkg.copy_rule_group;'
+,p_process_sql_clob=>'sct_ui_pkg.copy_rule_group;'
 ,p_process_error_message=>'Fehler beim Kopieren der Regelgruppe:<br>#SQLERRM#'
 ,p_error_display_location=>'INLINE_IN_NOTIFICATION'
 ,p_process_success_message=>'Regelgruppe erfolgreich kopiert.'
@@ -9718,7 +9718,7 @@ wwv_flow_api.create_report_columns(
 ,p_display_as=>'TEXT'
 ,p_lov_show_nulls=>'YES'
 ,p_column_width=>3
-,p_column_default=>'ui_sct_pkg.get_sra_sort_seq(:P5_SRU_SGR_ID, :P5_SRU_ID)'
+,p_column_default=>'sct_ui_pkg.get_sra_sort_seq(:P5_SRU_SGR_ID, :P5_SRU_ID)'
 ,p_column_default_type=>'FUNCTION'
 ,p_lov_display_extra=>'YES'
 ,p_include_in_export=>'Y'
@@ -10063,7 +10063,7 @@ wwv_flow_api.create_page_item(
 ,p_item_sequence=>60
 ,p_item_plug_id=>wwv_flow_api.id(121552924202927553)
 ,p_use_cache_before_default=>'NO'
-,p_item_default=>'ui_sct_pkg.get_sru_sort_seq(:P5_SRU_SGR_ID);'
+,p_item_default=>'sct_ui_pkg.get_sru_sort_seq(:P5_SRU_SGR_ID);'
 ,p_item_default_type=>'PLSQL_EXPRESSION'
 ,p_prompt=>'Sequenz'
 ,p_source=>'SRU_SORT_SEQ'
@@ -10180,7 +10180,7 @@ wwv_flow_api.create_page_validation(
  p_id=>wwv_flow_api.id(121852383670703694)
 ,p_validation_name=>'P5_SRU_RULE_IS_VALID'
 ,p_validation_sequence=>30
-,p_validation=>'return ui_sct_pkg.validate_rule_is_valid(:P5_SRU_SGR_ID, :P5_SRU_CONDITION)'
+,p_validation=>'return sct_ui_pkg.validate_rule_is_valid(:P5_SRU_SGR_ID, :P5_SRU_CONDITION)'
 ,p_validation_type=>'FUNC_BODY_RETURNING_ERR_TEXT'
 ,p_always_execute=>'N'
 ,p_validation_condition=>'SAVE,CREATE'
@@ -10287,7 +10287,7 @@ wwv_flow_api.create_page_process(
 ,p_process_type=>'NATIVE_PLSQL'
 ,p_process_name=>'REGEL persistieren'
 ,p_process_sql_clob=>wwv_flow_utilities.join(wwv_flow_t_varchar2(
-'ui_sct_pkg.process_rule_change(',
+'sct_ui_pkg.process_rule_change(',
 '  p_sgr_id => :P5_SRU_SGR_ID);'))
 ,p_error_display_location=>'INLINE_IN_NOTIFICATION'
 );
@@ -10344,8 +10344,8 @@ wwv_flow_api.create_page_process(
 ,p_process_sequence=>70
 ,p_process_point=>'BEFORE_HEADER'
 ,p_process_type=>'NATIVE_FORM_FETCH'
-,p_process_name=>'Fetch Row from UI_SCT_EDIT_RULE'
-,p_attribute_02=>'UI_SCT_EDIT_RULE'
+,p_process_name=>'Fetch Row from SCT_UI_EDIT_RULE'
+,p_attribute_02=>'SCT_UI_EDIT_RULE'
 ,p_attribute_03=>'P5_ROWID'
 ,p_attribute_04=>'ROWID'
 ,p_process_when=>'P5_ROWID'
@@ -10672,7 +10672,7 @@ wwv_flow_api.create_page_process(
 ,p_process_point=>'AFTER_SUBMIT'
 ,p_process_type=>'NATIVE_PLSQL'
 ,p_process_name=>'Propagate Rule Group change'
-,p_process_sql_clob=>'ui_sct_pkg.process_rule_change(:P6_SGR_ID);'
+,p_process_sql_clob=>'sct_ui_pkg.process_rule_change(:P6_SGR_ID);'
 ,p_error_display_location=>'INLINE_IN_NOTIFICATION'
 );
 wwv_flow_api.create_page_process(
@@ -10727,7 +10727,7 @@ wwv_flow_api.create_page_plug(
 ,p_plug_display_sequence=>10
 ,p_include_in_reg_disp_sel_yn=>'N'
 ,p_plug_display_point=>'BODY'
-,p_plug_source=>'ui_sct_pkg.get_action_type_help;'
+,p_plug_source=>'sct_ui_pkg.get_action_type_help;'
 ,p_plug_source_type=>'NATIVE_PLSQL'
 ,p_plug_query_row_template=>1
 ,p_plug_query_num_rows=>15
@@ -10966,7 +10966,7 @@ wwv_flow_api.create_page_process(
 ,p_process_point=>'AFTER_SUBMIT'
 ,p_process_type=>'NATIVE_PLSQL'
 ,p_process_name=>'process export'
-,p_process_sql_clob=>'ui_sct_pkg.export_rule_group;'
+,p_process_sql_clob=>'sct_ui_pkg.export_rule_group;'
 ,p_process_error_message=>'Fehler beim Export der Regelgruppe:<br>#SQLERRM#'
 ,p_error_display_location=>'INLINE_IN_NOTIFICATION'
 );

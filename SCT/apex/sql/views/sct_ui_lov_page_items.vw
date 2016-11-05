@@ -1,4 +1,4 @@
-create or replace force view ui_sct_lov_page_items as
+create or replace force view sct_ui_lov_page_items as
 select 'Element ' || item_name d, item_name r,
        application_id app_id, page_id
   from apex_application_page_items

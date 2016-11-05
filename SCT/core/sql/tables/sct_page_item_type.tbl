@@ -3,8 +3,8 @@ create table sct_page_item_type(
   sit_name varchar2(50 char),
   sit_has_value number(1,0) default 1,
   sit_event varchar2(30 byte),
-  constraint pk_sct_page_item_type primary key(sit_id),
-  constraint chk_sit_has_value check(sit_has_value in (0,1))
+  constraint sct_page_item_type_pk primary key(sit_id),
+  constraint sit_has_value_chk check(sit_has_value in (0,1))
 ) organization index;
 
 comment on table sct_page_item_type is 'Table to store page item types which are supported by SCT.';

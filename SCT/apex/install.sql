@@ -24,41 +24,44 @@ prompt &h3.CREATE TABLES
 
 
 prompt &h3.CREATE VIEWS
-prompt &s1.Create view UI_SCT_ACTION_TYPE
-@&view_dir.ui_sct_action_type.vw
+prompt &s1.Create view SCT_UI_ACTION_TYPE
+@&view_dir.sct_ui_action_type.vw
 
-prompt &s1.Create view UI_SCT_EDIT_RULE
-@&view_dir.ui_sct_edit_rule.vw
+prompt &s1.Create view SCT_UI_EDIT_RULE
+@&view_dir.sct_ui_edit_rule.vw
 
-prompt &s1.Create view UI_SCT_LIST_ACTION_TYPE
-@&view_dir.ui_sct_list_action_type.vw
+prompt &s1.Create view SCT_UI_LIST_ACTION_TYPE
+@&view_dir.sct_ui_list_action_type.vw
 
-prompt &s1.Create view UI_SCT_LIST_PAGE_ITEMS
-@&view_dir.ui_sct_list_page_items.vw
+prompt &s1.Create view SCT_UI_LIST_PAGE_ITEMS
+@&view_dir.sct_ui_list_page_items.vw
 
-prompt &s1.Create view UI_SCT_LOV_PAGE_ITEMS
-@&view_dir.ui_sct_lov_page_items.vw
+prompt &s1.Create view SCT_UI_LOV_PAGE_ITEMS
+@&view_dir.sct_ui_lov_page_items.vw
 
-prompt &s1.Create view UI_SCT_MAIN_GROUPS
-@&view_dir.ui_sct_main_groups.vw
+prompt &s1.Create view SCT_UI_MAIN_GROUPS
+@&view_dir.sct_ui_main_groups.vw
 
-prompt &s1.Create view UI_SCT_MAIN_RULES
-@&view_dir.ui_sct_main_rules.vw
+prompt &s1.Create view SCT_UI_MAIN_RULES
+@&view_dir.sct_ui_main_rules.vw
 
 
 prompt &h3.Create packages
-prompt &s1.Create package UI_SCT_PKG
-@&plsql_dir.ui_sct_pkg.pks
+prompt &s1.Checking UTL_APEX exists
+@check_has_package.sql UTL_APEX apex/utl_apex.sql
+
+prompt &s1.Create package SCT_UI_PKG
+@&plsql_dir.sct_ui_pkg.pks
 show errors
 
-prompt &s1.Create package Body UI_SCT_PKG
-@&plsql_dir.ui_sct_pkg.pkb
+prompt &s1.Create package Body SCT_UI_PKG
+@&plsql_dir.sct_ui_pkg.pkb
 show errors
 
 
 prompt &h3.Install APEX application
 prompt &s1.Prepare APEX import
-@&apex_dir.prepare_apex_import.sql
+--@&apex_dir.prepare_apex_import.sql
 
 prompt &s1.Install application
 @&apex_dir.sct.sql

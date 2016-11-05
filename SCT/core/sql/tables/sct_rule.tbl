@@ -5,14 +5,16 @@ create table sct_rule(
 	sru_condition clob, 
 	sru_sort_seq number, 
 	sru_firing_items varchar2(300 byte),
+  sru_has_error number(1,0) default 0,
   sru_active number(1,0) default 1,
-  constraint pk_sct_rules primary key (sru_id, sru_sgr_id),
-  constraint fk_sru_sgr_id foreign key (sru_sgr_id)
+  constraint sct_rules_pk primary key (sru_id, sru_sgr_id),
+  constraint sru_sgr_id_fk foreign key (sru_sgr_id)
 	  references sct_rule_group (sgr_id) on delete cascade,
-  constraint chk_sru_active check(sru_active in (0,1))
+  constraint sru_has_error_chk check(sru_has_error in (0,1)),
+  constraint sru_active_chk check(sru_active in (0,1))
 ) organization index;
 
-create index idx_fk_sru_sgr_id on sct_rule(sru_sgr_id, sru_id);
+create index sru_sgr_id_fk_idx on sct_rule(sru_sgr_id, sru_id);
 
 create or replace trigger trg_bri_sct_rule 
   before insert on sct_rule
@@ -30,4 +32,5 @@ comment on column sct_rule.sru_name is 'Descriptive Name';
 comment on column sct_rule.sru_condition is 'Condition, syntactically in the form of a partial where-clause';
 comment on column sct_rule.sru_firing_items is 'List of page items that are referenced within sru_condition';
 comment on column sct_rule.sru_sort_seq is 'Sort criteria, defines execution sequence';
-comment on column sct_rule.sru_active is 'Flag to indicate whether Rule is in use';
+comment on column sct_rule.sru_has_error is 'Flag to indicate whether rule has validation error';
+comment on column sct_rule.sru_active is 'Flag to indicate whether rule is in use';

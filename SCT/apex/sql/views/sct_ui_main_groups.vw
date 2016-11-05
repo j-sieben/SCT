@@ -1,4 +1,4 @@
-create or replace force view ui_sct_main_groups as
+create or replace force view sct_ui_main_groups as
 with params as (
        select v('APP_ID') app_id,
               v('P1_SGR_APPLICATION') sgr_app_id,

@@ -115,12 +115,14 @@ q'!
   
   -- Templates zum Export von Regelgruppen
   c_export_start_template constant varchar2(200) :=
-     'declare' || c_cr 
+     'set define off' || c_cr 
+  || c_cr 
+  || 'declare' || c_cr 
   || '  l_foo number;' || c_cr 
   || 'begin' || c_cr 
   || '  l_foo := sct_admin.map_id;' || c_cr
-  || '  sct_admin.prepare_rule_group_import(''&APEX_WS.'', ''#ALIAS#'');' || c_cr;
-  c_export_end_template constant varchar2(200) := c_cr || '  commit;' || c_cr || 'end;' || c_cr || '/';
+  || '  -- sct_admin.prepare_rule_group_import(''&APEX_WS.'', ''#ALIAS#'');' || c_cr;
+  c_export_end_template constant varchar2(200) := c_cr || '  commit;' || c_cr || 'end;' || c_cr || '/' || c_cr || 'set define on';
   c_action_type_template constant varchar2(32767) :=
 q'!
   sct_admin.merge_action_type(
