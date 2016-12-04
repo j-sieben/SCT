@@ -15,6 +15,75 @@ as
 
 
   /* Hilfsfunktionen */
+  
+  
+  /* Methode zur Erzeugung des Initialisierungscodes aus einem Fetch Row-Prozess
+   * %param p_sgr_id ID der Regelgruppe
+   * %usage Wird verwendet, um fuer eine Regelgruppe Initialisierungscode zu erzeugen
+   *        Der Code wird zur Laufzeit ausgefuehrt und initialisiert den Sessionstatus
+   *        der Seite.
+   */
+  function create_initialization_code(
+    p_sgr_id in sct_rule_group.sgr_id%type)
+    return varchar2
+  as
+    cursor fetch_row_cur (p_sgr_id in sct_rule_group.sgr_id%type) is
+      select attribute_02, attribute_03, attribute_04
+        from apex_application_page_proc api
+        join sct_rule_group sgr
+          on api.application_id = sgr.sgr_app_id
+         and api.page_id = sgr.sgr_page_id
+       where sgr.sgr_id = p_sgr_id
+         and api.process_type_code = 'DML_FETCH_ROW';
+    cursor item_cur(p_sgr_id in sct_rule_group.sgr_id%type) is
+      select item_name, item_source
+        from apex_application_page_items api
+        join sct_rule_group sgr
+          on api.application_id = sgr.sgr_app_id
+         and api.page_id = sgr.sgr_page_id
+        join sct_page_item spi
+          on sgr.sgr_id = spi.spi_sgr_id
+         and api.item_name = spi.spi_id
+       where api.item_source_type = 'Database Column'
+         and sgr.sgr_id = p_sgr_id
+         and spi.spi_is_required = 1;
+    l_sql_stmt varchar2(1000);
+    l_item_stmt varchar2(32767);
+    l_initialization_code varchar2(32767);
+  begin
+    -- 1. Schritt: Fetch Row-Anweisung generieren
+    for src in fetch_row_cur(p_sgr_id) loop
+      l_sql_stmt := utl_text.bulk_replace(
+                      case src.attribute_04
+                      when 'ROWID' then sct_const.c_col_sql_rowid_stmt
+                      else sct_const.c_col_sql_stmt end,
+                      char_table(
+                        '#ATTRIBUTE_02#', src.attribute_02,
+                        '#ATTRIBUTE_03#', src.attribute_03,
+                        '#ATTRIBUTE_04#', src.attribute_04
+                      ));
+    end loop;
+    if l_sql_stmt is not null then
+      -- 2. Schritt: Anweisungsliste fuer Sessionstatus erzeugen
+      for itm in item_cur(p_sgr_id) loop
+        l_item_stmt := l_item_stmt 
+                    || utl_text.bulk_replace(sct_const.c_col_val_template, char_table(
+                         '#ITEM#', itm.item_name,
+                         '#COLUMN#', itm.item_source,
+                         '#CR#', c_cr
+                       ));
+      end loop;
+      -- 3. Schritt: Template mit Anweisungen anreichern und returnieren
+      l_initialization_code := utl_text.bulk_replace(sct_const.c_initialize_code, char_table(
+                                 '#SQL_STMT#', l_sql_stmt,
+                                 '#ITEM_STMT#', l_item_stmt,
+                                 '#CR#', c_cr
+                               ));
+    end if;
+    return l_initialization_code;
+  end create_initialization_code;
+  
+  
   /* Methode zur Aktualisierung der Tabelle SCT_PAGE_ITEM mit dem APEX-Data Dictionary
    * %param p_sgr_id ID der Regelgruppe
    * %usage Wird verwendet, um bei einer Regelaenderung die Seitenelemente der
@@ -26,6 +95,7 @@ as
   procedure harmonize_sct_page_item(
     p_sgr_id in sct_rule_group.sgr_id%type)
   as
+    l_initialization_code varchar2(32767);
   begin
     pit.enter_optional('harmonize_sct_page_item', c_pkg);
     
@@ -106,6 +176,11 @@ as
           on (sra.sra_sgr_id = v.sra_sgr_id and sra.sra_spi_id = v.sra_spi_id)
         when matched then update set
              sra_has_error = sct_const.c_true;
+             
+      l_initialization_code := create_initialization_code(p_sgr_id);
+      update sct_rule_group
+         set sgr_initialization_code = l_initialization_code
+       where sgr_id = p_sgr_id;
     pit.leave_optional;
   end harmonize_sct_page_item;
   
@@ -992,6 +1067,10 @@ as
     p_sat_description in sct_action_type.sat_description%type default null,
     p_sat_pl_sql in sct_action_type.sat_pl_sql%type,
     p_sat_js in sct_action_type.sat_js%type,
+    p_sat_default_attribute_1 sct_action_type.sat_default_attribute_1%type default null,
+    p_sat_check_attribute_1 sct_action_type.sat_check_attribute_1%type default null,
+    p_sat_default_attribute_2 sct_action_type.sat_default_attribute_2%type default null,
+    p_sat_check_attribute_2 sct_action_type.sat_check_attribute_2%type default null,
     p_sat_is_editable in sct_action_type.sat_is_editable%type default sct_const.c_true,
     p_sat_raise_recursive in sct_action_type.sat_raise_recursive%type default sct_const.c_true)
   as
@@ -1003,6 +1082,10 @@ as
                   p_sat_description sat_description,
                   p_sat_pl_sql sat_pl_sql,
                   p_sat_js sat_js,
+                  p_sat_default_attribute_1 sat_default_attribute_1,
+                  p_sat_check_attribute_1 sat_check_attribute_1,
+                  p_sat_default_attribute_2 sat_default_attribute_2,
+                  p_sat_check_attribute_2 sat_check_attribute_2,
                   p_sat_is_editable sat_is_editable,
                   p_sat_raise_recursive sat_raise_recursive
              from dual) v
@@ -1012,10 +1095,20 @@ as
           sat_description = v.sat_description,
           sat_pl_sql = v.sat_pl_sql,
           sat_js = v.sat_js,
+          sat_default_attribute_1 = v.sat_default_attribute_1,
+          sat_check_attribute_1 = v.sat_check_attribute_1,
+          sat_default_attribute_2 = v.sat_default_attribute_2,
+          sat_check_attribute_2 = v.sat_check_attribute_2,
           sat_is_editable = v.sat_is_editable,
           sat_raise_recursive = v.sat_raise_recursive
-     when not matched then insert(sat_id, sat_name, sat_description, sat_pl_sql, sat_js, sat_is_editable, sat_raise_recursive)
-          values (v.sat_id, v.sat_name, v.sat_description, v.sat_pl_sql, v.sat_js, v.sat_is_editable, v.sat_raise_recursive);
+     when not matched then insert(
+            sat_id, sat_name, sat_description, sat_pl_sql, sat_js, 
+            sat_default_attribute_1, sat_check_attribute_1, sat_default_attribute_2, sat_check_attribute_2,
+            sat_is_editable, sat_raise_recursive)
+          values (
+            v.sat_id, v.sat_name, v.sat_description, v.sat_pl_sql, v.sat_js, 
+            v.sat_default_attribute_1, v.sat_check_attribute_1, v.sat_default_attribute_2, v.sat_check_attribute_2,
+            v.sat_is_editable, v.sat_raise_recursive);
     pit.leave_mandatory;
   end merge_action_type;
 

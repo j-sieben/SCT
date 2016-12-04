@@ -27,7 +27,7 @@ prompt APPLICATION 110 - AppEntwTools
 -- Application Export:
 --   Application:     110
 --   Name:            AppEntwTools
---   Date and Time:   09:25 Sunday October 9, 2016
+--   Date and Time:   13:11 Sunday November 27, 2016
 --   Exported By:     DOAG_ADMIN
 --   Flashback:       0
 --   Export Type:     Application Export
@@ -36,14 +36,14 @@ prompt APPLICATION 110 - AppEntwTools
 --
 
 -- Application Statistics:
---   Pages:                      9
---     Items:                   37
+--   Pages:                     10
+--     Items:                   42
 --     Computations:             4
 --     Validations:             11
 --     Processes:               26
---     Regions:                 19
+--     Regions:                 20
 --     Buttons:                 26
---     Dynamic Actions:         15
+--     Dynamic Actions:         16
 --   Shared Components:
 --     Logic:
 --       Items:                  1
@@ -53,6 +53,7 @@ prompt APPLICATION 110 - AppEntwTools
 --         Entries:              3
 --     Security:
 --       Authentication:         1
+--       Authorization:          1
 --     User Interface:
 --       Themes:                 1
 --       Templates:
@@ -115,7 +116,7 @@ wwv_flow_api.create_flow(
 ,p_csv_encoding=>'Y'
 ,p_auto_time_zone=>'N'
 ,p_last_updated_by=>'DOAG_ADMIN'
-,p_last_upd_yyyymmddhh24miss=>'20161009091412'
+,p_last_upd_yyyymmddhh24miss=>'20161127131100'
 ,p_file_prefix => nvl(wwv_flow_application_install.get_static_app_file_prefix,'')
 ,p_files_version=>4
 ,p_ui_type_name => null
@@ -204,7 +205,15 @@ end;
 /
 prompt --application/shared_components/security/authorizations
 begin
-null;
+wwv_flow_api.create_security_scheme(
+ p_id=>wwv_flow_api.id(10933017240373504)
+,p_name=>'Ist SCT-Admin'
+,p_scheme_type=>'NATIVE_IS_IN_GROUP'
+,p_attribute_01=>'SCT_ADMIN'
+,p_error_message=>'Sie haben nicht die Berechtigung für diese Daten'
+,p_caching=>'BY_USER_BY_SESSION'
+,p_comments=>'Zeigt interne SCT-Regeln'
+);
 end;
 /
 prompt --application/shared_components/navigation/navigation_bar
@@ -248,40 +257,34 @@ wwv_flow_api.create_list_of_values(
 ,p_lov_name=>'LOV_ACTION_TYPE'
 ,p_lov_query=>wwv_flow_utilities.join(wwv_flow_t_varchar2(
 'select d, r',
-'  from SCT_UI_list_action_type',
+'  from sct_ui_list_action_type',
 ' order by d'))
 );
 wwv_flow_api.create_list_of_values(
  p_id=>wwv_flow_api.id(121795663358028357)
 ,p_lov_name=>'LOV_APPLICATIONS'
 ,p_lov_query=>wwv_flow_utilities.join(wwv_flow_t_varchar2(
-'select application_name || '' ('' || application_id || '')'' d,',
-'        application_id r',
-'  from apex_applications',
-' where application_id != :APP_ID',
-'   and application_id not between 3000 and 9000',
-' order by 2'))
+'select d, r',
+'  from sct_ui_lov_applications',
+' order by r'))
 );
 wwv_flow_api.create_list_of_values(
  p_id=>wwv_flow_api.id(122031012227389385)
 ,p_lov_name=>'LOV_APPLICATION_ITEMS'
 ,p_lov_query=>wwv_flow_utilities.join(wwv_flow_t_varchar2(
 'select d, r',
-'  from SCT_UI_lov_page_items lpi',
-'  join sct_rule_group sgr',
-'    on lpi.app_id = sgr.sgr_app_id',
-' where sgr.sgr_id = :P1_SGR_ID',
-' order by 1'))
+'  from sct_ui_lov_sgr_page_items',
+' where sgr_id = :P1_SGR_ID',
+' order by d'))
 );
 wwv_flow_api.create_list_of_values(
  p_id=>wwv_flow_api.id(121795824578039058)
 ,p_lov_name=>'LOV_APPLICATION_PAGES'
 ,p_lov_query=>wwv_flow_utilities.join(wwv_flow_t_varchar2(
-'select page_name || '' ('' || page_id || '')'' d,',
-'       page_id r',
-'  from apex_application_pages',
+'select d, r',
+'  from sct_ui_lov_app_pages',
 ' where application_id = :P6_SGR_APP_ID',
-' order by 1'))
+' order by d'))
 );
 wwv_flow_api.create_list_of_values(
  p_id=>wwv_flow_api.id(28689394442699475)
@@ -304,24 +307,18 @@ wwv_flow_api.create_list_of_values(
  p_id=>wwv_flow_api.id(68947689224261244)
 ,p_lov_name=>'LOV_SGR_APPLICATIONS'
 ,p_lov_query=>wwv_flow_utilities.join(wwv_flow_t_varchar2(
-'select distinct application_name || '' ('' || application_id || '')'' d, application_id r',
-'  from apex_applications app',
-'  join sct_rule_group sgr',
-'    on app.application_id = sgr.sgr_app_id',
-' where sgr.sgr_app_id != :APP_ID',
-' order by 2'))
+'select d, r',
+'  from sct_ui_lov_sgr_applications',
+' order by r'))
 );
 wwv_flow_api.create_list_of_values(
  p_id=>wwv_flow_api.id(68948574219276185)
 ,p_lov_name=>'LOV_SGR_APPLICATION_PAGES'
 ,p_lov_query=>wwv_flow_utilities.join(wwv_flow_t_varchar2(
-'select page_name || '' ('' || page_id || '')'' d, page_id r',
-'  from apex_application_pages app',
-'  join sct_rule_group sgr',
-'    on app.application_id = sgr.sgr_app_id',
-'   and app.page_id = sgr.sgr_page_id',
-' where sgr.sgr_app_id = :P1_SGR_APPLICATION',
-' order by 2'))
+'select d, r',
+'  from sct_ui_lov_sgr_app_pages',
+' where sgr_app_id = :P1_SGR_APPLICATION',
+' order by r'))
 );
 end;
 /
@@ -7945,7 +7942,7 @@ wwv_flow_api.create_page(
 ,p_cache_timeout_seconds=>21600
 ,p_help_text=>'No help is available for this page.'
 ,p_last_updated_by=>'DOAG_ADMIN'
-,p_last_upd_yyyymmddhh24miss=>'20161008182256'
+,p_last_upd_yyyymmddhh24miss=>'20161127131100'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(121516959780100341)
@@ -8334,21 +8331,6 @@ wwv_flow_api.create_worksheet_rpt(
 ,p_flashback_enabled=>'N'
 );
 wwv_flow_api.create_page_button(
- p_id=>wwv_flow_api.id(7415591556648743)
-,p_button_sequence=>10
-,p_button_plug_id=>wwv_flow_api.id(121775894582909072)
-,p_button_name=>'VALIDATE_RULE_GROUP'
-,p_button_static_id=>'B1_VALIDATE_RULE_GROUP'
-,p_button_action=>'DEFINED_BY_DA'
-,p_button_template_options=>'#DEFAULT#'
-,p_button_template_id=>wwv_flow_api.id(121509977018100285)
-,p_button_image_alt=>'Regelgruppe prüfen'
-,p_button_position=>'REGION_TEMPLATE_EDIT'
-,p_grid_new_grid=>false
-,p_grid_new_row=>'N'
-,p_grid_new_column=>'N'
-);
-wwv_flow_api.create_page_button(
  p_id=>wwv_flow_api.id(68853126442702270)
 ,p_button_sequence=>20
 ,p_button_plug_id=>wwv_flow_api.id(121775894582909072)
@@ -8436,12 +8418,9 @@ wwv_flow_api.create_page_item(
 ,p_display_as=>'NATIVE_SELECT_LIST'
 ,p_named_lov=>'LOV_SGR_APPLICATIONS'
 ,p_lov=>wwv_flow_utilities.join(wwv_flow_t_varchar2(
-'select distinct application_name || '' ('' || application_id || '')'' d, application_id r',
-'  from apex_applications app',
-'  join sct_rule_group sgr',
-'    on app.application_id = sgr.sgr_app_id',
-' where sgr.sgr_app_id != :APP_ID',
-' order by 2'))
+'select d, r',
+'  from sct_ui_lov_sgr_applications',
+' order by r'))
 ,p_lov_display_null=>'YES'
 ,p_lov_null_text=>'- Anwendung wählen -'
 ,p_cHeight=>1
@@ -8461,13 +8440,10 @@ wwv_flow_api.create_page_item(
 ,p_display_as=>'NATIVE_SELECT_LIST'
 ,p_named_lov=>'LOV_SGR_APPLICATION_PAGES'
 ,p_lov=>wwv_flow_utilities.join(wwv_flow_t_varchar2(
-'select page_name || '' ('' || page_id || '')'' d, page_id r',
-'  from apex_application_pages app',
-'  join sct_rule_group sgr',
-'    on app.application_id = sgr.sgr_app_id',
-'   and app.page_id = sgr.sgr_page_id',
-' where sgr.sgr_app_id = :P1_SGR_APPLICATION',
-' order by 2'))
+'select d, r',
+'  from sct_ui_lov_sgr_app_pages',
+' where sgr_app_id = :P1_SGR_APPLICATION',
+' order by r'))
 ,p_lov_display_null=>'YES'
 ,p_lov_null_text=>'- Anwendungsseite wählen -'
 ,p_cSize=>30
@@ -8910,7 +8886,7 @@ wwv_flow_api.create_page(
 ,p_cache_timeout_seconds=>21600
 ,p_help_text=>'No help is available for this page.'
 ,p_last_updated_by=>'DOAG_ADMIN'
-,p_last_upd_yyyymmddhh24miss=>'20161008090700'
+,p_last_upd_yyyymmddhh24miss=>'20161127114752'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(121868352791142914)
@@ -9060,9 +9036,89 @@ wwv_flow_api.create_page_item(
 ,p_attribute_05=>'top'
 );
 wwv_flow_api.create_page_item(
+ p_id=>wwv_flow_api.id(9168426691701627)
+,p_name=>'P3_SAT_DEFAULT_ATTRIBUTE_1'
+,p_item_sequence=>60
+,p_item_plug_id=>wwv_flow_api.id(121868352791142914)
+,p_use_cache_before_default=>'NO'
+,p_prompt=>'Standard-Attribut 1'
+,p_source=>'SAT_DEFAULT_ATTRIBUTE_1'
+,p_source_type=>'DB_COLUMN'
+,p_display_as=>'NATIVE_TEXT_FIELD'
+,p_cSize=>30
+,p_field_template=>wwv_flow_api.id(121509399298100282)
+,p_item_template_options=>'#DEFAULT#'
+,p_help_text=>'Geben Sie einen PL/SQL-Ausdruck ein, der verwendet werden soll, falls für das entsprechende Attribut kein Wert übergeben wird.<br>Beispiele:<ul><li>''SUBMIT''</li><li>pit.get_message_text(''MY_MESSAGE'')</li></ul>'
+,p_attribute_01=>'N'
+,p_attribute_02=>'N'
+,p_attribute_04=>'TEXT'
+,p_attribute_05=>'BOTH'
+);
+wwv_flow_api.create_page_item(
+ p_id=>wwv_flow_api.id(9168537144701628)
+,p_name=>'P3_SAT_DEFAULT_ATTRIBUTE_2'
+,p_item_sequence=>80
+,p_item_plug_id=>wwv_flow_api.id(121868352791142914)
+,p_use_cache_before_default=>'NO'
+,p_prompt=>'Standard-Attribut 2'
+,p_source=>'SAT_DEFAULT_ATTRIBUTE_2'
+,p_source_type=>'DB_COLUMN'
+,p_display_as=>'NATIVE_TEXT_FIELD'
+,p_cSize=>30
+,p_field_template=>wwv_flow_api.id(121509399298100282)
+,p_item_template_options=>'#DEFAULT#'
+,p_help_text=>'Geben Sie einen PL/SQL-Ausdruck ein, der verwendet werden soll, falls für das entsprechende Attribut kein Wert übergeben wird.<br>Beispiele:<ul><li>''SUBMIT''</li><li>pit.get_message_text(''MY_MESSAGE'')</li></ul>'
+,p_attribute_01=>'N'
+,p_attribute_02=>'N'
+,p_attribute_04=>'TEXT'
+,p_attribute_05=>'BOTH'
+);
+wwv_flow_api.create_page_item(
+ p_id=>wwv_flow_api.id(9168634370701629)
+,p_name=>'P3_SAT_CHECK_ATTRIBUTE_1'
+,p_item_sequence=>70
+,p_item_plug_id=>wwv_flow_api.id(121868352791142914)
+,p_use_cache_before_default=>'NO'
+,p_prompt=>'Testausdruck Attribut 1'
+,p_source=>'SAT_CHECK_ATTRIBUTE_1'
+,p_source_type=>'DB_COLUMN'
+,p_display_as=>'NATIVE_TEXT_FIELD'
+,p_cSize=>30
+,p_begin_on_new_line=>'N'
+,p_field_template=>wwv_flow_api.id(121509399298100282)
+,p_item_template_options=>'#DEFAULT#'
+,p_help_text=>'Ausdruck, um das Attribut zu testen. Der Attributwert kann über den Ersetzungsanker #VALUE# referenziert werden.<br>Beispiele:<ul><li>#VALUE# is not null</li><li>#VALUE# in (10, 20, 30)</li><li>pit.assert_not_null(#VALUE#)</li></ul><p>Bevorzugt sollt'
+||'en PIT-Tests verwendet werden, da die dort erzeugten Fehlermeldungen in den Tests ausgegeben werden.</p>'
+,p_attribute_01=>'N'
+,p_attribute_02=>'N'
+,p_attribute_04=>'TEXT'
+,p_attribute_05=>'BOTH'
+);
+wwv_flow_api.create_page_item(
+ p_id=>wwv_flow_api.id(9168791074701630)
+,p_name=>'P3_SAT_CHECK_ATTRIBUTE_2'
+,p_item_sequence=>90
+,p_item_plug_id=>wwv_flow_api.id(121868352791142914)
+,p_use_cache_before_default=>'NO'
+,p_prompt=>'Testausdruck Attribut 2'
+,p_source=>'SAT_CHECK_ATTRIBUTE_2'
+,p_source_type=>'DB_COLUMN'
+,p_display_as=>'NATIVE_TEXT_FIELD'
+,p_cSize=>30
+,p_begin_on_new_line=>'N'
+,p_field_template=>wwv_flow_api.id(121509399298100282)
+,p_item_template_options=>'#DEFAULT#'
+,p_help_text=>'Ausdruck, um das Attribut zu testen. Der Attributwert kann über den Ersetzungsanker #VALUE# referenziert werden.<br>Beispiele:<ul><li>#VALUE# is not null</li><li>#VALUE# in (10, 20, 30)</li><li>pit.assert_not_null(#VALUE#)</li></ul><p>Bevorzugt sollt'
+||'en PIT-Tests verwendet werden, da die dort erzeugten Fehlermeldungen in den Tests ausgegeben werden.</p>'
+,p_attribute_01=>'N'
+,p_attribute_02=>'N'
+,p_attribute_04=>'TEXT'
+,p_attribute_05=>'BOTH'
+);
+wwv_flow_api.create_page_item(
  p_id=>wwv_flow_api.id(17628985480291879)
 ,p_name=>'P3_SAT_RAISE_RECURSIVE'
-,p_item_sequence=>60
+,p_item_sequence=>100
 ,p_item_plug_id=>wwv_flow_api.id(121868352791142914)
 ,p_use_cache_before_default=>'NO'
 ,p_item_default=>'1'
@@ -9257,7 +9313,7 @@ wwv_flow_api.create_page(
 ,p_cache_timeout_seconds=>21600
 ,p_help_text=>'No help is available for this page.'
 ,p_last_updated_by=>'DOAG_ADMIN'
-,p_last_upd_yyyymmddhh24miss=>'20161008163429'
+,p_last_upd_yyyymmddhh24miss=>'20161126102546'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(68856590420718316)
@@ -9391,12 +9447,9 @@ wwv_flow_api.create_page_item(
 ,p_display_as=>'NATIVE_SELECT_LIST'
 ,p_named_lov=>'LOV_APPLICATIONS'
 ,p_lov=>wwv_flow_utilities.join(wwv_flow_t_varchar2(
-'select application_name || '' ('' || application_id || '')'' d,',
-'        application_id r',
-'  from apex_applications',
-' where application_id != :APP_ID',
-'   and application_id not between 3000 and 9000',
-' order by 2'))
+'select d, r',
+'  from sct_ui_lov_applications',
+' order by r'))
 ,p_lov_display_null=>'YES'
 ,p_lov_null_text=>'- Zielanwendung -'
 ,p_cSize=>30
@@ -10374,7 +10427,7 @@ wwv_flow_api.create_page(
 ,p_cache_timeout_seconds=>21600
 ,p_help_text=>'No help is available for this page.'
 ,p_last_updated_by=>'DOAG_ADMIN'
-,p_last_upd_yyyymmddhh24miss=>'20161001144256'
+,p_last_upd_yyyymmddhh24miss=>'20161126103019'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(121767708874909028)
@@ -10555,12 +10608,9 @@ wwv_flow_api.create_page_item(
 ,p_display_as=>'NATIVE_SELECT_LIST'
 ,p_named_lov=>'LOV_APPLICATIONS'
 ,p_lov=>wwv_flow_utilities.join(wwv_flow_t_varchar2(
-'select application_name || '' ('' || application_id || '')'' d,',
-'        application_id r',
-'  from apex_applications',
-' where application_id != :APP_ID',
-'   and application_id not between 3000 and 9000',
-' order by 2'))
+'select d, r',
+'  from sct_ui_lov_applications',
+' order by r'))
 ,p_lov_display_null=>'YES'
 ,p_lov_null_text=>'- APEX-Anwendung wählen -'
 ,p_cHeight=>1
@@ -10583,11 +10633,10 @@ wwv_flow_api.create_page_item(
 ,p_display_as=>'NATIVE_SELECT_LIST'
 ,p_named_lov=>'LOV_APPLICATION_PAGES'
 ,p_lov=>wwv_flow_utilities.join(wwv_flow_t_varchar2(
-'select page_name || '' ('' || page_id || '')'' d,',
-'       page_id r',
-'  from apex_application_pages',
+'select d, r',
+'  from sct_ui_lov_app_pages',
 ' where application_id = :P6_SGR_APP_ID',
-' order by 1'))
+' order by d'))
 ,p_lov_display_null=>'YES'
 ,p_lov_null_text=>'- Anwendungsseite wählen -'
 ,p_lov_cascade_parent_items=>'P6_SGR_APP_ID'
@@ -10757,7 +10806,7 @@ wwv_flow_api.create_page(
 ,p_cache_timeout_seconds=>21600
 ,p_help_text=>'Für diese Seite ist keine Hilfe verfügbar.'
 ,p_last_updated_by=>'DOAG_ADMIN'
-,p_last_upd_yyyymmddhh24miss=>'20161008182547'
+,p_last_upd_yyyymmddhh24miss=>'20161127131100'
 );
 wwv_flow_api.create_page_plug(
  p_id=>wwv_flow_api.id(28682544054633700)
@@ -10827,12 +10876,9 @@ wwv_flow_api.create_page_item(
 ,p_display_as=>'NATIVE_SELECT_LIST'
 ,p_named_lov=>'LOV_SGR_APPLICATIONS'
 ,p_lov=>wwv_flow_utilities.join(wwv_flow_t_varchar2(
-'select distinct application_name || '' ('' || application_id || '')'' d, application_id r',
-'  from apex_applications app',
-'  join sct_rule_group sgr',
-'    on app.application_id = sgr.sgr_app_id',
-' where sgr.sgr_app_id != :APP_ID',
-' order by 2'))
+'select d, r',
+'  from sct_ui_lov_sgr_applications',
+' order by r'))
 ,p_lov_display_null=>'YES'
 ,p_lov_null_text=>'- Anwendung wählen -'
 ,p_cSize=>30
@@ -10989,6 +11035,86 @@ wwv_flow_api.create_page_process(
 ,p_attribute_04=>'SGR_ID'
 ,p_process_when=>'P1_SGR_ID'
 ,p_process_when_type=>'ITEM_IS_NOT_NULL'
+);
+end;
+/
+prompt --application/pages/page_00100
+begin
+wwv_flow_api.create_page(
+ p_id=>100
+,p_user_interface_id=>wwv_flow_api.id(121515126210100305)
+,p_name=>'Testelemente SCT'
+,p_page_mode=>'NORMAL'
+,p_step_title=>'Testelemente SCT'
+,p_step_sub_title_type=>'TEXT_WITH_SUBSTITUTIONS'
+,p_first_item=>'NO_FIRST_ITEM'
+,p_page_template_options=>'#DEFAULT#'
+,p_dialog_chained=>'Y'
+,p_overwrite_navigation_list=>'N'
+,p_page_is_public_y_n=>'N'
+,p_cache_mode=>'NOCACHE'
+,p_help_text=>'No help is available for this page.'
+,p_page_comment=>'Diese Seite enthält Testelemente, die zum automatisierten Testen von SCT verwendet werden.'
+,p_last_updated_by=>'DOAG_ADMIN'
+,p_last_upd_yyyymmddhh24miss=>'20161127123549'
+);
+wwv_flow_api.create_page_plug(
+ p_id=>wwv_flow_api.id(9168190962701624)
+,p_plug_name=>'Testparkours'
+,p_region_template_options=>'#DEFAULT#:t-Region--scrollBody'
+,p_plug_template=>wwv_flow_api.id(121489164121100263)
+,p_plug_display_sequence=>10
+,p_include_in_reg_disp_sel_yn=>'Y'
+,p_plug_display_point=>'BODY'
+,p_plug_query_row_template=>1
+,p_plug_query_options=>'DERIVED_REPORT_COLUMNS'
+,p_attribute_01=>'N'
+,p_attribute_02=>'HTML'
+);
+wwv_flow_api.create_page_button(
+ p_id=>wwv_flow_api.id(9168317878701626)
+,p_button_sequence=>10
+,p_button_plug_id=>wwv_flow_api.id(9168190962701624)
+,p_button_name=>'P100_SUBMIT'
+,p_button_static_id=>'B100_SAVE'
+,p_button_action=>'DEFINED_BY_DA'
+,p_button_template_options=>'#DEFAULT#'
+,p_button_template_id=>wwv_flow_api.id(121509977018100285)
+,p_button_image_alt=>'Speichern'
+,p_button_position=>'REGION_TEMPLATE_NEXT'
+,p_button_execute_validations=>'N'
+);
+wwv_flow_api.create_page_item(
+ p_id=>wwv_flow_api.id(9168285589701625)
+,p_name=>'P100_MANDATORY_FIELD'
+,p_item_sequence=>10
+,p_item_plug_id=>wwv_flow_api.id(9168190962701624)
+,p_prompt=>'Pflichtfeld'
+,p_display_as=>'NATIVE_TEXT_FIELD'
+,p_cSize=>30
+,p_field_template=>wwv_flow_api.id(121509399298100282)
+,p_item_template_options=>'#DEFAULT#'
+,p_attribute_01=>'N'
+,p_attribute_02=>'N'
+,p_attribute_04=>'TEXT'
+,p_attribute_05=>'BOTH'
+);
+wwv_flow_api.create_page_da_event(
+ p_id=>wwv_flow_api.id(9167987158701622)
+,p_name=>'SCT_TEST_CASES'
+,p_event_sequence=>10
+,p_bind_type=>'bind'
+,p_bind_event_type=>'ready'
+);
+wwv_flow_api.create_page_da_action(
+ p_id=>wwv_flow_api.id(9168001501701623)
+,p_event_id=>wwv_flow_api.id(9167987158701622)
+,p_event_result=>'TRUE'
+,p_action_sequence=>10
+,p_execute_on_page_init=>'N'
+,p_action=>'PLUGIN_DE.CONDES.PLUGIN.SCT'
+,p_attribute_01=>'SCT_TEST_CASES'
+,p_stop_execution_on_error=>'Y'
 );
 end;
 /

@@ -84,8 +84,7 @@ begin
     p_pms_text => q'øFehler beim Erstellen der Regelgruppenview #1#: #2#.ø',
     p_pms_pse_id => 30,
     p_pms_pml_name => 'GERMAN'
-  );
-  
+  );  
 
   pit_admin.merge_message(
     p_pms_name => 'SCT_APP_DOES_NOT_EXIST',
@@ -97,6 +96,13 @@ begin
   pit_admin.merge_message(
     p_pms_name => 'SCT_PAGE_DOES_NOT_EXIST',
     p_pms_text => q'øAPEX-Anwendungsseite #1# existiert nicht in Anwendung #2#.ø',
+    p_pms_pse_id => 30,
+    p_pms_pml_name => 'GERMAN'
+  );
+
+  pit_admin.merge_message(
+    p_pms_name => 'SCT_ITEM_DOES_NOT_EXIST',
+    p_pms_text => q'øSeitenelement #1# existiert nicht in Anwendung #2#.ø',
     p_pms_pse_id => 30,
     p_pms_pml_name => 'GERMAN'
   );

@@ -2,7 +2,8 @@ create or replace force view sct_ui_main_groups as
 with params as (
        select v('APP_ID') app_id,
               v('P1_SGR_APPLICATION') sgr_app_id,
-              v('P1_SGR_PAGE') sgr_page_id
+              v('P1_SGR_PAGE') sgr_page_id,
+              case when instr(apex_util.get_groups_user_belongs_to(v('APP_USER')), 'SCT_ADMIN') > 0 then 1 else 0 end is_sct_admin
          from dual
        ),
        rule_details as (
@@ -24,4 +25,4 @@ select /*+ NO_MERGE (p) */sgr.sgr_id, sgr.sgr_name, sgr.sgr_description,
   join params p
     on (sgr.sgr_app_id = p.sgr_app_id or p.sgr_app_id is null)
    and (sgr.sgr_page_id = p.sgr_page_id or p.sgr_page_id is null)
- where sgr.sgr_app_id != app_id;
+ where (sgr.sgr_app_id != app_id or p.is_sct_admin = 1);

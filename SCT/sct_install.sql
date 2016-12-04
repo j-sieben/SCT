@@ -1,6 +1,7 @@
 -- Parameters:
 -- 1: Owner of SCT, package into which SCT will be installed
 -- 2: APEX workspace name, into which the APEX application will be installed. Needs access to Owner of SCT
+-- 3: ALIAS of the APEX-application. 
 
 @init.sql &1. &2. &3.
 

@@ -36,8 +36,23 @@ prompt &s1.Create view SCT_UI_LIST_ACTION_TYPE
 prompt &s1.Create view SCT_UI_LIST_PAGE_ITEMS
 @&view_dir.sct_ui_list_page_items.vw
 
+prompt &s1.Create view SCT_UI_LOV_APP_PAGES
+@&view_dir.sct_ui_lov_app_pages.vw
+
+prompt &s1.Create view SCT_UI_LOV_APPLICATIONS
+@&view_dir.sct_ui_lov_applications.vw
+
 prompt &s1.Create view SCT_UI_LOV_PAGE_ITEMS
 @&view_dir.sct_ui_lov_page_items.vw
+
+prompt &s1.Create view SCT_UI_LOV_SGR_APP_PAGES
+@&view_dir.sct_ui_lov_app_sgr_pages.vw
+
+prompt &s1.Create view SCT_UI_LOV_SGR_APPLICATIONS
+@&view_dir.sct_ui_lov_sgr_applications.vw
+
+prompt &s1.Create view SCT_UI_LOV_SGR_PAGE_ITEMS
+@&view_dir.sct_ui_lov_sgr_page_items.vw
 
 prompt &s1.Create view SCT_UI_MAIN_GROUPS
 @&view_dir.sct_ui_main_groups.vw

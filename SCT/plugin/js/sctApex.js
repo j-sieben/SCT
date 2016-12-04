@@ -56,7 +56,7 @@ de.condes.plugin.sct.apex_42_5_0 = {};
 (function(sct){
    // APEX-Fehlerbehandlung
   var C_APEX_ERROR_CLASS = 'apex-page-item-error';
-  var C_APEX_ERROR_CLASS_SEL = `.${C_APEX_ERROR_CLASS}`;
+  var C_APEX_ERROR_CLASS_SEL = `.${C_APEX_ERROR_CLASS}, .DOCUMENT`;
   
   var C_MESSAGE_TITLE_SEL = '.t-Alert-title';    
   var C_ERROR_CLASS_SEL =  '.t-Body-alert';
@@ -303,8 +303,18 @@ de.condes.plugin.sct.apex_42_5_0 = {};
    */
   sct.setNotification = function(message){
     sct.clearNotification;
-    $(C_ERROR_DIALOG_POSITION_SEL).prepend(C_PAGE_NOTIFICATION_TEMPLATE);
-    $(C_MESSAGE_TITLE_SEL).text(message);      
+     if ($(`${C_ERROR_CLASS_SEL} ${C_APEX_ERROR_ID_SEL}`).length == 0){
+      // Es ist keine Fehlerregion auf der Seite vorhanden, anzeigen
+      if ($(C_ERROR_DIALOG_POSITION_SEL).length){ 
+        // Es wird eine modale Seite angezeigt
+        $(C_ERROR_DIALOG_POSITION_SEL).prepend(C_PAGE_NOTIFICATION_TEMPLATE);
+      }
+      else{
+        $(C_ERROR_REGION_POSITION_SEL).prepend(C_PAGE_NOTIFICATION_TEMPLATE);
+      }
+    };
+    $(C_MESSAGE_TITLE_SEL).text(message);    
+    $('.t-Button--closeAlert').on('click', sct.clearNotification);
   };
   
   

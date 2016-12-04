@@ -238,6 +238,10 @@ as
    * %param p_sat_description Optionale Beschreibung, wird als Hilfstext angezeigt
    * %param p_sat_pl_sql PL/SQL-Anweisung, die ausgefuehrt werden soll
    * %param p_sat_js JavaScript-Anweisung, die ausgefuehrt werden soll
+   * %param p_sat_default_attribute_1 Default-Ausdruck, falls Aktion kein Attribut 1 definiert
+   * %param p_sat_check_attribute_1 Testausdruck, der Attribut 1 validiert
+   * %param p_sat_default_attribute_2 Default-Ausdruck, falls Aktion kein Attribut 2 definiert
+   * %param p_sat_check_attribute_2 Testausdruck, der Attribut 2 validiert
    * %param p_sat_is_editable Flag, das anzeigt, ob der Endanwender diese Aktivitaet aendern darf
    * %param p_sat_raise_recursive Flag, das anzeigt, ob der Aktionstyp bei Rekursionen
    *        ausgefuehrt werden soll.
@@ -249,8 +253,12 @@ as
     p_sat_description in sct_action_type.sat_description%type default null,
     p_sat_pl_sql in sct_action_type.sat_pl_sql%type,
     p_sat_js in sct_action_type.sat_js%type,
+    p_sat_default_attribute_1 sct_action_type.sat_default_attribute_1%type default null,
+    p_sat_check_attribute_1 sct_action_type.sat_check_attribute_1%type default null,
+    p_sat_default_attribute_2 sct_action_type.sat_default_attribute_2%type default null,
+    p_sat_check_attribute_2 sct_action_type.sat_check_attribute_2%type default null,
     p_sat_is_editable in sct_action_type.sat_is_editable%type default sct_const.c_true,
     p_sat_raise_recursive in sct_action_type.sat_raise_recursive%type default sct_const.c_true);
-    
+
 end sct_admin;
 /

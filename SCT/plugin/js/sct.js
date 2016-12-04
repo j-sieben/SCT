@@ -76,36 +76,48 @@ de.condes.plugin.sct = {};
   sct.setErrors = function(errorList) {
     sct.ApexJS.maintainErrors(errorList);
   };
+
    
   /* 
     Private Hilfsmethoden 
    */
+  // Bindet einen konkreten Event an ein Element
+  function bindEvent(item, event){
+    var $this = $(`#${item}`);
+    var eventList = $._data($this.get(0), 'events');
+
+    if (eventList == undefined || eventList[event] == undefined){
+      // Element hat noch keinen entsprechenden Event, binden
+      $this
+      .on(event, function(e){
+        sct.execute(e, sct.ajaxIdentifier, sct.pageItems);
+        apex.debug.log(`Event »${event}« raised at ${item}`);
+      });
+      if(event == C_BIND_EVENT){
+        // CHANGE-Events sollen bei APEXREFRESH nicht ausgelöst werden, pausieren
+        $this
+        .on(C_APEX_BEFORE_REFRESH, function(e){
+          $(this).off(C_BIND_EVENT);
+          apex.debug.log(`Event »${C_BIND_EVENT}« paused at ${item}`);
+        })
+        .on(C_APEX_AFTER_REFRESH, function(e){
+          $(this).on(C_BIND_EVENT, function(e){
+            sct.execute(e, sct.ajaxIdentifier, sct.pageItems);
+          });
+          apex.debug.log(`Event »${C_BIND_EVENT}« re-established at ${item}`);
+        });
+      };
+    };
+  };
+
+
   // Bindet an alle Seitenelemente aus SCT.BIND_ITEMS an den CHANGE-Event,
   // um die Verarbeitung des Plugins auszulösen
   // Alle relevanten Elemente werden in pageItems hinterlegt, um beim Auslösen Elementwerte
   // an die Datenbank zu senden.
   function bindEvents() {
     $.each(sct.bindItems, function(){
-      var $this = $('#' + this.id);
-      var event = this.event;
-      $this
-      .on(event, function(e){
-        sct.execute(e, sct.ajaxIdentifier, sct.pageItems);
-        apex.debug.log(`Event »${event}« raised at ${this.id}`);
-      });
-      if(event == C_BIND_EVENT){
-        $this
-        .on(C_APEX_BEFORE_REFRESH, function(e){
-          $(this).off(C_BIND_EVENT);
-          apex.debug.log(`Event »${C_BIND_EVENT}« paused at ${this.id}`);
-        })
-        .on(C_APEX_AFTER_REFRESH, function(e){
-          $(this).on(C_BIND_EVENT, function(e){
-            sct.execute(e, sct.ajaxIdentifier, sct.pageItems);
-          });
-          apex.debug.log(`Event »${C_BIND_EVENT}« re-established at ${this.id}`);
-        });
-      };
+      bindEvent(this.id, this.event);
     });
   };
   
@@ -119,6 +131,10 @@ de.condes.plugin.sct = {};
   
   
   sct.setMandatory = function(item, mandatory){
+    if (mandatory){
+      bindEvent(item, C_BIND_EVENT);
+      sct.pageItems.push(item);
+    }
     sct.ApexJS.setFieldMandatory(item, mandatory);
   }
   
@@ -144,15 +160,15 @@ de.condes.plugin.sct = {};
     var triggeringElement = C_NO_TRIGGERING_ITEM
     if (typeof e.target != 'undefined'){
       triggeringElement = e.target.id;
-      $triggeringElement = $('#' + triggeringElement)
-      if($triggeringElement.attr('type') == 'radio'){
-        triggeringElement = $triggeringElement.parents('fieldset').attr('id');
-      }
-      else if (triggeringElement == '') {
+      if (triggeringElement == '') {
         // Einige Browser senden accessKey-San anstatt Schaltfläche als triggerndes Element
         // In diesen Fällen parent-Element ansprechen und ID von dort lesen
         triggeringElement = e.target.parentElement.id;
       };
+      $triggeringElement = $('#' + triggeringElement)
+      if($triggeringElement.attr('type') == 'radio'){
+        triggeringElement = $triggeringElement.parents('fieldset').attr('id');
+      }
       apex.debug.log(`Triggering element: ${triggeringElement}`);
     }
     
@@ -174,6 +190,7 @@ de.condes.plugin.sct = {};
   sct.init = function(me){
     // Binde auslösende Events an Elemente, die über Attribut 01 übergeben werden
     sct.bindItems = $.parseJSON(me.action.attribute01.replace(/~/g, '"'));
+    sct.pageItems = [];
     if (me.action.attribute02) {
       sct.pageItems = me.action.attribute02.split(',');
     };

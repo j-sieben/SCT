@@ -1,11 +1,12 @@
 call sct_admin.prepare_rule_group_import('&APEX_WS.', '&APEX_ALIAS.');
 
-
 set define off
+
 declare
   l_foo number;
 begin
   l_foo := sct_admin.map_id;
+  -- sct_admin.prepare_rule_group_import('DOAG', 'TOOL');
 
   -- ACTION TYPES
   sct_admin.merge_action_type(
@@ -65,7 +66,7 @@ apex.item('#ITEM#').disable();~',
 <p><em>Parameter</em>: JavaScript-Anweisung, die ausgef&uuml;hrt werden soll.</p>
 ~',
     p_sat_pl_sql => q'~~',
-    p_sat_js => q'~#ATTRIBUTE#~',
+    p_sat_js => q'~#ATTRIBUTE#;~',
     p_sat_is_editable => 1,
     p_sat_raise_recursive => 1);
 
@@ -188,7 +189,7 @@ apex.item('#ITEM#').enable();~',
     p_sru_active => 1);
 
   sct_admin.merge_rule(
-    p_sru_id => sct_admin.map_id(4),
+    p_sru_id => sct_admin.map_id(3),
     p_sru_sgr_id => sct_admin.map_id(1),
     p_sru_name => q'~Exporttyp ist "Regelgruppe", Regelgruppe unbekannt~',
     p_sru_condition => q'~P8_EXPORT_TYPE = 'SGR' and P8_SGR_ID is null~',
@@ -196,7 +197,7 @@ apex.item('#ITEM#').enable();~',
     p_sru_active => 1);
 
   sct_admin.merge_rule(
-    p_sru_id => sct_admin.map_id(5),
+    p_sru_id => sct_admin.map_id(4),
     p_sru_sgr_id => sct_admin.map_id(1),
     p_sru_name => q'~Anwendung ist nicht leer, Anwendungsexport~',
     p_sru_condition => q'~P8_SGR_APP_ID is not null and P8_EXPORT_TYPE = 'APP'~',
@@ -204,7 +205,7 @@ apex.item('#ITEM#').enable();~',
     p_sru_active => 1);
 
   sct_admin.merge_rule(
-    p_sru_id => sct_admin.map_id(6),
+    p_sru_id => sct_admin.map_id(5),
     p_sru_sgr_id => sct_admin.map_id(1),
     p_sru_name => q'~Anwendung ist nicht leer, Regelgruppenexport~',
     p_sru_condition => q'~P8_SGR_APP_ID is not null and P8_EXPORT_TYPE = 'SGR'~',
@@ -212,7 +213,7 @@ apex.item('#ITEM#').enable();~',
     p_sru_active => 1);
 
   sct_admin.merge_rule(
-    p_sru_id => sct_admin.map_id(7),
+    p_sru_id => sct_admin.map_id(6),
     p_sru_sgr_id => sct_admin.map_id(1),
     p_sru_name => q'~Anwendungseite ist nicht leer, Regelgruppenexport~',
     p_sru_condition => q'~P8_SGR_PAGE_ID is not null and P8_EXPORT_TYPE = 'SGR'~',
@@ -220,7 +221,7 @@ apex.item('#ITEM#').enable();~',
     p_sru_active => 1);
 
   sct_admin.merge_rule(
-    p_sru_id => sct_admin.map_id(8),
+    p_sru_id => sct_admin.map_id(7),
     p_sru_sgr_id => sct_admin.map_id(1),
     p_sru_name => q'~Regelgruppe exportieren~',
     p_sru_condition => q'~P8_EXPORT_TYPE = 'SGR' and P8_SGR_APP_ID is not null and P8_SGR_PAGE_ID is not null and P8_SGR_ID is not null~',
@@ -228,7 +229,7 @@ apex.item('#ITEM#').enable();~',
     p_sru_active => 1);
 
   sct_admin.merge_rule(
-    p_sru_id => sct_admin.map_id(9),
+    p_sru_id => sct_admin.map_id(8),
     p_sru_sgr_id => sct_admin.map_id(1),
     p_sru_name => q'~Seite absenden~',
     p_sru_condition => q'~B8_EXPORT = 1~',
@@ -236,7 +237,7 @@ apex.item('#ITEM#').enable();~',
     p_sru_active => 1);
 
   sct_admin.merge_rule(
-    p_sru_id => sct_admin.map_id(10),
+    p_sru_id => sct_admin.map_id(9),
     p_sru_sgr_id => sct_admin.map_id(1),
     p_sru_name => q'~Anwendung ist leer~',
     p_sru_condition => q'~P8_SGR_APP_ID is null~',
@@ -244,7 +245,7 @@ apex.item('#ITEM#').enable();~',
     p_sru_active => 1);
 
   sct_admin.merge_rule(
-    p_sru_id => sct_admin.map_id(11),
+    p_sru_id => sct_admin.map_id(10),
     p_sru_sgr_id => sct_admin.map_id(1),
     p_sru_name => q'~Anwendungsseite ist leer~',
     p_sru_condition => q'~P8_SGR_PAGE_ID is null~',
@@ -252,7 +253,7 @@ apex.item('#ITEM#').enable();~',
     p_sru_active => 1);
 
   sct_admin.merge_rule(
-    p_sru_id => sct_admin.map_id(12),
+    p_sru_id => sct_admin.map_id(11),
     p_sru_sgr_id => sct_admin.map_id(1),
     p_sru_name => q'~Regelgruppe ist leer~',
     p_sru_condition => q'~P8_SGR_ID is null~',
@@ -260,7 +261,7 @@ apex.item('#ITEM#').enable();~',
     p_sru_active => 1);
 
   sct_admin.merge_rule(
-    p_sru_id => sct_admin.map_id(64),
+    p_sru_id => sct_admin.map_id(12),
     p_sru_sgr_id => sct_admin.map_id(1),
     p_sru_name => q'~Seite initialisieren, Regelgruppe bekannt~',
     p_sru_condition => q'~initializing = 1 and P8_SGR_ID is not null~',
@@ -268,7 +269,7 @@ apex.item('#ITEM#').enable();~',
     p_sru_active => 1);
 
   sct_admin.merge_rule(
-    p_sru_id => sct_admin.map_id(66),
+    p_sru_id => sct_admin.map_id(13),
     p_sru_sgr_id => sct_admin.map_id(1),
     p_sru_name => q'~Exporttyp ist "Anwendung", Regelgruppe bekannt~',
     p_sru_condition => q'~P8_EXPORT_TYPE = 'APP' and P8_SGR_ID is not null~',
@@ -276,7 +277,7 @@ apex.item('#ITEM#').enable();~',
     p_sru_active => 1);
 
   sct_admin.merge_rule(
-    p_sru_id => sct_admin.map_id(68),
+    p_sru_id => sct_admin.map_id(14),
     p_sru_sgr_id => sct_admin.map_id(1),
     p_sru_name => q'~Exporttyp ist "Anwendung", Regeglruppe unbekannt~',
     p_sru_condition => q'~P8_EXPORT_TYPE = 'APP' and P8_SGR_ID is null~',
@@ -284,7 +285,7 @@ apex.item('#ITEM#').enable();~',
     p_sru_active => 1);
 
   sct_admin.merge_rule(
-    p_sru_id => sct_admin.map_id(70),
+    p_sru_id => sct_admin.map_id(15),
     p_sru_sgr_id => sct_admin.map_id(1),
     p_sru_name => q'~Exporttyp ist "Regelgruppe", Regelgruppe bekannt~',
     p_sru_condition => q'~P8_EXPORT_TYPE = 'SGR' and P8_SGR_ID is not null~',
@@ -333,7 +334,7 @@ apex.item('#ITEM#').enable();~',
     p_sra_active => 1);
 
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(4),
+    p_sra_sru_id => sct_admin.map_id(3),
     p_sra_sgr_id => sct_admin.map_id(1),
     p_sra_spi_id => 'P8_SGR_APP_ID',
     p_sra_sat_id => 'EMPTY_FIELD',
@@ -343,7 +344,7 @@ apex.item('#ITEM#').enable();~',
     p_sra_active => 1);
 
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(4),
+    p_sra_sru_id => sct_admin.map_id(3),
     p_sra_sgr_id => sct_admin.map_id(1),
     p_sra_spi_id => 'P8_SGR_ID',
     p_sra_sat_id => 'DISABLE_ITEM',
@@ -353,7 +354,7 @@ apex.item('#ITEM#').enable();~',
     p_sra_active => 1);
 
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(4),
+    p_sra_sru_id => sct_admin.map_id(3),
     p_sra_sgr_id => sct_admin.map_id(1),
     p_sra_spi_id => 'P8_SGR_ID',
     p_sra_sat_id => 'IS_MANDATORY',
@@ -363,7 +364,7 @@ apex.item('#ITEM#').enable();~',
     p_sra_active => 1);
 
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(4),
+    p_sra_sru_id => sct_admin.map_id(3),
     p_sra_sgr_id => sct_admin.map_id(1),
     p_sra_spi_id => 'P8_SGR_PAGE_ID',
     p_sra_sat_id => 'DISABLE_ITEM',
@@ -373,7 +374,7 @@ apex.item('#ITEM#').enable();~',
     p_sra_active => 1);
 
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(4),
+    p_sra_sru_id => sct_admin.map_id(3),
     p_sra_sgr_id => sct_admin.map_id(1),
     p_sra_spi_id => 'P8_SGR_PAGE_ID',
     p_sra_sat_id => 'IS_MANDATORY',
@@ -383,7 +384,7 @@ apex.item('#ITEM#').enable();~',
     p_sra_active => 1);
 
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(5),
+    p_sra_sru_id => sct_admin.map_id(4),
     p_sra_sgr_id => sct_admin.map_id(1),
     p_sra_spi_id => 'B8_EXPORT',
     p_sra_sat_id => 'SHOW_ITEM',
@@ -393,9 +394,19 @@ apex.item('#ITEM#').enable();~',
     p_sra_active => 1);
 
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(6),
+    p_sra_sru_id => sct_admin.map_id(5),
     p_sra_sgr_id => sct_admin.map_id(1),
     p_sra_spi_id => 'P8_SGR_PAGE_ID',
+    p_sra_sat_id => 'REFRESH_ITEM',
+    p_sra_attribute => q'~~',
+    p_sra_attribute_2 => q'~~',
+    p_sra_sort_seq => 10,
+    p_sra_active => 1);
+
+  sct_admin.merge_rule_action(
+    p_sra_sru_id => sct_admin.map_id(6),
+    p_sra_sgr_id => sct_admin.map_id(1),
+    p_sra_spi_id => 'P8_SGR_ID',
     p_sra_sat_id => 'REFRESH_ITEM',
     p_sra_attribute => q'~~',
     p_sra_attribute_2 => q'~~',
@@ -405,16 +416,6 @@ apex.item('#ITEM#').enable();~',
   sct_admin.merge_rule_action(
     p_sra_sru_id => sct_admin.map_id(7),
     p_sra_sgr_id => sct_admin.map_id(1),
-    p_sra_spi_id => 'P8_SGR_ID',
-    p_sra_sat_id => 'REFRESH_ITEM',
-    p_sra_attribute => q'~~',
-    p_sra_attribute_2 => q'~~',
-    p_sra_sort_seq => 10,
-    p_sra_active => 1);
-
-  sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(8),
-    p_sra_sgr_id => sct_admin.map_id(1),
     p_sra_spi_id => 'B8_EXPORT',
     p_sra_sat_id => 'SHOW_ITEM',
     p_sra_attribute => q'~~',
@@ -423,7 +424,7 @@ apex.item('#ITEM#').enable();~',
     p_sra_active => 1);
 
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(9),
+    p_sra_sru_id => sct_admin.map_id(8),
     p_sra_sgr_id => sct_admin.map_id(1),
     p_sra_spi_id => 'DOCUMENT',
     p_sra_sat_id => 'PLSQL_CODE',
@@ -433,7 +434,7 @@ apex.item('#ITEM#').enable();~',
     p_sra_active => 1);
 
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(9),
+    p_sra_sru_id => sct_admin.map_id(8),
     p_sra_sgr_id => sct_admin.map_id(1),
     p_sra_spi_id => 'DOCUMENT',
     p_sra_sat_id => 'SUBMIT',
@@ -443,7 +444,7 @@ apex.item('#ITEM#').enable();~',
     p_sra_active => 1);
 
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(10),
+    p_sra_sru_id => sct_admin.map_id(9),
     p_sra_sgr_id => sct_admin.map_id(1),
     p_sra_spi_id => 'B8_EXPORT',
     p_sra_sat_id => 'DISABLE_ITEM',
@@ -453,7 +454,7 @@ apex.item('#ITEM#').enable();~',
     p_sra_active => 1);
 
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(10),
+    p_sra_sru_id => sct_admin.map_id(9),
     p_sra_sgr_id => sct_admin.map_id(1),
     p_sra_spi_id => 'P8_SGR_APP_ID',
     p_sra_sat_id => 'CHECK_MANDATORY',
@@ -463,7 +464,7 @@ apex.item('#ITEM#').enable();~',
     p_sra_active => 1);
 
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(10),
+    p_sra_sru_id => sct_admin.map_id(9),
     p_sra_sgr_id => sct_admin.map_id(1),
     p_sra_spi_id => 'P8_SGR_PAGE_ID',
     p_sra_sat_id => 'EMPTY_FIELD',
@@ -473,7 +474,7 @@ apex.item('#ITEM#').enable();~',
     p_sra_active => 1);
 
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(11),
+    p_sra_sru_id => sct_admin.map_id(10),
     p_sra_sgr_id => sct_admin.map_id(1),
     p_sra_spi_id => 'P8_SGR_PAGE_ID',
     p_sra_sat_id => 'CHECK_MANDATORY',
@@ -483,7 +484,7 @@ apex.item('#ITEM#').enable();~',
     p_sra_active => 1);
 
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(12),
+    p_sra_sru_id => sct_admin.map_id(11),
     p_sra_sgr_id => sct_admin.map_id(1),
     p_sra_spi_id => 'P8_SGR_ID',
     p_sra_sat_id => 'CHECK_MANDATORY',
@@ -493,7 +494,7 @@ apex.item('#ITEM#').enable();~',
     p_sra_active => 1);
 
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(64),
+    p_sra_sru_id => sct_admin.map_id(12),
     p_sra_sgr_id => sct_admin.map_id(1),
     p_sra_spi_id => 'P8_EXPORT_TYPE',
     p_sra_sat_id => 'SET_ITEM',
@@ -503,7 +504,7 @@ apex.item('#ITEM#').enable();~',
     p_sra_active => 1);
 
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(64),
+    p_sra_sru_id => sct_admin.map_id(12),
     p_sra_sgr_id => sct_admin.map_id(1),
     p_sra_spi_id => 'P8_SGR_APP_ID',
     p_sra_sat_id => 'IS_MANDATORY',
@@ -513,7 +514,7 @@ apex.item('#ITEM#').enable();~',
     p_sra_active => 1);
 
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(66),
+    p_sra_sru_id => sct_admin.map_id(13),
     p_sra_sgr_id => sct_admin.map_id(1),
     p_sra_spi_id => 'P8_SGR_ID',
     p_sra_sat_id => 'HIDE_ITEM',
@@ -523,7 +524,7 @@ apex.item('#ITEM#').enable();~',
     p_sra_active => 1);
 
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(66),
+    p_sra_sru_id => sct_admin.map_id(13),
     p_sra_sgr_id => sct_admin.map_id(1),
     p_sra_spi_id => 'P8_SGR_ID',
     p_sra_sat_id => 'IS_OPTIONAL',
@@ -533,7 +534,7 @@ apex.item('#ITEM#').enable();~',
     p_sra_active => 1);
 
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(66),
+    p_sra_sru_id => sct_admin.map_id(13),
     p_sra_sgr_id => sct_admin.map_id(1),
     p_sra_spi_id => 'P8_SGR_PAGE_ID',
     p_sra_sat_id => 'IS_OPTIONAL',
@@ -543,7 +544,7 @@ apex.item('#ITEM#').enable();~',
     p_sra_active => 1);
 
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(66),
+    p_sra_sru_id => sct_admin.map_id(13),
     p_sra_sgr_id => sct_admin.map_id(1),
     p_sra_spi_id => 'P8_SGR_PAGE_ID',
     p_sra_sat_id => 'SET_NULL_HIDE',
@@ -553,7 +554,7 @@ apex.item('#ITEM#').enable();~',
     p_sra_active => 1);
 
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(68),
+    p_sra_sru_id => sct_admin.map_id(14),
     p_sra_sgr_id => sct_admin.map_id(1),
     p_sra_spi_id => 'P8_SGR_ID',
     p_sra_sat_id => 'HIDE_ITEM',
@@ -563,7 +564,7 @@ apex.item('#ITEM#').enable();~',
     p_sra_active => 1);
 
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(68),
+    p_sra_sru_id => sct_admin.map_id(14),
     p_sra_sgr_id => sct_admin.map_id(1),
     p_sra_spi_id => 'P8_SGR_ID',
     p_sra_sat_id => 'IS_OPTIONAL',
@@ -573,7 +574,7 @@ apex.item('#ITEM#').enable();~',
     p_sra_active => 1);
 
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(68),
+    p_sra_sru_id => sct_admin.map_id(14),
     p_sra_sgr_id => sct_admin.map_id(1),
     p_sra_spi_id => 'P8_SGR_PAGE_ID',
     p_sra_sat_id => 'HIDE_ITEM',
@@ -583,7 +584,7 @@ apex.item('#ITEM#').enable();~',
     p_sra_active => 1);
 
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(68),
+    p_sra_sru_id => sct_admin.map_id(14),
     p_sra_sgr_id => sct_admin.map_id(1),
     p_sra_spi_id => 'P8_SGR_PAGE_ID',
     p_sra_sat_id => 'IS_OPTIONAL',
@@ -593,7 +594,7 @@ apex.item('#ITEM#').enable();~',
     p_sra_active => 1);
 
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(70),
+    p_sra_sru_id => sct_admin.map_id(15),
     p_sra_sgr_id => sct_admin.map_id(1),
     p_sra_spi_id => 'P8_SGR_ID',
     p_sra_sat_id => 'IS_MANDATORY',
@@ -603,7 +604,7 @@ apex.item('#ITEM#').enable();~',
     p_sra_active => 1);
 
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(70),
+    p_sra_sru_id => sct_admin.map_id(15),
     p_sra_sgr_id => sct_admin.map_id(1),
     p_sra_spi_id => 'P8_SGR_ID',
     p_sra_sat_id => 'SHOW_ITEM',
@@ -613,7 +614,7 @@ apex.item('#ITEM#').enable();~',
     p_sra_active => 1);
 
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(70),
+    p_sra_sru_id => sct_admin.map_id(15),
     p_sra_sgr_id => sct_admin.map_id(1),
     p_sra_spi_id => 'P8_SGR_PAGE_ID',
     p_sra_sat_id => 'IS_MANDATORY',
@@ -623,7 +624,7 @@ apex.item('#ITEM#').enable();~',
     p_sra_active => 1);
 
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(70),
+    p_sra_sru_id => sct_admin.map_id(15),
     p_sra_sgr_id => sct_admin.map_id(1),
     p_sra_spi_id => 'P8_SGR_PAGE_ID',
     p_sra_sat_id => 'SHOW_ITEM',
@@ -634,92 +635,84 @@ apex.item('#ITEM#').enable();~',
 
   sct_admin.propagate_rule_change(sct_admin.map_id(1));
 
-  -- RULE GROUP SCT_ADMIN_MAIN (ID 13)
+  -- RULE GROUP SCT_ADMIN_MAIN (ID 16)
   sct_admin.merge_rule_group(
     p_sgr_app_id => coalesce(apex_application_install.get_application_id, 110),
     p_sgr_page_id => 1,
-    p_sgr_id => sct_admin.map_id(13),
+    p_sgr_id => sct_admin.map_id(16),
     p_sgr_name => q'~SCT_ADMIN_MAIN~',
     p_sgr_description => q'~Hauptseite der SCT-Administration~',
     p_sgr_active => 1);
 
   -- RULES
   sct_admin.merge_rule(
-    p_sru_id => sct_admin.map_id(14),
-    p_sru_sgr_id => sct_admin.map_id(13),
+    p_sru_id => sct_admin.map_id(17),
+    p_sru_sgr_id => sct_admin.map_id(16),
     p_sru_name => q'~Regelgruppe gewählt~',
     p_sru_condition => q'~P1_SGR_ID is not null~',
     p_sru_sort_seq => 30,
     p_sru_active => 1);
 
   sct_admin.merge_rule(
-    p_sru_id => sct_admin.map_id(15),
-    p_sru_sgr_id => sct_admin.map_id(13),
+    p_sru_id => sct_admin.map_id(18),
+    p_sru_sgr_id => sct_admin.map_id(16),
     p_sru_name => q'~Regelgruppe neu nummerieren~',
     p_sru_condition => q'~B1_RESEQUENCE_RULE_GROUP = 1~',
     p_sru_sort_seq => 80,
     p_sru_active => 1);
 
   sct_admin.merge_rule(
-    p_sru_id => sct_admin.map_id(16),
-    p_sru_sgr_id => sct_admin.map_id(13),
+    p_sru_id => sct_admin.map_id(19),
+    p_sru_sgr_id => sct_admin.map_id(16),
     p_sru_name => q'~Anwendungsfilter ist nicht leer~',
     p_sru_condition => q'~P1_SGR_APPLICATION is not null~',
     p_sru_sort_seq => 40,
     p_sru_active => 1);
 
   sct_admin.merge_rule(
-    p_sru_id => sct_admin.map_id(17),
-    p_sru_sgr_id => sct_admin.map_id(13),
+    p_sru_id => sct_admin.map_id(20),
+    p_sru_sgr_id => sct_admin.map_id(16),
     p_sru_name => q'~Anwendungsfilter ist leer~',
     p_sru_condition => q'~P1_SGR_APPLICATION is null~',
     p_sru_sort_seq => 50,
     p_sru_active => 1);
 
   sct_admin.merge_rule(
-    p_sru_id => sct_admin.map_id(18),
-    p_sru_sgr_id => sct_admin.map_id(13),
+    p_sru_id => sct_admin.map_id(21),
+    p_sru_sgr_id => sct_admin.map_id(16),
     p_sru_name => q'~Initialisierung~',
     p_sru_condition => q'~initializing = 1~',
     p_sru_sort_seq => 10,
     p_sru_active => 1);
 
   sct_admin.merge_rule(
-    p_sru_id => sct_admin.map_id(19),
-    p_sru_sgr_id => sct_admin.map_id(13),
+    p_sru_id => sct_admin.map_id(22),
+    p_sru_sgr_id => sct_admin.map_id(16),
     p_sru_name => q'~Regelgruppe ist leer~',
     p_sru_condition => q'~P1_SGR_ID is null~',
     p_sru_sort_seq => 20,
     p_sru_active => 1);
 
   sct_admin.merge_rule(
-    p_sru_id => sct_admin.map_id(20),
-    p_sru_sgr_id => sct_admin.map_id(13),
+    p_sru_id => sct_admin.map_id(23),
+    p_sru_sgr_id => sct_admin.map_id(16),
     p_sru_name => q'~Anwendungsseite ist nicht leer~',
     p_sru_condition => q'~P1_SGR_PAGE is not null~',
     p_sru_sort_seq => 70,
     p_sru_active => 1);
 
   sct_admin.merge_rule(
-    p_sru_id => sct_admin.map_id(21),
-    p_sru_sgr_id => sct_admin.map_id(13),
+    p_sru_id => sct_admin.map_id(24),
+    p_sru_sgr_id => sct_admin.map_id(16),
     p_sru_name => q'~Anwendungsseite ist leer~',
     p_sru_condition => q'~P1_SGR_PAGE is null~',
     p_sru_sort_seq => 60,
     p_sru_active => 1);
 
-  sct_admin.merge_rule(
-    p_sru_id => sct_admin.map_id(44),
-    p_sru_sgr_id => sct_admin.map_id(13),
-    p_sru_name => q'~Regelgruppe validieren~',
-    p_sru_condition => q'~B1_VALIDATE_RULE_GROUP = 1~',
-    p_sru_sort_seq => 90,
-    p_sru_active => 1);
-
   -- RULE ACTIONS
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(14),
-    p_sra_sgr_id => sct_admin.map_id(13),
+    p_sra_sru_id => sct_admin.map_id(17),
+    p_sra_sgr_id => sct_admin.map_id(16),
     p_sra_spi_id => 'B1_COPY_RULE_GROUP',
     p_sra_sat_id => 'SHOW_ITEM',
     p_sra_attribute => q'~~',
@@ -728,8 +721,8 @@ apex.item('#ITEM#').enable();~',
     p_sra_active => 1);
 
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(14),
-    p_sra_sgr_id => sct_admin.map_id(13),
+    p_sra_sru_id => sct_admin.map_id(17),
+    p_sra_sgr_id => sct_admin.map_id(16),
     p_sra_spi_id => 'B1_CREATE',
     p_sra_sat_id => 'SHOW_ITEM',
     p_sra_attribute => q'~~',
@@ -738,8 +731,8 @@ apex.item('#ITEM#').enable();~',
     p_sra_active => 1);
 
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(14),
-    p_sra_sgr_id => sct_admin.map_id(13),
+    p_sra_sru_id => sct_admin.map_id(17),
+    p_sra_sgr_id => sct_admin.map_id(16),
     p_sra_spi_id => 'B1_RESEQUENCE_RULE_GROUP',
     p_sra_sat_id => 'SHOW_ITEM',
     p_sra_attribute => q'~~',
@@ -748,18 +741,18 @@ apex.item('#ITEM#').enable();~',
     p_sra_active => 1);
 
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(14),
-    p_sra_sgr_id => sct_admin.map_id(13),
-    p_sra_spi_id => 'B1_VALIDATE_RULE_GROUP',
-    p_sra_sat_id => 'SHOW_ITEM',
-    p_sra_attribute => q'~~',
+    p_sra_sru_id => sct_admin.map_id(17),
+    p_sra_sgr_id => sct_admin.map_id(16),
+    p_sra_spi_id => 'P1_SGR_ID',
+    p_sra_sat_id => 'PLSQL_CODE',
+    p_sra_attribute => q'~sct_ui_pkg.validate_rule_group(v('#ITEM#'));~',
     p_sra_attribute_2 => q'~~',
-    p_sra_sort_seq => 50,
+    p_sra_sort_seq => 70,
     p_sra_active => 1);
 
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(14),
-    p_sra_sgr_id => sct_admin.map_id(13),
+    p_sra_sru_id => sct_admin.map_id(17),
+    p_sra_sgr_id => sct_admin.map_id(16),
     p_sra_spi_id => 'R1_RULE_OVERVIEW',
     p_sra_sat_id => 'REFRESH_ITEM',
     p_sra_attribute => q'~~',
@@ -768,8 +761,8 @@ apex.item('#ITEM#').enable();~',
     p_sra_active => 1);
 
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(15),
-    p_sra_sgr_id => sct_admin.map_id(13),
+    p_sra_sru_id => sct_admin.map_id(18),
+    p_sra_sgr_id => sct_admin.map_id(16),
     p_sra_spi_id => 'P1_SGR_ID',
     p_sra_sat_id => 'PLSQL_CODE',
     p_sra_attribute => q'~sct_ui_pkg.resequence_rule_group(v('#ITEM#'));~',
@@ -778,8 +771,8 @@ apex.item('#ITEM#').enable();~',
     p_sra_active => 1);
 
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(15),
-    p_sra_sgr_id => sct_admin.map_id(13),
+    p_sra_sru_id => sct_admin.map_id(18),
+    p_sra_sgr_id => sct_admin.map_id(16),
     p_sra_spi_id => 'R1_RULE_OVERVIEW',
     p_sra_sat_id => 'REFRESH_ITEM',
     p_sra_attribute => q'~~',
@@ -788,8 +781,8 @@ apex.item('#ITEM#').enable();~',
     p_sra_active => 1);
 
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(16),
-    p_sra_sgr_id => sct_admin.map_id(13),
+    p_sra_sru_id => sct_admin.map_id(19),
+    p_sra_sgr_id => sct_admin.map_id(16),
     p_sra_spi_id => 'P1_SGR_ID',
     p_sra_sat_id => 'SET_ITEM',
     p_sra_attribute => q'~''~',
@@ -798,8 +791,8 @@ apex.item('#ITEM#').enable();~',
     p_sra_active => 1);
 
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(16),
-    p_sra_sgr_id => sct_admin.map_id(13),
+    p_sra_sru_id => sct_admin.map_id(19),
+    p_sra_sgr_id => sct_admin.map_id(16),
     p_sra_spi_id => 'P1_SGR_PAGE',
     p_sra_sat_id => 'REFRESH_ITEM',
     p_sra_attribute => q'~~',
@@ -808,8 +801,8 @@ apex.item('#ITEM#').enable();~',
     p_sra_active => 1);
 
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(17),
-    p_sra_sgr_id => sct_admin.map_id(13),
+    p_sra_sru_id => sct_admin.map_id(20),
+    p_sra_sgr_id => sct_admin.map_id(16),
     p_sra_spi_id => 'P1_SGR_ID',
     p_sra_sat_id => 'SET_ITEM',
     p_sra_attribute => q'~''~',
@@ -818,8 +811,8 @@ apex.item('#ITEM#').enable();~',
     p_sra_active => 1);
 
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(17),
-    p_sra_sgr_id => sct_admin.map_id(13),
+    p_sra_sru_id => sct_admin.map_id(20),
+    p_sra_sgr_id => sct_admin.map_id(16),
     p_sra_spi_id => 'P1_SGR_PAGE',
     p_sra_sat_id => 'SET_NULL_DISABLE',
     p_sra_attribute => q'~~',
@@ -828,8 +821,8 @@ apex.item('#ITEM#').enable();~',
     p_sra_active => 1);
 
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(17),
-    p_sra_sgr_id => sct_admin.map_id(13),
+    p_sra_sru_id => sct_admin.map_id(20),
+    p_sra_sgr_id => sct_admin.map_id(16),
     p_sra_spi_id => 'R1_RULE_GROUP',
     p_sra_sat_id => 'REFRESH_ITEM',
     p_sra_attribute => q'~~',
@@ -838,8 +831,8 @@ apex.item('#ITEM#').enable();~',
     p_sra_active => 1);
 
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(18),
-    p_sra_sgr_id => sct_admin.map_id(13),
+    p_sra_sru_id => sct_admin.map_id(21),
+    p_sra_sgr_id => sct_admin.map_id(16),
     p_sra_spi_id => 'P1_SGR_APPLICATION',
     p_sra_sat_id => 'SET_ITEM',
     p_sra_attribute => q'~''~',
@@ -848,8 +841,8 @@ apex.item('#ITEM#').enable();~',
     p_sra_active => 1);
 
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(19),
-    p_sra_sgr_id => sct_admin.map_id(13),
+    p_sra_sru_id => sct_admin.map_id(22),
+    p_sra_sgr_id => sct_admin.map_id(16),
     p_sra_spi_id => 'B1_COPY_RULE_GROUP',
     p_sra_sat_id => 'DISABLE_ITEM',
     p_sra_attribute => q'~~',
@@ -858,8 +851,8 @@ apex.item('#ITEM#').enable();~',
     p_sra_active => 1);
 
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(19),
-    p_sra_sgr_id => sct_admin.map_id(13),
+    p_sra_sru_id => sct_admin.map_id(22),
+    p_sra_sgr_id => sct_admin.map_id(16),
     p_sra_spi_id => 'B1_CREATE',
     p_sra_sat_id => 'DISABLE_ITEM',
     p_sra_attribute => q'~~',
@@ -868,8 +861,8 @@ apex.item('#ITEM#').enable();~',
     p_sra_active => 1);
 
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(19),
-    p_sra_sgr_id => sct_admin.map_id(13),
+    p_sra_sru_id => sct_admin.map_id(22),
+    p_sra_sgr_id => sct_admin.map_id(16),
     p_sra_spi_id => 'B1_RESEQUENCE_RULE_GROUP',
     p_sra_sat_id => 'DISABLE_ITEM',
     p_sra_attribute => q'~~',
@@ -878,18 +871,8 @@ apex.item('#ITEM#').enable();~',
     p_sra_active => 1);
 
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(19),
-    p_sra_sgr_id => sct_admin.map_id(13),
-    p_sra_spi_id => 'B1_VALIDATE_RULE_GROUP',
-    p_sra_sat_id => 'DISABLE_ITEM',
-    p_sra_attribute => q'~~',
-    p_sra_attribute_2 => q'~~',
-    p_sra_sort_seq => 50,
-    p_sra_active => 1);
-
-  sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(19),
-    p_sra_sgr_id => sct_admin.map_id(13),
+    p_sra_sru_id => sct_admin.map_id(22),
+    p_sra_sgr_id => sct_admin.map_id(16),
     p_sra_spi_id => 'R1_RULE_OVERVIEW',
     p_sra_sat_id => 'REFRESH_ITEM',
     p_sra_attribute => q'~~',
@@ -898,8 +881,8 @@ apex.item('#ITEM#').enable();~',
     p_sra_active => 1);
 
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(20),
-    p_sra_sgr_id => sct_admin.map_id(13),
+    p_sra_sru_id => sct_admin.map_id(23),
+    p_sra_sgr_id => sct_admin.map_id(16),
     p_sra_spi_id => 'P1_SGR_ID',
     p_sra_sat_id => 'SET_ITEM',
     p_sra_attribute => q'~''~',
@@ -908,8 +891,8 @@ apex.item('#ITEM#').enable();~',
     p_sra_active => 1);
 
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(21),
-    p_sra_sgr_id => sct_admin.map_id(13),
+    p_sra_sru_id => sct_admin.map_id(24),
+    p_sra_sgr_id => sct_admin.map_id(16),
     p_sra_spi_id => 'R1_RULE_GROUP',
     p_sra_sat_id => 'REFRESH_ITEM',
     p_sra_attribute => q'~~',
@@ -917,121 +900,101 @@ apex.item('#ITEM#').enable();~',
     p_sra_sort_seq => 10,
     p_sra_active => 1);
 
-  sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(44),
-    p_sra_sgr_id => sct_admin.map_id(13),
-    p_sra_spi_id => 'P1_SGR_ID',
-    p_sra_sat_id => 'PLSQL_CODE',
-    p_sra_attribute => q'~sct_ui_pkg.validate_rule_group(v('#ITEM#'));~',
-    p_sra_attribute_2 => q'~~',
-    p_sra_sort_seq => 10,
-    p_sra_active => 1);
+  sct_admin.propagate_rule_change(sct_admin.map_id(16));
 
-  sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(44),
-    p_sra_sgr_id => sct_admin.map_id(13),
-    p_sra_spi_id => 'R1_RULE_OVERVIEW',
-    p_sra_sat_id => 'REFRESH_ITEM',
-    p_sra_attribute => q'~~',
-    p_sra_attribute_2 => q'~~',
-    p_sra_sort_seq => 20,
-    p_sra_active => 1);
-
-  sct_admin.propagate_rule_change(sct_admin.map_id(13));
-
-  -- RULE GROUP SCT_COPY_RULEGROUP (ID 22)
+  -- RULE GROUP SCT_COPY_RULEGROUP (ID 26)
   sct_admin.merge_rule_group(
     p_sgr_app_id => coalesce(apex_application_install.get_application_id, 110),
     p_sgr_page_id => 4,
-    p_sgr_id => sct_admin.map_id(22),
+    p_sgr_id => sct_admin.map_id(26),
     p_sgr_name => q'~SCT_COPY_RULEGROUP~',
     p_sgr_description => q'~Regeln zur Dialogseite "Regelgruppe kopieren"~',
     p_sgr_active => 1);
 
   -- RULES
   sct_admin.merge_rule(
-    p_sru_id => sct_admin.map_id(23),
-    p_sru_sgr_id => sct_admin.map_id(22),
+    p_sru_id => sct_admin.map_id(27),
+    p_sru_sgr_id => sct_admin.map_id(26),
     p_sru_name => q'~Quellanwendung ist leer~',
     p_sru_condition => q'~P4_SGR_APP_ID is null~',
     p_sru_sort_seq => 10,
     p_sru_active => 1);
 
   sct_admin.merge_rule(
-    p_sru_id => sct_admin.map_id(24),
-    p_sru_sgr_id => sct_admin.map_id(22),
+    p_sru_id => sct_admin.map_id(28),
+    p_sru_sgr_id => sct_admin.map_id(26),
     p_sru_name => q'~Quellanwending ist nicht leer~',
     p_sru_condition => q'~P4_SGR_APP_ID is not null~',
     p_sru_sort_seq => 20,
     p_sru_active => 1);
 
   sct_admin.merge_rule(
-    p_sru_id => sct_admin.map_id(25),
-    p_sru_sgr_id => sct_admin.map_id(22),
+    p_sru_id => sct_admin.map_id(29),
+    p_sru_sgr_id => sct_admin.map_id(26),
     p_sru_name => q'~Quellseite ist leer~',
     p_sru_condition => q'~P4_SGR_PAGE_ID is null~',
     p_sru_sort_seq => 30,
     p_sru_active => 1);
 
   sct_admin.merge_rule(
-    p_sru_id => sct_admin.map_id(26),
-    p_sru_sgr_id => sct_admin.map_id(22),
+    p_sru_id => sct_admin.map_id(30),
+    p_sru_sgr_id => sct_admin.map_id(26),
     p_sru_name => q'~Quellseite ist nicht leer~',
     p_sru_condition => q'~P4_SGR_PAGE_ID is not null~',
     p_sru_sort_seq => 40,
     p_sru_active => 1);
 
   sct_admin.merge_rule(
-    p_sru_id => sct_admin.map_id(27),
-    p_sru_sgr_id => sct_admin.map_id(22),
+    p_sru_id => sct_admin.map_id(31),
+    p_sru_sgr_id => sct_admin.map_id(26),
     p_sru_name => q'~Regelgruppe ist leer~',
     p_sru_condition => q'~P4_SGR_ID is null~',
     p_sru_sort_seq => 50,
     p_sru_active => 1);
 
   sct_admin.merge_rule(
-    p_sru_id => sct_admin.map_id(28),
-    p_sru_sgr_id => sct_admin.map_id(22),
+    p_sru_id => sct_admin.map_id(32),
+    p_sru_sgr_id => sct_admin.map_id(26),
     p_sru_name => q'~Regelgruppe ist nicht leer~',
     p_sru_condition => q'~P4_SGR_ID is not null~',
     p_sru_sort_seq => 60,
     p_sru_active => 1);
 
   sct_admin.merge_rule(
-    p_sru_id => sct_admin.map_id(29),
-    p_sru_sgr_id => sct_admin.map_id(22),
+    p_sru_id => sct_admin.map_id(33),
+    p_sru_sgr_id => sct_admin.map_id(26),
     p_sru_name => q'~Zielanwendung ist leer~',
     p_sru_condition => q'~P4_SGR_APP_TO is null~',
     p_sru_sort_seq => 70,
     p_sru_active => 1);
 
   sct_admin.merge_rule(
-    p_sru_id => sct_admin.map_id(30),
-    p_sru_sgr_id => sct_admin.map_id(22),
+    p_sru_id => sct_admin.map_id(34),
+    p_sru_sgr_id => sct_admin.map_id(26),
     p_sru_name => q'~Zielanwendung ist nicht leer~',
     p_sru_condition => q'~P4_SGR_APP_TO is not null~',
     p_sru_sort_seq => 80,
     p_sru_active => 1);
 
   sct_admin.merge_rule(
-    p_sru_id => sct_admin.map_id(31),
-    p_sru_sgr_id => sct_admin.map_id(22),
+    p_sru_id => sct_admin.map_id(35),
+    p_sru_sgr_id => sct_admin.map_id(26),
     p_sru_name => q'~Zielseite ist leer~',
     p_sru_condition => q'~P4_SGR_PAGE_TO is null~',
     p_sru_sort_seq => 90,
     p_sru_active => 1);
 
   sct_admin.merge_rule(
-    p_sru_id => sct_admin.map_id(32),
-    p_sru_sgr_id => sct_admin.map_id(22),
+    p_sru_id => sct_admin.map_id(36),
+    p_sru_sgr_id => sct_admin.map_id(26),
     p_sru_name => q'~Zielseite ist nicht leer~',
     p_sru_condition => q'~P4_SGR_PAGE_TO is not null~',
     p_sru_sort_seq => 100,
     p_sru_active => 1);
 
   sct_admin.merge_rule(
-    p_sru_id => sct_admin.map_id(62),
-    p_sru_sgr_id => sct_admin.map_id(22),
+    p_sru_id => sct_admin.map_id(37),
+    p_sru_sgr_id => sct_admin.map_id(26),
     p_sru_name => q'~Regelgruppe kopieren~',
     p_sru_condition => q'~B4_COPY = 1~',
     p_sru_sort_seq => 110,
@@ -1039,49 +1002,9 @@ apex.item('#ITEM#').enable();~',
 
   -- RULE ACTIONS
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(23),
-    p_sra_sgr_id => sct_admin.map_id(22),
-    p_sra_spi_id => 'P4_SGR_PAGE_ID',
-    p_sra_sat_id => 'SET_NULL_DISABLE',
-    p_sra_attribute => q'~~',
-    p_sra_attribute_2 => q'~~',
-    p_sra_sort_seq => 10,
-    p_sra_active => 1);
-
-  sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(24),
-    p_sra_sgr_id => sct_admin.map_id(22),
-    p_sra_spi_id => 'P4_SGR_PAGE_ID',
-    p_sra_sat_id => 'REFRESH_ITEM',
-    p_sra_attribute => q'~~',
-    p_sra_attribute_2 => q'~~',
-    p_sra_sort_seq => 10,
-    p_sra_active => 1);
-
-  sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(25),
-    p_sra_sgr_id => sct_admin.map_id(22),
-    p_sra_spi_id => 'P4_SGR_ID',
-    p_sra_sat_id => 'SET_NULL_DISABLE',
-    p_sra_attribute => q'~~',
-    p_sra_attribute_2 => q'~~',
-    p_sra_sort_seq => 10,
-    p_sra_active => 1);
-
-  sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(26),
-    p_sra_sgr_id => sct_admin.map_id(22),
-    p_sra_spi_id => 'P4_SGR_ID',
-    p_sra_sat_id => 'REFRESH_ITEM',
-    p_sra_attribute => q'~~',
-    p_sra_attribute_2 => q'~~',
-    p_sra_sort_seq => 10,
-    p_sra_active => 1);
-
-  sct_admin.merge_rule_action(
     p_sra_sru_id => sct_admin.map_id(27),
-    p_sra_sgr_id => sct_admin.map_id(22),
-    p_sra_spi_id => 'P4_SGR_APP_TO',
+    p_sra_sgr_id => sct_admin.map_id(26),
+    p_sra_spi_id => 'P4_SGR_PAGE_ID',
     p_sra_sat_id => 'SET_NULL_DISABLE',
     p_sra_attribute => q'~~',
     p_sra_attribute_2 => q'~~',
@@ -1090,9 +1013,9 @@ apex.item('#ITEM#').enable();~',
 
   sct_admin.merge_rule_action(
     p_sra_sru_id => sct_admin.map_id(28),
-    p_sra_sgr_id => sct_admin.map_id(22),
-    p_sra_spi_id => 'P4_SGR_APP_TO',
-    p_sra_sat_id => 'SHOW_ITEM',
+    p_sra_sgr_id => sct_admin.map_id(26),
+    p_sra_spi_id => 'P4_SGR_PAGE_ID',
+    p_sra_sat_id => 'REFRESH_ITEM',
     p_sra_attribute => q'~~',
     p_sra_attribute_2 => q'~~',
     p_sra_sort_seq => 10,
@@ -1100,8 +1023,8 @@ apex.item('#ITEM#').enable();~',
 
   sct_admin.merge_rule_action(
     p_sra_sru_id => sct_admin.map_id(29),
-    p_sra_sgr_id => sct_admin.map_id(22),
-    p_sra_spi_id => 'P4_SGR_PAGE_TO',
+    p_sra_sgr_id => sct_admin.map_id(26),
+    p_sra_spi_id => 'P4_SGR_ID',
     p_sra_sat_id => 'SET_NULL_DISABLE',
     p_sra_attribute => q'~~',
     p_sra_attribute_2 => q'~~',
@@ -1110,8 +1033,8 @@ apex.item('#ITEM#').enable();~',
 
   sct_admin.merge_rule_action(
     p_sra_sru_id => sct_admin.map_id(30),
-    p_sra_sgr_id => sct_admin.map_id(22),
-    p_sra_spi_id => 'P4_SGR_PAGE_TO',
+    p_sra_sgr_id => sct_admin.map_id(26),
+    p_sra_spi_id => 'P4_SGR_ID',
     p_sra_sat_id => 'REFRESH_ITEM',
     p_sra_attribute => q'~~',
     p_sra_attribute_2 => q'~~',
@@ -1120,7 +1043,47 @@ apex.item('#ITEM#').enable();~',
 
   sct_admin.merge_rule_action(
     p_sra_sru_id => sct_admin.map_id(31),
-    p_sra_sgr_id => sct_admin.map_id(22),
+    p_sra_sgr_id => sct_admin.map_id(26),
+    p_sra_spi_id => 'P4_SGR_APP_TO',
+    p_sra_sat_id => 'SET_NULL_DISABLE',
+    p_sra_attribute => q'~~',
+    p_sra_attribute_2 => q'~~',
+    p_sra_sort_seq => 10,
+    p_sra_active => 1);
+
+  sct_admin.merge_rule_action(
+    p_sra_sru_id => sct_admin.map_id(32),
+    p_sra_sgr_id => sct_admin.map_id(26),
+    p_sra_spi_id => 'P4_SGR_APP_TO',
+    p_sra_sat_id => 'SHOW_ITEM',
+    p_sra_attribute => q'~~',
+    p_sra_attribute_2 => q'~~',
+    p_sra_sort_seq => 10,
+    p_sra_active => 1);
+
+  sct_admin.merge_rule_action(
+    p_sra_sru_id => sct_admin.map_id(33),
+    p_sra_sgr_id => sct_admin.map_id(26),
+    p_sra_spi_id => 'P4_SGR_PAGE_TO',
+    p_sra_sat_id => 'SET_NULL_DISABLE',
+    p_sra_attribute => q'~~',
+    p_sra_attribute_2 => q'~~',
+    p_sra_sort_seq => 10,
+    p_sra_active => 1);
+
+  sct_admin.merge_rule_action(
+    p_sra_sru_id => sct_admin.map_id(34),
+    p_sra_sgr_id => sct_admin.map_id(26),
+    p_sra_spi_id => 'P4_SGR_PAGE_TO',
+    p_sra_sat_id => 'REFRESH_ITEM',
+    p_sra_attribute => q'~~',
+    p_sra_attribute_2 => q'~~',
+    p_sra_sort_seq => 10,
+    p_sra_active => 1);
+
+  sct_admin.merge_rule_action(
+    p_sra_sru_id => sct_admin.map_id(35),
+    p_sra_sgr_id => sct_admin.map_id(26),
     p_sra_spi_id => 'B4_COPY',
     p_sra_sat_id => 'DISABLE_ITEM',
     p_sra_attribute => q'~~',
@@ -1129,8 +1092,8 @@ apex.item('#ITEM#').enable();~',
     p_sra_active => 1);
 
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(32),
-    p_sra_sgr_id => sct_admin.map_id(22),
+    p_sra_sru_id => sct_admin.map_id(36),
+    p_sra_sgr_id => sct_admin.map_id(26),
     p_sra_spi_id => 'B4_COPY',
     p_sra_sat_id => 'SHOW_ITEM',
     p_sra_attribute => q'~~',
@@ -1139,8 +1102,8 @@ apex.item('#ITEM#').enable();~',
     p_sra_active => 1);
 
   sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(62),
-    p_sra_sgr_id => sct_admin.map_id(22),
+    p_sra_sru_id => sct_admin.map_id(37),
+    p_sra_sgr_id => sct_admin.map_id(26),
     p_sra_spi_id => 'DOCUMENT',
     p_sra_sat_id => 'SUBMIT',
     p_sra_attribute => q'~COPY~',
@@ -1148,7 +1111,56 @@ apex.item('#ITEM#').enable();~',
     p_sra_sort_seq => 10,
     p_sra_active => 1);
 
-  sct_admin.propagate_rule_change(sct_admin.map_id(22));
+  sct_admin.propagate_rule_change(sct_admin.map_id(26));
+
+  -- RULE GROUP SCT_TEST_CASES (ID 38)
+  sct_admin.merge_rule_group(
+    p_sgr_app_id => coalesce(apex_application_install.get_application_id, 110),
+    p_sgr_page_id => 100,
+    p_sgr_id => sct_admin.map_id(38),
+    p_sgr_name => q'~SCT_TEST_CASES~',
+    p_sgr_description => q'~Testfälle für Seite 100~',
+    p_sgr_active => 1);
+
+  -- RULES
+  sct_admin.merge_rule(
+    p_sru_id => sct_admin.map_id(40),
+    p_sru_sgr_id => sct_admin.map_id(38),
+    p_sru_name => q'~Initialisierung~',
+    p_sru_condition => q'~initializing = 1~',
+    p_sru_sort_seq => 10,
+    p_sru_active => 1);
+
+  sct_admin.merge_rule(
+    p_sru_id => sct_admin.map_id(42),
+    p_sru_sgr_id => sct_admin.map_id(38),
+    p_sru_name => q'~Seite absenden~',
+    p_sru_condition => q'~B100_SAVE = 1~',
+    p_sru_sort_seq => 20,
+    p_sru_active => 1);
+
+  -- RULE ACTIONS
+  sct_admin.merge_rule_action(
+    p_sra_sru_id => sct_admin.map_id(40),
+    p_sra_sgr_id => sct_admin.map_id(38),
+    p_sra_spi_id => 'P100_MANDATORY_FIELD',
+    p_sra_sat_id => 'IS_MANDATORY',
+    p_sra_attribute => q'~Bitte geben Sie einen Wert ein.~',
+    p_sra_attribute_2 => q'~~',
+    p_sra_sort_seq => 10,
+    p_sra_active => 1);
+
+  sct_admin.merge_rule_action(
+    p_sra_sru_id => sct_admin.map_id(42),
+    p_sra_sgr_id => sct_admin.map_id(38),
+    p_sra_spi_id => 'DOCUMENT',
+    p_sra_sat_id => 'SUBMIT',
+    p_sra_attribute => q'~SAVE~',
+    p_sra_attribute_2 => q'~Bitte bearbeiten Sie vor dem Absenden alle Fehler.~',
+    p_sra_sort_seq => 10,
+    p_sra_active => 1);
+
+  sct_admin.propagate_rule_change(sct_admin.map_id(38));
 
   commit;
 end;

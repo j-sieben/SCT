@@ -46,7 +46,7 @@ begin
   end loop;
   
   for msg in message_cur loop
-    pit_admin.remove_message(msg.pms_name);
+    pit_admin.remove_message(msg.pms_name, 'GERMAN');
     dbms_output.put_line('&s1.Message ' || msg.pms_name || ' deleted.');
   end loop;
   commit;

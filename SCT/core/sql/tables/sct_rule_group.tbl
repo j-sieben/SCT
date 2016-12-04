@@ -4,6 +4,7 @@ create table sct_rule_group (
 	sgr_description varchar2(200 char), 
 	sgr_app_id number, 
 	sgr_page_id number, 
+  sgr_initialization_code clob,
   sgr_active number(1,0) default 1,
 	constraint sct_rule_group_pk primary key (sgr_id),
   constraint sgr_name_uq unique (sgr_name, sgr_app_id),
@@ -27,6 +28,7 @@ comment on column sct_rule_group.sgr_name is 'Unique name per application';
 comment on column sct_rule_group.sgr_description is 'Optional description';
 comment on column sct_rule_group.sgr_app_id is 'ID of the APEX application the rule group referes to';
 comment on column sct_rule_group.sgr_page_id is 'ID of the APEX page the rule group referes to';
+comment on column sct_rule_group.sgr_initialization_code is 'Initialisierungscode, der beim Aufruf der Seite ausgefuehrt wird.';
 comment on column sct_rule_group.sgr_active is 'Flag to indicate whether rule group is in use';
 
 

@@ -2,7 +2,7 @@ create table sct_rule(
   sru_id number, 
 	sru_sgr_id number, 
 	sru_name varchar2(50 char), 
-	sru_condition clob, 
+	sru_condition clob,
 	sru_sort_seq number, 
 	sru_firing_items varchar2(300 byte),
   sru_has_error number(1,0) default 0,

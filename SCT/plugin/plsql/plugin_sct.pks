@@ -106,6 +106,26 @@ as
     p_value in varchar2,
     p_error in varchar2);
     
+    
+  /* Prozedur zum Setzen des Session Status, basierend auf einer SQL-Anweisung, die einen
+   * einzelnen Wert zurueckliefert
+   * %param p_item Name des Feldes, das gesetzt werden soll
+   * %param p_stmt select-Anweisung, die einen einzelnen Wert liefert
+   */
+  procedure set_value_from_stmt(
+    p_item in sct_page_item.spi_id%type,
+    p_stmt in varchar2);
+    
+    
+  /* Prozedur zum Setzen des Session Status, basierend auf einer SQL-Anweisung, die eine
+   * LIste von Werten zurueckliefert
+   * %param p_item Name des Feldes, das gesetzt werden soll
+   * %param p_stmt select-Anweisung, die eine Liste von Werten liefert
+   */
+  procedure set_list_from_stmt(
+    p_item in sct_page_item.spi_id%type,
+    p_stmt in varchar2);
+    
 
   /* RENDER-Funktion des Plugins gem. APEX-Vorgaben */
   function render(
