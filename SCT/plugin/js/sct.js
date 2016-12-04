@@ -22,14 +22,23 @@ de.condes.plugin.sct = {};
  * pageItems: Liste von Seitenelementen, deren aktueller Elementwert beim Auslösen eines Events auf einem 
  *            gebundenen Element ausgelesen und an die Datenbank geschickt werden soll.
  *            Die Liste wird von der Datenbank berechnet und bei der Initialisierung vermerkt
+ * initCode:  Nach der Initialisierung werden die Initialisierungsregeln berechnet und der resultierende JavaScript-Code
+ *            +ber diesen Parameter ausgeliefert.
  * ApexJS:    Objekt, das die Visualisierung von Pluginfunktionen auf der Oberfläche kapselt.
  *            Dieser Parameter wird als Application-Parameter des Plugins verwaltet und gestattet es, die JavaScript-
  *            Library, die für die Darstellung verwendet wird, einzustellen.
  *            Die konkrete Implementierung kann durch differierende Anforderungen, geänderte Templates oder sonstige
  *            Gründe nicht generisch definiert werden. Standardmäßig wird de.condes.plugin.sct.apex_42_5_0 verwendet.
  *            Details zu einer Überschreibung dieser Datei findet sich in der Dokumentation der Datei sctApex.js
- *            - setNoficitation
- *                Die Methode setzt eine Nachricht auf der Oberfläche.
+ *            - submit
+ *                Sendet die Seite ab, nachdem sichergestellt wurde, dass alle Pflichtfelder Werte enthalten
+ *            - setMandatory
+ *                Macht ein Seitenelement zum Pflicht- oder optionalen Feld, basierend auf einem booleschen Parameter
+ *            - notify
+ *                Zeigt eine Erfolgsmeldung
+ *            - setErrors
+ *                Zeigt Fehlermeldungen auf der Seite. Falls eine Fehlerregion existiert, werden die Fehlermeldungen 
+ *                hinzugefügt, anonsten wird eine Fehlerregion erstellt
  *            Wird eine eigene Implementierung vorgenommen, empfiehlt es sich, von der existierenden sctApex.js abzuleiten.
  *
  * Das Plugin wird auf der Seite als Dynamic Action zum Zeitpunkt PAGE_LOAD eingebunden. 
@@ -41,6 +50,7 @@ de.condes.plugin.sct = {};
    
   C_BIND_EVENT = 'change';
   C_CLICK_EVENT = 'click';
+  C_APEX_REFRESH = 'apexrefresh';
   C_APEX_BEFORE_REFRESH = 'apexbeforerefresh';
   C_APEX_AFTER_REFRESH = 'apexafterrefresh';
   C_NO_TRIGGERING_ITEM = 'DOCUMENT';
@@ -127,7 +137,7 @@ de.condes.plugin.sct = {};
    */
   sct.submit = function(request, message){
     sct.ApexJS.submitPage(request, message);
-  }
+  };
   
   
   sct.setMandatory = function(item, mandatory){
@@ -141,7 +151,17 @@ de.condes.plugin.sct = {};
   
   sct.notify = function(message){
     sct.ApexJS.setNotification(message);
-  }
+  };
+  
+  
+  sct.refreshAndSetValue = function(item){
+    var itemValue = arguments[1] || $v(item);
+    $(`#${item}`)
+    .one(C_APEX_AFTER_REFRESH, function(e){
+          $s(item, itemValue);
+        })
+    .trigger(C_APEX_REFRESH);    
+  };
    
    
   sct.execute = function(e){
@@ -187,6 +207,14 @@ de.condes.plugin.sct = {};
   };
   
   
+  function hexToChar(hexx) {
+    var hex = hexx.toString();//force conversion
+    var str = '';
+    for (var i = 0; i < hex.length; i += 2)
+        str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
+    return str;
+  }
+  
   sct.init = function(me){
     // Binde auslösende Events an Elemente, die über Attribut 01 übergeben werden
     sct.bindItems = $.parseJSON(me.action.attribute01.replace(/~/g, '"'));
@@ -194,18 +222,21 @@ de.condes.plugin.sct = {};
     if (me.action.attribute02) {
       sct.pageItems = me.action.attribute02.split(',');
     };
-    sct.ajaxIdentifier = me.action.ajaxIdentifier;
-    
     // Registriere APEX-JavaScript Objekt
     sct.ApexJS = eval(me.action.attribute03);
+    sct.ajaxIdentifier = me.action.ajaxIdentifier;
     
     // Bereite Einsatz des Plugins vor
     bindEvents();
     apex.debug.log('SCT initialized');
     
-    // Löse beim Seitenladen explizit Verarbeitung des Plugins aus
-    apex.debug.log(`Triggering element: document`);
-    sct.execute(me);
+    // Initialisierungscode ausführen
+    if (me.action.attribute04){
+      apex.debug.log('Initialization code received');
+      sct.initCode = hexToChar(me.action.attribute04);
+      $('body').append(sct.initCode);
+      $('#' + $(sct.initCode).attr('id')).remove();
+    };
   }
   
 })(de.condes.plugin.sct, apex.jQuery, apex.server);
