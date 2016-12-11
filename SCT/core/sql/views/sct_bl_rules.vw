@@ -1,6 +1,6 @@
 create or replace force view sct_bl_rules as
 select sru.sru_id, sru.sru_sgr_id sgr_id, sru.sru_sort_seq, sru.sru_name,
-       ',' || sru.sru_firing_items|| ',DOCUMENT,' sru_firing_items,
+       ',' || sru.sru_firing_items|| ',DOCUMENT,' sru_firing_items, sru_fire_on_page_load,
        sra.sra_spi_id, sra.sra_sat_id, sra.sra_attribute, sra.sra_attribute_2
   from sct_rule sru
   join sct_rule_action sra

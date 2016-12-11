@@ -254,24 +254,16 @@ as
     return varchar2
   as
     cursor column_cur(p_sgr_id in sct_rule_group.sgr_id%type, p_validation in number) is
-      select replace(
-               case sit.sit_id
-                 when 'BUTTON' then sct_const.c_button_col_template
-                 when 'REGION' then sct_const.c_region_col_template
-                 when 'DOCUMENT' then sct_const.c_region_col_template
-                 when 'ITEM' then sct_const.c_item_col_template
-                 when 'NUMBER_ITEM' then replace(sct_const.c_number_item_col_template, '#CONVERSION#', spi_conversion)
-                 when 'DATE_ITEM' then replace(sct_const.c_date_item_col_template, '#CONVERSION#', spi_conversion)
-               else null end,
-              '#ITEM#',
-              spi_id) column_name
+      select sct_const.c_column_delimiter
+             || replace(replace(sit_col_template, '#CONVERSION#', spi_conversion), '#ITEM#', spi_id)
+             column_name
         from sct_page_item spi
         join sct_page_item_type sit
           on spi.spi_sit_id = sit.sit_id
        where spi_sgr_id = p_sgr_id
          and ((spi_is_required = sct_const.c_true
           or p_validation = sct_const.c_true)
-          or (spi_id = 'DOCUMENT'))
+          or (spi_id = sct_const.c_no_firing_item))
        order by spi_id;
     l_data_cols varchar2(32767);
   begin
@@ -539,6 +531,7 @@ as
       sru_sort_seq sct_rule.sru_sort_seq%type,
       sru_name sct_rule.sru_name%type,
       sru_firing_items sct_rule.sru_firing_items%type,
+      sru_fire_on_page_load sct_rule.sru_fire_on_page_load%type,
       item sct_page_item.spi_id%type,
       pl_sql sct_action_type.sat_pl_sql%type,
       js sct_action_type.sat_js%type,
@@ -551,6 +544,7 @@ as
     l_stmt varchar2(32767);
     l_pl_sql_code varchar2(32767);
     l_js_code varchar2(32767);
+    l_allow_recursion number(1,0);
   begin
     pit.enter_mandatory('create_action', c_pkg);
     -- Stelle ausloesendes Element fuer SQL ueber Get-Methode zur Verfuegung
@@ -567,10 +561,17 @@ as
     while l_action_cur%FOUND loop
       -- Baue PL/SQL-Code zusammen
       if l_rule.pl_sql is not null then
+        case when l_rule.item = sct_const.c_no_firing_item 
+              and l_rule.sru_fire_on_page_load = sct_const.c_true
+          then l_allow_recursion := sct_const.c_false;
+          else l_allow_recursion := sct_const.c_true;
+        end case;
         l_pl_sql_code := utl_text.bulk_replace(l_pl_sql_code || sct_const.c_plsql_template, char_table(
           '#PLSQL#', l_rule.pl_sql,
           '#ATTRIBUTE#', l_rule.attribute,
           '#ATTRIBUTE_2#', l_rule.attribute_2,
+          '#ALLOW_RECURSION#', l_allow_recursion,
+          '#ITEM_VALUE#', sct_const.c_plsql_item_value_template,
           '#ITEM#', l_rule.item));
         utl_text.append(l_pl_sql_code, sct_const.c_cr || '  ', null, sct_const.c_true);
       end if;
@@ -580,6 +581,7 @@ as
         l_js_code := utl_text.bulk_replace(l_js_code || sct_const.c_js_template, char_table(
           '#SCRIPT#', replace(l_rule.js, c_cr, c_cr || '  '),
           '#JS_FILE#', sct_const.c_js_namespace,
+          '#ITEM_VALUE#', sct_const.c_js_item_value_template,
           '#ITEM#', l_rule.item,
           '#ATTRIBUTE#', l_rule.attribute,
           '#ATTRIBUTE_2#', l_rule.attribute_2));
@@ -627,7 +629,7 @@ as
        
     merge into sct_rule_group s
     using (select l_sgr_id sgr_id,
-                  p_sgr_name sgr_name,
+                  upper(p_sgr_name) sgr_name,
                   p_sgr_description sgr_description,
                   p_sgr_app_id sgr_app_id,
                   p_sgr_page_id sgr_page_id,
@@ -992,6 +994,7 @@ as
     harmonize_firing_items(p_sgr_id);
     harmonize_sct_page_item(p_sgr_id);
     create_rule_view(p_sgr_id);
+    resequence_rule_group(p_sgr_id);
     pit.leave_mandatory;
   end propagate_rule_change;
 

@@ -20,28 +20,14 @@ as
   -- Ersatzseitennummer fuer Anwendungselemente
   c_app_item_page constant number(1,0) := 0;
   
-  -- Templates zur Erzeugung der Spaltenliste der Regelview
-  c_col_delimiter constant varchar2(100 byte) := ',' || c_cr || '              ';
-  c_item_col_template constant varchar2(100 byte) := c_col_delimiter || q'~v('#ITEM#') #ITEM#~';
-  c_date_item_col_template constant varchar2(100 byte) := c_col_delimiter || q'~to_date(v('#ITEM#'), '#CONVERSION#') #ITEM#~';
-  c_number_item_col_template constant varchar2(100 byte) := c_col_delimiter || q'~to_number(v('#ITEM#'), '#CONVERSION#') #ITEM#~';
-  c_number_conversion_template constant varchar2(200 byte) := q'~begin :x := to_number(v('#ITEM#'), '#CONVERSION#'); end;~';
-  c_date_conversion_template constant varchar2(200 byte) := q'~begin :x := to_date(v('#ITEM#'), '#CONVERSION#'); end;~';
-  
-  c_region_col_template constant varchar2(100 byte) := c_col_delimiter || 'null #ITEM#';
-  c_button_col_template constant varchar2(100 byte) := c_col_delimiter ||  q'~case sct_admin.get_firing_item when '#ITEM#' then 1 else 0 end #ITEM#~';
-  c_column_delimiter constant varchar2(20 byte) := ',' || c_cr || '              ';
-  
-  -- Templates zur Erzeugung der WHERE-Klausel der Regelview
-  c_join_clause_template constant varchar2(100 byte) := q'~(r.sru_id = #ID# and (#CONDITION#))~';
-  $IF dbms_db_version.ver_le_11 $THEN
-  c_join_delimiter constant varchar2(20 byte) := c_cr || '           or ';
-  $ELSE
-  c_join_delimiter constant varchar2(20 byte) := c_cr || '    or ';
-  $END
-  
   -- Templates zur Erzeugung der Regelview
   c_create_view_template constant varchar2(100 byte) := q'~create or replace force view #NAME# as~' || c_cr;
+  
+  c_column_delimiter constant varchar2(20 byte) := ',' || c_cr || '              ';
+  c_join_delimiter constant varchar2(20 byte) := c_cr || '           or ';
+  
+  c_join_clause_template constant varchar2(100 byte) := q'~(r.sru_id = #ID# and ((#CONDITION#) or sru_fire_on_page_load = initializing))~';
+  
   c_rule_view_template constant varchar2(1000 byte) := 
 q'~create or replace force view #NAME# as
   with session_state as(
@@ -50,23 +36,25 @@ q'~create or replace force view #NAME# as
          from dual),
        data as (
        select /*+ NO_MERGE(s) */
-              r.sru_id, r.sru_name, r.sru_firing_items,
+              r.sru_id, r.sru_name, r.sru_firing_items, r.sru_fire_on_page_load,
               r.sra_spi_id, r.sra_sat_id, r.sra_attribute, r.sra_attribute_2,
-              rank() over (order by r.sru_sort_seq) rang
+              rank() over (partition by sru_fire_on_page_load order by r.sru_sort_seq) rang, s.initializing
          from sct_bl_rules r
          join session_state s
-           on instr(r.sru_firing_items, ',' || s.firing_item || ',') > 0
+           on (instr(r.sru_firing_items, ',' || s.firing_item || ',') > 0 or sru_fire_on_page_load = 1)
         where r.sgr_id = #SGR_ID#
           and (#WHERE_CLAUSE#))
 select sru_id, sru_name, sra_spi_id, sra_sat_id, sra_attribute, sra_attribute_2
   from data
- where rang = 1~';
+ where rang = 1 or sru_fire_on_page_load = initializing
+ order by sru_fire_on_page_load desc, rang~';
   
   -- Templates zur Erzeugung der Seiten-Aktion
   c_plsql_action_template constant varchar2(200 byte) := 'begin' || c_cr || '  #CODE#'|| c_cr || '  commit;'|| c_cr || 'end;';
+  c_plsql_item_value_template constant varchar2(100 byte) := q'^v('#ITEM#')^';
   c_stmt_template constant varchar2(32767) :=
-q'~select sru.sru_id, sru.sru_sort_seq, sru.sru_name, sru.sru_firing_items, sra_spi_id item,
-       sat_pl_sql pl_sql, sat_js js, sra_attribute attribute, sra_attribute_2 attribute_2
+q'~select sru.sru_id, sru.sru_sort_seq, sru.sru_name, sru.sru_firing_items, sru_fire_on_page_load,
+       sra_spi_id item, sat_pl_sql pl_sql, sat_js js, sra_attribute attribute, sra_attribute_2 attribute_2
   from #RULE_VIEW# srg
   join sct_rule sru
     on srg.sru_id = sru.sru_id
@@ -74,17 +62,7 @@ q'~select sru.sru_id, sru.sru_sort_seq, sru.sru_name, sru.sru_firing_items, sra_
     on srg.sra_sat_id = sat.sat_id
  where sat.sat_raise_recursive >= #IS_RECURSIVE#~';
 
-  c_js_action_template constant varchar2(300) :=
-q'^<script>~#JS_FILE#.setItemValues(#ITEM_JSON#);~  #JS_FILE#.setErrors(#ERROR_JSON#);#CODE#~</script>^';
-
-  c_bind_json_template constant varchar2(100) := '[#JSON#]';
-  c_bind_json_element constant varchar2(100) := '{"id":"#ID#","event":"#EVENT#"}';
-  c_page_json_element constant varchar2(100) := '{"id":"#ID#","value":"#VALUE#"}';
-  c_error_json_template constant varchar2(200) := 
-q'^{"count":#COUNT#,"errorDependentButtons":"#DEPENDENT_BUTTONS#","firingItems":"#FIRING_ITEMS#","errors":[#ERRORS#]}^';
-  c_error_json_element constant varchar2(100) := q'^{"item":"#ITEM#","message":"#MESSAGE#","additionalInfo":"#INFO#"}^';
-
-  c_no_js_action constant varchar2(100) := '// No JavaScript Action';
+  c_js_item_value_template constant varchar2(100 byte) := q'^apex.item('#ITEM#').getValue()^';
 
   c_js_code_template constant varchar2(300) :=
 q'^

@@ -3,6 +3,7 @@ create table sct_page_item_type(
   sit_name varchar2(50 char),
   sit_has_value number(1,0) default 1,
   sit_event varchar2(30 byte),
+  sit_col_template varchar2(100 char),
   constraint sct_page_item_type_pk primary key(sit_id),
   constraint sit_has_value_chk check(sit_has_value in (0,1))
 ) organization index;
@@ -12,6 +13,7 @@ comment on column sct_page_item_type.sit_id is 'PK, alphanumerical key';
 comment on column sct_page_item_type.sit_name is 'Display name of element type';
 comment on column sct_page_item_type.sit_has_value is 'Flag to indicate whether element type maintains a value in Session State';
 comment on column sct_page_item_type.sit_event is 'JavaScript event to be bound to this element type by the plugin. If null, SCT won''t react on changes.';
+comment on column sct_page_item_type.sit_col_template is 'DDL template to create a column at the rule view';
 
 delete from sct_page_item_type;
 
@@ -19,21 +21,23 @@ merge into sct_page_item_type s
 using (select 'ITEM' sit_id,
               'Element' sit_name,
               1 sit_has_value,
-              'change' sit_event
+              'change' sit_event,
+              q'~v('#ITEM#') #ITEM#~' sit_col_template
          from dual
         union all 
-       select 'NUMBER_ITEM', 'Element (Zahl)', 1, 'change' from dual union all
-       select 'DATE_ITEM', 'Element (Datum)', 1, 'change' from dual union all
-       select 'APP_ITEM', 'Anwendungselement', 1, 'change' from dual union all
-       select 'BUTTON', 'Schaltfläche', 0, 'click' from dual union all
-       select 'REGION', 'Region', 0, null from dual union all
-       select 'DOCUMENT', 'Dokument', 0, null from dual) v
+       select 'NUMBER_ITEM', 'Element (Zahl)', 1, 'change', q'~to_number(v('#ITEM#'), '#CONVERSION#') #ITEM#~' from dual union all
+       select 'DATE_ITEM', 'Element (Datum)', 1, 'change', q'~to_date(v('#ITEM#'), '#CONVERSION#') #ITEM#~' from dual union all
+       select 'APP_ITEM', 'Anwendungselement', 1, 'change', q'~v('#ITEM#') #ITEM#~' from dual union all
+       select 'BUTTON', 'Schaltfläche', 0, 'click', q'~case sct_admin.get_firing_item when '#ITEM#' then 1 else 0 end #ITEM#~' from dual union all
+       select 'REGION', 'Region', 0, null, 'null #ITEM#' from dual union all
+       select 'DOCUMENT', 'Dokument', 0, null, 'null #ITEM#' from dual) v
    on (s.sit_id = v.sit_id)
  when matched then update set
       sit_name = v.sit_name,
       sit_has_value = v.sit_has_value,
-      sit_event = v.sit_event
- when not matched then insert(sit_id, sit_name, sit_has_value, sit_event)
-      values (v.sit_id, v.sit_name, v.sit_has_value, v.sit_event);
+      sit_event = v.sit_event,
+      sit_col_template = v.sit_col_template
+ when not matched then insert(sit_id, sit_name, sit_has_value, sit_event, sit_col_template)
+      values (v.sit_id, v.sit_name, v.sit_has_value, v.sit_event, v.sit_col_template);
       
 commit;

@@ -22,8 +22,6 @@ de.condes.plugin.sct = {};
  * pageItems: Liste von Seitenelementen, deren aktueller Elementwert beim Auslösen eines Events auf einem 
  *            gebundenen Element ausgelesen und an die Datenbank geschickt werden soll.
  *            Die Liste wird von der Datenbank berechnet und bei der Initialisierung vermerkt
- * initCode:  Nach der Initialisierung werden die Initialisierungsregeln berechnet und der resultierende JavaScript-Code
- *            +ber diesen Parameter ausgeliefert.
  * ApexJS:    Objekt, das die Visualisierung von Pluginfunktionen auf der Oberfläche kapselt.
  *            Dieser Parameter wird als Application-Parameter des Plugins verwaltet und gestattet es, die JavaScript-
  *            Library, die für die Darstellung verwendet wird, einzustellen.
@@ -48,74 +46,53 @@ de.condes.plugin.sct = {};
  */
 (function(sct, $, server){
    
-  C_BIND_EVENT = 'change';
-  C_CLICK_EVENT = 'click';
-  C_APEX_REFRESH = 'apexrefresh';
-  C_APEX_BEFORE_REFRESH = 'apexbeforerefresh';
-  C_APEX_AFTER_REFRESH = 'apexafterrefresh';
+  var 
+  C_BIND_EVENT = 'change',
+  C_CLICK_EVENT = 'click',
+  C_APEX_REFRESH = 'apexrefresh',
+  C_APEX_BEFORE_REFRESH = 'apexbeforerefresh',
+  C_APEX_AFTER_REFRESH = 'apexafterrefresh',
   C_NO_TRIGGERING_ITEM = 'DOCUMENT';
   
   sct.ajaxIdentifier = {};
-  
-  /*
-    Funktionen, die durch Script aus Response aufgerufen werden.
-   */  
-  // Die Methode setItemValues wird von Response aufgerufen und darf daher nicht umbenannt oder entfernt werden
-  sct.setRuleName = function(ruleName){
-    apex.debug.log(`Rule used: ${ruleName}`);
-    // TODO: Verwendete Regel auf Seitenelement kopieren? Eventuell zusätzlicher Parameter für diesen Zweck
-  };
-  
-  
-  // setItemValues synchronisiert geänderte Elementwerte aus dem Session State auf der Seite.
-  // Die Methode setItemValues wird von Response aufgerufen und darf daher nicht umbenannt oder entfernt werden
-  sct.setItemValues = function(pageItems){
-    // Entnehme die neuen Elementwerte und setze sie auf der Seite
-    $.each(pageItems, function(){
-      if ((this.value || 'FOO') != ($v(this.id) || 'FOO')){
-        apex.item(this.id).setValue(this.value, this.value, true);
-        apex.debug.log(`Item "${this.id}" set to "${this.value}"`);
-      };
-    });
-  };
- 
-
-  // Die Methode setErrors wird von Response aufgerufen und darf daher nicht umbenannt oder entfernt werden
-  // Spezifisch für die aktuelle Version der Anwendung. Muss wahrscheinlich überarbeitet werden,
-  // wenn der neue StyleGuide eingesetzt wird
-  sct.setErrors = function(errorList) {
-    sct.ApexJS.maintainErrors(errorList);
-  };
+  sct.lastItemValues = {};
 
    
   /* 
     Private Hilfsmethoden 
    */
+   
+  // Hilfsmethode, wird als Callback-Methode für den Change-Event verwendet
+  function changeCallback(e){
+    apex.debug.log(`Event »${e.type}« raised at ${e.target}`);
+    sct.execute(e, sct.ajaxIdentifier, sct.pageItems);
+  };
+  
+  
   // Bindet einen konkreten Event an ein Element
   function bindEvent(item, event){
     var $this = $(`#${item}`);
-    var eventList = $._data($this.get(0), 'events');
+    
+    if ($this.length > 0){
+      // Element ist auf Seite auch vorhanden (könnte durch Condition fehlen)
+      var eventList = $._data($this.get(0), 'events');
 
-    if (eventList == undefined || eventList[event] == undefined){
-      // Element hat noch keinen entsprechenden Event, binden
-      $this
-      .on(event, function(e){
-        sct.execute(e, sct.ajaxIdentifier, sct.pageItems);
-        apex.debug.log(`Event »${event}« raised at ${item}`);
-      });
-      if(event == C_BIND_EVENT){
-        // CHANGE-Events sollen bei APEXREFRESH nicht ausgelöst werden, pausieren
+      if (eventList == undefined || eventList[event] == undefined){
+        // Element hat noch keinen entsprechenden Event, binden
         $this
-        .on(C_APEX_BEFORE_REFRESH, function(e){
-          $(this).off(C_BIND_EVENT);
-          apex.debug.log(`Event »${C_BIND_EVENT}« paused at ${item}`);
-        })
-        .on(C_APEX_AFTER_REFRESH, function(e){
-          $(this).on(C_BIND_EVENT, function(e){
-            sct.execute(e, sct.ajaxIdentifier, sct.pageItems);
+        .on(event, changeCallback);
+        if(event == C_BIND_EVENT){
+          // CHANGE-Events sollen bei APEXREFRESH nicht ausgelöst werden, pausieren
+          $this
+          .on(C_APEX_BEFORE_REFRESH, function(e){
+            $(this).off(C_BIND_EVENT);
+            apex.debug.log(`Event »${C_BIND_EVENT}« paused at ${item}`);
+          })
+          .on(C_APEX_AFTER_REFRESH, function(e){
+            $(this).on(C_BIND_EVENT, changeCallback);
+            apex.debug.log(`Event »${C_BIND_EVENT}« re-established at ${item}`);
           });
-          apex.debug.log(`Event »${C_BIND_EVENT}« re-established at ${item}`);
-        });
+        };
       };
     };
   };
@@ -132,9 +109,106 @@ de.condes.plugin.sct = {};
   };
   
   
+  // Methode findet ein konkretes Element in einem JSON-Array und liefert dessen Wert zurück
+  // Struktur des JSON-Arrary: [{"id":"<ID>","value":"<Wert>"}, {"id":"<ID>","value":"<Wert>"}]
+  // Die Methode nimmt an, dass "id" eindeutig ist.
+  function findItemValue(item){
+    // Finde ID in lastItemValues
+    var result = $.grep(sct.lastItemValues, function(e){ 
+      return e.id == item; 
+    });
+    
+    // Liefere VALUE
+    if(result){
+      return result[0].value;
+    }
+  };
+  
+  
+  // Methode zur Konvertierung einer hexadezimalen Darstellung in einen Text
+  // Wird verwendet, um beliebige Text per JSON übermitteln zu können, ohne aufwändiges Escaping
+  // durchzufhren. In der Datenbank wird der Text mittels utl_raw.cast_to_raw(<TEXT>) erzeugt.
+  function hexToChar(rawString) {
+    var code = '';
+    var hexString;
+    if (rawString){}
+      hexString = rawString.toString();
+      for (var i = 0; i < hexString.length; i += 2){
+        code += String.fromCharCode(parseInt(hexString.substr(i, 2), 16));
+      };
+    return code;
+  }
+  
+  
+  // Methode zur Ermittlung der ID des auslösenden Elements.
+  function getTriggeringElement(e){
+    // Falls PageLoad, wird "document" verwendet
+    var triggeringElement = C_NO_TRIGGERING_ITEM
+    
+    if (typeof e.target != 'undefined'){
+      triggeringElement = e.target.id;
+      if (triggeringElement == '') {
+        // Einige Browser senden accessKey-span anstatt Schaltfläche als triggerndes Element
+        // In diesen Fällen parent-Element ansprechen und ID von dort lesen
+        triggeringElement = e.target.parentElement.id;
+      };
+      $triggeringElement = $('#' + triggeringElement);
+      
+      if($triggeringElement.attr('type') == 'radio'){
+        // Radio-Buttons haben ihre ID im parent-Fieldset
+        triggeringElement = $triggeringElement.parents('fieldset').attr('id');
+      }
+      apex.debug.log(`Triggering element: ${triggeringElement}`);
+    }
+    return triggeringElement;
+  };
+  
+  
+  // Methode zum Ausführen des übergebenen Codes und anschließendem Entfernen
+  // Nimmt den Code entgegen und fügt es als Dokument-Fragment ein.
+  // Dies führt den enthaltenen JavaSrcipt-Code direkt aus, so dass das eingefügte 
+  // Element anschließend direkt wieder gelöscht werden kann
+  function executeCode(code){
+    if (code) {
+      apex.debug.log('Response received: \n' + $(code).text());
+      $('body').append(code);
+      $('#' + $(code).attr('id')).remove();
+    };
+  };
+  
+  
   /*
     Implementierung der Plugin-Funktionalität
    */
+   
+  // Funktionen, die durch Script aus Response aufgerufen werden.
+  sct.setRuleName = function(ruleName){
+    apex.debug.log(`Rule used: ${ruleName}`);
+    // TODO: Verwendete Regel auf Seitenelement kopieren? Eventuell zusätzlicher Parameter für diesen Zweck
+  };
+  
+  
+  // setItemValues synchronisiert geänderte Elementwerte aus dem Session State auf der Seite.
+  sct.setItemValues = function(pageItems){
+    // Elemente und ihre Werte zwischenspeichern für Referenz aus asynchronen Aufrufen
+    sct.lastItemValues = pageItems;
+    // Entnehme die neuen Elementwerte und setze sie auf der Seite
+    $.each(pageItems, function(){
+      if ((this.value || 'FOO') != ($v(this.id) || 'FOO')){
+        // Elementwert wird gesetzt. Letzter Parameter unterdrückt change-Event
+        apex.item(this.id).setValue(this.value, this.value, true);
+        apex.debug.log(`Item "${this.id}" set to "${this.value}"`);
+      };
+    });
+  };
+  
+  
+  // Wrapper um sct.ApexJS
+  sct.setErrors = function(errorList) {
+    sct.ApexJS.maintainErrors(errorList);
+  };
+  
+  
   sct.submit = function(request, message){
     sct.ApexJS.submitPage(request, message);
   };
@@ -154,66 +228,78 @@ de.condes.plugin.sct = {};
   };
   
   
+  sct.refresh = function(item){
+    $(`#${item}`).trigger(C_APEX_REFRESH);
+    sct.enable(item);
+  };
+  
+  
+  // Lokale ActionType-Methoden
   sct.refreshAndSetValue = function(item){
-    var itemValue = arguments[1] || $v(item);
+    var itemValue = arguments[1] || findItemValue(item);
     $(`#${item}`)
     .one(C_APEX_AFTER_REFRESH, function(e){
+          $(this).off(C_BIND_EVENT);
           $s(item, itemValue);
+          $(this).on(C_BIND_EVENT, changeCallback);
         })
-    .trigger(C_APEX_REFRESH);    
+    .trigger(C_APEX_REFRESH);
+    sct.enable(item);
+  };
+  
+  
+  sct.disable = function(item){
+    $this = $(`#${item}`);
+    if ($this.is('select')){
+      // Select-Liste, deaktiviere alle Einträge außer dem gewählten
+      $(`#${item}:not(:selected)`).prop('disabled', true);
+    }
+    else if ($this.is('button')){
+      // Button, wird »normal« deaktiviert
+      apex.item(item).disable();
+    }
+    else if ($this.is('input')){
+      // Normales Element, nicht deaktivieren, da ansonsten Sessionstate nicht gefüllt wird.
+      // Stattdessen readonly und CSS-Klasse setzen, so dass es wie deaktiviert aussieht
+      $this.prop('readonly', true).addClass('sct-disabled');
+    };
+    apex.item(item).show();
+  };
+  
+  
+  sct.enable = function(item){
+    $this = $(`#${item}`);
+    if ($this.is('select')){
+      // Select-Liste, deaktiviere alle Einträge außer dem gewählten
+      $(`#${item}:not(:selected)`).prop('disabled', false);
+    }
+    else if ($this.is('button')){
+      // Button, wird »normal« aktiviert
+      apex.item(item).enable();
+    }
+    else if ($this.is('input')){
+      // Normales Eingabeelement war nicht deaktiviert, sondern readonly. Zurücksetzen
+      $this.prop('readonly', false).removeClass('sct-disabled');
+    };
+    apex.item(item).show();
   };
    
-   
+  
+  // Plugin-Funktionalität
   sct.execute = function(e){
-    var callback = function(data){
-      // Nimmt das Ergebnis entgegen und fügt es als Dokument-Fragment ein.
-      // Dies führt den enthaltenen JavaSrcipt-Code direkt aus, so dass das eingefügte 
-      // Element anschließend direkt wieder gelöscht werden kann
-      if (data) {
-        apex.debug.log('Response received');
-        $('body').append(data);
-        $('#' + $(data).attr('id')).remove();
-      };
-    };
-    
-    // ID des auslösenden Elements. Falls PageLoad, wird "document" verwendet
-    var triggeringElement = C_NO_TRIGGERING_ITEM
-    if (typeof e.target != 'undefined'){
-      triggeringElement = e.target.id;
-      if (triggeringElement == '') {
-        // Einige Browser senden accessKey-San anstatt Schaltfläche als triggerndes Element
-        // In diesen Fällen parent-Element ansprechen und ID von dort lesen
-        triggeringElement = e.target.parentElement.id;
-      };
-      $triggeringElement = $('#' + triggeringElement)
-      if($triggeringElement.attr('type') == 'radio'){
-        triggeringElement = $triggeringElement.parents('fieldset').attr('id');
-      }
-      apex.debug.log(`Triggering element: ${triggeringElement}`);
-    }
-    
     server.plugin(
       sct.ajaxIdentifier,
       {
-        'x01':triggeringElement,
+        'x01':getTriggeringElement(e),
         // Kopiere alle relevanten Seitenelemente in den SessionState
         'pageItems':sct.pageItems
       },
       {
         'dataType':'html',
-        'success':callback
+        'success':executeCode
       }
     );
   };
-  
-  
-  function hexToChar(hexx) {
-    var hex = hexx.toString();//force conversion
-    var str = '';
-    for (var i = 0; i < hex.length; i += 2)
-        str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
-    return str;
-  }
   
   sct.init = function(me){
     // Binde auslösende Events an Elemente, die über Attribut 01 übergeben werden
@@ -222,6 +308,7 @@ de.condes.plugin.sct = {};
     if (me.action.attribute02) {
       sct.pageItems = me.action.attribute02.split(',');
     };
+    
     // Registriere APEX-JavaScript Objekt
     sct.ApexJS = eval(me.action.attribute03);
     sct.ajaxIdentifier = me.action.ajaxIdentifier;
@@ -231,12 +318,7 @@ de.condes.plugin.sct = {};
     apex.debug.log('SCT initialized');
     
     // Initialisierungscode ausführen
-    if (me.action.attribute04){
-      apex.debug.log('Initialization code received');
-      sct.initCode = hexToChar(me.action.attribute04);
-      $('body').append(sct.initCode);
-      $('#' + $(sct.initCode).attr('id')).remove();
-    };
+    executeCode(hexToChar(me.action.attribute04));
   }
   
 })(de.condes.plugin.sct, apex.jQuery, apex.server);

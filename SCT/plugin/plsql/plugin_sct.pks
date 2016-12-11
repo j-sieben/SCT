@@ -82,15 +82,18 @@ as
    */
   procedure set_session_state(
     p_item in sct_page_item.spi_id%type,
-    p_value in varchar2);
+    p_value in varchar2,
+    p_allow_recursion in number default sct_const.c_true);
     
   procedure set_session_state(
     p_item in sct_page_item.spi_id%type,
-    p_value in date);
+    p_value in date,
+    p_allow_recursion in number default sct_const.c_true);
     
   procedure set_session_state(
     p_item in sct_page_item.spi_id%type,
-    p_value in number);
+    p_value in number,
+    p_allow_recursion in number default sct_const.c_true);
     
     
   /* Prozedur zum Setzen des Session Status, falls kein Fehler vorliegt.
@@ -104,7 +107,8 @@ as
   procedure set_session_state_or_error(
     p_item in sct_page_item.spi_id%type,
     p_value in varchar2,
-    p_error in varchar2);
+    p_error in varchar2,
+    p_allow_recursion in number default sct_const.c_true);
     
     
   /* Prozedur zum Setzen des Session Status, basierend auf einer SQL-Anweisung, die einen

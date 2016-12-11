@@ -22,6 +22,8 @@ as
   g_recursive_stack recursive_stack;
   g_recursive_level binary_integer;
   g_recursion_limit binary_integer;
+  -- Globale Variable fuer eine Regelgruppe Rekursion erlauben oder nicht
+  g_allow_recursion boolean;
   
   /* Package-Konstanten */
   C_PKG constant varchar2(30 byte) := $$PLSQL_UNIT;
@@ -31,7 +33,17 @@ as
   C_YES constant char(1 byte) := 'Y';
   C_NUMBER_ITEM constant sct_page_item_type.sit_id%type := 'NUMBER_ITEM';
   C_DATE_ITEM constant sct_page_item_type.sit_id%type := 'DATE_ITEM';
+  C_NUMBER_CONVERSION_TEMPLATE constant varchar2(200 byte) := q'~begin :x := to_number(v('#ITEM#'), '#CONVERSION#'); end;~';
+  C_DATE_CONVERSION_TEMPLATE constant varchar2(200 byte) := q'~begin :x := to_date(v('#ITEM#'), '#CONVERSION#'); end;~';
   
+  C_BIND_JSON_TEMPLATE constant varchar2(100) := '[#JSON#]';
+  C_BIND_JSON_ELEMENT constant varchar2(100) := '{"id":"#ID#","event":"#EVENT#"}';
+  C_PAGE_JSON_ELEMENT constant varchar2(100) := '{"id":"#ID#","value":"#VALUE#"}';
+  C_ERROR_JSON_TEMPLATE constant varchar2(200) := q'^{"count":#COUNT#,"errorDependentButtons":"#DEPENDENT_BUTTONS#","firingItems":"#FIRING_ITEMS#","errors":[#ERRORS#]}^';
+  C_ERROR_JSON_ELEMENT constant varchar2(100) := q'^{"item":"#ITEM#","message":"#MESSAGE#","additionalInfo":"#INFO#"}^';
+  
+  C_JS_ACTION_TEMPLATE constant varchar2(300) := q'^<script>~#JS_FILE#.setItemValues(#ITEM_JSON#);~  #JS_FILE#.setErrors(#ERROR_JSON#);#CODE#~</script>^';
+  C_NO_JS_ACTION constant varchar2(100) := '// No JavaScript Action';
 
   /* Hilfsprozedur zum Formatieren von ausloesenden Elementen.
    * %usage Die Methode analysiert, ob das ausloesende Element eine Formatmaske
@@ -65,7 +77,7 @@ as
           -- Konvertiere in Zahl
           execute immediate 
             utl_text.bulk_replace(
-              sct_const.c_number_conversion_template, char_table(
+              C_NUMBER_CONVERSION_TEMPLATE, char_table(
                 '#CONVERSION#', l_spi_conversion,
                 '#ITEM#', g_param.firing_item))
             using out l_number_val;
@@ -82,7 +94,7 @@ as
           -- Konvertiere in Datum
           execute immediate 
             utl_text.bulk_replace(
-              sct_const.c_date_conversion_template, char_table(
+              C_DATE_CONVERSION_TEMPLATE, char_table(
                 '#CONVERSION#', l_spi_conversion,
                 '#ITEM#', g_param.firing_item))
             using out l_date_val;
@@ -102,7 +114,6 @@ as
     when no_data_found then
       -- Keine Formatmaske gefunden, ignorieren
       pit.leave_optional;
-      null;
   end format_firing_item;
   
   
@@ -115,6 +126,7 @@ as
     p_dynamic_action in apex_plugin.t_dynamic_action)
   as
     l_stmt varchar2(200 char);
+    l_allow_recursion number;
   begin
     pit.enter_optional('read_settings', C_PKG);
 
@@ -130,11 +142,14 @@ as
     g_recursive_stack.delete;
     g_recursive_level := 1;
     
-    select sgr_id
-      into g_param.sgr_id
+    select sgr_id, coalesce(sgr_with_recursion, 1)
+      into g_param.sgr_id, l_allow_recursion
       from sct_rule_group
-     where upper(sct_rule_group.sgr_name) = upper(p_dynamic_action.attribute_01)
+     where sct_rule_group.sgr_name = upper(p_dynamic_action.attribute_01)
        and sgr_app_id = apex_application.g_flow_id;
+       
+    -- Adjustiere Rekursionsschalter
+    g_allow_recursion := l_allow_recursion = sct_const.c_true;
     
     -- Pruefe und formatiere das ausloesende Element
     format_firing_item;
@@ -175,7 +190,7 @@ as
     for item in rule_group_items(g_param.sgr_id) loop
       utl_text.append(
         l_json,
-        utl_text.bulk_replace(sct_const.c_bind_json_element, char_table(
+        utl_text.bulk_replace(c_bind_json_element, char_table(
           '#ID#', item.spi_id,
           '#EVENT#', item.sit_event)),
         sct_const.c_delimiter, C_YES);
@@ -190,7 +205,7 @@ as
     -- Elemente werden mit '~' als Ersatz fuer '"' erzeugt, da APEX dieses Zeichen
     -- durch eine Escape-Sequenz maskiert. Andernfalls kann in JavaScript daraus 
     -- kein JSON-Objekt mehr erzeugt werden.
-    l_json := utl_text.bulk_replace(sct_const.c_bind_json_template, char_table('#JSON#', l_json, '"', '~'));
+    l_json := utl_text.bulk_replace(c_bind_json_template, char_table('#JSON#', l_json, '"', '~'));
     
     pit.leave_optional;
     return l_json;
@@ -217,13 +232,13 @@ as
     for i in 1 .. l_items.count loop
       utl_text.append(
         l_json,
-        utl_text.bulk_replace(sct_const.c_page_json_element, char_table(
+        utl_text.bulk_replace(c_page_json_element, char_table(
           '#ID#', l_items(i),
           '#VALUE#', htf.escape_sc(v(l_items(i))))),
         sct_const.c_delimiter, C_YES);
     end loop;
     
-    l_json := replace(sct_const.c_bind_json_template, '#JSON#', l_json);
+    l_json := replace(c_bind_json_template, '#JSON#', l_json);
     
     pit.leave_optional;
     return l_json;
@@ -242,13 +257,13 @@ as
     for i in 1 .. g_error_stack.count loop
       utl_text.append(
         l_json,
-        utl_text.bulk_replace(sct_const.c_error_json_element, char_table(
+        utl_text.bulk_replace(c_error_json_element, char_table(
           '#ITEM#', g_error_stack(i).page_item_name,
           '#MESSAGE#', htf.escape_sc(g_error_stack(i).message),
           '#INFO#', htf.escape_sc(g_error_stack(i).additional_info))),
         sct_const.c_delimiter, C_YES);
     end loop;
-    l_json := utl_text.bulk_replace(sct_const.c_error_json_template, char_table(
+    l_json := utl_text.bulk_replace(c_error_json_template, char_table(
                 '#COUNT#', g_error_stack.count,
                 '#DEPENDENT_BUTTONS#', g_param.error_dependent_buttons,
                 '#ERRORS#', l_json));
@@ -368,7 +383,7 @@ as
               and spi_is_required = 1 -- und ruft sich nicht selbst auf
               and p_item != g_param.firing_item);
        
-    if l_has_rule > 0 then
+    if l_has_rule > 0 and g_allow_recursion then
       if g_recursive_level <= g_recursion_limit then
         if not g_recursive_stack.exists(p_item) then
           -- Element wurde rekursiv noch nicht aufgerufen, vermerken
@@ -548,11 +563,14 @@ as
   
   procedure set_session_state(
     p_item in sct_page_item.spi_id%type,
-    p_value in varchar2)
+    p_value in varchar2,
+    p_allow_recursion in number default sct_const.c_true)
   as
   begin
     pit.enter_mandatory('set_session_state', C_PKG);
-    register_item(p_item);
+    if p_allow_recursion = sct_const.c_true then
+      register_item(p_item);
+    end if;
     apex_util.set_session_state(p_item, p_value);
     pit.leave_mandatory;
   end set_session_state;
@@ -560,11 +578,14 @@ as
     
   procedure set_session_state(
     p_item in sct_page_item.spi_id%type,
-    p_value in date)
+    p_value in date,
+    p_allow_recursion in number default sct_const.c_true)
   as
   begin
     pit.enter_mandatory('set_session_state', C_PKG);
-    register_item(p_item);
+    if p_allow_recursion = sct_const.c_true then
+      register_item(p_item);
+    end if;
     apex_util.set_session_state(p_item, p_value);
     pit.leave_mandatory;
   end set_session_state;
@@ -572,11 +593,14 @@ as
     
   procedure set_session_state(
     p_item in sct_page_item.spi_id%type,
-    p_value in number)
+    p_value in number,
+    p_allow_recursion in number default sct_const.c_true)
   as
   begin
     pit.enter_mandatory('set_session_state', C_PKG);
-    register_item(p_item);
+    if p_allow_recursion = sct_const.c_true then
+      register_item(p_item);
+    end if;
     apex_util.set_session_state(p_item, p_value);
     pit.leave_mandatory;
   end set_session_state;
@@ -585,10 +609,11 @@ as
   procedure set_session_state_or_error(
     p_item in sct_page_item.spi_id%type,
     p_value in varchar2,
-    p_error in varchar2)
+    p_error in varchar2,
+    p_allow_recursion in number default sct_const.c_true)
   as
   begin
-    if p_error is not null then
+    if p_error is not null and p_allow_recursion = sct_const.c_true then
       register_error(p_item, p_error, '');
     else
       set_session_state(
@@ -654,8 +679,8 @@ as
     l_js_action varchar2(32767);
   begin      
       -- Bereite Anwort als JS vor
-      l_js_action := coalesce(process_rule, sct_const.c_no_js_action);
-      l_js_action := utl_text.bulk_replace(sct_const.c_js_action_template, char_table(
+      l_js_action := coalesce(process_rule, C_NO_JS_ACTION);
+      l_js_action := utl_text.bulk_replace(C_JS_ACTION_TEMPLATE, char_table(
         '~', sct_const.c_cr,
         '#ITEM_JSON#', get_json_from_items,
         '#ERROR_JSON#', get_json_from_errors,

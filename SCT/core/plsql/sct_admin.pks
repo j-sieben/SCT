@@ -64,15 +64,6 @@ as
   procedure delete_rule_group(
     p_sgr_id in sct_rule_group.sgr_id%type);
     
-  
-  /* Prozedur zum erneuten Nummerieren der Spalten SORT_SEQ in einer Regelgruppe
-   * %param p_sgr_id ID der Regelgruppe, die erneut nummeriert werden soll
-   * %usage Wird von UI_SCT_PKG aufgerufen, um die Spalten SORT_SEQ der Tabellen
-   *        SCT_RULE und SCT_RULE_ACTION auf 10er Schrittweite einzustellen.
-   */
-  procedure resequence_rule_group(
-    p_sgr_id in sct_rule_group.sgr_id%type);
-    
     
   /* Prozdur zum Kopieren einer Regelgruppe innerhalb oder zwischen APEX-Anwendungen
    * %param p_sgr_app_id Anwendungs-ID der Anwendung, aus der die Regelgruppe kopiert werden soll

@@ -45,15 +45,6 @@ as
   procedure export_rule_group;
 
 
-  /* Re-sequenziert die Ausfuehrungsreihenfolge der Einzelregeln
-   * %param p_sgr_id ID der Regelgruppe, die resequenziert werden soll
-   * %usage Wird aufgerufen, um alle Einzelregeln nach Aenderung der Reihenfolge
-   *        erneut in 10er-Schritten zu nummerieren.
-   */
-  procedure resequence_rule_group(
-    p_sgr_id in sct_rule_group.sgr_id%type);
-
-
   /* Propagiert das Speichern einer Einzelregel
    * %param p_sgr_id ID der betroffenen Regelgruppe
    * %usage Wird nach dem Aendern von Regelgruppen oder Einzelregeln aufgerufen.
@@ -76,6 +67,7 @@ as
     p_sgr_id in sct_rule_group.sgr_id%type,
     p_sru_condition in sct_rule.sru_condition%type)
     return varchar2;
+    
 
   /* Hilfsfunktion zur Ermittlung der nächsten Sequenznummer für Regeln
    * %param p_sgr_id ID der Regelgruppe
@@ -85,6 +77,7 @@ as
   function get_sru_sort_seq(
     p_sgr_id in sct_rule_group.sgr_id%type)
     return number;
+    
 
   /* Hilfsfunktion zur Ermittlung der nächsten Sequenznummer für Regelaktionen
    * %param p_sgr_id ID der Regelgruppe
