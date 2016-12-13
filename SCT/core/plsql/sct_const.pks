@@ -37,14 +37,14 @@ q'~create or replace force view #NAME# as
        data as (
        select /*+ NO_MERGE(s) */
               r.sru_id, r.sru_name, r.sru_firing_items, r.sru_fire_on_page_load,
-              r.sra_spi_id, r.sra_sat_id, r.sra_attribute, r.sra_attribute_2,
-              rank() over (partition by sru_fire_on_page_load order by r.sru_sort_seq) rang, s.initializing
+              r.sra_spi_id, r.sra_sat_id, r.sra_attribute, r.sra_attribute_2, r.sra_sort_seq,
+              rank() over (order by r.sru_sort_seq) rang, s.initializing
          from sct_bl_rules r
          join session_state s
            on (instr(r.sru_firing_items, ',' || s.firing_item || ',') > 0 or sru_fire_on_page_load = 1)
         where r.sgr_id = #SGR_ID#
           and (#WHERE_CLAUSE#))
-select sru_id, sru_name, sra_spi_id, sra_sat_id, sra_attribute, sra_attribute_2
+select sru_id, sru_name, sra_spi_id, sra_sat_id, sra_attribute, sra_attribute_2, sra_sort_seq
   from data
  where rang = 1 or sru_fire_on_page_load = initializing
  order by sru_fire_on_page_load desc, rang~';
@@ -52,23 +52,25 @@ select sru_id, sru_name, sra_spi_id, sra_sat_id, sra_attribute, sra_attribute_2
   -- Templates zur Erzeugung der Seiten-Aktion
   c_plsql_action_template constant varchar2(200 byte) := 'begin' || c_cr || '  #CODE#'|| c_cr || '  commit;'|| c_cr || 'end;';
   c_plsql_item_value_template constant varchar2(100 byte) := q'^v('#ITEM#')^';
+  
+  c_rule_origin_template constant varchar2(100 byte) := q'^// Rule #SRU_SORT_SEQ# (#SRU_NAME#), fired on page load^';
+  c_rule_name_template constant varchar2(100 byte) := q'^// Recursion #RECURSION#: #SRU_SORT_SEQ# (#SRU_NAME#), Firing Item: #FIRING_ITEM#^';
+  
   c_stmt_template constant varchar2(32767) :=
 q'~select sru.sru_id, sru.sru_sort_seq, sru.sru_name, sru.sru_firing_items, sru_fire_on_page_load,
-       sra_spi_id item, sat_pl_sql pl_sql, sat_js js, sra_attribute attribute, sra_attribute_2 attribute_2
+       sra_spi_id item, sat_pl_sql pl_sql, sat_js js, sra_attribute attribute, sra_attribute_2 attribute_2,
+       case row_number() over (partition by sru_sort_seq order by sru.sru_name) when 1 then 1 else 0 end is_first_row
   from #RULE_VIEW# srg
   join sct_rule sru
     on srg.sru_id = sru.sru_id
   join sct_action_type sat
     on srg.sra_sat_id = sat.sat_id
- where sat.sat_raise_recursive >= #IS_RECURSIVE#~';
+ where sat.sat_raise_recursive >= #IS_RECURSIVE#
+ order by sru.sru_sort_seq desc, srg.sra_sort_seq~';
 
   c_js_item_value_template constant varchar2(100 byte) := q'^apex.item('#ITEM#').getValue()^';
 
-  c_js_code_template constant varchar2(300) :=
-q'^
-  //Recursion #RECURSION#: #SRU_SORT_SEQ# (#SRU_NAME#), Firing Item: #FIRING_ITEM#
-  #CODE#^';
-    
+  c_js_code_template constant varchar2(300) := '#CODE#';   
   c_plsql_template constant varchar2(20 byte) := '#PLSQL#';
   c_js_template constant varchar2(20 byte) := '#SCRIPT#';
   

@@ -42,7 +42,7 @@ as
   C_ERROR_JSON_TEMPLATE constant varchar2(200) := q'^{"count":#COUNT#,"errorDependentButtons":"#DEPENDENT_BUTTONS#","firingItems":"#FIRING_ITEMS#","errors":[#ERRORS#]}^';
   C_ERROR_JSON_ELEMENT constant varchar2(100) := q'^{"item":"#ITEM#","message":"#MESSAGE#","additionalInfo":"#INFO#"}^';
   
-  C_JS_ACTION_TEMPLATE constant varchar2(300) := q'^<script>~#JS_FILE#.setItemValues(#ITEM_JSON#);~  #JS_FILE#.setErrors(#ERROR_JSON#);#CODE#~</script>^';
+  C_JS_ACTION_TEMPLATE constant varchar2(300) := q'^<script>~  #JS_FILE#.setItemValues(#ITEM_JSON#);~  #JS_FILE#.setErrors(#ERROR_JSON#);#CODE#~</script>^';
   C_NO_JS_ACTION constant varchar2(100) := '// No JavaScript Action';
 
   /* Hilfsprozedur zum Formatieren von ausloesenden Elementen.
@@ -313,22 +313,18 @@ as
         l_needs_recursive_call := true;
         
         -- Session State auswerten und neue Aktion berechnen
-        begin
-          sct_admin.create_action(
-            p_sgr_id => g_param.sgr_id,
-            p_firing_item => g_param.firing_item,
-            p_is_recursive => l_is_recursive,
-            p_firing_items => l_firing_items,
-            p_plsql_action => l_plsql_action,
-            p_js_action => l_js_action_chunk);
+        sct_admin.create_action(
+          p_sgr_id => g_param.sgr_id,
+          p_firing_item => g_param.firing_item,
+          p_is_recursive => l_is_recursive,
+          p_firing_items => l_firing_items,
+          p_plsql_action => l_plsql_action,
+          p_js_action => l_js_action_chunk);
+        
+        -- Rekursionsebene und Firing Items vermerken
+        l_js_action_chunk := replace(l_js_action_chunk, '#RECURSION#', l_actual_recursive_level);
+        utl_text.merge(g_param.firing_items, l_firing_items, sct_const.c_delimiter);
           
-          -- Rekursionsebene und Firing Items vermerken
-          l_js_action_chunk := replace(l_js_action_chunk, '#RECURSION#', l_actual_recursive_level);
-          utl_text.merge(g_param.firing_items, l_firing_items, sct_const.c_delimiter);
-        exception
-          when others then
-            null;
-        end;
         -- JavaScript dieser Rekursionsebene erstellen
         l_js_action := l_js_action || l_js_action_chunk;        
         

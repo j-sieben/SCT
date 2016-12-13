@@ -15,7 +15,19 @@ as
 
 
   /* Hilfsfunktionen */
-  
+  type rule_rec is record(
+    sru_id sct_rule.sru_id%type,
+    sru_sort_seq sct_rule.sru_sort_seq%type,
+    sru_name sct_rule.sru_name%type,
+    sru_firing_items sct_rule.sru_firing_items%type,
+    sru_fire_on_page_load sct_rule.sru_fire_on_page_load%type,
+    item sct_page_item.spi_id%type,
+    pl_sql sct_action_type.sat_pl_sql%type,
+    js sct_action_type.sat_js%type,
+    attribute sct_rule_action.sra_attribute%type,
+    attribute_2 sct_rule_action.sra_attribute_2%type,
+    is_first_row number
+  );
   
   /* Methode zur Erzeugung des Initialisierungscodes aus einem Fetch Row-Prozess
    * %param p_sgr_id ID der Regelgruppe
@@ -516,6 +528,36 @@ as
       pit.leave_mandatory;
       return p_firing_item;
   end get_firing_items;
+  
+  
+  procedure prepare_js_code(
+    p_code in out nocopy varchar2,
+    p_rule in rule_rec,
+    p_origin in varchar2 default null)
+  as
+    c_delimiter constant varchar2(10) := c_cr || '  ';
+  begin
+    p_code := utl_text.bulk_replace(p_code || sct_const.c_js_template, char_table(
+                '#SCRIPT#', replace(p_rule.js, c_cr, c_cr || '  '),
+                '#JS_FILE#', sct_const.c_js_namespace,
+                '#ITEM_VALUE#', sct_const.c_js_item_value_template,
+                '#ITEM#', p_rule.item,
+                '#ATTRIBUTE#', p_rule.attribute,
+                '#ATTRIBUTE_2#', p_rule.attribute_2));
+  end prepare_js_code;
+  
+  
+  function check_recursion(
+    p_rule in rule_rec)
+    return varchar2
+  as
+  begin
+    case when p_rule.item = sct_const.c_no_firing_item 
+          and p_rule.sru_fire_on_page_load = sct_const.c_true
+      then return sct_const.c_false;
+      else return sct_const.c_true;
+    end case;
+  end check_recursion;
 
 
   procedure create_action(
@@ -526,25 +568,17 @@ as
     p_plsql_action out nocopy varchar2,
     p_js_action out nocopy varchar2)
   as
-    type rule_rec is record(
-      sru_id sct_rule.sru_id%type,
-      sru_sort_seq sct_rule.sru_sort_seq%type,
-      sru_name sct_rule.sru_name%type,
-      sru_firing_items sct_rule.sru_firing_items%type,
-      sru_fire_on_page_load sct_rule.sru_fire_on_page_load%type,
-      item sct_page_item.spi_id%type,
-      pl_sql sct_action_type.sat_pl_sql%type,
-      js sct_action_type.sat_js%type,
-      attribute sct_rule_action.sra_attribute%type,
-      attribute_2 sct_rule_action.sra_attribute_2%type
-    );
     l_rule rule_rec;
     l_action_cur sys_refcursor;
 
     l_stmt varchar2(32767);
     l_pl_sql_code varchar2(32767);
     l_js_code varchar2(32767);
-    l_allow_recursion number(1,0);
+    l_js_chunk varchar2(32767);
+    l_current_rule number := 0;
+    l_origin_template varchar2(200);
+    
+    c_delimiter constant varchar2(10) := c_cr || '  ';
   begin
     pit.enter_mandatory('create_action', c_pkg);
     -- Stelle ausloesendes Element fuer SQL ueber Get-Methode zur Verfuegung
@@ -561,31 +595,36 @@ as
     while l_action_cur%FOUND loop
       -- Baue PL/SQL-Code zusammen
       if l_rule.pl_sql is not null then
-        case when l_rule.item = sct_const.c_no_firing_item 
-              and l_rule.sru_fire_on_page_load = sct_const.c_true
-          then l_allow_recursion := sct_const.c_false;
-          else l_allow_recursion := sct_const.c_true;
-        end case;
+        
         l_pl_sql_code := utl_text.bulk_replace(l_pl_sql_code || sct_const.c_plsql_template, char_table(
           '#PLSQL#', l_rule.pl_sql,
           '#ATTRIBUTE#', l_rule.attribute,
           '#ATTRIBUTE_2#', l_rule.attribute_2,
-          '#ALLOW_RECURSION#', l_allow_recursion,
+          '#ALLOW_RECURSION#', check_recursion(l_rule),
           '#ITEM_VALUE#', sct_const.c_plsql_item_value_template,
           '#ITEM#', l_rule.item));
         utl_text.append(l_pl_sql_code, sct_const.c_cr || '  ', null, sct_const.c_true);
       end if;
 
       -- Baue JavaScript-Code zusammen
+      if l_rule.is_first_row = sct_const.c_true then
+        if l_current_rule > 0 then 
+          l_js_code := l_js_code || coalesce(l_js_chunk, '// No JavaScript code for this rule');
+          l_js_chunk := null;
+        else
+          l_current_rule := l_rule.sru_sort_seq;
+        end if;
+        if l_rule.sru_fire_on_page_load = sct_const.c_true then
+          l_origin_template := c_delimiter || sct_const.c_rule_origin_template || c_delimiter;
+        else
+          l_origin_template := c_delimiter || sct_const.c_rule_name_template || c_delimiter;
+        end if;
+        l_js_code := utl_text.bulk_replace(l_js_code || l_origin_template, char_table(
+                       '#SRU_SORT_SEQ#', l_rule.sru_sort_seq,
+                       '#SRU_NAME#', l_rule.sru_name));        
+      end if;
       if l_rule.js is not null then
-        l_js_code := utl_text.bulk_replace(l_js_code || sct_const.c_js_template, char_table(
-          '#SCRIPT#', replace(l_rule.js, c_cr, c_cr || '  '),
-          '#JS_FILE#', sct_const.c_js_namespace,
-          '#ITEM_VALUE#', sct_const.c_js_item_value_template,
-          '#ITEM#', l_rule.item,
-          '#ATTRIBUTE#', l_rule.attribute,
-          '#ATTRIBUTE_2#', l_rule.attribute_2));
-        utl_text.append(l_js_code, sct_const.c_cr || '  ', null, sct_const.c_true);
+        prepare_js_code(l_js_chunk, l_rule);
       end if;
       fetch l_action_cur into l_rule;
     end loop;
@@ -599,7 +638,7 @@ as
       utl_text.bulk_replace(sct_const.c_js_code_template, char_table(
         '#SRU_SORT_SEQ#', case when l_rule.sru_sort_seq is not null then 'RULE_' || l_rule.sru_sort_seq else 'NO_RULE_FOUND' end,
         '#SRU_NAME#', l_rule.sru_name,
-        '#CODE#', rtrim(l_js_code, sct_const.c_cr || '  '),
+        '#CODE#', l_js_code || coalesce(l_js_chunk, '// No JavaScript code for this rule'),
         '#FIRING_ITEM#', p_firing_item));
 
     -- Ermittle durch die Regel betroffene Seitenelemente als FIRING_ITEMS
@@ -674,7 +713,8 @@ as
     using (select sru_id, sru_sgr_id,
                   row_number() over (partition by sru_sgr_id order by sru_sort_seq) * 10 sru_sort_seq
              from sct_rule
-            where sru_sgr_id = p_sgr_id) v
+            where sru_sgr_id = p_sgr_id
+              and sru_sgr_id > 0) v
        on (sru.sru_id = v.sru_id and sru.sru_sgr_id = v.sru_sgr_id)
      when matched then update set
           sru_sort_seq = v.sru_sort_seq;

@@ -100,7 +100,7 @@ begin
     p_sru_id => 0,
     p_sru_sgr_id => 0,
     p_sru_name => q'~Pflichtfeld~',
-    p_sru_condition => q'~firing_item = sra_spi_id~',
+    p_sru_condition => q'~firing_item = sra_spi_id and (select v('SRA_SPI_ID') from dual) is null~',
     p_sru_sort_seq => 9999,
     p_sru_active => 1);
 

@@ -41,6 +41,7 @@ with params as (
               replace(sru.sru_firing_items, p.delimiter, p.br || p.sgr_page_prefix) sru_firing_items,
               sru.sru_sort_seq,
               sra_name,
+              case sru.sru_fire_on_page_load when 1 then p.fa_check else p.fa_uncheck end sru_fire_on_page_load,
               case sru.sru_active when 1 then p.fa_check else p.fa_uncheck end sru_active,
               p.regex_repl, p.regex_err
          from params p
@@ -69,6 +70,7 @@ select a.row_id,
        regexp_replace(a.sru_condition, regex_err, regex_repl, 1, 0, 'i') sru_condition, 
        regexp_replace(a.sru_firing_items, regex_err, regex_repl, 1, 0, 'i') sru_firing_items,
        regexp_replace(a.sra_name, regex_err, regex_repl, 1, 0, 'i') sru_action,
+       sru_fire_on_page_load,
        sru_active
   from actions a
   join apex_applications app
