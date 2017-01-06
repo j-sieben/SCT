@@ -261,7 +261,7 @@ de.condes.plugin.sct = {};
     else if ($this.is('input')){
       // Normales Element, nicht deaktivieren, da ansonsten Sessionstate nicht gefüllt wird.
       // Stattdessen readonly und CSS-Klasse setzen, so dass es wie deaktiviert aussieht
-      $this.prop('readonly', true).addClass('sct-disabled');
+      $this.prop('readonly', true).addClass('apex_disabled');
     };
     apex.item(item).show();
   };
@@ -279,7 +279,7 @@ de.condes.plugin.sct = {};
     }
     else if ($this.is('input')){
       // Normales Eingabeelement war nicht deaktiviert, sondern readonly. Zurücksetzen
-      $this.prop('readonly', false).removeClass('sct-disabled');
+      $this.prop('readonly', false).removeClass('apex_disabled');
     };
     apex.item(item).show();
   };
