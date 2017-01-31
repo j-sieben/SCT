@@ -350,6 +350,7 @@ as
                 '#DATA_COLS#', create_column_list(p_sgr_id),
                 '#WHERE_CLAUSE#', create_where_clause(p_sgr_id),
                 '#SGR_ID#', p_sgr_id));
+                
     execute immediate l_stmt;
 
     pit.verbose(msg.SCT_VIEW_CREATED, msg_args(l_view_name));
@@ -538,7 +539,7 @@ as
     c_delimiter constant varchar2(10) := c_cr || '  ';
   begin
     p_code := utl_text.bulk_replace(p_code || sct_const.c_js_template, char_table(
-                '#SCRIPT#', replace(p_rule.js, c_cr, c_cr || '  '),
+                '#SCRIPT#', c_delimiter || replace(p_rule.js, c_cr, c_delimiter),
                 '#JS_FILE#', sct_const.c_js_namespace,
                 '#ITEM_VALUE#', sct_const.c_js_item_value_template,
                 '#ITEM#', p_rule.item,
@@ -609,15 +610,15 @@ as
       -- Baue JavaScript-Code zusammen
       if l_rule.is_first_row = sct_const.c_true then
         if l_current_rule > 0 then 
-          l_js_code := l_js_code || coalesce(l_js_chunk, '// No JavaScript code for this rule');
+          l_js_code := l_js_code || coalesce(l_js_chunk, sct_const.C_NO_JAVA_SCRIPT);
           l_js_chunk := null;
         else
           l_current_rule := l_rule.sru_sort_seq;
         end if;
         if l_rule.sru_fire_on_page_load = sct_const.c_true then
-          l_origin_template := c_delimiter || sct_const.c_rule_origin_template || c_delimiter;
+          l_origin_template := c_delimiter || sct_const.c_rule_origin_template;
         else
-          l_origin_template := c_delimiter || sct_const.c_rule_name_template || c_delimiter;
+          l_origin_template := c_delimiter || sct_const.c_rule_name_template;
         end if;
         l_js_code := utl_text.bulk_replace(l_js_code || l_origin_template, char_table(
                        '#SRU_SORT_SEQ#', l_rule.sru_sort_seq,
@@ -632,13 +633,13 @@ as
     close l_action_cur;
 
     -- Uebernehme PL/SQL bzw. JS-Codes in entsprechende Ausgabeparameter
-    p_plsql_action := replace(sct_const.c_plsql_action_template, '#CODE#', coalesce(l_pl_sql_code, sct_const.c_null));
+    p_plsql_action := replace(sct_const.c_plsql_action_template, '#CODE#', coalesce(l_pl_sql_code, sct_const.C_NULL));
 
     p_js_action :=
       utl_text.bulk_replace(sct_const.c_js_code_template, char_table(
         '#SRU_SORT_SEQ#', case when l_rule.sru_sort_seq is not null then 'RULE_' || l_rule.sru_sort_seq else 'NO_RULE_FOUND' end,
         '#SRU_NAME#', l_rule.sru_name,
-        '#CODE#', l_js_code || coalesce(l_js_chunk, '// No JavaScript code for this rule'),
+        '#CODE#', l_js_code || coalesce(l_js_chunk, sct_const.C_NO_JAVA_SCRIPT),
         '#FIRING_ITEM#', p_firing_item));
 
     -- Ermittle durch die Regel betroffene Seitenelemente als FIRING_ITEMS

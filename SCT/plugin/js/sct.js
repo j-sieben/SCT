@@ -65,7 +65,7 @@ de.condes.plugin.sct = {};
   // Hilfsmethode, wird als Callback-Methode für den Change-Event verwendet
   function changeCallback(e){
     apex.debug.log(`Event »${e.type}« raised at ${e.target}`);
-    sct.execute(e, sct.ajaxIdentifier, sct.pageItems);
+    sct.execute(e);
   };
   
   
@@ -80,7 +80,7 @@ de.condes.plugin.sct = {};
       if (eventList == undefined || eventList[event] == undefined){
         // Element hat noch keinen entsprechenden Event, binden
         $this
-        .on(event, changeCallback);
+        .on(event, {'ajaxIdentifier':sct.ajaxIdentifier,'pageItems':sct.pageItems}, changeCallback);
         if(event == C_BIND_EVENT){
           // CHANGE-Events sollen bei APEXREFRESH nicht ausgelöst werden, pausieren
           $this
@@ -170,7 +170,7 @@ de.condes.plugin.sct = {};
   // Element anschließend direkt wieder gelöscht werden kann
   function executeCode(code){
     if (code) {
-      apex.debug.log('Response received: \n' + $(code).text());
+      console.log('Response received: \n' + $(code).text());
       $('body').append(code);
       $('#' + $(code).attr('id')).remove();
     };
@@ -288,11 +288,11 @@ de.condes.plugin.sct = {};
   // Plugin-Funktionalität
   sct.execute = function(e){
     server.plugin(
-      sct.ajaxIdentifier,
+      e.data.ajaxIdentifier,
       {
         'x01':getTriggeringElement(e),
         // Kopiere alle relevanten Seitenelemente in den SessionState
-        'pageItems':sct.pageItems
+        'pageItems':e.data.pageItems
       },
       {
         'dataType':'html',
@@ -300,6 +300,7 @@ de.condes.plugin.sct = {};
       }
     );
   };
+  
   
   sct.init = function(me){
     // Binde auslösende Events an Elemente, die über Attribut 01 übergeben werden

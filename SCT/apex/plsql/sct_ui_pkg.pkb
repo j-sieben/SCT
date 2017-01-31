@@ -15,16 +15,6 @@ as
   end delete_rule_group;
 
 
-  procedure resequence_rule_group(
-    p_sgr_id in sct_rule_group.sgr_id%type)
-  as
-  begin
-    pit.enter_mandatory('resequence_rule_group', c_pkg);
-    sct_admin.resequence_rule_group(p_sgr_id);
-    pit.leave_mandatory;
-  end resequence_rule_group;
-
-
   procedure copy_rule_group
   as
   begin

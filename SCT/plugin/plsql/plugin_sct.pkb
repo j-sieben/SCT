@@ -14,6 +14,12 @@ as
   -- Fehlerstack
   type error_stack is table of apex_error.t_error index by binary_integer;
   g_error_stack error_stack;
+  g_now pls_integer;
+  
+  -- Nachrichten-Stack
+  -- Der Nachrichtenstack speichert Meldungen, die während der Ausführung eines PL/SQL-Prozesses auftreten.
+  -- Kann genutzt werden, um Baenchrichtigungen ueber Wertfestlegungen etc. an die Oberflaeche zu bringen.
+  g_notification_stack varchar2(32767);
   
   -- Rekursionsstack
   -- Der Rekursionsstack speichert die Seitenelemente, die durch die Regeln geaendert wurden,
@@ -22,6 +28,7 @@ as
   g_recursive_stack recursive_stack;
   g_recursive_level binary_integer;
   g_recursion_limit binary_integer;
+  g_recursion_loop_is_error boolean;
   -- Globale Variable fuer eine Regelgruppe Rekursion erlauben oder nicht
   g_allow_recursion boolean;
   
@@ -40,7 +47,7 @@ as
   C_BIND_JSON_ELEMENT constant varchar2(100) := '{"id":"#ID#","event":"#EVENT#"}';
   C_PAGE_JSON_ELEMENT constant varchar2(100) := '{"id":"#ID#","value":"#VALUE#"}';
   C_ERROR_JSON_TEMPLATE constant varchar2(200) := q'^{"count":#COUNT#,"errorDependentButtons":"#DEPENDENT_BUTTONS#","firingItems":"#FIRING_ITEMS#","errors":[#ERRORS#]}^';
-  C_ERROR_JSON_ELEMENT constant varchar2(100) := q'^{"item":"#ITEM#","message":"#MESSAGE#","additionalInfo":"#INFO#"}^';
+  C_ERROR_JSON_ELEMENT constant varchar2(200) := q'^{"type":"error","item":"#ITEM#","message":"#MESSAGE#","location":#LOCATION#,"additionalInfo":"#INFO#","unsafe":"false"}^';
   
   C_JS_ACTION_TEMPLATE constant varchar2(300) := q'^<script>~  #JS_FILE#.setItemValues(#ITEM_JSON#);~  #JS_FILE#.setErrors(#ERROR_JSON#);#CODE#~</script>^';
   C_NO_JS_ACTION constant varchar2(100) := '// No JavaScript Action';
@@ -252,14 +259,21 @@ as
     return varchar2
   as
     l_json varchar2(32767);
+    l_location varchar2(50 char);
   begin
     pit.enter_optional('get_json_from_errors', C_PKG);
     for i in 1 .. g_error_stack.count loop
+      if g_error_stack(i).page_item_name = 'DOCUMENT' then
+        l_location := '"page"';
+      else
+        l_location := '["inline","page"]';
+      end if;
       utl_text.append(
         l_json,
         utl_text.bulk_replace(c_error_json_element, char_table(
           '#ITEM#', g_error_stack(i).page_item_name,
           '#MESSAGE#', htf.escape_sc(g_error_stack(i).message),
+          '#LOCATION#', l_location,
           '#INFO#', htf.escape_sc(g_error_stack(i).additional_info))),
         sct_const.c_delimiter, C_YES);
     end loop;
@@ -293,6 +307,7 @@ as
     l_actual_recursive_level binary_integer;
     l_is_recursive number(1,0);
     l_processed_item sct_page_item.spi_id%type;
+    l_elapsed varchar2(20);
   begin
     pit.enter_mandatory('process_rule', C_PKG);
     -- Initialisierung
@@ -311,6 +326,8 @@ as
         -- Speichere Name des Elements zum spaeteren Loeschen des Elements aus dem Rekursionsstack
         l_processed_item := g_param.firing_item;
         l_needs_recursive_call := true;
+        -- Meldungensstack initialisieren
+        g_notification_stack := null;
         
         -- Session State auswerten und neue Aktion berechnen
         sct_admin.create_action(
@@ -319,20 +336,26 @@ as
           p_is_recursive => l_is_recursive,
           p_firing_items => l_firing_items,
           p_plsql_action => l_plsql_action,
-          p_js_action => l_js_action_chunk);
+          p_js_action => l_js_action_chunk);     
         
-        -- Rekursionsebene und Firing Items vermerken
-        l_js_action_chunk := replace(l_js_action_chunk, '#RECURSION#', l_actual_recursive_level);
-        utl_text.merge(g_param.firing_items, l_firing_items, sct_const.c_delimiter);
-          
-        -- JavaScript dieser Rekursionsebene erstellen
-        l_js_action := l_js_action || l_js_action_chunk;        
-        
-        -- Fuehre alle serverseitigen Aktionen aus. 
-        -- Fehler werden in G_ERROR_STACK gesammelt
+        -- Fuehre alle serverseitigen Aktionen aus, 
+        -- Fehler werden in G_ERROR_STACK und Meldungen in G_NOTIFICATION_STACK gesammelt
         if l_plsql_action is not null then
           execute immediate l_plsql_action;
         end if;
+        
+        l_elapsed := (dbms_utility.get_time - g_now) || 'hsec';
+        -- JavaScript dieser Rekursionsebene erstellen 
+        l_js_action_chunk := utl_text.bulk_replace(l_js_action_chunk, char_table(
+                              '#RECURSION#', l_actual_recursive_level,
+                              '#TIME#', l_elapsed,
+                              '#NOTIFICATION#', g_notification_stack,
+                              '#CR#', sct_const.C_CR));
+        
+        -- Ausgabe erstellen und geaenderte Elemente merken
+        utl_text.merge(g_param.firing_items, l_firing_items, sct_const.c_delimiter);
+        utl_text.append(l_js_action, l_js_action_chunk);
+        
       end if;
 
       -- Naechstes Element verarbeiten
@@ -375,8 +398,10 @@ as
      where exists(
            select 1
              from sct_page_item
-            where spi_id = p_item     -- Element ist relevant  
-              and spi_is_required = 1 -- und ruft sich nicht selbst auf
+            where spi_id = p_item     
+              -- Element ist relevant  
+              and spi_is_required = 1 
+              -- und ruft sich nicht selbst auf
               and p_item != g_param.firing_item);
        
     if l_has_rule > 0 and g_allow_recursion then
@@ -385,7 +410,12 @@ as
           -- Element wurde rekursiv noch nicht aufgerufen, vermerken
           g_recursive_stack(p_item) := g_recursive_level;
         else
-          register_error(p_item, msg.SCT_RECURSION_LOOP, msg_args(p_item));
+          -- Schleife in Rekursion
+          if g_recursion_loop_is_error then
+            register_error(p_item, msg.SCT_RECURSION_LOOP, msg_args(p_item, to_char(g_recursive_level)));
+          else
+            register_notification(msg.SCT_RECURSION_LOOP, msg_args(p_item, to_char(g_recursive_level)));
+          end if;
         end if;
       else
         register_error(p_item, msg.SCT_RECURSION_LIMIT, msg_args(p_item, to_char(g_recursion_limit)));
@@ -398,6 +428,7 @@ as
   procedure initialize
   as
   begin
+    g_recursion_loop_is_error := param.get_boolean('RAISE_RECURSION_LOOP', C_PARAM_GROUP);
     g_recursion_limit := param.get_integer('RECURSION_LIMIT', C_PARAM_GROUP);
   end initialize;
   
@@ -453,6 +484,24 @@ as
     end if;
     pit.leave_mandatory;
   end register_error;
+  
+  
+  procedure register_notification(
+    p_text in varchar2)
+  as
+    c_comment constant varchar2(10) := sct_const.C_CR || '  // ';
+  begin
+    utl_text.append(g_notification_stack, C_COMMENT || p_text);
+  end register_notification;
+  
+  
+  procedure register_notification(
+    p_message_name in varchar2,
+    p_arg_list in msg_args)
+  as
+  begin
+    register_notification(pit.get_message_text(p_message_name, p_arg_list));
+  end register_notification;
   
   
   function get_mandatory_message(
@@ -568,6 +617,7 @@ as
       register_item(p_item);
     end if;
     apex_util.set_session_state(p_item, p_value);
+    register_notification(msg.SCT_SESSION_STATE_SET, msg_args(p_item, p_value));
     pit.leave_mandatory;
   end set_session_state;
   
@@ -583,6 +633,7 @@ as
       register_item(p_item);
     end if;
     apex_util.set_session_state(p_item, p_value);
+    register_notification(msg.SCT_SESSION_STATE_SET, msg_args(p_item, to_char(p_value)));
     pit.leave_mandatory;
   end set_session_state;
   
@@ -598,6 +649,7 @@ as
       register_item(p_item);
     end if;
     apex_util.set_session_state(p_item, p_value);
+    register_notification(msg.SCT_SESSION_STATE_SET, msg_args(p_item, to_char(p_value)));
     pit.leave_mandatory;
   end set_session_state;
   
@@ -702,6 +754,8 @@ as
         p_dynamic_action => p_dynamic_action);
     end if;
     
+    g_now := dbms_utility.get_time;
+    
     read_settings(p_dynamic_action);
     
     l_result.javascript_function := sct_const.c_js_function;
@@ -736,8 +790,10 @@ as
         p_dynamic_action => p_dynamic_action);
     end if;
     
+    g_now := dbms_utility.get_time;
     -- Initialisieren
     read_settings(p_dynamic_action);
+    
     -- Registriere FIRING_ELEMENT auf Rekursionebene 1
     g_recursive_stack(g_param.firing_item) := g_recursive_level;
     -- Returniere Ergebnis der Regelpruefung

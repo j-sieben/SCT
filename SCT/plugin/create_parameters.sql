@@ -12,6 +12,12 @@ begin
     p_par_validation_string => '#NUMBER_VAL# between 1 and 100',
     p_par_validation_message => 'Der Wert muss zwischen 1 und 100 liegen');
 
+  param_admin.edit_parameter(
+    p_par_id => 'RAISE_RECURSION_LOOP',
+    p_par_pgr_id => 'SCT',
+    p_par_description => 'Steuert, ob eine rekursive Schleife als Fehler geworfen oder nur benachrichtigt wird',
+    p_par_boolean_value => false);
+
   commit;
 end;
 /

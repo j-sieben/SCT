@@ -1,8 +1,8 @@
 define sql_dir=apex/sql/
-define seq_dir=&sql_dir./sequences/
-define table_dir=&sql_dir./tables/
-define type_dir=&sql_dir./types/
-define view_dir=&sql_dir./views/
+define seq_dir=&sql_dir.sequences/
+define table_dir=&sql_dir.tables/
+define type_dir=&sql_dir.types/
+define view_dir=&sql_dir.views/
 define plsql_dir=apex/plsql/
 define apex_dir=apex/apex/
 
@@ -46,7 +46,7 @@ prompt &s1.Create view SCT_UI_LOV_PAGE_ITEMS
 @&view_dir.sct_ui_lov_page_items.vw
 
 prompt &s1.Create view SCT_UI_LOV_SGR_APP_PAGES
-@&view_dir.sct_ui_lov_app_sgr_pages.vw
+@&view_dir.sct_ui_lov_sgr_app_pages.vw
 
 prompt &s1.Create view SCT_UI_LOV_SGR_APPLICATIONS
 @&view_dir.sct_ui_lov_sgr_applications.vw
@@ -74,9 +74,10 @@ prompt &s1.Create package Body SCT_UI_PKG
 show errors
 
 
+set serveroutput on
 prompt &h3.Install APEX application
 prompt &s1.Prepare APEX import
---@&apex_dir.prepare_apex_import.sql
+@&apex_dir.prepare_apex_import.sql
 
 prompt &s1.Install application
 @&apex_dir.sct.sql

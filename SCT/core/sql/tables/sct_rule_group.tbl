@@ -10,7 +10,7 @@ create table sct_rule_group (
 	constraint sct_rule_group_pk primary key (sgr_id),
   constraint sgr_name_uq unique (sgr_name, sgr_app_id),
   constraint sgr_name_nn check (sgr_name is not null),
-  constraint sgr_with_recursion_chk check (sgr_with_recursion in (0,1),
+  constraint sgr_with_recursion_chk check (sgr_with_recursion in (0,1)),
   constraint sgr_active_chk check (sgr_active in (0,1))
 ) organization index;
 

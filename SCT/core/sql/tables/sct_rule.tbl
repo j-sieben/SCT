@@ -5,7 +5,7 @@ create table sct_rule(
 	sru_condition clob,
 	sru_sort_seq number, 
 	sru_firing_items varchar2(300 byte),
-  sru_fire_on_page_load number(1,0) default 0,
+  sru_fire_on_page_load number(1,0) default -1,
   sru_has_error number(1,0) default 0,
   sru_active number(1,0) default 1,
   constraint sct_rules_pk primary key (sru_id, sru_sgr_id),

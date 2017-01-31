@@ -6,7 +6,6 @@ declare
   l_foo number;
 begin
   l_foo := sct_admin.map_id;
-  -- sct_admin.prepare_rule_group_import('DOAG', 'TOOL');
 
   -- ACTION TYPES
   sct_admin.merge_action_type(
@@ -1161,7 +1160,6 @@ apex.item('#ITEM#').enable();~',
     p_sra_active => 1);
 
   sct_admin.propagate_rule_change(sct_admin.map_id(38));
-
   commit;
 end;
 /

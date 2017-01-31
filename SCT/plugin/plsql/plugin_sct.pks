@@ -36,6 +36,31 @@ as
     p_message_name in varchar2,
     p_arg_list in msg_args default null);
     
+  
+  /* Prozedur zum Registrieren von Meldungen
+   * %param p_text Meldungstext
+   * %usage Wird aufgerufen, wenn waehrend der Verarbeitung innerhalb der Datenbank
+   *        eine Information an die Antwort uebermittelt werden soll, die aktuell
+   *        bearbeitet wird. Die Meldungen werden zu den entsprechenden Prozessen
+   *        als Kommentare der Antwort vor dem JavaScript-Code ausgegeben
+   */
+  procedure register_notification(
+    p_text in varchar2);
+    
+    
+  /* Ueberladung als Schnittstelle zu PIT
+   * %param p_message_name Fehlermeldung, Rferenz auf PIT-Nachricht
+   * %param p_arg_list Liste von PIT-Meldungsparmetern
+   * %usage Wird aufgerufen, wenn waehrend der Verarbeitung innerhalb der Datenbank
+   *        eine Informaiton an die Antwort uebermittelt werden soll.
+   *        Es wird eine, in PIT definierte Meldung uafgerufen und optional
+   *        die erforderlichen Parameter uebergeben.
+   */
+  procedure register_notification(
+    p_message_name in varchar2,
+    p_arg_list in msg_args);
+    
+    
   /* Prozedur zur (De-)Registrierung von Pflichtelementen auf der Seite
    * %param p_spi_id Name des Pflichelements
    * %param p_spi_mandatory_message Optionale Benachrichtigung beim Regelverstoss
