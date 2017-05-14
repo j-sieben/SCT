@@ -5,7 +5,7 @@ define type_dir=&sql_dir./types/
 define view_dir=&sql_dir./views/
 define plsql_dir=plugin/plsql/
 
-prompt &h3.Check installation prerquisites
+prompt &h3.Check installation prerequisites
 @plugin/check_prerequisites.sql
 
 prompt &h3.Remove existing installation

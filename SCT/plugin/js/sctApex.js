@@ -4,7 +4,6 @@ de.condes = de.condes || {};
 de.condes.plugin = de.condes.plugin || {};
 de.condes.plugin.sct = de.condes.plugin.sct || {};
 de.condes.plugin.sct.apex_42_5_0 = {};
-de.condes.plugin.sct.apex_42_5_1 = {};
 
 /*!
  * Hilfsmethoden zur Darstellung der Plugin-Funktionalität auf der APEX-Oberfläche
@@ -39,8 +38,8 @@ de.condes.plugin.sct.apex_42_5_1 = {};
  *        "errors":[                  // Liste der aufgetretenen Fehler
  *          {"item":"",               // ID des Elements, das den Fehler erhält, oder DOCUMENT, 
  *                                    // um anzuzeigen, dass ein genereller Fehler vorliegt
- *           "message":"",            // Fehlermeldung
- *           "additionalInfo":""      // optionale Zusatzinformationen, z.B. CallStack etc.
+ *            "message":"",           // Fehlermeldung
+ *            "additionalInfo":""     // optionale Zusatzinformationen, z.B. CallStack etc.
  *          }
  *        ]
  *     }
@@ -57,7 +56,7 @@ de.condes.plugin.sct.apex_42_5_1 = {};
 (function(sct){
    // APEX-Fehlerbehandlung
   var C_APEX_ERROR_CLASS = 'apex-page-item-error';
-  var C_APEX_ERROR_CLASS_SEL = `.${C_APEX_ERROR_CLASS}, .DOCUMENT`;
+  var C_APEX_ERROR_CLASS_SEL = `.${C_APEX_ERROR_CLASS}`;
   
   var C_MESSAGE_TITLE_SEL = '.t-Alert-title';    
   var C_ERROR_CLASS_SEL =  '.t-Body-alert';
@@ -304,18 +303,8 @@ de.condes.plugin.sct.apex_42_5_1 = {};
    */
   sct.setNotification = function(message){
     sct.clearNotification;
-     if ($(`${C_ERROR_CLASS_SEL} ${C_APEX_ERROR_ID_SEL}`).length == 0){
-      // Es ist keine Fehlerregion auf der Seite vorhanden, anzeigen
-      if ($(C_ERROR_DIALOG_POSITION_SEL).length){ 
-        // Es wird eine modale Seite angezeigt
-        $(C_ERROR_DIALOG_POSITION_SEL).prepend(C_PAGE_NOTIFICATION_TEMPLATE);
-      }
-      else{
-        $(C_ERROR_REGION_POSITION_SEL).prepend(C_PAGE_NOTIFICATION_TEMPLATE);
-      }
-    };
-    $(C_MESSAGE_TITLE_SEL).text(message);    
-    $('.t-Button--closeAlert').on('click', sct.clearNotification);
+    $(C_ERROR_DIALOG_POSITION_SEL).prepend(C_PAGE_NOTIFICATION_TEMPLATE);
+    $(C_MESSAGE_TITLE_SEL).text(message);      
   };
   
   
@@ -326,113 +315,3 @@ de.condes.plugin.sct.apex_42_5_1 = {};
     $(`${C_ERROR_CLASS_SEL} ${C_APEX_NOTIFICATION_ID_SEL}`).parent().remove();     
   };
 })(de.condes.plugin.sct.apex_42_5_0);
-
-
-
-
-
- // Version 5.1, Theme 42
-(function(sct, msg){
-
-  var C_APEX_ERROR_CLASS_SEL = 'div.a-Notification--error';
-
-  // Die Methode setErrors wird von Response aufgerufen und darf daher nicht umbenannt oder entfernt werden
-  /**
-   * Die Methode behandelt alle Einzelfehler aus errorList, bereinigt die bestehende Fehlerliste
-   * und fügt die neuen Fehler hinzu.
-   */
-  function setErrors(errorList) {
-
-    // Alle Einzelfehler behandeln und auf apex.message.errorObject abbilden
-    apex.debug.log(`Anzahl Fehler PlugIn: ${errorList.count}`);
-
-    msg.showErrors(errorList);
-  };
-
-  /**
-   * Die Methode prüft, ob das Plugin abhängige Elemente verwaltet und steuert deren Aktivität abhängig davon,
-   * ob auf der Seite Fehler angezeigt werden oder nicht.
-   */
-  function maintainDependentElements(errorList){
-    if (errorList.errorDependentButtons != null && errorList.errorDependentButtons != ''){
-      var errorDependentButtons = errorList.errorDependentButtons.split(',');
-      if ($(C_APEX_ERROR_CLASS_SEL).length == 0){
-        $.each(errorDependentButtons, function() {
-          apex.item(this).enable();
-        });
-      }
-      else {
-        $.each(errorDependentButtons, function() {
-          apex.item(this).disable();
-        });
-      };
-    };
-  };
-
-  
-  /** 
-   * Methode sendet die Seite ab, falls keine Fehler auf der Seite gefunden werden.
-   */
-  sct.submitPage = function(request, message){
-
-    if ($(C_APEX_ERROR_CLASS_SEL).length == 0) {
-      apex.page.submit({
-        "request" : request,
-        "showWait" : true
-      });
-    }
-    else{
-      msg.alert(message);
-    }
-  };
-  
-  
-  /**
-   * Methode zur Steuerung der Darstellung von Pflichtelementen
-   */
-  sct.setFieldMandatory = function(item, mandatory){
-
-    var $mandatoryItem = $(`#${item}_CONTAINER`);
-    var C_REQUIRED_CLASS = 'is-required';
-
-    // evtl. vorhandene Markierung entfernen
-    $mandatoryItem.removeClass(C_REQUIRED_CLASS);
-    
-    if(mandatory){
-      $mandatoryItem.addClass(C_REQUIRED_CLASS);
-    }
-  };
-  
-  
-  /**
-   * Methode, um Fehler auf der Seite zu verwalten.
-   */
-  sct.maintainErrors = function(errorList){
-    $each(errorList, function(){
-      msg.clearErrors(this.item);
-      if (this.message != ""){
-        msg.showErrors(this.item);
-      };
-    });
-    // In jedem Fall fehlerabhängige Elemente aktualisieren
-    maintainDependentElements(errorList);
-  };
-  
-  
-  /**
-   * Methode zur Anzeige einer Nachricht auf der Oberfläche
-   */
-  sct.setNotification = function(message){
-    msg.hidePageSuccess();
-    msg.showPageSuccess(message);
-  };
-  
-  
-  /**
-   * Methode zum Entfernen einer Benachrichtigung auf der Option
-   */
-  sct.clearNotification = function(){
-    msg.hidePageSuccess();
-  };
-
-})(de.condes.plugin.sct.apex_42_5_1, apex.message);

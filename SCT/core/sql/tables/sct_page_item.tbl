@@ -7,18 +7,18 @@ create table sct_page_item(
 	spi_is_mandatory number(1,0) default 0, 
 	spi_mandatory_message varchar2(200 char),
   spi_has_error number(1,0) default 0,
-	constraint sru_rule_item_pk primary key (spi_sgr_id, spi_id),
-  constraint spi_sit_id_fk foreign key (spi_sit_id)
+	constraint p_sru_rule_item primary key (spi_sgr_id, spi_id),
+  constraint r_spi_sit_id foreign key (spi_sit_id)
     references sct_page_item_type(sit_id) on delete cascade,
-  constraint spi_sgr_id_fk foreign key (spi_sgr_id)
+  constraint r_spi_sgr_id foreign key (spi_sgr_id)
     references sct_rule_group(sgr_id) on delete cascade,
-  constraint spi_is_required_chk check (spi_is_required in (0,1)),
-  constraint spi_is_mandatory_chk check (spi_is_mandatory in (0,1)),
-  constraint spi_has_error_chk check (spi_has_error in (0,1))
+  constraint c_spi_is_required check (spi_is_required in (0,1)),
+  constraint c_spi_is_mandatory check (spi_is_mandatory in (0,1)),
+  constraint c_spi_has_error check (spi_has_error in (0,1))
 ) organization index;
 
-create index spi_sit_id_fk_idx on sct_page_item(spi_sit_id);
-create index spi_sgr_id_fk_idx on sct_page_item(spi_id, spi_sgr_id);
+create index ix_fk_spi_sit_id on sct_page_item(spi_sit_id) tablespace ekasse_k_idx;
+create index ix_fk_spi_sgr_id on sct_page_item(spi_id, spi_sgr_id) tablespace ekasse_k_idx;
 
 comment on table sct_page_item is 'Table to store all page items of the referenced page';
 comment on column sct_page_item.spi_id is 'PK, technical key';
@@ -28,3 +28,15 @@ comment on column sct_page_item.spi_is_required is 'Flag to indicate whether rul
 comment on column sct_page_item.spi_is_mandatory is 'Flag to indicate whether item is mandatory element and therefore must be checked prior to submitting the page';
 comment on column sct_page_item.spi_mandatory_message is 'Message that is emitted if this element is null';
 comment on column sct_page_item.spi_has_error is 'Flag to indicate whether actions reference non existent page items';
+
+merge into sct_page_item spi
+using (select 0 spi_sgr_id,
+              'ALL' spi_id,
+              'ITEM' spi_sit_id,
+              q'~v(('#ITEM#')~' spi_conversion
+         from dual) v
+   on (spi.spi_sgr_id = v.spi_sgr_id and spi.spi_id = v.spi_id)
+ when not matched then insert (spi_sgr_id, spi_id, spi_sit_id, spi_conversion)
+      values (v.spi_sgr_id, v.spi_id, v.spi_sit_id, v.spi_conversion);
+      
+commit;

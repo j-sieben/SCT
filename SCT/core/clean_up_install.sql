@@ -10,7 +10,7 @@ declare
   cursor delete_object_cur is
           select object_name name, object_type type
             from all_objects
-           where object_name in (
+           where (object_name in (
                  '', -- Typen
                  'SCT_ADMIN', 'SCT_CONST', -- Packages
                  'SCT_BL_RULES', 'SCT_BL_PAGE_TARGETS', -- Views
@@ -19,11 +19,12 @@ declare
                  '',  -- Synonyme
                  'SCT_SEQ' -- Sequenzen
                  )
+                 or object_name like 'SCT_RULES_GROUP%')
              and object_type not like '%BODY'
              and owner = upper('&INSTALL_USER.')
            order by object_type, object_name;
   cursor message_cur is
-    select pms_name
+    select pms_name, pms_pml_name
       from pit_message
      where pms_name like 'SCT%'
        and pms_id is not null;
@@ -46,7 +47,7 @@ begin
   end loop;
   
   for msg in message_cur loop
-    pit_admin.remove_message(msg.pms_name, 'GERMAN');
+    pit_admin.remove_message(msg.pms_name, msg.pms_pml_name);
     dbms_output.put_line('&s1.Message ' || msg.pms_name || ' deleted.');
   end loop;
   commit;

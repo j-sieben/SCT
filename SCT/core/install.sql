@@ -52,7 +52,7 @@ prompt &h3.Create SCT messages
 
 prompt &h3.Create packages
 prompt &s1.Checking UTL_TEXT exists
-@check_has_package.sql UTL_TEXT core/utl_text.sql
+@check_has_utl_text.sql core/utl_text.sql
 
 prompt &s1.Create package SCT_CONST
 @&plsql_dir.sct_const.pks

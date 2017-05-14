@@ -4,15 +4,18 @@ create table sct_rule_group (
 	sgr_description varchar2(200 char), 
 	sgr_app_id number, 
 	sgr_page_id number, 
+  sgr_active number(1,0) default 1,
   sgr_initialization_code clob,
   sgr_with_recursion number(1, 0) default 1,
-  sgr_active number(1,0) default 1,
-	constraint sct_rule_group_pk primary key (sgr_id),
-  constraint sgr_name_uq unique (sgr_name, sgr_app_id),
-  constraint sgr_name_nn check (sgr_name is not null),
-  constraint sgr_with_recursion_chk check (sgr_with_recursion in (0,1)),
-  constraint sgr_active_chk check (sgr_active in (0,1))
-) organization index;
+	constraint p_sct_rule_group primary key (sgr_id),
+  constraint u_sgr_name unique (sgr_name, sgr_app_id),
+  constraint c_sgr_name check (sgr_name is not null),
+  constraint c_sgr_active check (sgr_active in (0,1)),
+  constraint c_sgr_with_recursion check (sgr_with_recursion in (0,1))
+) 
+organization index 
+tablespace ekasse_k_dat
+lob (sgr_initialization_code) store as securefile (tablespace ekasse_lob);
 
 
 create or replace trigger trg_bri_sct_rule_group
@@ -26,12 +29,13 @@ end;
 
 comment on table sct_rule_group is 'Table to store SCT Rule Groups';
 comment on column sct_rule_group.sgr_id is 'PK, technical key';
-comment on column sct_rule_group.sgr_name is 'Unique name per application';
+comment on column sct_rule_group.sgr_name is 'NOT NULL, Unique name per application';
 comment on column sct_rule_group.sgr_description is 'Optional description';
 comment on column sct_rule_group.sgr_app_id is 'ID of the APEX application the rule group referes to';
 comment on column sct_rule_group.sgr_page_id is 'ID of the APEX page the rule group referes to';
-comment on column sct_rule_group.sgr_initialization_code is 'Initialization code to define initial status of SCT on the page.';
-comment on column sct_rule_group.sgr_with_recursion is 'Flag to indicate whether rule group allows recursive rule calls';
 comment on column sct_rule_group.sgr_active is 'Flag to indicate whether rule group is in use';
+comment on column sct_rule_group.sgr_initialization_code is 'Initialisierungscode der Regelgruppe. Wird aus Fetch Row-Prozess der referenzierten APEX-Seite abgeleitet.';
+comment on column sct_rule_group.sgr_initialization_code is 'Flag, das anzeigt, ob diese Regel rekursive Regeln erlaubt oder nicht.';
+comment on column sct_rule_group.sgr_initialization_code is 'Flag, das anzeigt, ob die Aktion Fehler beinhaltet';
 
 

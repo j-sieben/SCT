@@ -1,7 +1,7 @@
 create or replace package sct_admin
   authid current_user
 as 
-
+  
   /* getter-Funktionen fuer das PLUGIN_SCT und UI_SCT_PKG */
   /* Funktion liefert den Namen des ausloesenden APEX-Elements. Falls kein Element
    * ausgeloest hat, wird DOCUMENT geliefert.
@@ -9,6 +9,11 @@ as
   function get_firing_item
     return varchar2;
     
+  /* setter-Methode fuer eine Zahl, die auf APP_ID aufgeschlagen wird, wenn Regeln importiert
+   * werden. Kann verwendet werden, um ID-Systeme aufeinander abzubilden
+   */
+  procedure set_app_offset(
+    p_offset in binary_integer);
     
   /* Prozedur erzeugt eine Antwort auf eine gegebene Situation im Session State 
    * fuer eine Regelgruppe
@@ -54,6 +59,7 @@ as
     p_sgr_id in sct_rule_group.sgr_id%type,
     p_sgr_name in sct_rule_group.sgr_name%type,
     p_sgr_description in sct_rule_group.sgr_description%type,
+    p_sgr_with_recursion in sct_rule_group.sgr_with_recursion%type,
     p_sgr_active in sct_rule_group.sgr_active%type default sct_const.c_true);
     
     
@@ -80,6 +86,15 @@ as
     p_sgr_id in sct_rule_group.sgr_id%type,
     p_sgr_app_to in sct_rule_group.sgr_app_id%type,
     p_sgr_page_to in sct_rule_group.sgr_page_id%type);
+    
+    
+  /* Exportiert alle Regelgruppen
+   * %param p_sgr_app_id ID der APEX-Anwendung
+   * %usage Ermittelt alle Regelgruppen einer APEX-Anwendungen und exportiert diese.
+   *        Umfasst Aktionstypen
+   */
+  function export_all_rule_groups
+    return clob;
     
     
   /* Exportiert alle Regelgruppen einer Anwendung
@@ -172,6 +187,7 @@ as
     p_sru_sgr_id in sct_rule_group.sgr_id%type,
     p_sru_name in sct_rule.sru_name%type,
     p_sru_condition in sct_rule.sru_condition%type,
+    p_sru_fire_on_page_load in sct_rule.sru_fire_on_page_load%type,
     p_sru_sort_seq in sct_rule.sru_sort_seq%type,
     p_sru_active in sct_rule.sru_active%type default sct_const.c_true);
     

@@ -69,25 +69,10 @@ If the DA initializes, it is told which elements to bind by the database. Plus, 
 
 ### Upon PAGE LOAD event
 
-The plugin will fire immediately after `Page Load` to gather the initial status for that page. Here's an example request of the plugin upon page load:
+The plugin does its best to read the default values of the relevant page items during the render phase. If it is succesful in reading the default values, all initial rules are applied before the page shows for the first time, leading to immediate initialization of the form according to the initalization rules. no additional roundtrip is required.
 
-```
-p_arg_names: P1_PARENT
-p_arg_names: P1_CHILD
-p_arg_values: 1165
-p_arg_values: 
-p_debug: 
-p_flow_id: 123
-p_flow_step_id: 1
-p_instance: 543940867742
-p_request: PLUGIN=5FFD719CC65B19D4746F8BA08EB48C2DCA059C05622DDCD58D9157E245CE5A87
-x01: DOCUMENT
-```
-
-The request tells us that
-
-- items `P1_PARENT` and `P1_CHILD` are of interest for the plugin and therefore get submitted on `Page Load`.
-- no firing item could be detected. As the event is `Page Load`, the firing item is `DOCUMENT`
+### Upon occurence of a relevant event
+If an event is raised (`change` event on items of interes or `click` event of bound buttons), the firing element is defined and all relevant field values are collected and sent to the session state. Based on that information, the database limits the rules that get evaluated in order to calculate the response.
 
 ### At the database
 
@@ -140,9 +125,6 @@ The answer tells us that
 The plugin executes the script by appending it to the document. It will be deleted immediately afterwards.
 If a request comes in, all item values the plugin is interested in were sent to the session state of APEX already. Therefore, it's easy for the database part to get access to the element values in SQL. These values are collected in a dedicated view and presented as columns for the view.
 
-### Raising an event
-
-If an event is raised (`change` event on items of interes or `click` event of bound buttons), the same activity is fired as upon page load, with the exception that a firing element is defined. Based on that information, the database further limits the rules that get evaluated in order to calculate the response.
 
 ## Advantages of this approach
 
@@ -168,3 +150,17 @@ Any call to the plugin results in a response from the database that includes the
 
 ### Automatic type detection
 If you compare values entered on the page, it's hard to do so because you need to treat date values different than number values and these different to string values. Based on the fact, that each page item is allowed to have a format mask to define the item's appearance on the page, SCT converts the item value to the respective data type using this format mask. In order to make this work, you have to set the format mask of the respective page items. If the format mask is null, the element will be treated as string.
+
+## Downsides of this approach
+There are some disadvantages you should be aware of before taking SCT into account for your page
+
+### Rules are maintained outside the APEX IDE
+As I'm not an APEX team member, I obviously have no possibility to include SCT into the APEX-IDE. Therefore, a separate APEX application ships with SCT to enable developers to create and maintain rules. This is a disadvantage because developing in more than one IDE is somewhat boring.
+
+### Export of rules is possible, but not with the application itself
+The second disadvantage is closely related to the first downside. If you export a rule set, this then is not incorporated into the »normal« application export created by APEX. You can insert the export into the normal export file or install the rules after having imported the APEX application. But when importing the rules separate from the application, it must be ensured that the SCT import is aware of the application and workspace ID the application is imported to. This is solvable but not really user friendly.
+
+### Roundtrips to the database server are required per change
+SCT requires a roundtrip to the database every time a relevant event occurs on the page. This may or may not be a disadvantage. Some events may only result in JavaScript actions to be taken on page, such as hiding or showing items on the page. In this case, the need for a roundtrip to the server adds complexity and consumes time. In most cases though, a roundtrip to the database is required anyway, fi to check values against the database, validate input, refresh items or other examples. In all these cases, the amount of roundtrips required to change the page values may be reduced by SCT as it allows you to do any of the required actions within the database in one roundtrip. Overall, it balances out, keeping in mind that SCT is designed to control complex forms where roundtrips to the server are more likely than on trivial forms.
+
+Another point to keep in mind is the fact that due to the roundtrip SCT is able to utilize the sheer power of SQL to do their computing which in many cases may be at least not slower than working clientside with roundtrips to gather certain information from the database. But if your application cannot afford connecting the database per relevant event, SCT might not be for you.

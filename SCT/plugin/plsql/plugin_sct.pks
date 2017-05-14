@@ -5,6 +5,8 @@ as
    * %author Juergen Sieben, ConDeS GmbH
    * %usage Das Package implementiert die datenbankseitige Logik des SCT-APEX-Plugins
    */
+   
+  procedure stop_rule;
   
   /* Prozedur zum Registrieren von Fehlern
    * %param p_spi_id Name des Feldes, das den Fehler enthaelt

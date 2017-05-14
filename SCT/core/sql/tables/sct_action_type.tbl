@@ -3,17 +3,18 @@ create table sct_action_type(
 	sat_name varchar2(50 char), 
   sat_description clob,
 	sat_pl_sql varchar2(200 char), 
-	sat_js varchar2(200 char),
+	sat_js varchar2(200 char), 
+	sat_is_editable number(1,0) default 1, 
+	sat_raise_recursive number(1,0) default 1,
   sat_default_attribute_1 varchar2(200 char),
   sat_check_attribute_1 varchar2(100 char),
   sat_default_attribute_2 varchar2(200 char),
   sat_check_attribute_2 varchar2(100 char),
-	sat_is_editable number(1,0) default 1, 
-	sat_raise_recursive number(1,0) default 1, 
-	constraint sct_action_type_pk primary key (sat_id),
-  constraint sat_is_editable_chk check (sat_is_editable in (0,1)),
-  constraint sat_raise_recursive_chk check(sat_raise_recursive in (0,1))
-);
+	constraint p_sct_action_type primary key (sat_id),
+  constraint c_sat_is_editable check (sat_is_editable in (0,1)),
+  constraint c_sat_raise_recursive check(sat_raise_recursive in (0,1))
+) organization index
+tablespace ekasse_k_dat;
 
 comment on table sct_action_type is 'Tabel to store different action types as template for actions';
 comment on column sct_action_type.sat_id is 'PK, alphanumeric key';
@@ -21,12 +22,12 @@ comment on column sct_action_type.sat_name is 'Display name';
 comment on column sct_action_type.sat_description is 'Optional description, is shown as a help text';
 comment on column sct_action_type.sat_pl_sql is 'PL/SQL pattern to implement the functionality in PL/SQL';
 comment on column sct_action_type.sat_js is 'JavaScript pattern to implement the functionality in JS';
+comment on column sct_action_type.sat_is_editable is 'Flag to indicate whether developer is allowed to change this action type (others are required by SCT';
+comment on column sct_action_type.sat_raise_recursive is 'Flag to indicate whether action is executed if recurive level is greater than 1';
 comment on column sct_action_type.sat_default_attribute_1 is 'Default PL/SQL-expression for attribute 1 of the resulting action. Is executed upon insert if attribute 1 is null';
 comment on column sct_action_type.sat_check_attribute_1 is 'Validation expression for attribute 1';
 comment on column sct_action_type.sat_default_attribute_2 is 'Default PL/SQL-expression for attribute 2 of the resulting action. Is executed upon insert if attribute 2 is null';
 comment on column sct_action_type.sat_check_attribute_2 is 'Validation expression for attribute 2';
-comment on column sct_action_type.sat_is_editable is 'Flag to indicate whether developer is allowed to change this action type (others are required by SCT';
-comment on column sct_action_type.sat_raise_recursive is 'Flag to indicate whether action is executed if recurive level is greater than 1';
 
 create or replace trigger trg_briu_sct_action_type 
 before insert or update on sct_action_type 

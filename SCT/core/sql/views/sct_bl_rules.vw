@@ -1,7 +1,7 @@
 create or replace force view sct_bl_rules as
 select sru.sru_id, sru.sru_sgr_id sgr_id, sru.sru_sort_seq, sru.sru_name,
-       ',' || sru.sru_firing_items|| ',DOCUMENT,' sru_firing_items, sru_fire_on_page_load, sra_sort_seq,
-       sra.sra_spi_id, sra.sra_sat_id, sra.sra_attribute, sra.sra_attribute_2
+       ',' || sru.sru_firing_items|| ',DOCUMENT,' sru_firing_items, sru_fire_on_page_load,
+       sra.sra_spi_id, sra.sra_sat_id, sra.sra_attribute, sra.sra_attribute_2, sra.sra_sort_seq
   from sct_rule sru
   join sct_rule_action sra
     on sru.sru_id in sra.sra_sru_id
@@ -11,8 +11,8 @@ select sru.sru_id, sru.sru_sgr_id sgr_id, sru.sru_sort_seq, sru.sru_name,
    and sra_spi_id != 'ALL'
 union all
 select sru.sru_id, spi.spi_sgr_id, sru.sru_sort_seq, sru.sru_name,
-       ',' || spi.spi_id || ',' sru_firing_items, sru_fire_on_page_load, sra_sort_seq,
-       spi.spi_id, sra.sra_sat_id, to_clob(spi.spi_mandatory_message), sra.sra_attribute_2
+       ',' || spi.spi_id || ',' sru_firing_items, sru_fire_on_page_load,
+       spi.spi_id, sra.sra_sat_id, to_clob(spi.spi_mandatory_message), sra.sra_attribute_2, sra.sra_sort_seq
   from sct_rule sru
   join sct_rule_action sra
     on sru.sru_id = sra.sra_sru_id

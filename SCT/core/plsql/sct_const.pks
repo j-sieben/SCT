@@ -3,7 +3,7 @@ create or replace package sct_const
 as 
 
   /* Das Package sammelt Konstanten, die zur Generierung von DDL-Anweisungen
-   * und JavaScript-BlÃ¶cken verwendet werden. Entzerrt den Code in SCT_ADMIN
+   * und JavaScript-Blöcken verwendet werden. Entzerrt den Code in SCT_ADMIN
    */
 
   c_cr constant varchar2(2 byte) := chr(10);
@@ -73,7 +73,7 @@ q'~select sru.sru_id, sru.sru_sort_seq, sru.sru_name, sru.sru_firing_items, sru_
   c_js_code_template constant varchar2(300) := '#CODE#';   
   c_plsql_template constant varchar2(20 byte) := '#PLSQL#';
   c_js_template constant varchar2(20 byte) := '#SCRIPT#';
-  c_no_java_script constant varchar2(100) := c_cr || '  // No JavaScript code for this rule';
+  c_no_java_script constant varchar2(100) := c_cr || '  // No JavaScript code for rule #SRU_NAME#';
   
   -- Template zur Generierung des Initialisierungscodes
   c_col_val_template constant varchar2(100) := q'~    apex_util.set_session_state('#ITEM#', itm.#COLUMN#);#CR#~';
@@ -96,7 +96,7 @@ q'~declare#CR#    cursor item_cur is#CR#      #SQL_STMT#;#CR#begin#CR#  for itm 
   || '  l_foo number;' || c_cr 
   || 'begin' || c_cr 
   || '  l_foo := sct_admin.map_id;' || c_cr
-  || '  -- sct_admin.prepare_rule_group_import(''&APEX_WS.'', ''#ALIAS#'');' || c_cr;
+  || '  -- sct_admin.prepare_rule_group_import(''KASSE'', ''#ALIAS#'');' || c_cr;
   c_export_end_template constant varchar2(200) := c_cr || '  commit;' || c_cr || 'end;' || c_cr || '/' || c_cr || 'set define on';
   c_action_type_template constant varchar2(32767) :=
 q'^
@@ -113,11 +113,12 @@ q'^
   c_rule_group_template constant varchar2(32767) :=
 q'^
   sct_admin.merge_rule_group(
-    p_sgr_app_id => coalesce(apex_application_install.get_application_id, #SGR_APP_ID#),
-    p_sgr_page_id => #SGR_PAGE_ID#,
     p_sgr_id => sct_admin.map_id(#SGR_ID#),
     p_sgr_name => q'~#SGR_NAME#~',
     p_sgr_description => q'~#SGR_DESCRIPTION#~',
+    p_sgr_app_id => coalesce(apex_application_install.get_application_id, #SGR_APP_ID#),
+    p_sgr_page_id => #SGR_PAGE_ID#,
+    p_sgr_with_recursion => #SGR_WITH_RECURSION#,
     p_sgr_active => #SGR_ACTIVE#);
 ^';
 
@@ -129,6 +130,7 @@ q'^
     p_sru_name => q'~#SRU_NAME#~',
     p_sru_condition => q'~#SRU_CONDITION#~',
     p_sru_sort_seq => #SRU_SORT_SEQ#,
+    p_sru_fire_on_page_load => #SRU_FIRE_ON_PAGE_LOAD#,
     p_sru_active => #SRU_ACTIVE#);
 ^';
 
@@ -162,12 +164,12 @@ select *
   from session_state
  where #CONDITION#~';
  
-  c_rule_group_error constant varchar2(200 char) := q'^<p>Regelgruppe Â»#SGR_NAME#Â« kann nicht exportiert werden:</p><ul>#ERROR_LIST#</ul>^';
-  c_page_item_error constant varchar2(200 char) := q'^<li>#SIT_NAME# Â»#SPI_ID#Â« existiert in Anwendung #SGR_APP_ID# nicht</li>^';
+  c_rule_group_error constant varchar2(200 char) := q'^<p>Regelgruppe »#SGR_NAME#« kann nicht exportiert werden:</p><ul>#ERROR_LIST#</ul>^';
+  c_page_item_error constant varchar2(200 char) := q'^<li>#SIT_NAME# »#SPI_ID#« existiert in Anwendung #SGR_APP_ID# nicht</li>^';
   
-  c_action_type_help_template constant varchar2(200 char) := q'Â±<h2>Hilfe zu Aktionstypen</h2><dl>#HELP_LIST#</dl>Â±';
+  c_action_type_help_template constant varchar2(200 char) := q'±<h2>Hilfe zu Aktionstypen</h2><dl>#HELP_LIST#</dl>±';
 
-  c_action_type_help_entry constant varchar2(200 char) := q'Â±<dt class="sct-dt">#SAT_NAME# #SAT_IS_EDITABLE#</dt><dd>#SAT_DESCRIPTION#</dd>Â±';
+  c_action_type_help_entry constant varchar2(200 char) := q'±<dt class="sct-dt">#SAT_NAME# #SAT_IS_EDITABLE#</dt><dd>#SAT_DESCRIPTION#</dd>±';
  
 end sct_const;
 /
