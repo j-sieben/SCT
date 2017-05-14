@@ -1,7 +1,7 @@
 # SCT
 State Chart Toolkit is a toolkit aimed at APEX designers wanting to simplify the construction of complex forms.
 
-ATTENTION: SCT is not intended to be used widely, rather it is a proof of concept. To use it in your projects, you need to be aware that it usage requires more effort to set up a working repository than for a normal plugin. If you expect SCT to simply install and work, this is not possible due to the nature of the plugin and the lack of integration into the normal APEX API. So use it as a technology demonstration!
+ATTENTION: SCT is not intended to be used widely, rather it is a proof of concept. To use it in your projects, you need to be aware that its usage requires more effort to set up a working repository than for a normal plugin. If you expect SCT to simply be installed and it works, this is not possible due to the nature of the plugin and the lack of integration into the normal APEX API. So use it as a technology demonstration!
 
 ## The problem with complex forms
 A complex form in APEX requires many JavaScript based interactions to be coded by an APEX developer. This is normally achieved by creating Dynamic Actions (DA) on the page. This declarative approach is best suited for minor to medium complex pages but it becomes a nightmare to maintain once many items are on the page or once a more sophisticated control over the page elements is required.
