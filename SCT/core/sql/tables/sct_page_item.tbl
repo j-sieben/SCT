@@ -17,8 +17,8 @@ create table sct_page_item(
   constraint c_spi_has_error check (spi_has_error in (0,1))
 ) organization index;
 
-create index ix_fk_spi_sit_id on sct_page_item(spi_sit_id) tablespace ekasse_k_idx;
-create index ix_fk_spi_sgr_id on sct_page_item(spi_id, spi_sgr_id) tablespace ekasse_k_idx;
+create index ix_fk_spi_sit_id on sct_page_item(spi_sit_id);
+create index ix_fk_spi_sgr_id on sct_page_item(spi_id, spi_sgr_id);
 
 comment on table sct_page_item is 'Table to store all page items of the referenced page';
 comment on column sct_page_item.spi_id is 'PK, technical key';

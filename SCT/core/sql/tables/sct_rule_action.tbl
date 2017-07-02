@@ -7,7 +7,7 @@ create table sct_rule_action(
   sra_attribute_2 clob,
 	sra_sort_seq number, 
   sra_active number(1,0) default 1,
-  sra_has_errors number(1,0) default 0,
+  sra_has_error number(1,0) default 0,
 	constraint p_sct_rule_action primary key (sra_sgr_id, sra_sru_id, sra_spi_id, sra_sat_id),
   constraint r_sra_sat_id foreign key (sra_sat_id)
 	  references sct_action_type (sat_id) on delete cascade,
@@ -16,12 +16,11 @@ create table sct_rule_action(
   constraint r_sra_sru_id foreign key (sra_sru_id, sra_sgr_id)
 	  references sct_rule (sru_id, sru_sgr_id) on delete cascade,
   constraint c_sra_active check(sra_active in (0,1)),
-  constraint c_sra_has_errors check(sra_has_errors in (0,1))
-) organization index
-tablespace ekasse_k_dat;
+  constraint c_sra_has_error check(sra_has_error in (0,1))
+) organization index;
 
-create index idx_sra_spi_id on sct_rule_action(sra_spi_id) tablespace ekasse_k_idx;
-create index idx_sra_sat_id on sct_rule_action(sra_sat_id) tablespace ekasse_k_idx;
+create index idx_sra_spi_id on sct_rule_action(sra_spi_id);
+create index idx_sra_sat_id on sct_rule_action(sra_sat_id);
 
 comment on table sct_rule_action  is 'Table to store activities per rule';
 comment on column sct_rule_action.sra_sgr_id is 'PK, references SCT_RULE';
@@ -32,4 +31,5 @@ comment on column sct_rule_action.sra_attribute is 'Optimonal parameter, passed 
 comment on column sct_rule_action.sra_attribute is 'Optimonal second parameter, passed to ACTION_TYPE';
 comment on column sct_rule_action.sra_sort_seq is 'Sorting criteria to control execution flow';
 comment on column sct_rule_action.sra_active is 'Flag to indicate whether Rule Group is in use';
+comment on column sct_rule_action.sra_has_error is 'Flag, das anzeigt, ob diese Aktion einen Fehler enthaelt oder nicht';
 

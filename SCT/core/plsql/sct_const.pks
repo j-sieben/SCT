@@ -1,9 +1,11 @@
-create or replace package sct_const
+set define off
+
+create or replace  package sct_const
   authid definer
 as 
 
   /* Das Package sammelt Konstanten, die zur Generierung von DDL-Anweisungen
-   * und JavaScript-Blöcken verwendet werden. Entzerrt den Code in SCT_ADMIN
+   * und JavaScript-Bloecken verwendet werden. Entzerrt den Code in SCT_ADMIN
    */
 
   c_cr constant varchar2(2 byte) := chr(10);
@@ -51,10 +53,10 @@ select sru_id, sru_name, sra_spi_id, sra_sat_id, sra_attribute, sra_attribute_2,
   
   -- Templates zur Erzeugung der Seiten-Aktion
   c_plsql_action_template constant varchar2(200 byte) := 'begin' || c_cr || '  #CODE#'|| c_cr || '  commit;'|| c_cr || 'end;';
-  c_plsql_item_value_template constant varchar2(100 byte) := q'^v('#ITEM#')^';
+  c_plsql_item_value_template constant varchar2(100 byte) := q'~v('#ITEM#')~';
   
-  c_rule_origin_template constant varchar2(100 byte) := q'^// Rule #SRU_SORT_SEQ# (#SRU_NAME#), fired on page load^';
-  c_rule_name_template constant varchar2(120 byte) := q'^#CR#  // Recursion #RECURSION#: #SRU_SORT_SEQ# (#SRU_NAME#), Firing Item: #FIRING_ITEM#, elapsed: #TIME##NOTIFICATION#^';
+  c_rule_origin_template constant varchar2(100 byte) := q'~// Rule #SRU_SORT_SEQ# (#SRU_NAME#), fired on page load~';
+  c_rule_name_template constant varchar2(120 byte) := q'~#CR#  // Recursion #RECURSION#: #SRU_SORT_SEQ# (#SRU_NAME#), Firing Item: #FIRING_ITEM#, elapsed: #TIME##NOTIFICATION#~';
   
   c_stmt_template constant varchar2(32767) :=
 q'~select sru.sru_id, sru.sru_sort_seq, sru.sru_name, sru.sru_firing_items, sru_fire_on_page_load,
@@ -68,9 +70,10 @@ q'~select sru.sru_id, sru.sru_sort_seq, sru.sru_name, sru.sru_firing_items, sru_
  where sat.sat_raise_recursive >= #IS_RECURSIVE#
  order by sru.sru_sort_seq desc, srg.sra_sort_seq~';
 
-  c_js_item_value_template constant varchar2(100 byte) := q'^apex.item('#ITEM#').getValue()^';
+  c_js_item_value_template constant varchar2(100 byte) := q'~apex.item('#ITEM#').getValue()~';
 
-  c_js_code_template constant varchar2(300) := '#CODE#';   
+  c_js_code_template constant varchar2(300) := '#CODE#';
+  c_dynamic_js_code_template constant varchar2(300) := '// Dynamically created JavaScript #CR##CODE#';
   c_plsql_template constant varchar2(20 byte) := '#PLSQL#';
   c_js_template constant varchar2(20 byte) := '#SCRIPT#';
   c_no_java_script constant varchar2(100) := c_cr || '  // No JavaScript code for rule #SRU_NAME#';
@@ -78,26 +81,25 @@ q'~select sru.sru_id, sru.sru_sort_seq, sru.sru_name, sru.sru_firing_items, sru_
   -- Template zur Generierung des Initialisierungscodes
   c_col_val_template constant varchar2(100) := q'~    apex_util.set_session_state('#ITEM#', itm.#COLUMN#);#CR#~';
   c_col_sql_stmt varchar2(200) := 
-q'^select * 
+q'~select * 
         from #ATTRIBUTE_02# 
-       where #ATTRIBUTE_04# = (select v('#ATTRIBUTE_03#') from dual)^';
+       where #ATTRIBUTE_04# = (select v('#ATTRIBUTE_03#') from dual)~';
   c_col_sql_rowid_stmt varchar2(200) := 
-q'^select rowid, v.* 
+q'~select rowid, v.* 
         from #ATTRIBUTE_02# v
-       where #ATTRIBUTE_04# = (select v('#ATTRIBUTE_03#') from dual)^';
+       where #ATTRIBUTE_04# = (select v('#ATTRIBUTE_03#') from dual)~';
   c_initialize_code constant varchar2(200) := 
 q'~declare#CR#    cursor item_cur is#CR#      #SQL_STMT#;#CR#begin#CR#  for itm in item_cur loop#CR##ITEM_STMT#  end loop;#CR#end;~';
   
   -- Templates zum Export von Regelgruppen
   c_export_start_template constant varchar2(200) :=
-     'set define off' || c_cr 
+     'set define ^' || c_cr 
   || c_cr 
   || 'declare' || c_cr 
   || '  l_foo number;' || c_cr 
   || 'begin' || c_cr 
-  || '  l_foo := sct_admin.map_id;' || c_cr
-  || '  -- sct_admin.prepare_rule_group_import(''KASSE'', ''#ALIAS#'');' || c_cr;
-  c_export_end_template constant varchar2(200) := c_cr || '  commit;' || c_cr || 'end;' || c_cr || '/' || c_cr || 'set define on';
+  || '  l_foo := sct_admin.map_id;' || c_cr;
+  c_export_end_template constant varchar2(200) := c_cr || '  commit;' || c_cr || 'end;' || c_cr || '/' || c_cr || 'set define &';
   c_action_type_template constant varchar2(32767) :=
 q'^
   sct_admin.merge_action_type(
@@ -112,11 +114,12 @@ q'^
 
   c_rule_group_template constant varchar2(32767) :=
 q'^
+  dbms_output.put_line('.    - Rulegroup #SGR_NAME#');
   sct_admin.merge_rule_group(
     p_sgr_id => sct_admin.map_id(#SGR_ID#),
     p_sgr_name => q'~#SGR_NAME#~',
     p_sgr_description => q'~#SGR_DESCRIPTION#~',
-    p_sgr_app_id => coalesce(apex_application_install.get_application_id, #SGR_APP_ID#),
+    p_sgr_app_id => coalesce(apex_application_install.get_application_id, ^APP_ID.),
     p_sgr_page_id => #SGR_PAGE_ID#,
     p_sgr_with_recursion => #SGR_WITH_RECURSION#,
     p_sgr_active => #SGR_ACTIVE#);
@@ -148,9 +151,9 @@ q'^
 ^';
 
   c_rule_group_validation constant varchar2(200) := 
-q'^
+q'~
   sct_admin.propagate_rule_change(sct_admin.map_id(#SGR_ID#));
-^';
+~';
 
   c_directory constant varchar2(30 byte) := 'SCT_DIR';
   
@@ -164,12 +167,14 @@ select *
   from session_state
  where #CONDITION#~';
  
-  c_rule_group_error constant varchar2(200 char) := q'^<p>Regelgruppe »#SGR_NAME#« kann nicht exportiert werden:</p><ul>#ERROR_LIST#</ul>^';
-  c_page_item_error constant varchar2(200 char) := q'^<li>#SIT_NAME# »#SPI_ID#« existiert in Anwendung #SGR_APP_ID# nicht</li>^';
+  c_rule_group_error constant varchar2(200 char) := q'~<p>Regelgruppe "#SGR_NAME#" kann nicht exportiert werden:</p><ul>#ERROR_LIST#</ul>~';
+  c_page_item_error constant varchar2(200 char) := q'~<li>#SIT_NAME# "#SPI_ID#" existiert in Anwendung #SGR_APP_ID# nicht</li>~';
   
-  c_action_type_help_template constant varchar2(200 char) := q'±<h2>Hilfe zu Aktionstypen</h2><dl>#HELP_LIST#</dl>±';
+  c_action_type_help_template constant varchar2(200 char) := q'~<h2>Hilfe zu Aktionstypen</h2><dl>#HELP_LIST#</dl>~';
 
-  c_action_type_help_entry constant varchar2(200 char) := q'±<dt class="sct-dt">#SAT_NAME# #SAT_IS_EDITABLE#</dt><dd>#SAT_DESCRIPTION#</dd>±';
+  c_action_type_help_entry constant varchar2(200 char) := q'~<dt class="sct-dt">#SAT_NAME# #SAT_IS_EDITABLE#</dt><dd>#SAT_DESCRIPTION#</dd>~';
  
 end sct_const;
 /
+
+set define on

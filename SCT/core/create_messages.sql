@@ -154,7 +154,7 @@ begin
   
   pit_admin.merge_message(
     p_pms_name => 'SCT_NO_DATA_FOR_ITEM',
-    p_pms_text => q'~'Keine Daten fuer #1# gefunden.~',
+    p_pms_text => q'~Keine Daten fuer #1# gefunden.~',
     p_pms_pse_id => 30,
     p_pms_pml_name => 'GERMAN',
     p_error_number => -20000
@@ -162,25 +162,31 @@ begin
 
   pit_admin.merge_message(
     p_pms_name => 'SCT_WHERE_CLAUSE',
-    p_pms_text => 'Fehler beim Erzeugen der WHERE-Klausel: #SQLERRM#',
+    p_pms_text => q'~Fehler beim Erzeugen der WHERE-Klausel: #SQLERRM#~',
     p_pms_pse_id => 30,
     p_pms_pml_name => 'GERMAN');
     
   pit_admin.merge_message(
     p_pms_name => 'SCT_MERGE_RULE_GROUP',
-    p_pms_text => 'Fehler beim Mergen von Regelgruppe #1#: #SQLERRM#',
+    p_pms_text => q'~Fehler beim Mergen von Regelgruppe #1#: #SQLERRM#~',
     p_pms_pse_id => 30,
     p_pms_pml_name => 'GERMAN');
     
   pit_admin.merge_message(
     p_pms_name => 'SCT_MERGE_RULE',
-    p_pms_text => 'Fehler beim Mergen von Regel #1#: #SQLERRM#',
+    p_pms_text => q'~Fehler beim Mergen von Regel #1#: #SQLERRM#~',
     p_pms_pse_id => 30,
     p_pms_pml_name => 'GERMAN');
     
   pit_admin.merge_message(
     p_pms_name => 'SCT_MERGE_RULE_ACTION',
-    p_pms_text => 'Fehler beim Mergen von Regelaktion #1#, #2#: #SQLERRM#',
+    p_pms_text => q'~Fehler beim Mergen von Regelaktion #1#, #2#: #SQLERRM#~',
+    p_pms_pse_id => 30,
+    p_pms_pml_name => 'GERMAN');
+    
+  pit_admin.merge_message(
+    p_pms_name => 'SCT_NO_EXPORT_DATA_FOUND',
+    p_pms_text => q'~Keine Daten für Workspace #1# und Alias #2# gefunden.~',
     p_pms_pse_id => 30,
     p_pms_pml_name => 'GERMAN');
     

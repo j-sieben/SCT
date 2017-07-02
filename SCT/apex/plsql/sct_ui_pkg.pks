@@ -39,6 +39,12 @@ as
     p_sgr_id in sct_rule_group.sgr_id%type);
     
   
+  /* Prozedur veranlasst den Export aller Regelgruppen. Die Regelgruppen
+   * werden als Datei auf den Client-rechner geladen
+   */
+  procedure export_all_rule_groups;
+    
+  
   /* Prozedur veranlasst den Export einer oder mehrerer Regelgruppen. Die Regelgruppen
    * werden als Datei auf den Client-rechner geladen
    */
@@ -69,7 +75,7 @@ as
     return varchar2;
     
 
-  /* Hilfsfunktion zur Ermittlung der nächsten Sequenznummer für Regeln
+  /* Hilfsfunktion zur Ermittlung der n�chsten Sequenznummer f�r Regeln
    * %param p_sgr_id ID der Regelgruppe
    * %return Naechste Sequenznummer
    * %usage Wird von der Anwendung genutzt, um eine neue Sequenznummer vorzublenden
@@ -79,7 +85,7 @@ as
     return number;
     
 
-  /* Hilfsfunktion zur Ermittlung der nächsten Sequenznummer für Regelaktionen
+  /* Hilfsfunktion zur Ermittlung der n�chsten Sequenznummer f�r Regelaktionen
    * %param p_sgr_id ID der Regelgruppe
    * %param p_sru_id ID der Einzelregel
    * %return Naechste Sequenznummer
@@ -97,3 +103,4 @@ as
 
 end sct_ui_pkg;
 /
+

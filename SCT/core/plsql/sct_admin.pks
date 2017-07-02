@@ -109,10 +109,18 @@ as
   
   /* Export einer Regelgruppe
    * %param p_sgr_id ID der Regelgruppe
-   * %usage Exportiert alle Einzelregeln einer Regelgruppe. Umfasst Aktionstypen
+   * %usage Exportiert alle Einzelregeln einer Regelgruppe.
    */
   function export_rule_group(
     p_sgr_id in sct_rule_group.sgr_id%type)
+    return clob;
+    
+  
+  /* Export der Aktionstypen
+   * %usage Exportiert alle Aktionstypen ausser den nicht-editierbaren Systemtypen
+   */
+  function export_action_types(
+    p_core_flag in boolean default false)
     return clob;
     
   

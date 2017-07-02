@@ -61,7 +61,7 @@ prompt &s1.Create view SCT_UI_MAIN_RULES
 @&view_dir.sct_ui_main_rules.vw
 
 
-prompt &h3.Create packages
+prompt &h3.Create PACKAGES
 prompt &s1.Checking UTL_APEX exists
 @check_has_package.sql UTL_APEX apex/utl_apex.sql
 
@@ -97,4 +97,6 @@ prompt &h3.Recompiling SCT_ADMIN to prepare SCT rules import
 alter package sct_admin compile package;
 
 prompt &s1.Import SCT rules
-@&apex_dir.sct_rules.sql
+@&apex_dir.merge_rule_sct_admin_export_rule.sql
+@&apex_dir.merge_rule_sct_admin_main.sql
+@&apex_dir.merge_rule_sct_copy_rulegroup.sql

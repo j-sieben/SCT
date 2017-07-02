@@ -6,8 +6,7 @@ create table sct_page_item_type(
   sit_col_template varchar2(100 char),
   constraint p_sct_page_item_type primary key(sit_id),
   constraint c_sit_has_value check(sit_has_value in (0,1))
-) organization index
-tablespace ekasse_k_dat;
+) organization index;
 
 comment on table sct_page_item_type is 'Table to store page item types which are supported by SCT.';
 comment on column sct_page_item_type.sit_id is 'PK, alphanumerical key';

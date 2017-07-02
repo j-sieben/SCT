@@ -6,19 +6,17 @@ create table sct_rule(
 	sru_sort_seq number, 
 	sru_firing_items varchar2(300 byte),
   sru_active number(1,0) default 1,
-  sru_has_errors number(1,0) default 0,
+  sru_has_error number(1,0) default 0,
   sru_fire_on_page_load number(1,0) default -1,
   constraint p_sct_rules primary key (sru_id, sru_sgr_id),
   constraint r_sru_sgr_id foreign key (sru_sgr_id)
 	  references sct_rule_group (sgr_id) on delete cascade,
   constraint c_sru_active check(sru_active in (0,1)),
-  constraint c_sru_has_errors check(sru_has_errors in (0,1)),
+  constraint c_sru_has_error check(sru_has_error in (0,1)),
   constraint c_sru_fire_on_page_load check(sru_fire_on_page_load in (1, -1))
-) organization index
-tablespace ekasse_k_dat
-lob (sru_condition) store as securefile(tablespace ekasse_lob);
+) organization index;
 
-create index ix_r_sru_sgr_id on sct_rule(sru_sgr_id, sru_id) tablespace ekasse_k_idx;
+create index ix_r_sru_sgr_id on sct_rule(sru_sgr_id, sru_id);
 
 create or replace trigger trg_bri_sct_rule 
   before insert on sct_rule
@@ -39,3 +37,4 @@ comment on column sct_rule.sru_sort_seq is 'Sortierkriterium, definiert Ausführu
 comment on column sct_rule.sru_active is 'Flag,. das anzeigt, ob die Regel aktuell verwendet werden soll';
 comment on column sct_rule.sru_active is 'Flag, das anzeigt, ob die Regel fehler beinhaltet';
 comment on column sct_rule.sru_active is 'Flag, das anzeigt, ob diese Regel beim Initialisiern der Seite gefeuert werden soll';
+comment on column sct_rule.sru_has_error is 'Flag, das anzeigt, ob diese Regel einen Fehler enthaelt oder nicht';

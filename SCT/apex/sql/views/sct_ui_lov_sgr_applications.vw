@@ -9,4 +9,7 @@ select /*+ NO_MERGE (p) */
   join sct_rule_group sgr
     on app.application_id = sgr.sgr_app_id
  cross join params p
- where (sgr.sgr_app_id != p.app_id or p.is_sct_admin = 1);
+ where (sgr.sgr_app_id != p.app_id or p.is_sct_admin = 1)
+ union all
+select 'Alle Anwendungen', 0
+  from dual;

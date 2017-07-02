@@ -165,7 +165,7 @@ as
               
       -- Fehler in SCT_RULE und SCT_RULE_ACTION vermerken
       update sct_rule
-         set sru_has_errors = sct_const.c_false
+         set sru_has_error = sct_const.c_false
        where sru_sgr_id = p_sgr_id;
       
        merge into sct_rule sru
@@ -177,10 +177,10 @@ as
                  and spi_has_error = sct_const.c_true) v
           on (sru.sru_id = v.sru_id)
         when matched then update set
-             sru_has_errors = sct_const.c_true;
+             sru_has_error = sct_const.c_true;
       
       update sct_rule_action
-         set sra_has_errors = sct_const.c_false
+         set sra_has_error = sct_const.c_false
        where sra_sgr_id  = p_sgr_id;
       
        merge into sct_rule_action sra
@@ -190,7 +190,7 @@ as
                  and spi_has_error = sct_const.c_true) v
           on (sra.sra_sgr_id = v.sra_sgr_id and sra.sra_spi_id = v.sra_spi_id)
         when matched then update set
-             sra_has_errors = sct_const.c_true;
+             sra_has_error = sct_const.c_true;
              
       l_initialization_code := create_initialization_code(p_sgr_id);
       update sct_rule_group
@@ -372,27 +372,22 @@ as
    *        erzeugen kann
    */
   function read_action_type(
-    p_only_editable in boolean := true)
+    p_sat_is_editable in sct_action_type.sat_is_editable%type)
     return clob
   as
     cursor action_type_cur(p_sat_is_editable in sct_action_type.sat_is_editable%type) is
       select *
         from sct_action_type
-       where sat_is_editable = p_sat_is_editable
-          or p_sat_is_editable is null;
+       where sat_is_editable = p_sat_is_editable;
     l_action_type clob;
-    l_sat_is_editable sct_action_type.sat_is_editable%type;
   begin
     pit.enter_optional('read_action_type', c_pkg);
     dbms_lob.createtemporary(l_action_type, false, dbms_lob.call);
 
     dbms_lob.append(l_action_type, sct_const.c_cr || '  -- ACTION TYPES');
-    if p_only_editable then
-      l_sat_is_editable := sct_const.c_true;
-    end if;
 
     -- Exportiere Aktionstypen
-    for sat in action_type_cur(l_sat_is_editable) loop
+    for sat in action_type_cur(p_sat_is_editable) loop
       dbms_lob.append(
         l_action_type,
         utl_text.bulk_replace(sct_const.c_action_type_template, char_table(
@@ -868,11 +863,7 @@ as
     dbms_lob.createTemporary(l_stmt, false, dbms_lob.call);
     
     -- Exportheader starten
-    dbms_lob.append(
-      l_stmt, replace(sct_const.c_export_start_template, '#ALIAS#', null));
-    
-    -- Aktionstypen berechnen
-    dbms_lob.append(l_stmt, read_action_type(false));
+    dbms_lob.append(l_stmt, sct_const.c_export_start_template);
 
     -- Einzelne Regelgruppen berechnen
     for sgr in rule_group_cur loop
@@ -905,11 +896,7 @@ as
       into l_app_alias
       from apex_applications
      where application_id = p_sgr_app_id;
-    dbms_lob.append(
-      l_stmt, replace(sct_const.c_export_start_template, '#ALIAS#', coalesce(l_app_alias, to_char(p_sgr_app_id))));
-
-    -- Aktionstypen berechnen
-    dbms_lob.append(l_stmt, read_action_type);
+    dbms_lob.append(l_stmt, sct_const.c_export_start_template);
 
     -- Einzelne Regelgruppen berechnen
     for sgr in rule_group_cur(p_sgr_app_id) loop
@@ -939,17 +926,39 @@ as
       into l_app_id
       from sct_rule_group
      where sgr_id = p_sgr_id;
-    dbms_lob.append(
-      l_stmt, replace(sct_const.c_export_start_template, '#ALIAS#', l_app_id));
+    dbms_lob.append(l_stmt, sct_const.c_export_start_template);
 
     -- Einzelne Teilbereiche berechnen
-    dbms_lob.append(l_stmt, read_action_type);
     dbms_lob.append(l_stmt, read_rule_group(p_sgr_id));
     dbms_lob.append(l_stmt, sct_const.c_export_end_template);
 
     pit.leave_mandatory;
     return l_stmt;
   end export_rule_group;
+  
+  
+  function export_action_types(
+    p_core_flag in boolean default false)
+    return clob
+  as
+    l_stmt clob;
+    l_sat_is_editable sct_action_type.sat_is_editable%type := 1;
+  begin
+    pit.enter_mandatory('export_action_types', c_pkg);
+    if p_core_flag then
+      l_sat_is_editable := 0;
+    end if;
+    
+    -- Initialisierung
+    dbms_lob.createtemporary(l_stmt, false, dbms_lob.call);
+    dbms_lob.append(
+      l_stmt, replace(sct_const.c_export_start_template, '#ALIAS#', 'FOO'));
+    dbms_lob.append(l_stmt, read_action_type(l_sat_is_editable));
+    dbms_lob.append(l_stmt, sct_const.c_export_end_template);
+    
+    pit.leave_mandatory;
+    return l_stmt;
+  end export_action_types;
 
 
   function validate_rule_group(

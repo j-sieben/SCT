@@ -52,7 +52,7 @@ prompt &h3.Create SCT messages
 
 prompt &h3.Create packages
 prompt &s1.Checking UTL_TEXT exists
-@check_has_utl_text.sql core/utl_text.sql
+@core/check_has_utl_text.sql core/utl_text.sql
 
 prompt &s1.Create package SCT_CONST
 @&plsql_dir.sct_const.pks
@@ -66,5 +66,5 @@ prompt &s1.Create package Body SCT_ADMIN
 @&plsql_dir.sct_admin.pkb
 show errors
 
-prompt &h3.Create base rules
-@core/create_base_rules.sql
+prompt &h3.Create base action types
+@core/merge_base_action_types.sql

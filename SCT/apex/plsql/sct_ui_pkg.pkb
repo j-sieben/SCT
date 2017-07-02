@@ -2,7 +2,7 @@ create or replace package body sct_ui_pkg
 as
 
   c_pkg constant varchar2(30 byte) := $$PLSQL_UNIT;
-
+  c_zip_file_name constant varchar2(50 char) := 'all_rule_groups.zip';
 
   /* INTERFACE */
   procedure delete_rule_group(
@@ -64,11 +64,57 @@ as
   end;
 
 
+  procedure export_all_rule_groups
+  as
+    cursor sgr_cur is
+      select sgr_id, lower(sgr_name) sgr_name
+        from sct_rule_group;
+    l_blob blob;
+    l_zip_file blob;
+  begin
+    pit.enter_mandatory('export_all_rule_groups', c_pkg);
+    
+    l_blob := utl_apex.clob_to_blob(sct_admin.export_action_types(true));
+    apex_zip.add_file(
+      p_zipped_blob => l_zip_file,
+      p_file_name => 'merge_base_action_types.sql',
+      p_content => l_blob);
+    
+    l_blob := utl_apex.clob_to_blob(sct_admin.export_action_types);
+    apex_zip.add_file(
+      p_zipped_blob => l_zip_file,
+      p_file_name => 'merge_action_types.sql',
+      p_content => l_blob);
+      
+    for sgr in sgr_cur loop
+      l_blob := utl_apex.clob_to_blob(sct_admin.export_rule_group(sgr.sgr_id));
+      apex_zip.add_file(
+        p_zipped_blob => l_zip_file,
+        p_file_name => 'merge_rule_' || sgr.sgr_name || '.sql',
+        p_content => l_blob);
+    end loop;
+    
+    apex_zip.finish(l_zip_file);
+
+    utl_apex.download_blob(l_zip_file, c_zip_file_name);
+    
+    pit.leave_mandatory;
+  end export_all_rule_groups;
+  
+  
   procedure export_rule_group
   as
+    cursor sgr_cur(p_sgr_app_id in sct_rule_group.sgr_app_id%type) is
+      select sgr_id, lower(sgr_name) sgr_name
+        from sct_rule_group
+       where sgr_app_id = p_sgr_app_id;
+       
     l_sgr_app_id sct_rule_group.sgr_app_id%type;
     l_sgr_id sct_rule_group.sgr_id%type;
-    l_export_file clob;
+    l_sgr_name sct_rule_group.sgr_name%type;
+    l_clob clob;
+    l_blob blob;
+    l_zip_file blob;
   begin
     pit.enter_mandatory('export_rule_group', c_pkg);
     
@@ -76,11 +122,35 @@ as
     l_sgr_id := to_number(v('P8_SGR_ID'));
     
     if l_sgr_id is not null then
-      l_export_file := sct_admin.export_rule_group(l_sgr_id);
-      utl_apex.download_clob(l_export_file, 'SCT_RULE_GROUP_' || l_sgr_id || '.sql');
+      select lower(sgr_name) sgr_name
+        into l_sgr_name
+        from sct_rule_group
+       where sgr_id = l_sgr_id;
+      l_clob := sct_admin.export_rule_group(l_sgr_id);
+      utl_apex.download_clob(l_clob, 'merge_rule_group_' || l_sgr_name || '.sql');
     else
-      l_export_file := sct_admin.export_rule_groups(l_sgr_app_id);
-      utl_apex.download_clob(l_export_file, 'SCT_APP_' || l_sgr_app_id || '.sql');
+      if l_sgr_app_id > 0 then
+        for sgr in sgr_cur(l_sgr_app_id) loop
+          l_blob := utl_apex.clob_to_blob(sct_admin.export_rule_group(sgr.sgr_id));
+          apex_zip.add_file(
+            p_zipped_blob => l_zip_file,
+            p_file_name => 'merge_rule_' || sgr.sgr_name || '.sql',
+            p_content => l_blob);
+        end loop;
+        
+        -- Bei Export aller Regelgruppen einer Anwendung Aktionstypen integrieren
+        l_blob := utl_apex.clob_to_blob(sct_admin.export_action_types);
+        apex_zip.add_file(
+          p_zipped_blob => l_zip_file,
+          p_file_name => 'merge_action_types.sql',
+          p_content => l_blob);
+          
+        apex_zip.finish(l_zip_file);
+    
+        utl_apex.download_blob(l_zip_file, c_zip_file_name);
+      else
+        export_all_rule_groups;
+      end if;
     end if;
     
     pit.leave_mandatory;
