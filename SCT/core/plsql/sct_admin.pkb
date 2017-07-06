@@ -338,7 +338,7 @@ as
           '#CONDITION#', sru.sru_condition));
     end loop;
     pit.leave_detailed;
-    return l_where_clause;
+    return coalesce(l_where_clause, '1=1');
   exception
     when others then
       pit.sql_exception(msg.SCT_WHERE_CLAUSE);
@@ -373,9 +373,9 @@ as
 
     pit.verbose(msg.SCT_VIEW_CREATED, msg_args(l_view_name));
     pit.leave_optional;
-/*  exception
+  exception
     when others then
-      pit.sql_exception(msg.SCT_VIEW_CREATION, msg_args(sqlerrm, l_stmt));*/
+      pit.sql_exception(msg.SCT_VIEW_CREATION, msg_args(sqlerrm, l_stmt));
   end create_rule_view;
 
 
