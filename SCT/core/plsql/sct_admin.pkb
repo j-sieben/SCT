@@ -30,6 +30,20 @@ as
     is_first_row number
   );
   
+  
+  function get_comment(
+    p_msg pit_message.pms_name%type,
+    p_msg_args msg_args default null)
+    return varchar2
+  as
+  begin
+    if wwv_flow.g_debug then
+      return pit.get_message_text(p_msg, p_msg_args);
+    else
+      return null;
+    end if;
+  end get_comment;
+  
   /* Methode zur Erzeugung des Initialisierungscodes aus einem Fetch Row-Prozess
    * %param p_sgr_id ID der Regelgruppe
    * %usage Wird verwendet, um fuer eine Regelgruppe Initialisierungscode zu erzeugen
@@ -600,7 +614,7 @@ as
     l_js_code varchar2(32767);
     l_js_chunk varchar2(32767);
     l_current_rule number := 0;
-    l_origin_template varchar2(200);
+    l_origin_msg varchar2(200);
     
     c_delimiter constant varchar2(10) := c_cr || '  ';
   begin
@@ -633,19 +647,22 @@ as
       -- Baue JavaScript-Code zusammen
       if l_rule.is_first_row = sct_const.c_true then
         if l_current_rule > 0 then 
-          l_js_code := l_js_code || coalesce(l_js_chunk, replace(sct_const.C_NO_JAVA_SCRIPT, '#SRU_NAME#', l_rule.sru_name));
+          l_js_code := l_js_code || coalesce(l_js_chunk, get_comment(msg.SCT_NO_JAVASCRIPT, msg_args(l_rule.sru_name, sct_const.c_cr)));
           l_js_chunk := null;
         else
           l_current_rule := l_rule.sru_sort_seq;
         end if;
-        if l_rule.sru_fire_on_page_load = sct_const.c_true then
-          l_origin_template := c_delimiter || sct_const.c_rule_origin_template;
-        else
-          l_origin_template := c_delimiter || sct_const.c_rule_name_template;
+        if wwv_flow.g_debug then
+          if l_rule.sru_fire_on_page_load = sct_const.c_true then
+            l_origin_msg := msg.SCT_INIT_ORIGIN;
+          else
+            l_origin_msg := msg.SCT_RULE_ORIGIN;
+          end if;
+          l_js_code := l_js_code 
+                    || c_delimiter 
+                    || get_comment(l_origin_msg, 
+                         msg_args(to_char(l_rule.sru_sort_seq), l_rule.sru_name, g_firing_item, sct_const.c_cr));
         end if;
-        l_js_code := utl_text.bulk_replace(l_js_code || l_origin_template, char_table(
-                       '#SRU_SORT_SEQ#', l_rule.sru_sort_seq,
-                       '#SRU_NAME#', l_rule.sru_name));        
       end if;
       if l_rule.js is not null then
         prepare_js_code(l_js_chunk, l_rule);
@@ -660,10 +677,7 @@ as
 
     p_js_action :=
       utl_text.bulk_replace(sct_const.c_js_code_template, char_table(
-        '#SRU_SORT_SEQ#', case when l_rule.sru_sort_seq is not null then 'RULE_' || l_rule.sru_sort_seq else 'NO_RULE_FOUND' end,
-        '#SRU_NAME#', l_rule.sru_name,
-        '#CODE#', l_js_code || coalesce(l_js_chunk, replace(sct_const.C_NO_JAVA_SCRIPT, '#SRU_NAME#', l_rule.sru_name)),
-        '#FIRING_ITEM#', p_firing_item));
+        '#CODE#', l_js_code || coalesce(l_js_chunk, get_comment(msg.SCT_NO_JAVASCRIPT, msg_args(l_rule.sru_name, sct_const.c_cr)))));
 
     -- Ermittle durch die Regel betroffene Seitenelemente als FIRING_ITEMS
     p_firing_items := get_firing_items(p_firing_item);

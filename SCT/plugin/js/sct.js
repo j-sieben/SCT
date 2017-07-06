@@ -119,7 +119,13 @@ de.condes.plugin.sct = {};
   
   
   sct.setMandatory = function(item, mandatory){
-    sct.ApexJS.setFieldMandatory(item, mandatory);
+    var $Items = $(`#${item}`);
+    if (!$items.length){
+      $Items = $(item);
+    }
+    $Items.each(function(){
+      sct.ApexJS.setFieldMandatory(this.attr('id'), mandatory);
+    })
   }
   
   

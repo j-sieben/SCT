@@ -55,9 +55,6 @@ select sru_id, sru_name, sra_spi_id, sra_sat_id, sra_attribute, sra_attribute_2,
   c_plsql_action_template constant varchar2(200 byte) := 'begin' || c_cr || '  #CODE#'|| c_cr || '  commit;'|| c_cr || 'end;';
   c_plsql_item_value_template constant varchar2(100 byte) := q'~v('#ITEM#')~';
   
-  c_rule_origin_template constant varchar2(100 byte) := q'~// Rule #SRU_SORT_SEQ# (#SRU_NAME#), fired on page load~';
-  c_rule_name_template constant varchar2(120 byte) := q'~#CR#  // Recursion #RECURSION#: #SRU_SORT_SEQ# (#SRU_NAME#), Firing Item: #FIRING_ITEM#, elapsed: #TIME##NOTIFICATION#~';
-  
   c_stmt_template constant varchar2(32767) :=
 q'~select sru.sru_id, sru.sru_sort_seq, sru.sru_name, sru.sru_firing_items, sru_fire_on_page_load,
        sra_spi_id item, sat_pl_sql pl_sql, sat_js js, sra_attribute attribute, sra_attribute_2 attribute_2,
@@ -73,10 +70,8 @@ q'~select sru.sru_id, sru.sru_sort_seq, sru.sru_name, sru.sru_firing_items, sru_
   c_js_item_value_template constant varchar2(100 byte) := q'~apex.item('#ITEM#').getValue()~';
 
   c_js_code_template constant varchar2(300) := '#CODE#';
-  c_dynamic_js_code_template constant varchar2(300) := '// Dynamically created JavaScript #CR##CODE#';
   c_plsql_template constant varchar2(20 byte) := '#PLSQL#';
   c_js_template constant varchar2(20 byte) := '#SCRIPT#';
-  c_no_java_script constant varchar2(100) := c_cr || '  // No JavaScript code for rule #SRU_NAME#';
   
   -- Template zur Generierung des Initialisierungscodes
   c_col_val_template constant varchar2(100) := q'~    apex_util.set_session_state('#ITEM#', itm.#COLUMN#);#CR#~';

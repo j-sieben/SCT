@@ -7,7 +7,7 @@ as
   
   -- Rekursionsstack
   -- Der Rekursionsstack speichert die Seitenelemente, die durch die Regeln geaendert wurden,
-  -- um anschließend auch fuer diese Elemente die Regelpruefung aufzurufen.
+  -- um anschlieï¿½end auch fuer diese Elemente die Regelpruefung aufzurufen.
   type recursive_stack_t is table of number index by sct_page_item.spi_id%type;
   
   -- Record zur Aufnahme der Plugin-Attribute
@@ -50,9 +50,27 @@ as
   C_ERROR_JSON_TEMPLATE constant varchar2(200) := q'^{"count":#COUNT#,"errorDependentButtons":"#DEPENDENT_BUTTONS#","firingItems":"#FIRING_ITEMS#","errors":[#ERRORS#]}^';
   C_ERROR_JSON_ELEMENT constant varchar2(200) := q'^{"type":"error","item":"#ITEM#","message":"#MESSAGE#","location":#LOCATION#,"additionalInfo":"#INFO#","unsafe":"false"}^';
   
-  C_JS_ACTION_TEMPLATE constant varchar2(300) := q'^<script>~  #JS_FILE#.setItemValues(#ITEM_JSON#);~  #JS_FILE#.setErrors(#ERROR_JSON#);#CODE#~</script>^';
-  C_NO_JS_ACTION constant varchar2(100) := '// No JavaScript Action';
-
+  C_JS_ACTION_TEMPLATE constant varchar2(300) := q'^<script>~(function(sct){~  sct.setItemValues(#ITEM_JSON#);~  sct.setErrors(#ERROR_JSON#);#CODE#~})(#JS_FILE#);~</script>^';  
+  
+  /* Hilfsprozedur zum Einfuegen von Kommentaren, falls Seite sich im Debug-Modus befindet
+   * %param p_msg Meldung, die als Kommentar ausgegeben werden soll
+   * %param p_msg_args Optionale Meldungsparameter
+   * %usage Wird verwendet, um die Antwort im Normalbetrieb schlank zu halten
+   */
+  function get_comment(
+    p_msg pit_message.pms_name%type,
+    p_msg_args msg_args default null)
+    return varchar2
+  as
+  begin
+    if wwv_flow.g_debug then
+      return pit.get_message_text(p_msg, p_msg_args);
+    else
+      return null;
+    end if;
+  end get_comment;
+  
+  
   /* Hilfsprozedur zum Formatieren von ausloesenden Elementen.
    * %usage Die Methode analysiert, ob das ausloesende Element eine Formatmaske
    *        hinterlegt hat. Falls ja,
@@ -261,7 +279,7 @@ as
           '#EVENT#', item.sit_event)),
         sct_const.c_delimiter, C_YES);
       -- relevante Elemente mit Session State registrieren, damit beim initialen Aufruf
-      -- die aktuellen Seitenwerte dieser Elemente übermittelt werden
+      -- die aktuellen Seitenwerte dieser Elemente ï¿½bermittelt werden
       -- (diese Aufgabe uebernimmt anschliessend REGISTER_ITEM)
       if item.sit_has_value = 1 then
         push_page_item(item.spi_id);
@@ -375,7 +393,7 @@ as
     -- Initialisierung
     l_actual_recursive_level := g_param.recursive_level;
     -- Inkrementiert Rekursionslevel, damit zukuenftige Eintraege auf eigenem Level liegen
-    -- Wird benoetigt, um »breadth first« zu arbeiten: Alle Rekursionsaufrufe einer Ebene, danach die naechste Ebene etc.
+    -- Wird benoetigt, um ï¿½breadth firstï¿½ zu arbeiten: Alle Rekursionsaufrufe einer Ebene, danach die naechste Ebene etc.
     g_param.recursive_level := l_actual_recursive_level + 1;
     
     -- is_recursive wird verwendet, um Aktionen, die nicht rekursiv ausgefuehrt werden sollen, auszusondern
@@ -386,7 +404,7 @@ as
 
     while g_param.firing_item is not null loop
       begin
-        --  fuehre alle »Events« auf aktuellem Rekursionslevel aus
+        --  fuehre alle ï¿½Eventsï¿½ auf aktuellem Rekursionslevel aus
         if g_param.recursive_stack(g_param.firing_item) = l_actual_recursive_level then
           -- Speichere Name des Elements zum spaeteren Loeschen des Elements aus dem Rekursionsstack
           l_processed_item := g_param.firing_item;
@@ -409,14 +427,15 @@ as
             execute immediate l_plsql_action;
           end if;
           
-          l_elapsed := (dbms_utility.get_time - g_param.now) || 'hsec';  --  Das berechnet die verstrichene Zeit, allerdings kumulativ, also jeweils die Zeit von G_NOW an gerechnet
-          -- JavaScript dieser Rekursionsebene erstellen 
-          l_js_action_chunk := utl_text.bulk_replace(l_js_action_chunk, char_table(
-                                '#RECURSION#', l_actual_recursive_level,
-                                '#TIME#', l_elapsed, -- hier wird die Zeit eingefügt
-                                '#NOTIFICATION#', g_param.notification_stack,
-                                '#CR#', sct_const.C_CR));
-    
+          if wwv_flow.g_debug then
+            l_elapsed := (dbms_utility.get_time - g_param.now) || 'hsec';  --  Das berechnet die verstrichene Zeit, allerdings kumulativ, also jeweils die Zeit von G_NOW an gerechnet
+            -- JavaScript dieser Rekursionsebene erstellen 
+            l_js_action_chunk := utl_text.bulk_replace(l_js_action_chunk, char_table(
+                                  '#RECURSION#', l_actual_recursive_level,
+                                  '#TIME#', l_elapsed, -- hier wird die Zeit eingefuegt
+                                  '#NOTIFICATION#', g_param.notification_stack,
+                                  '#CR#', sct_const.C_CR));
+          end if;
           -- Ausgabe erstellen und geaenderte Elemente merken
           push_firing_item(l_firing_items);
           utl_text.append(l_js_action, l_js_action_chunk);
@@ -558,7 +577,7 @@ as
     l_json_errors varchar2(32767);
   begin      
       -- Bereite Anwort als JS vor
-      l_js_action := coalesce(process_rule, C_NO_JS_ACTION);
+      l_js_action := coalesce(process_rule, get_comment(msg.SCT_NO_JAVASCRIPT, msg_args('0')));
       l_json_items := get_json_from_items;
       l_json_errors := get_json_from_errors;
       l_js_script := utl_text.bulk_replace(C_JS_ACTION_TEMPLATE, char_table(
@@ -873,6 +892,7 @@ as
     l_result apex_plugin.t_dynamic_action_render_result;
   begin
     pit.enter_mandatory('render', C_PKG);
+    g_param.now := dbms_utility.get_time;
     
     if wwv_flow.g_debug then
       apex_plugin_util.debug_dynamic_action(
