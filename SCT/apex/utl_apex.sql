@@ -10,6 +10,15 @@ as
     p_authorization_scheme in varchar2)
     return number;
     
+    
+  /* Methode zur Konvertierung von CLOB nach BLOB.
+   * TODO: Falls UTL_TEXT verwendet wird, sollte die dort vorhandene Methode verwendet werden
+   */
+  function clob_to_blob(
+    p_clob in clob)
+    return blob;
+    
+    
   /* Methode zum Laden einer CLOB-Spalte als Datei ueber APEX
    * %param p_clob CLOB-Instanz, die geladen werden soll
    * %param p_file_name Name der Datei des Downloads
@@ -51,6 +60,8 @@ as
       return 0;
     end if;
   end get_authorization_status_for;
+  
+  
   function clob_to_blob(
     p_clob in clob)
     return blob
