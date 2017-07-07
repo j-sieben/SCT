@@ -7,7 +7,6 @@ as
   /* Das Package sammelt Konstanten, die zur Generierung von DDL-Anweisungen
    * und JavaScript-Bloecken verwendet werden. Entzerrt den Code in SCT_ADMIN
    */
-
   c_cr constant varchar2(2 byte) := chr(10);
   c_true constant number(1,0) := 1;
   c_false constant number(1,0) := 0;
@@ -18,18 +17,15 @@ as
   c_regex_item constant varchar2(50 byte) := q'~(^|[ '\(])#ITEM#([ ',=<^>\)]|$)~';
   c_null constant varchar2(10 byte) := 'null;';
   c_no_firing_item constant varchar2(30 byte) := 'DOCUMENT';
+  c_directory constant varchar2(30 byte) := 'SCT_DIR';
   
   -- Ersatzseitennummer fuer Anwendungselemente
   c_app_item_page constant number(1,0) := 0;
   
   -- Templates zur Erzeugung der Regelview
-  c_create_view_template constant varchar2(100 byte) := q'~create or replace force view #NAME# as~' || c_cr;
-  
   c_column_delimiter constant varchar2(20 byte) := ',' || c_cr || '              ';
   c_join_delimiter constant varchar2(20 byte) := c_cr || '           or ';
-  
   c_join_clause_template constant varchar2(100 byte) := q'~(r.sru_id = #ID# and ((#CONDITION#) or sru_fire_on_page_load = initializing))~';
-  
   c_rule_view_template constant varchar2(1000 byte) := 
 q'~create or replace force view #NAME# as
   with session_state as(
@@ -52,8 +48,12 @@ select sru_id, sru_name, sra_spi_id, sra_sat_id, sra_attribute, sra_attribute_2,
  order by sru_fire_on_page_load desc, rang~';
   
   -- Templates zur Erzeugung der Seiten-Aktion
-  c_plsql_action_template constant varchar2(200 byte) := 'begin' || c_cr || '  #CODE#'|| c_cr || '  commit;'|| c_cr || 'end;';
+  c_plsql_action_template constant varchar2(200 byte) := 'begin#CR#  #CODE##CR#  commit;#CR#end;';
   c_plsql_item_value_template constant varchar2(100 byte) := q'~v('#ITEM#')~';
+  c_plsql_template constant varchar2(20 byte) := '#PLSQL#';
+
+  c_js_item_value_template constant varchar2(100 byte) := q'~apex.item('#ITEM#').getValue()~';
+  c_js_template constant varchar2(100 byte) := '#CODE#';
   
   c_stmt_template constant varchar2(32767) :=
 q'~select sru.sru_id, sru.sru_sort_seq, sru.sru_name, sru.sru_firing_items, sru_fire_on_page_load,
@@ -65,13 +65,7 @@ q'~select sru.sru_id, sru.sru_sort_seq, sru.sru_name, sru.sru_firing_items, sru_
   join sct_action_type sat
     on srg.sra_sat_id = sat.sat_id
  where sat.sat_raise_recursive >= #IS_RECURSIVE#
- order by sru.sru_sort_seq desc, srg.sra_sort_seq~';
-
-  c_js_item_value_template constant varchar2(100 byte) := q'~apex.item('#ITEM#').getValue()~';
-
-  c_js_code_template constant varchar2(300) := '#CODE#';
-  c_plsql_template constant varchar2(20 byte) := '#PLSQL#';
-  c_js_template constant varchar2(20 byte) := '#SCRIPT#';
+ order by sru.sru_sort_seq desc, srg.sra_sort_seq~';  
   
   -- Template zur Generierung des Initialisierungscodes
   c_col_val_template constant varchar2(100) := q'~    apex_util.set_session_state('#ITEM#', itm.#COLUMN#);#CR#~';
@@ -88,13 +82,8 @@ q'~declare#CR#    cursor item_cur is#CR#      #SQL_STMT#;#CR#begin#CR#  for itm 
   
   -- Templates zum Export von Regelgruppen
   c_export_start_template constant varchar2(200) :=
-     'set define ^' || c_cr 
-  || c_cr 
-  || 'declare' || c_cr 
-  || '  l_foo number;' || c_cr 
-  || 'begin' || c_cr 
-  || '  l_foo := sct_admin.map_id;' || c_cr;
-  c_export_end_template constant varchar2(200) := c_cr || '  commit;' || c_cr || 'end;' || c_cr || '/' || c_cr || 'set define &';
+     'set define ^#CR##CR#declare#CR#  l_foo number;#CR#begin#CR#  l_foo := sct_admin.map_id;#CR#';
+  c_export_end_template constant varchar2(200) := '#CR#  commit;#CR#end;#CR#/#CR#set define &';
   c_action_type_template constant varchar2(32767) :=
 q'^
   sct_admin.merge_action_type(
@@ -150,9 +139,7 @@ q'~
   sct_admin.propagate_rule_change(sct_admin.map_id(#SGR_ID#));
 ~';
 
-  c_directory constant varchar2(30 byte) := 'SCT_DIR';
-  
-  -- Templates uzuir Validierung von Regelgruppen
+  -- Templates zur Validierung von Regelgruppen
   c_rule_validation_template constant varchar2(2000 byte) := 
 q'~  with session_state as(
        select null firing_item,

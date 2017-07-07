@@ -31,6 +31,12 @@ as
   );
   
   
+  /* Hole Meldungstext von PIT zur Integration als Kommentar in die Ausgabe
+   * %param p_msg Message-ID
+   * %param p_msg_args Optionale Message-Parameter
+   * %return Meldungstext, angereichert um Parameter, in der entsprechenden Sprache
+   * %usage Wird verwendet, um im Debug-Modus mehr Informationen ueber SCT auszugeben
+   */
   function get_comment(
     p_msg pit_message.pms_name%type,
     p_msg_args msg_args default null)
@@ -44,8 +50,10 @@ as
     end if;
   end get_comment;
   
+  
   /* Methode zur Erzeugung des Initialisierungscodes aus einem Fetch Row-Prozess
    * %param p_sgr_id ID der Regelgruppe
+   * %return SQL-Anweisung, die die Standardelementwerte der Anwendungsseite berechnet
    * %usage Wird verwendet, um fuer eine Regelgruppe Initialisierungscode zu erzeugen
    *        Der Code wird zur Laufzeit ausgefuehrt und initialisiert den Sessionstatus
    *        der Seite.
@@ -271,11 +279,13 @@ as
    * %param p_sgr_id ID der Regelgruppe
    * %param p_validation Flag, das anzeigt, ob die Spaltenliste fuer Regelpruefungen
    *        benoetigt wird.
+   * %return Liste der Spalten, die fuer die Regelgruppe verwendet werden
    * %usage Erzeugt die Spaltenliste fuer eine Regelview. Die Liste umfasst alle
    *        relevanten Seitenelemente einer Regelgruppe.
    *        Wird die Prozedur zur Validierung aufgerufen, umfasst die Spaltenliste
    *        alle Elemente der Seite, um keine falsch negative Validierung einer
    *        Regelbedingung zu erhalten.
+   * TODO: Refaktorisieren auf CODE_GENERATOR?
    */
   function create_column_list(
     p_sgr_id in sct_rule_group.sgr_id%type,
@@ -310,8 +320,10 @@ as
 
   /* Methode zur Erzeugung einer WHERE-Klausel fuer die Regelview
    * %param p_sgr_id ID der Regelgruppe
+   * %return WHERE-Klausel, die fuer die Regelview verwendet wird
    * %usage Wird verwendet, um die WHERE-Klausel der Regelview zu erzeugen.
    *        Die Klausel besteht aus der Relgel-ID und der Regelbedingung
+   * TODO: Refaktorisieren auf CODE_GENERATOR?
    */
   function create_where_clause(
     p_sgr_id in sct_rule_group.sgr_id%type)
@@ -338,7 +350,7 @@ as
           '#CONDITION#', sru.sru_condition));
     end loop;
     pit.leave_detailed;
-    return coalesce(l_where_clause, '1=1');
+    return coalesce(l_where_clause, 'null is not null');
   exception
     when others then
       pit.sql_exception(msg.SCT_WHERE_CLAUSE);
@@ -351,6 +363,7 @@ as
    * %usage Wird verwendet, um fuer eine Regelgruppe eine Regelview zu erzeugen.
    *        Die Spaltenliste und die WHERE-Klausel werden durch Hilfsmethoden
    *        zugeliefert.
+   * TODO: Refaktorisieren auf CODE_GENERATOR?
    */
   procedure create_rule_view(
     p_sgr_id in sct_rule_group.sgr_id%type)
@@ -381,9 +394,13 @@ as
 
   /* Prozeduren fuer den DDL-Export */
   /* Methode zur Erzeugung eines Skripts zum Exportieren der Aktionstypen
+   * %param p_sat_is_editable Flag, das anzeigt, ob die Aktionstypen, die durch
+   *        die Entwickler editiert wurden, exportiert werden sollen, oder die 
+   *        mit SCT gelieferten Aktionstypen
    * %return CLOB-Instanz mit dem Exportskript
    * %usage Wird verwendet, um einen CLOB zu erzeugen, der alle Aktionstypen
    *        erzeugen kann
+   * TODO: Refaktorisieren auf CODE_GENERATOR?
    */
   function read_action_type(
     p_sat_is_editable in sct_action_type.sat_is_editable%type)
@@ -417,6 +434,43 @@ as
     pit.leave_optional;
     return l_action_type;
   end read_action_type;
+  
+  
+  /* Hilfsmethode zur Renummerierung der Regeln und Aktionen
+   * %param p_sgr_id Regelgruppen-ID
+   * %usage Die Methode wird bei jeder Aenderung der Regelgruppe oder Einzelregel
+   *        aufgerufen, um die Nummerierung automatisiert in 10er-Schritten zu bereinigen
+   */
+  procedure resequence_rule_group(
+    p_sgr_id in sct_rule_group.sgr_id%type)
+  as
+  begin
+    pit.enter_mandatory('resequence_rule_group', c_pkg);
+    -- Regel neu nummerieren
+    merge into sct_rule sru
+    using (select sru_id, sru_sgr_id,
+                  row_number() over (partition by sru_sgr_id order by sru_sort_seq) * 10 sru_sort_seq
+             from sct_rule
+            where sru_sgr_id = p_sgr_id
+              and sru_sgr_id > 0) v
+       on (sru.sru_id = v.sru_id and sru.sru_sgr_id = v.sru_sgr_id)
+     when matched then update set
+          sru_sort_seq = v.sru_sort_seq;
+
+    -- Aktionen neu nummerieren
+    merge into sct_rule_action sra
+    using (select rowid row_id,
+                  row_number() over (partition by sra_sru_id order by sra_sort_seq) * 10 sra_sort_seq
+             from sct_rule_action
+            where sra_sgr_id = p_sgr_id) v
+       on (sra.rowid = v.row_id)
+     when matched then update set
+          sra_sort_seq = v.sra_sort_seq;
+
+    -- Wird aus AJAX aufgerufen, daher hier Aenderungen festschreiben
+    commit;
+    pit.leave_mandatory;
+  end resequence_rule_group;
 
 
   /* Methode zur Erzeugung eines Skripts zum Exportieren der Einzelregeln und Aktionen
@@ -424,6 +478,7 @@ as
    * %param p_sgr_id ID der Regelgruppe
    * %return CLOB-Instanz mit dem Exportskript
    * %usage Wird verwendet, um eine Regelgruppe komplett zu exportieren.
+   * TODO: Refaktorisieren auf CODE_GENERATOR?
    */
   function read_rule_group(
     p_sgr_id in sct_rule_group.sgr_id%type)
@@ -502,7 +557,7 @@ as
               '#SRA_ACTIVE#', to_char(sra.sra_active))));
         end loop;
       end loop;
-      -- Bei Ersetzungspatterns keine tatsaechlichen Absatzzeichen einbauen,
+      -- Bei DDL-Templates keine tatsaechlichen Absatzzeichen einbauen,
       -- da Installationsskripte ansonsten COMMIT, END etc. als Kommando ausfuehren
       dbms_lob.append(l_stmt, replace('~  -- RULE GROUP ' || l_rule_group_name, '~', sct_const.c_cr));
       dbms_lob.append(l_stmt, l_sgr);
@@ -519,6 +574,7 @@ as
   end read_rule_group;
   
   
+  /* Initialisierungsmethode */
   procedure initialize
   as
   begin
@@ -531,8 +587,6 @@ as
     return varchar2
   as
   begin
-    pit.enter_mandatory('get_firing_item', c_pkg);
-    pit.leave_mandatory;
     return g_firing_item;
   end get_firing_item;
   
@@ -568,23 +622,6 @@ as
   end get_firing_items;
   
   
-  procedure prepare_js_code(
-    p_code in out nocopy varchar2,
-    p_rule in rule_rec,
-    p_origin in varchar2 default null)
-  as
-    c_delimiter constant varchar2(10) := c_cr || '  ';
-  begin
-    p_code := utl_text.bulk_replace(p_code || sct_const.c_js_template, char_table(
-                '#SCRIPT#', c_delimiter || replace(p_rule.js, c_cr, c_delimiter),
-                '#JS_FILE#', sct_const.c_js_namespace,
-                '#ITEM_VALUE#', sct_const.c_js_item_value_template,
-                '#ITEM#', p_rule.item,
-                '#ATTRIBUTE#', p_rule.sra_attribute,
-                '#ATTRIBUTE_2#', p_rule.sra_attribute_2));
-  end prepare_js_code;
-  
-  
   function check_recursion(
     p_rule in rule_rec)
     return varchar2
@@ -596,6 +633,25 @@ as
       else return sct_const.c_true;
     end case;
   end check_recursion;
+  
+    
+  procedure prepare_js_code(
+    p_code in out nocopy varchar2,
+    p_rule in rule_rec)
+  as
+    c_delimiter constant varchar2(10) := c_cr || '  ';
+  begin
+    if p_rule.js is not null then
+      p_code := utl_text.bulk_replace(p_code || sct_const.c_js_template, char_table(
+                  '#CODE#', c_delimiter || replace(p_rule.js, c_cr, c_delimiter),
+                  '#JS_FILE#', sct_const.c_js_namespace,
+                  '#ITEM_VALUE#', sct_const.c_js_item_value_template,
+                  '#ITEM#', p_rule.item,
+                  '#ATTRIBUTE#', p_rule.sra_attribute,
+                  '#ATTRIBUTE_2#', p_rule.sra_attribute_2,
+                  '#CR#', sct_const.c_cr));
+    end if;
+  end prepare_js_code;
 
 
   procedure create_action(
@@ -632,15 +688,15 @@ as
 
     while l_action_cur%FOUND loop
       -- Baue PL/SQL-Code zusammen
-      if l_rule.pl_sql is not null then
-        
+      if l_rule.pl_sql is not null then        
         l_pl_sql_code := utl_text.bulk_replace(l_pl_sql_code || sct_const.c_plsql_template, char_table(
           '#PLSQL#', l_rule.pl_sql,
           '#ATTRIBUTE#', l_rule.sra_attribute,
           '#ATTRIBUTE_2#', l_rule.sra_attribute_2,
           '#ALLOW_RECURSION#', check_recursion(l_rule),
           '#ITEM_VALUE#', sct_const.c_plsql_item_value_template,
-          '#ITEM#', l_rule.item));
+          '#ITEM#', l_rule.item,
+          '#CR#', sct_const.c_cr));
         utl_text.append(l_pl_sql_code, sct_const.c_cr || '  ', null, sct_const.c_true);
       end if;
 
@@ -664,20 +720,18 @@ as
                          msg_args(to_char(l_rule.sru_sort_seq), l_rule.sru_name, g_firing_item, sct_const.c_cr));
         end if;
       end if;
-      if l_rule.js is not null then
-        prepare_js_code(l_js_chunk, l_rule);
-      end if;
+      prepare_js_code(l_js_chunk, l_rule);
       fetch l_action_cur into l_rule;
     end loop;
 
     close l_action_cur;
 
     -- Uebernehme PL/SQL bzw. JS-Codes in entsprechende Ausgabeparameter
-    p_plsql_action := replace(sct_const.c_plsql_action_template, '#CODE#', coalesce(l_pl_sql_code, sct_const.C_NULL));
+    p_plsql_action := utl_text.bulk_replace(sct_const.c_plsql_action_template, char_table(
+                        '#CODE#', coalesce(l_pl_sql_code, sct_const.C_NULL),
+                        '#CR#', sct_const.c_cr));
 
-    p_js_action :=
-      utl_text.bulk_replace(sct_const.c_js_code_template, char_table(
-        '#CODE#', l_js_code || coalesce(l_js_chunk, get_comment(msg.SCT_NO_JAVASCRIPT, msg_args(l_rule.sru_name, sct_const.c_cr)))));
+    p_js_action := l_js_code || coalesce(l_js_chunk, get_comment(msg.SCT_NO_JAVASCRIPT, msg_args(l_rule.sru_name, sct_const.c_cr)));
 
     -- Ermittle durch die Regel betroffene Seitenelemente als FIRING_ITEMS
     p_firing_items := get_firing_items(p_firing_item);
@@ -742,38 +796,6 @@ as
      where sgr_id = p_sgr_id;
     pit.leave_mandatory;
   end delete_rule_group;
-
-
-  procedure resequence_rule_group(
-    p_sgr_id in sct_rule_group.sgr_id%type)
-  as
-  begin
-    pit.enter_mandatory('resequence_rule_group', c_pkg);
-    -- Regel neu nummerieren
-    merge into sct_rule sru
-    using (select sru_id, sru_sgr_id,
-                  row_number() over (partition by sru_sgr_id order by sru_sort_seq) * 10 sru_sort_seq
-             from sct_rule
-            where sru_sgr_id = p_sgr_id
-              and sru_sgr_id > 0) v
-       on (sru.sru_id = v.sru_id and sru.sru_sgr_id = v.sru_sgr_id)
-     when matched then update set
-          sru_sort_seq = v.sru_sort_seq;
-
-    -- Aktionen neu nummerieren
-    merge into sct_rule_action sra
-    using (select rowid row_id,
-                  row_number() over (partition by sra_sru_id order by sra_sort_seq) * 10 sra_sort_seq
-             from sct_rule_action
-            where sra_sgr_id = p_sgr_id) v
-       on (sra.rowid = v.row_id)
-     when matched then update set
-          sra_sort_seq = v.sra_sort_seq;
-
-    -- Wird aus AJAX aufgerufen, daher hier Aenderungen festschreiben
-    commit;
-    pit.leave_mandatory;
-  end resequence_rule_group;
 
 
   procedure copy_rule_group(
@@ -877,7 +899,7 @@ as
     dbms_lob.createTemporary(l_stmt, false, dbms_lob.call);
     
     -- Exportheader starten
-    dbms_lob.append(l_stmt, sct_const.c_export_start_template);
+    dbms_lob.append(l_stmt, replace(sct_const.c_export_start_template, '#CR#', sct_const.c_cr));
 
     -- Einzelne Regelgruppen berechnen
     for sgr in rule_group_cur loop
@@ -885,7 +907,7 @@ as
     end loop;
 
     -- Export beenden
-    dbms_lob.append(l_stmt, sct_const.c_export_end_template);
+    dbms_lob.append(l_stmt, replace(sct_const.c_export_end_template, '#CR#', sct_const.c_cr));
     
     return l_stmt;
   end export_all_rule_groups;
@@ -910,14 +932,14 @@ as
       into l_app_alias
       from apex_applications
      where application_id = p_sgr_app_id;
-    dbms_lob.append(l_stmt, sct_const.c_export_start_template);
+    dbms_lob.append(l_stmt, replace(sct_const.c_export_start_template, '#CR#', sct_const.c_cr));
 
     -- Einzelne Regelgruppen berechnen
     for sgr in rule_group_cur(p_sgr_app_id) loop
       dbms_lob.append(l_stmt, read_rule_group(sgr.sgr_id));
     end loop;
 
-    dbms_lob.append(l_stmt, sct_const.c_export_end_template);
+    dbms_lob.append(l_stmt, replace(sct_const.c_export_end_template, '#CR#', sct_const.c_cr));
     pit.leave_mandatory;
 
     return l_stmt;
@@ -940,7 +962,7 @@ as
       into l_app_id
       from sct_rule_group
      where sgr_id = p_sgr_id;
-    dbms_lob.append(l_stmt, sct_const.c_export_start_template);
+    dbms_lob.append(l_stmt, replace(sct_const.c_export_start_template, '#CR#', sct_const.c_cr));
 
     -- Einzelne Teilbereiche berechnen
     dbms_lob.append(l_stmt, read_rule_group(p_sgr_id));
@@ -965,10 +987,9 @@ as
     
     -- Initialisierung
     dbms_lob.createtemporary(l_stmt, false, dbms_lob.call);
-    dbms_lob.append(
-      l_stmt, replace(sct_const.c_export_start_template, '#ALIAS#', 'FOO'));
+    dbms_lob.append(l_stmt, replace(sct_const.c_export_start_template, '#CR#', sct_const.c_cr));
     dbms_lob.append(l_stmt, read_action_type(l_sat_is_editable));
-    dbms_lob.append(l_stmt, sct_const.c_export_end_template);
+    dbms_lob.append(l_stmt, replace(sct_const.c_export_end_template, '#CR#', sct_const.c_cr));
     
     pit.leave_mandatory;
     return l_stmt;
@@ -1196,9 +1217,9 @@ as
      when not matched then insert (sra_sru_id, sra_sgr_id, sra_spi_id, sra_sat_id, sra_attribute, sra_attribute_2, sra_sort_seq, sra_active)
           values(v.sra_sru_id, v.sra_sgr_id, v.sra_spi_id, v.sra_sat_id, v.sra_attribute, v.sra_attribute_2, v.sra_sort_seq, v.sra_active);
     pit.leave_mandatory;
-/*  exception
+  exception
     when others then
-      pit.sql_exception(msg.SCT_MERGE_RULE_ACTION, msg_args(to_char(p_sra_sru_id), to_char( p_sra_spi_id)));*/
+      pit.sql_exception(msg.SCT_MERGE_RULE_ACTION, msg_args(to_char(p_sra_sru_id), to_char( p_sra_spi_id)));
   end merge_rule_action;
 
 
