@@ -157,6 +157,15 @@ as
     p_item in sct_page_item.spi_id%type,
     p_stmt in varchar2);
     
+    
+  /* Prozedur zum dynamischen Ausfuehren eines berechneten JavaScript-Blocks
+   * %param p_plsql PL/SQL-Anweisung, die das JavaScript berechnet, das ausgefuehrt werden soll
+   * %usage Wird verwendet, um in PL/SQL einen JavaScript-Block berechnen zu lassen,
+   *        der anschliessend auf der Seite ausgefuehrt wird.
+   */
+  procedure execute_javascript(
+    p_plsql in varchar2);
+    
 
   /* RENDER-Funktion des Plugins gem. APEX-Vorgaben */
   function render(
