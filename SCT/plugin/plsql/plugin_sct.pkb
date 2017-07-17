@@ -7,7 +7,7 @@ as
   
   -- Rekursionsstack
   -- Der Rekursionsstack speichert die Seitenelemente, die durch die Regeln geaendert wurden,
-  -- um anschlie�end auch fuer diese Elemente die Regelpruefung aufzurufen.
+  -- um anschliessend auch fuer diese Elemente die Regelpruefung aufzurufen.
   type recursive_stack_t is table of number index by sct_page_item.spi_id%type;
   
   -- Record zur Aufnahme der Plugin-Attribute
@@ -882,6 +882,16 @@ as
     
     pit.leave_mandatory;
   end set_list_from_stmt;
+  
+  
+  procedure execute_javascript(
+    p_plsql in varchar2)
+  as
+    l_result varchar2(32767);
+  begin
+    execute immediate 'begin :x := ' || p_plsql || '; end;' using out l_result;
+    g_dynamic_javascript := g_dynamic_javascript || sct_const.C_CR || replace(l_result, 'javascript:');
+  end execute_javascript;
   
   
   function render(
