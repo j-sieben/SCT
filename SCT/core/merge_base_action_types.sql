@@ -302,6 +302,17 @@ apex.item('#ITEM#').disable();~',
     p_sat_js => q'~de.condes.plugin.sct.submit('#ATTRIBUTE#', '#ATTRIBUTE_2#');~',
     p_sat_is_editable => 0,
     p_sat_raise_recursive => 1);
+    
+  sct_admin.merge_action_type(
+    p_sat_id => 'DYNAMIC_JAVASCRIPT',
+    p_sat_name => 'Dynamisches JavaScript ausführen',
+    p_sat_description => q'~<p>Führt das übergebene JavaScript auf der Seite aus</p>
+<p><em>Parameter</em>: PL/SQL-Funktion, die eine JavaScript-Anweisung ausgibt. Ohne javascript: verwenden, nur den JavaScript-Code ausgeben</p>~',
+    p_sat_pl_sql => q'~plugin_sct.execute_javascript('#ATTRIBUTE#');~',
+    p_sat_js => q'~~',
+    p_sat_is_editable => 0,
+    p_sat_raise_recursive => 1);
+
 
   commit;
 end;
