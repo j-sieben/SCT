@@ -646,7 +646,7 @@ as
     p_with_comment in boolean)
   as
   begin
-    g_with_comments := p_with_comments;
+    g_with_comments := p_with_comment;
   end set_with_comments;
   
 
