@@ -9,6 +9,17 @@ as
   function get_firing_item
     return varchar2;
     
+  function get_firing_items(
+    p_spi_id in sct_page_item.spi_id%type,
+    p_attribute_2 in sct_rule_action.sra_attribute_2%type)
+    return char_table;
+    
+  function get_with_comments
+    return boolean;
+    
+  procedure set_with_comments(
+    p_with_comment in boolean);
+    
   /* setter-Methode fuer eine Zahl, die auf APP_ID aufgeschlagen wird, wenn Regeln importiert
    * werden. Kann verwendet werden, um ID-Systeme aufeinander abzubilden
    */
@@ -117,7 +128,10 @@ as
     
   
   /* Export der Aktionstypen
-   * %usage Exportiert alle Aktionstypen ausser den nicht-editierbaren Systemtypen
+   * %param p_core_flag Flag, das steuert, ob die nicht-editierbaren oder die
+   *        editierbaren Aktionstypen exportiert werden sollen
+   * %usage Exportiert alle Aktionstypen, entweder die editierbaren oder die
+   *        mitgelieferten
    */
   function export_action_types(
     p_core_flag in boolean default false)
@@ -164,7 +178,7 @@ as
    * %param p_id ID, die gamppt werden soll
    * %usage Da vorab nicht bekannt ist, welche ID durch eine Sequenz als naechstes 
    *        geliefert wird, merkt sich diese Methode fuer eine gegebene ID
-   *        eine neu vergebene ID, die anschließend geliefert wird. Ist P_ID
+   *        eine neu vergebene ID, die anschlieÃŸend geliefert wird. Ist P_ID
    *        nicht bekannt, wird eine neue ID hierfuer erzeugt.
    *        Wird die Methode mit P_ID => NULL aufgerufen, wird der ID-Stack neu
    *        initialisiert. Dies muss vor Verwendung geschehen
