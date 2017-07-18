@@ -54,6 +54,7 @@ select sru_id, sru_name, sra_spi_id, sra_sat_id, sra_attribute, sra_attribute_2,
 
   c_js_item_value_template constant varchar2(100 byte) := q'~apex.item('#ITEM#').getValue()~';
   c_js_template constant varchar2(100 byte) := '#CODE#';
+  c_dynamic_js_code_template constant varchar2(100 byte) := '#CODE#';
   
   c_stmt_template constant varchar2(32767) :=
 q'~select sru.sru_id, sru.sru_sort_seq, sru.sru_name, sru.sru_firing_items, sru_fire_on_page_load,
