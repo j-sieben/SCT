@@ -9,6 +9,7 @@ as
   /* Globale Variablen */
   g_firing_item varchar2(30 byte);
   g_offset binary_integer;
+  g_with_comments boolean;
   
   -- PL/SQL-Tabelle zum Mappen alter IDs auf neue. Wird beim Kopieren von Regelgruppen verwendet
   type id_map_t is table of binary_integer index by binary_integer;
@@ -42,7 +43,7 @@ as
     return varchar2
   as
   begin
-    if wwv_flow.g_debug then
+    if g_with_comments then
       return pit.get_message_text(p_msg, p_msg_args);
     else
       return null;
@@ -578,6 +579,7 @@ as
   as
   begin
     g_offset := 0;
+    g_with_comments := true;
   end;
 
 
@@ -630,6 +632,22 @@ as
     end case;
     return l_item_list;
   end get_firing_items;
+  
+  
+  function get_with_comments
+    return boolean
+  as
+  begin
+    return g_with_comments;
+  end get_with_comments;
+  
+    
+  procedure set_with_comments(
+    p_with_comment in boolean)
+  as
+  begin
+    g_with_comments := p_with_comments;
+  end set_with_comments;
   
 
   procedure set_app_offset(
@@ -750,7 +768,7 @@ as
         else
           l_current_rule := l_rule.sru_sort_seq;
         end if;
-        if wwv_flow.g_debug then
+        if g_with_comments then
           if l_rule.sru_fire_on_page_load = sct_const.c_true then
             l_origin_msg := msg.SCT_INIT_ORIGIN;
           else
