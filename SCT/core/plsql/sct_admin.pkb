@@ -29,8 +29,7 @@ as
     sra_attribute_2 sct_rule_action.sra_attribute_2%type,
     is_first_row number
   );
-  
-  
+    
   /* Hole Meldungstext von PIT zur Integration als Kommentar in die Ausgabe
    * %param p_msg Message-ID
    * %param p_msg_args Optionale Message-Parameter
@@ -49,6 +48,7 @@ as
       return null;
     end if;
   end get_comment;
+  
   
   
   /* Methode zur Erzeugung des Initialisierungscodes aus einem Fetch Row-Prozess
@@ -110,11 +110,10 @@ as
       end loop;
       -- 3. Schritt: Template mit Anweisungen anreichern und returnieren
       if l_item_stmt is not null then
-        l_initialization_code := utl_text.bulk_replace(sct_const.c_initialize_code, char_table(
-                                   '#SQL_STMT#', l_sql_stmt,
-                                   '#ITEM_STMT#', l_item_stmt,
-                                   '#CR#', c_cr
-                                 ));
+        l_initialization_code := replace(replace(replace(sct_const.c_initialize_code,
+                                   '#SQL_STMT#', l_sql_stmt),
+                                   '#ITEM_STMT#', l_item_stmt),
+                                   '#CR#', c_cr);
       end if;
     end if;
     return l_initialization_code;
@@ -377,11 +376,11 @@ as
     l_view_name := sct_const.c_view_name_prefix || p_sgr_id;
 
     -- Erzeuge die Regelview
-    l_stmt := utl_text.bulk_replace(sct_const.c_rule_view_template, char_table(
-                '#NAME#', l_view_name,
-                '#DATA_COLS#', create_column_list(p_sgr_id),
-                '#WHERE_CLAUSE#', create_where_clause(p_sgr_id),
-                '#SGR_ID#', p_sgr_id));
+    l_stmt := replace(replace(replace(replace(sct_const.c_rule_view_template, 
+                '#NAME#', l_view_name),
+                '#DATA_COLS#', create_column_list(p_sgr_id)),
+                '#WHERE_CLAUSE#', create_where_clause(p_sgr_id)),
+                '#SGR_ID#', p_sgr_id);
     execute immediate l_stmt;
 
     pit.verbose(msg.SCT_VIEW_CREATED, msg_args(l_view_name));
@@ -590,6 +589,48 @@ as
     return g_firing_item;
   end get_firing_item;
   
+  
+  function get_firing_items(
+    p_spi_id in sct_page_item.spi_id%type,
+    p_attribute_2 in sct_rule_action.sra_attribute_2%type)
+    return char_table
+  as
+    l_item_list char_table;
+  begin
+    case 
+    when p_spi_id = sct_const.c_no_firing_item and trim(p_attribute_2) like '.%' then
+      -- Attribut enthaelt CSS-Klassenausdruck, Seitenelemente mit dieser Klasse suchen
+        with params as(
+             select v('APP_ID') application_id,
+                    v('APP_PAGE_ID') page_id
+               from dual)
+      select /*+ NO_MERGE (params) */
+             cast(collect(item_name) as char_table)
+        into l_item_list
+        from apex_application_page_items
+     natural join params
+       where html_form_element_css_classes is not null
+         and regexp_instr(p_attribute_2, '\.' || html_form_element_css_classes || '(,|$)') > 0;
+         
+    when p_spi_id = sct_const.c_no_firing_item and trim(p_attribute_2) like '#%' then
+      -- Attribut ist Array von IDs, Seitenelemente mit dieser Klasse suchen
+        with params as(
+             select v('APP_ID') application_id,
+                    v('APP_PAGE_ID') page_id
+               from dual)
+      select /*+ NO_MERGE (params) */
+             cast(collect(item_name) as char_table)
+        into l_item_list
+        from apex_application_page_items
+     natural join params
+       where regexp_instr(p_attribute_2, '#' || item_name || '(,|$)') > 0;
+       
+    else
+      l_item_list := null;
+    end case;
+    return l_item_list;
+  end get_firing_items;
+  
 
   procedure set_app_offset(
     p_offset in binary_integer)
@@ -634,23 +675,23 @@ as
     end case;
   end check_recursion;
   
-    
+  
   procedure prepare_js_code(
     p_code in out nocopy varchar2,
-    p_rule in rule_rec)
+    p_rule in rule_rec,
+    p_origin in varchar2 default null)
   as
     c_delimiter constant varchar2(10) := c_cr || '  ';
   begin
-    if p_rule.js is not null then
-      p_code := utl_text.bulk_replace(p_code || sct_const.c_js_template, char_table(
-                  '#CODE#', c_delimiter || replace(p_rule.js, c_cr, c_delimiter),
-                  '#JS_FILE#', sct_const.c_js_namespace,
-                  '#ITEM_VALUE#', sct_const.c_js_item_value_template,
-                  '#ITEM#', p_rule.item,
-                  '#ATTRIBUTE#', p_rule.sra_attribute,
-                  '#ATTRIBUTE_2#', p_rule.sra_attribute_2,
-                  '#CR#', sct_const.c_cr));
-    end if;
+    -- Nicht in BULK_REPLACE integrieren wg. Limit 4000 Byte
+    p_code := p_code || replace(sct_const.c_js_template, '#SCRIPT#', c_delimiter || replace(p_rule.js, c_cr, c_delimiter));
+    utl_text.bulk_replace(p_code, char_table(
+      '#JS_FILE#', sct_const.c_js_namespace,
+      '#ITEM_VALUE#', sct_const.c_js_item_value_template,
+      '#ITEM#', p_rule.item,
+      '#SELECTOR#', case p_rule.item when sct_const.c_no_firing_item then p_rule.sra_attribute_2 else p_rule.item end,
+      '#ATTRIBUTE#', p_rule.sra_attribute,
+      '#ATTRIBUTE_2#', p_rule.sra_attribute_2));
   end prepare_js_code;
 
 
@@ -688,7 +729,8 @@ as
 
     while l_action_cur%FOUND loop
       -- Baue PL/SQL-Code zusammen
-      if l_rule.pl_sql is not null then        
+      if l_rule.pl_sql is not null then
+        
         l_pl_sql_code := utl_text.bulk_replace(l_pl_sql_code || sct_const.c_plsql_template, char_table(
           '#PLSQL#', l_rule.pl_sql,
           '#ATTRIBUTE#', l_rule.sra_attribute,
@@ -720,18 +762,25 @@ as
                          msg_args(to_char(l_rule.sru_sort_seq), l_rule.sru_name, g_firing_item, sct_const.c_cr));
         end if;
       end if;
+      
       prepare_js_code(l_js_chunk, l_rule);
+      
       fetch l_action_cur into l_rule;
     end loop;
 
     close l_action_cur;
 
     -- Uebernehme PL/SQL bzw. JS-Codes in entsprechende Ausgabeparameter
-    p_plsql_action := utl_text.bulk_replace(sct_const.c_plsql_action_template, char_table(
-                        '#CODE#', coalesce(l_pl_sql_code, sct_const.C_NULL),
-                        '#CR#', sct_const.c_cr));
+    p_plsql_action := replace(sct_const.c_plsql_action_template, '#CODE#', coalesce(l_pl_sql_code, sct_const.C_NULL));
+    
+    -- Nicht in BULK_REPLACE integrieren wg. Limit 4000 Byte
+    
+    p_js_action := replace(sct_const.c_js_code_template, '#CODE#', l_js_code || coalesce(l_js_chunk, get_comment(msg.SCT_NO_JAVASCRIPT, msg_args(l_rule.sru_name, sct_const.c_cr))));
 
-    p_js_action := l_js_code || coalesce(l_js_chunk, get_comment(msg.SCT_NO_JAVASCRIPT, msg_args(l_rule.sru_name, sct_const.c_cr)));
+    utl_text.bulk_replace(p_js_action, char_table(
+      '#SRU_SORT_SEQ#', case when l_rule.sru_sort_seq is not null then 'RULE_' || l_rule.sru_sort_seq else 'NO_RULE_FOUND' end,
+      '#SRU_NAME#', l_rule.sru_name,
+      '#FIRING_ITEM#', p_firing_item));
 
     -- Ermittle durch die Regel betroffene Seitenelemente als FIRING_ITEMS
     p_firing_items := get_firing_items(p_firing_item);
@@ -1170,9 +1219,9 @@ as
     pit.enter_mandatory('validate_rule', c_pkg);
     harmonize_sct_page_item(p_sgr_id);
     l_data_cols := create_column_list(p_sgr_id, sct_const.c_true);
-    l_stmt := utl_text.bulk_replace(sct_const.c_rule_validation_template, char_table(
-                '#DATA_COLS#', l_data_cols,
-                '#CONDITION#', p_sru_condition));
+    l_stmt := replace(replace(sct_const.c_rule_validation_template,
+                '#DATA_COLS#', l_data_cols),
+                '#CONDITION#', p_sru_condition);
     l_ctx := dbms_sql.open_cursor;
     dbms_sql.parse(l_ctx, l_stmt, dbms_sql.native);
     dbms_sql.close_cursor(l_ctx);
@@ -1219,7 +1268,7 @@ as
     pit.leave_mandatory;
   exception
     when others then
-      pit.sql_exception(msg.SCT_MERGE_RULE_ACTION, msg_args(to_char(p_sra_sru_id), to_char( p_sra_spi_id)));
+      pit.stop(msg.SCT_MERGE_RULE_ACTION, msg_args(to_char(p_sra_sru_id), to_char( p_sra_spi_id)));
   end merge_rule_action;
 
 
