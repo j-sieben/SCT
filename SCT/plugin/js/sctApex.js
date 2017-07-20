@@ -319,6 +319,72 @@ de.condes.plugin.sct.apex_42_5_1 = {};
   };
   
   
+  sct.disableElement = function (item){
+    // Normales Element, nicht deaktivieren, da ansonsten Sessionstate nicht gefüllt wird.
+    // Stattdessen readonly und CSS-Klasse setzen, so dass es wie deaktiviert aussieht
+    $('#item').prop('readonly', true).addClass('sct-disabled');
+    
+      $this = $(item);
+      var itemId = $this.attr('id');
+      if ($this.is('select')){
+        // Select-Liste, deaktiviere alle Einträge außer dem gewählten
+        $(`#${itemId}:not(:selected)`).prop('disabled', false);
+      }
+      else if ($this.is('button')){
+        // Button, wird »normal« aktiviert
+        apex.item(itemId).enable();
+      }
+      else if ($this.is('input')){
+        sct.ApexJS.enableElement(itemId);
+      };
+      apex.item(itemId).show();
+  };
+  
+  
+  sct.enableElement = function (item){
+    // Normales Element, nicht deaktivieren, da ansonsten Sessionstate nicht gefüllt wird.
+    // Stattdessen readonly und CSS-Klasse setzen, so dass es wie deaktiviert aussieht
+    $('#item').prop('readonly', false).removeClass('sct-disabled');
+    
+      $this = $(item);
+      var itemId = $this.attr('id');
+      if ($this.is('select')){
+        // Select-Liste, deaktiviere alle Einträge außer dem gewählten
+        $(`#${itemId}:not(:selected)`).prop('disabled', false);
+      }
+      else if ($this.is('button')){
+        // Button, wird »normal« aktiviert
+        apex.item(itemId).enable();
+      }
+      else if ($this.is('input')){
+        sct.ApexJS.enableElement(itemId);
+      };
+      apex.item(itemId).show();
+      
+      /** TODO Erweiterung integrieren:
+      
+	// wenn es sich bei dem Seitenelement um ein Datumsfeld handelt, dann auch die Schaltflaeche
+	// zur Datumsauswahl aktivieren
+	if (itemId.hasClass("hasDatepicker")) {
+		itemId.parent().find("button").prop('readonly', false).removeClass(C_APEX_DISABLED_CLASS);
+	}
+
+	// wenn es sich bei dem Seitenelement um ein Farbfeld handelt, dann auch die Schaltflaeche
+	// zur Farbauswahl aktivieren
+	else if (itemId.hasClass("color_picker")) {
+		$('#' + pItem + '_fieldset').prop('readonly', false).removeClass(C_APEX_DISABLED_CLASS);
+	}
+
+	// wenn es sich bei dem Seitenelement um eine Popup-Liste handelt, dann auch die Schaltflaeche
+	// zur Auswahl der Listeneintraege aktivieren
+	else if (itemId.hasClass("popup_lov")) {
+		itemId.closest('#' + pItem + '_fieldset').find('.a-Button--popupLOV')
+		   .prop('readonly', false).removeClass(C_APEX_DISABLED_CLASS);
+	};
+  */
+  };
+  
+  
   /**
    * Methode zum Entfernen einer Benachrichtigung auf der Option
    */
@@ -345,11 +411,11 @@ de.condes.plugin.sct.apex_42_5_1 = {};
 
     // Alle Einzelfehler behandeln und auf apex.message.errorObject abbilden
     apex.debug.log(`Anzahl Fehler PlugIn: ${errorList.count}`);
-	msg.clearErrors();
+    msg.clearErrors();
 	
-	if (errorList.errors.count > 0){
-		msg.showErrors(errorList.errors);
-	}
+    if (errorList.errors.count > 0){
+      msg.showErrors(errorList.errors);
+    }
   };
 
   /**
@@ -412,9 +478,9 @@ de.condes.plugin.sct.apex_42_5_1 = {};
    */
   sct.maintainErrors = function(errorList){
     msg.clearErrors()
-	if(errorList.count > 0){
-        msg.showErrors(errorList.errors);
-	}
+    if(errorList.count > 0){
+      msg.showErrors(errorList.errors);
+    }
     // In jedem Fall fehlerabhängige Elemente aktualisieren
     // maintainDependentElements(errorList);
   };
