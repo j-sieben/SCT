@@ -47,7 +47,7 @@ as
     return varchar2
   as
   begin
-    if g_with_comments then
+    if get_with_comments then
       return pit.get_message_text(p_msg, p_msg_args);
     else
       return null;
@@ -188,7 +188,15 @@ as
   as
   begin
     g_has_errors := true;
-  end set_error_flag;  
+  end set_error_flag; 
+  
+  
+  function get_error_flag
+    return boolean
+  as
+  begin
+    return g_has_errors;
+  end get_error_flag;
 
 
   procedure create_action(
