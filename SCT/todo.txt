@@ -1,0 +1,3 @@
+- Auslagerung Logik von PLUGIN_SCT => BL_SCT
+- Erweiterung: RAISE_RECURSIVE auf Regelaktionsebene ermöglichen
+- Ausgabeprozess JavaScript optimieren und in BL_SCT verlagern
