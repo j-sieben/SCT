@@ -215,6 +215,7 @@ as
     p_sra_attribute_2 in sct_rule_action.sra_attribute_2%type,
     p_sra_sort_seq in sct_rule_action.sra_sort_seq%type,
     p_sra_on_error in sct_rule_action.sra_on_error%type default sct_const.c_false,
+    p_sra_raise_recursive in sct_rule_action.sra_raise_recursive%type default sct_const.c_true,
     p_sra_active in sct_rule_action.sra_active%type default sct_const.c_true,
     p_sra_comment in sct_rule_action.sra_comment%type default null);
     
