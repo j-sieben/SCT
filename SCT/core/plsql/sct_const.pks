@@ -34,14 +34,14 @@ q'~create or replace force view #NAME# as
        data as (
        select /*+ NO_MERGE(s) */
               r.sru_id, r.sru_name, r.sru_firing_items, r.sru_fire_on_page_load,
-              r.sra_spi_id, r.sra_sat_id, r.sra_attribute, r.sra_attribute_2, r. sra_on_error, r.sra_sort_seq,
+              r.sra_spi_id, r.sra_sat_id, r.sra_attribute, r.sra_attribute_2, r.sra_on_error, r.sra_raise_recursive, r.sra_sort_seq,
               rank() over (order by r.sru_sort_seq) rang, s.initializing
          from sct_bl_rules r
          join session_state s
            on (instr(r.sru_firing_items, ',' || s.firing_item || ',') > 0 or sru_fire_on_page_load = 1)
         where r.sgr_id = #SGR_ID#
           and (#WHERE_CLAUSE#))
-select sru_id, sru_name, sra_spi_id, sra_sat_id, sra_attribute, sra_attribute_2, sra_on_error, sra_sort_seq
+select sru_id, sru_name, sra_spi_id, sra_sat_id, sra_attribute, sra_attribute_2, sra_on_error, sra_raise_recursive, sra_sort_seq
   from data
  where rang = 1 or sru_fire_on_page_load = initializing
  order by sru_fire_on_page_load desc, rang~';
@@ -57,7 +57,7 @@ select sru_id, sru_name, sra_spi_id, sra_sat_id, sra_attribute, sra_attribute_2,
   
   c_stmt_template constant varchar2(32767) :=
 q'~select sru.sru_id, sru.sru_sort_seq, sru.sru_name, sru.sru_firing_items, sru_fire_on_page_load,
-       sra_spi_id item, sat_pl_sql pl_sql, sat_js js, sra_attribute attribute, sra_attribute_2 attribute_2, sra_on_error,
+       sra_spi_id item, sat_pl_sql pl_sql, sat_js js, sra_attribute attribute, sra_attribute_2 attribute_2, sra_on_error, 
        case row_number() over (partition by sru_sort_seq order by srg.sra_sort_seq) when 1 then 1 else 0 end is_first_row
   from #RULE_VIEW# srg
   join sct_rule sru
@@ -65,6 +65,7 @@ q'~select sru.sru_id, sru.sru_sort_seq, sru.sru_name, sru.sru_firing_items, sru_
   join sct_action_type sat
     on srg.sra_sat_id = sat.sat_id
  where sat.sat_raise_recursive >= #IS_RECURSIVE#
+   and srg.sra_raise_recursive >= #IS_RECURSIVE#
  order by sru.sru_sort_seq desc, srg.sra_sort_seq~';  
   
   -- Template zur Generierung des Initialisierungscodes
@@ -132,6 +133,7 @@ q'^
     p_sra_attribute_2 => q'~#SRA_ATTRIBUTE_2#~',
     p_sra_sort_seq => #SRA_SORT_SEQ#,
     p_sra_on_error => #SRA_ON_ERROR#,
+    p_sra_raise_recursive => #SRA_RAISE_RECURSIVE#,
     p_sra_active => #SRA_ACTIVE#);
 ^';
 
@@ -159,4 +161,3 @@ select *
  
 end sct_const;
 /
-                                                                  
