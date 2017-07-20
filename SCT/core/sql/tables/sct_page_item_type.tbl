@@ -4,6 +4,7 @@ create table sct_page_item_type(
   sit_has_value number(1,0) default 1,
   sit_event varchar2(30 byte),
   sit_col_template varchar2(100 char),
+  sit_init_template varchar2(100 char),
   constraint p_sct_page_item_type primary key(sit_id),
   constraint c_sit_has_value check(sit_has_value in (0,1))
 ) organization index;
@@ -14,6 +15,7 @@ comment on column sct_page_item_type.sit_name is 'Display name of element type';
 comment on column sct_page_item_type.sit_has_value is 'Flag to indicate whether element type maintains a value in Session State';
 comment on column sct_page_item_type.sit_event is 'JavaScript event to be bound to this element type by the plugin. If null, SCT won''t react on changes.';
 comment on column sct_page_item_type.sit_col_template is 'Template zur Erzeugung einer Spalte in der Regel-View.';
+comment on column sct_page_item_type.sit_col_template is 'Template zur Erstellung des Initialisisierungscodes.';
 
 delete from sct_page_item_type;
 
@@ -22,23 +24,24 @@ using (select 'ITEM' sit_id,
               'Element' sit_name,
               1 sit_has_value,
               'change' sit_event,
-              q'~v('#ITEM#') #ITEM#~' sit_col_template
+              q'~v('#ITEM#') #ITEM#~' sit_col_template,
+              q'~itm.#ITEM#~' sit_init_template
          from dual
         union all 
-       select 'NUMBER_ITEM', 'Element (Zahl)', 1, 'change', q'~to_number(v('#ITEM#'), '#CONVERSION#') #ITEM#~' from dual union all
-       select 'DATE_ITEM', 'Element (Datum)', 1, 'change', q'~to_date(v('#ITEM#'), '#CONVERSION#') #ITEM#~' from dual union all
-       select 'APP_ITEM', 'Anwendungselement', 1, 'change', q'~v('#ITEM#') #ITEM#~' from dual union all
-       select 'BUTTON', 'Schaltfl‰che', 0, 'click', q'~case sct_admin.get_firing_item when '#ITEM#' then 1 else 0 end #ITEM#~' from dual union all
-       select 'REGION', 'Region', 0, null, q'~null #ITEM#~' from dual union all
-       select 'DOCUMENT', 'Dokument', 0, null, q'~null #ITEM#~' from dual) v
+       select 'NUMBER_ITEM', 'Element (Zahl)', 1, 'change', q'~to_number(v('#ITEM#'), '#CONVERSION#') #ITEM#~', q'~to_char(itm.#ITEM#, '#CONVERSION#')~' from dual union all
+       select 'DATE_ITEM', 'Element (Datum)', 1, 'change', q'~to_date(v('#ITEM#'), '#CONVERSION#') #ITEM#~', q'~to_char(to_date(itm.#ITEM#), '#CONVERSION#')~' from dual union all
+       select 'APP_ITEM', 'Anwendungselement', 1, 'change', q'~v('#ITEM#') #ITEM#~', q'~itm.#ITEM#~' from dual union all
+       select 'BUTTON', 'Schaltfl√§che', 0, 'click', q'~case sct_admin.get_firing_item when '#ITEM#', q'~~' then 1 else 0 end #ITEM#~' from dual union all
+       select 'REGION', 'Region', 0, null, q'~null #ITEM#~', q'~~' from dual union all
+       select 'DOCUMENT', 'Dokument', 0, null, q'~null #ITEM#~', q'~~' from dual) v
    on (s.sit_id = v.sit_id)
  when matched then update set
       sit_name = v.sit_name,
       sit_has_value = v.sit_has_value,
       sit_event = v.sit_event,
       sit_col_template = v.sit_col_template
- when not matched then insert(sit_id, sit_name, sit_has_value, sit_event, sit_col_template)
-      values (v.sit_id, v.sit_name, v.sit_has_value, v.sit_event, v.sit_col_template);
+ when not matched then insert(sit_id, sit_name, sit_has_value, sit_event, sit_col_template, sit_init_template)
+      values (v.sit_id, v.sit_name, v.sit_has_value, v.sit_event, v.sit_col_template, v.sit_init_template);
 
       
 commit;
