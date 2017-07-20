@@ -45,6 +45,9 @@ as
    *        das Fehlerhandling in der Rekursion ausgefuehrt wird
    */
   procedure set_error_flag;
+  
+  function get_error_flag
+    return boolean;
     
   /* Prozedur erzeugt eine Antwort auf eine gegebene Situation im Session State 
    * fuer eine Regelgruppe
