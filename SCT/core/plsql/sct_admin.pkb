@@ -533,6 +533,7 @@ as
               '#SRA_ATTRIBUTE#', sra.sra_attribute,
               '#SRA_ATTRIBUTE_2#', sra.sra_attribute_2,
               '#SRA_ON_ERROR#', to_char(sra.sra_on_error),
+              '#SRA_RAISE_RECURSIVE#', to_char(sra.sra_raise_recursive),
               '#SRA_SORT_SEQ#', to_char(sra.sra_sort_seq),
               '#SRA_ACTIVE#', to_char(sra.sra_active))));
         end loop;
@@ -697,8 +698,8 @@ as
 
       propagate_rule_change(map_id(l_sgr_id));
 
-     insert into sct_rule_action(sra_sgr_id, sra_sru_id, sra_spi_id, sra_sat_id, sra_attribute, sra_attribute_2, sra_sort_seq, sra_active, sra_comment)
-      select map_id(sra_sgr_id), map_id(sra_sru_id), sra_spi_id, sra_sat_id,
+     insert into sct_rule_action(sra_sgr_id, sra_sru_id, sra_spi_id, sra_sat_id, sra_on_error, sra_raise_recursive, sra_attribute, sra_attribute_2, sra_sort_seq, sra_active, sra_comment)
+      select map_id(sra_sgr_id), map_id(sra_sru_id), sra_spi_id, sra_sat_id, sra_on_error, sra_raise_recursive,
              replace(upper(sra_attribute), 'P' || p_sgr_page_id || '_',  'P' || p_sgr_page_to || '_'),
              replace(upper(sra_attribute_2), 'P' || p_sgr_page_id || '_',  'P' || p_sgr_page_to || '_'),
              sra_sort_seq, sra_active, sra_comment
@@ -1024,6 +1025,7 @@ as
     p_sra_attribute_2 in sct_rule_action.sra_attribute_2%type,
     p_sra_sort_seq in sct_rule_action.sra_sort_seq%type,
     p_sra_on_error in sct_rule_action.sra_on_error%type default sct_const.c_false,
+    p_sra_raise_recursive in sct_rule_action.sra_raise_recursive%type default sct_const.c_true,
     p_sra_active in sct_rule_action.sra_active%type default sct_const.c_true,
     p_sra_comment in sct_rule_action.sra_comment%type default null)
   as
@@ -1038,22 +1040,25 @@ as
                   p_sra_attribute_2 sra_attribute_2,
                   p_sra_sort_seq sra_sort_seq,
                   p_sra_on_error sra_on_error,
+                  p_sra_raise_recursive sra_raise_recursive,
                   p_sra_active sra_active,
                   p_sra_comment sra_comment
              from dual) v
        on (sra.sra_sru_id = v.sra_sru_id
       and sra.sra_sgr_id = v.sra_sgr_id
       and sra.sra_spi_id = v.sra_spi_id
-      and sra.sra_sat_id = v.sra_sat_id)
+      and sra.sra_sat_id = v.sra_sat_id
+      and sra.sra_on_error = v.sra_on_error)
      when matched then update set
           sra_attribute = v.sra_attribute,
           sra_attribute_2 = v.sra_attribute_2,
           sra_sort_seq = v.sra_sort_seq,
           sra_on_error = v.sra_on_error,
+          sra_raise_recursive = v.sra_raise_recursive,
           sra_active = v.sra_active,
           sra_comment = v.sra_comment
-     when not matched then insert (sra_sru_id, sra_sgr_id, sra_spi_id, sra_sat_id, sra_attribute, sra_attribute_2, sra_sort_seq, sra_on_error, sra_active, sra_comment)
-          values(v.sra_sru_id, v.sra_sgr_id, v.sra_spi_id, v.sra_sat_id, v.sra_attribute, v.sra_attribute_2, v.sra_sort_seq, v.sra_on_error, v.sra_active, v.sra_comment);
+     when not matched then insert (sra_sru_id, sra_sgr_id, sra_spi_id, sra_sat_id, sra_attribute, sra_attribute_2, sra_sort_seq, sra_on_error, sra_raise_recursive, sra_active, sra_comment)
+          values(v.sra_sru_id, v.sra_sgr_id, v.sra_spi_id, v.sra_sat_id, v.sra_attribute, v.sra_attribute_2, v.sra_sort_seq, v.sra_on_error, v.sra_raise_recursive, v.sra_active, v.sra_comment);
     pit.leave_mandatory;
   exception
     when others then
@@ -1115,3 +1120,4 @@ as
 begin
   initialize;
 end sct_admin;
+/
