@@ -1,75 +1,205 @@
-create or replace package bl_sct 
+create or replace package plugin_sct 
 as 
+
+  /* Package PLUGIN_SCT zur Verwaltung von State Charts
+   * %author Juergen Sieben, ConDeS GmbH
+   * %usage Das Package implementiert die datenbankseitige Logik des SCT-APEX-Plugins
+   */
+   
+  procedure stop_rule;
   
-  /* getter-Funktionen fuer das PLUGIN_SCT und UI_SCT_PKG */
-  /* Funktion liefert den Namen des ausloesenden APEX-Elements. Falls kein Element
-   * ausgeloest hat, wird DOCUMENT geliefert.
-   */
-  function get_firing_item
-    return varchar2;
-    
-  /* Funktion liefert eine Liste von Elementen, die durch den uebergebenen
-   * jQuery-Ausdruck identifiziert werden konnten.
-   * %param p_spi_id ITEM-ID, muss DOCUMENT sein, ansonsten wird von einem Element ausgegangen
-   * %param p_attribute_2 jQuery-Ausdruck, der zu Elementen evaluiert wird
-   * %return Instanz von CHAR_TABLE mit den Namen der Elemente
-   * %usage Analysiert den uebergebenen jQuery-Ausdruck und ermittelt die angesprochenen Elemente.
-   *        Moegliche Auspraegungen:
-   *        - CSS-Klasse oder CSS-Klassen, durch Kommata getrennt
-   *          Elemente muessen die entsprechende Klasse als Element-CSS enthalten
-   *        - Komma-separierte Liste von IDs
-   *          Die IDs muessen inklusive vorangestelltem #-Zeichen angegeben werden
-   */
-  function get_firing_items(
-    p_spi_id in sct_page_item.spi_id%type,
-    p_attribute_2 in sct_rule_action.sra_attribute_2%type)
-    return char_table;
-    
   
-  /* Liefert die Einstellung, ob Kommentare ausgegeben werden sollen oder nicht
+  /* Methode zur Registrierung eines Elements im Rekursionsstack
+   * %param p_item Name des Elements
+   * %param p_allow_recursion Flag, das anzeigt, ob Rekursion erlaubt ist oder nicht
+   * %usage Wird normalerweise nicht explizit benoetigt.
    */
-  function get_with_comments
+  procedure register_item(
+    p_item in varchar2,
+    p_allow_recursion in number default sct_const.c_true);
+  
+  /* Prozedur zum Registrieren von Fehlern
+   * %param p_spi_id Name des Feldes, das den Fehler enthaelt
+   * %param p_error_msg Fehlermeldung, die registriert werden soll
+   * %param p_internal_error Optionale zweite, technische Fehlermeldung
+   * %usage Wird automatisiert aufgerufen, wenn eine Aktivitaet ausgefuehrt wird.
+   *        Existiert eine technische Fehlermeldung und wird eine anwendungsseitige
+   *        Fehlermeldung produziert kann die technische Fehlermeldung als
+   *        Parameter P_INTERNAL_ERROR uebergeben werden. In jedem Fall muss
+   *        P_ERROR_MSG einen Wert enthalten.
+   */
+  procedure register_error(
+    p_spi_id in varchar2,
+    p_error_msg in varchar2,
+    p_internal_error in varchar2 default null);
+  
+  function has_errors
     return boolean;
     
-  /* Setzt Kommentar-Flag
-   * %param p_with_comment Flag, das angibt, ob Kommentare in JavaScript ausgegeben
-   *        werden sollen (TRUE) oder nicht (FALSE)
+  function has_no_errors
+    return boolean;
+  
+  
+  /* Ueberladung als Schnittstelle zu PIT
+   * %param p_spi_id Name des Feldes, das den Fehler enthaelt
+   * %param p_message_name Fehlermeldung, Referenz auf PIT-Nachricht
+   * %param p_arg_list Liste von PIT-Meldungsparametern
+   * %usage Wird automatisiert aufgerufen, wenn eine Aktivitaet ausgefuehrt wird.
+   *        Es wird eine, in PIT definierte Meldung aufgerufen und optional
+   *        die erforderlichen Parameter uebergeben.
+   *        Die Ausgabe wird in den Error-Stack des Plugins integriert.
    */
-  procedure set_with_comments(
-    p_with_comment in boolean);
+  procedure register_error(
+    p_spi_id in varchar2,
+    p_message_name in varchar2,
+    p_arg_list in msg_args default null);
     
   
-  /* Setzt Flag, ob ein Fehler aufgetreten ist
-   * %usage Wird durch PLUGIN_SCT aufgerufen, falls ein Fehler aufgetreten ist
-   *        Das Flag wird mit jedem Rekursionslauf zurueckgesetzt, um zu ermoeglichen,
-   *        das Fehlerhandling in der Rekursion ausgefuehrt wird
+  /* Prozedur zum Registrieren von Meldungen
+   * %param p_text Meldungstext
+   * %usage Wird aufgerufen, wenn waehrend der Verarbeitung innerhalb der Datenbank
+   *        eine Information an die Antwort uebermittelt werden soll, die aktuell
+   *        bearbeitet wird. Die Meldungen werden zu den entsprechenden Prozessen
+   *        als Kommentare der Antwort vor dem JavaScript-Code ausgegeben
    */
-  procedure set_error_flag;
+  procedure register_notification(
+    p_text in varchar2);
     
-  /* Prozedur erzeugt eine Antwort auf eine gegebene Situation im Session State 
-   * fuer eine Regelgruppe
-   * %param p_sgr_id ID der Regelgruppe, die ausgewertet werden soll
-   * %param p_firing_item Element, das die Auswertung ausgeloest hat
-   * %param p_firing_items Ausgabe aller Item-Namen, die durch das feuernde Element
-   *        in einer Regel verbunden sind. Wird gebraucht, um selektiv Fehlermeldungen 
-   *        zu entfernen
-   * %param p_plsql_action List der PL/SQL-Aktionen, die in der Datenbank als
-   *        Ergebnis der Auswertung ausgefuehrt werden sollen
-   * %param p_js_action Liste der JavaScript-Aktionen, die auf der APEX-Seite als
-   *        Ergebnis der Auswertung ausgefuehrt werden sollen
-   * %usage Wird aus dem Plugin SCT aufgerufen, um fuer eine gegebene Seitensituation
-   *        (die vorab im Session State hinterlegt wurde) die passende Regel zu
-   *        finden und aus dieser Handlungsanweisungen fuer die weitere Bearbeitung
-   *        abzuleiten.
+    
+  /* Ueberladung als Schnittstelle zu PIT
+   * %param p_message_name Fehlermeldung, Rferenz auf PIT-Nachricht
+   * %param p_arg_list Liste von PIT-Meldungsparmetern
+   * %usage Wird aufgerufen, wenn waehrend der Verarbeitung innerhalb der Datenbank
+   *        eine Informaiton an die Antwort uebermittelt werden soll.
+   *        Es wird eine, in PIT definierte Meldung uafgerufen und optional
+   *        die erforderlichen Parameter uebergeben.
    */
-  procedure create_action(
-    p_sgr_id in sct_rule_group.sgr_id%type,
-    p_firing_item in sct_page_item.spi_id%type,
-    p_is_recursive in number,    
-    p_firing_items out nocopy varchar2,
-    p_plsql_action out nocopy varchar2,
-    p_js_action out nocopy varchar2);
+  procedure register_notification(
+    p_message_name in varchar2,
+    p_arg_list in msg_args);
+    
+    
+  /* Prozedur zur (De-)Registrierung von Pflichtelementen auf der Seite
+   * %param p_spi_id Name des Pflichelements
+   * %param p_spi_mandatory_message Optionale Benachrichtigung beim Regelverstoss
+   * %param p_is_mandatory Flag, das anzeigt, ob das Element ein Pflichtelement
+   *        ist oder nicht.
+   * %param p_attribute_2 Optionales Argument, das genutzt wird, wenn mehrere Elemente
+   *        ueber einen jQuery-Ausdruck angesprochen werden.
+   * %usage Wird aufgerufen, um Pflichtelemente im Plugin zu registrieren.
+   *        Pflichtelemente werden vor dem Absenden der Seite durch das Plugin
+   *        gegen den SessionState geprueft, um sicherzustellen, dass ein Wert
+   *        enthalten ist.
+   *        Bei einem Verstoss wird die SUBMIT-Anweisung nicht gesendet.
+   */
+  procedure register_mandatory(
+    p_spi_id in sct_page_item.spi_id%type,
+    p_spi_mandatory_message in varchar2,
+    p_is_mandatory in boolean,
+    p_attribute_2 in sct_rule_action.sra_attribute_2%type default null);
+    
+    
+  /* Hilfsmethode, prueft, ob ein Pflichtfeld NULL ist und registriert entsprechenden Fehler
+   * %param p_firing_item Name des Elements, das sich geaendert hat
+   * %usage Wird verwendet, wenn SCT Pflichtfelder verwaltet.
+   */
+  procedure check_mandatory(
+    p_firing_item in sct_page_item.spi_id%type);
+    
+    
+  /* Prozedur zur Vorbereitung des Speicherns der Seite
+   * %usage Diese Prozedur sollte nur verwendet werden, wenn SCT eine Seite
+   *        vollstaendig verwaltet. Die Prozedur prueft alle Seitenelemente,
+   *        die durch SCT auf MANDATORY gesetzt wurden, gegen den Session-State.
+   *        Ist ein Pflichtfeld NULL wird ein Fehler registriert und das Absenden
+   *        der Seite dadurch verhindert.
+   */
+  procedure submit_page;
+  
+  
+  /* Prozedur zum Setzen des Session Status
+   * %param p_item Name des Feldes, das gesetzt werden soll
+   * %param p_value Wert, der gesetzt werden soll
+   * %usage Wird verwendet, um den Session Status eines Elementes zu aendern.
+   *        Die Prozedur ist ein Wrapper um APEX_UTIL.SET_SESSION_STATE,
+   *        die aber nicht verwendet werden sollte, weil mit PLUGIN_SCT.SET_SESSION_STATE
+   *        Weg das Plugin alle Aenderungen am Session State registrieren und
+   *        and die Oberflaeche zurueckliefern kann
+   */
+  procedure set_session_state(
+    p_item in sct_page_item.spi_id%type,
+    p_value in varchar2,
+    p_allow_recursion in number default sct_const.c_true,
+    p_attribute_2 in sct_rule_action.sra_attribute_2%type default null);
+    
+  /*procedure set_session_state(
+    p_item in sct_page_item.spi_id%type,
+    p_value in date,
+    p_allow_recursion in number default sct_const.c_true,
+    p_attribute_2 in sct_rule_action.sra_attribute_2%type default null);
+    
+  procedure set_session_state(
+    p_item in sct_page_item.spi_id%type,
+    p_value in number,
+    p_allow_recursion in number default sct_const.c_true,
+    p_attribute_2 in sct_rule_action.sra_attribute_2%type default null);*/
+    
+    
+  /* Prozedur zum Setzen des Session Status, falls kein Fehler vorliegt.
+   * %param p_item Name des Feldes, das gesetzt werden soll
+   * %param p_value Wert, der gesetzt werden soll
+   * %param p_error Fehlermeldung. Falls NULL, wird Session State gesetzt, sonst Fehler
+   * %usage Wird verwendet, um als Ergebnis einer externen Validierung mit Fehlertext
+   *        eine Hilfsfunktion anzubieten, die selbststaendig zwischen Fehlermeldung und
+   *        Session State entscheidet.
+   */
+  procedure set_session_state_or_error(
+    p_item in sct_page_item.spi_id%type,
+    p_value in varchar2,
+    p_error in varchar2,
+    p_allow_recursion in number default sct_const.c_true);
+    
+    
+  /* Prozedur zum Setzen des Session Status, basierend auf einer SQL-Anweisung, die einen
+   * einzelnen Wert zurueckliefert
+   * %param p_item Name des Feldes, das gesetzt werden soll
+   * %param p_stmt select-Anweisung, die einen einzelnen Wert liefert
+   */
+  procedure set_value_from_stmt(
+    p_item in sct_page_item.spi_id%type,
+    p_stmt in varchar2);
+    
+    
+  /* Prozedur zum Setzen des Session Status, basierend auf einer SQL-Anweisung, die eine
+   * Liste von Werten zurueckliefert
+   * %param p_item Name des Feldes, das gesetzt werden soll
+   * %param p_stmt select-Anweisung, die eine Liste von Werten liefert
+   */
+  procedure set_list_from_stmt(
+    p_item in sct_page_item.spi_id%type,
+    p_stmt in varchar2);
+    
+    
+  /* Prozedur zum dynamischen Ausfuehren eines berechneten JavaScript-Blocks
+   * %param p_plsql PL/SQL-Anweisung, die das JavaScript berechnet, das ausgefuehrt werden soll
+   * %usage Wird verwendet, um in PL/SQL einen JavaScript-Block berechnen zu lassen,
+   *        der anschliessend auf der Seite ausgefuehrt wird.
+   */
+  procedure execute_javascript(
+    p_plsql in varchar2);
     
 
-end bl_sct;
+  /* RENDER-Funktion des Plugins gem. APEX-Vorgaben */
+  function render(
+    p_dynamic_action in apex_plugin.t_dynamic_action,
+    p_plugin in apex_plugin.t_plugin)
+    return apex_plugin.t_dynamic_action_render_result;
+    
+  /* AJAX-Funktion des Plugins gem. APEX-Vorgaben */
+  function ajax(
+    p_dynamic_action in apex_plugin.t_dynamic_action,
+    p_plugin in apex_plugin.t_plugin)
+    return apex_plugin.t_dynamic_action_ajax_result;
+
+end plugin_sct;
 /
