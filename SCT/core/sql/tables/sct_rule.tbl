@@ -1,16 +1,16 @@
 create table sct_rule(
   sru_id number, 
-	sru_sgr_id number, 
-	sru_name varchar2(200 byte), 
-	sru_condition clob, 
-	sru_sort_seq number, 
-	sru_firing_items varchar2(300 byte),
+  sru_sgr_id number, 
+  sru_name varchar2(200 byte), 
+  sru_condition clob, 
+  sru_sort_seq number, 
+  sru_firing_items varchar2(300 byte),
   sru_active number(1,0) default 1,
   sru_has_error number(1,0) default 0,
   sru_fire_on_page_load number(1,0) default -1,
   constraint p_sct_rules primary key (sru_id, sru_sgr_id),
   constraint r_sru_sgr_id foreign key (sru_sgr_id)
-	  references sct_rule_group (sgr_id) on delete cascade,
+    references sct_rule_group (sgr_id) on delete cascade,
   constraint c_sru_active check(sru_active in (0,1)),
   constraint c_sru_has_error check(sru_has_error in (0,1)),
   constraint c_sru_fire_on_page_load check(sru_fire_on_page_load in (1, -1))
@@ -33,8 +33,7 @@ comment on column sct_rule.sru_sgr_id is 'FK, reference to SCT_GROUP';
 comment on column sct_rule.sru_name is 'Descriptive Name';
 comment on column sct_rule.sru_condition is 'Condition, syntactically in the form of a partial where-clause';
 comment on column sct_rule.sru_firing_items is 'List of page items that are referenced within sru_condition';
-comment on column sct_rule.sru_sort_seq is 'Sortierkriterium, definiert Ausführungsreihenfolge';
-comment on column sct_rule.sru_active is 'Flag,. das anzeigt, ob die Regel aktuell verwendet werden soll';
-comment on column sct_rule.sru_active is 'Flag, das anzeigt, ob die Regel fehler beinhaltet';
-comment on column sct_rule.sru_active is 'Flag, das anzeigt, ob diese Regel beim Initialisiern der Seite gefeuert werden soll';
+comment on column sct_rule.sru_sort_seq is 'Sortierkriterium, definiert AusfÃ¼hrungsreihenfolge';
+comment on column sct_rule.sru_active is 'Flag, das anzeigt, ob die Regel aktuell verwendet werden soll';
+comment on column sct_rule.sru_fire_on_page_load is 'Flag, das anzeigt, ob diese Regel beim Initialisiern der Seite gefeuert werden soll';
 comment on column sct_rule.sru_has_error is 'Flag, das anzeigt, ob diese Regel einen Fehler enthaelt oder nicht';
