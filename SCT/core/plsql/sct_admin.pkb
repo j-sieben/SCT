@@ -51,7 +51,10 @@ as
        where sgr.sgr_id = p_sgr_id
          and api.process_type_code = 'DML_FETCH_ROW';
     cursor item_cur(p_sgr_id in sct_rule_group.sgr_id%type) is
-      select item_name, item_source
+      select item_name, 
+             utl_text.bulk_replace(sit_init_template, char_table(
+               '#CONVERSION#', spi_conversion, 
+               '#ITEM#', item_source)) item_source
         from apex_application_page_items api
         join sct_rule_group sgr
           on api.application_id = sgr.sgr_app_id
@@ -59,6 +62,8 @@ as
         join sct_page_item spi
           on sgr.sgr_id = spi.spi_sgr_id
          and api.item_name = spi.spi_id
+        join sct_page_item_type sit
+          on spi.spi_sit_id = sit.sit_id
        where api.item_source_type = 'Database Column'
          and sgr.sgr_id = p_sgr_id
          and spi.spi_is_required = 1;
