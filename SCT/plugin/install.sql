@@ -1,36 +1,73 @@
-define sql_dir=plugin/sql/
+define sql_dir=core/sql/
 define seq_dir=&sql_dir./sequences/
 define table_dir=&sql_dir./tables/
 define type_dir=&sql_dir./types/
 define view_dir=&sql_dir./views/
-define plsql_dir=plugin/plsql/
+define plsql_dir=core/plsql/
 
 prompt &h3.Check installation prerequisites
-@plugin/check_prerequisites.sql
+@core/check_prerequisites.sql
 
 prompt &h3.Remove existing installation
-@plugin/clean_up_install.sql
+@core/clean_up_install.sql
 
 prompt &h3.Setting compile flags
-@plugin/set_compile_flags.sql
+@core/set_compile_flags.sql
 
 
-prompt &h3.CREATE MESSAGES and PARAMETERS
-prompt &s1.Create MESSAGES
-@plugin/create_messages.sql
+prompt &h3.Create sequences
+prompt &s1.Create sequence SCT_SEQ
+@&seq_dir.sct_seq.seq
 
-prompt &s1.Create PARAMETERS
-@plugin/create_parameters.sql
+prompt &h3.Create tables and initial data
+prompt &s1.Create table SCT_RULE_GROUP
+@&table_dir.sct_rule_group.tbl
 
-prompt &h3.CREATE PACKAGES
-prompt &s1.Create package PLUGIN_SCT
-@&plsql_dir.plugin_sct.pks
+prompt &s1.Create table SCT_ACTION_TYPE
+@&table_dir.sct_action_type.tbl
+
+prompt &s1.Create table SCT_PAGE_ITEM_TYPE
+@&table_dir.sct_page_item_type.tbl
+
+prompt &s1.Create table SCT_PAGE_ITEM
+@&table_dir.sct_page_item.tbl
+
+prompt &s1.Create table SCT_RULE
+@&table_dir.sct_rule.tbl
+
+prompt &s1.Create table SCT_RULE_ACTION
+@&table_dir.sct_rule_action.tbl
+
+
+prompt &s1.Create view SCT_BL_RULES
+@&view_dir.sct_bl_rules.vw
+
+prompt &s1.Create view SCT_BL_PAGE_TARGETS
+@&view_dir.sct_bl_page_targets.vw
+
+--prompt &h3.Create SCT messages
+--@core/create_messages.sql
+
+prompt &h3.Create packages
+prompt &s1.Checking UTL_TEXT exists
+@core/check_has_utl_text.sql core/utl_text.sql
+
+prompt &s1.Create package SCT_CONST
+@&plsql_dir.sct_const.pks
 show errors
 
-prompt &s1.Create package body PLUGIN_SCT
-@&plsql_dir.plugin_sct.pkb
+prompt &s1.Create package SCT_ADMIN
+@&plsql_dir.sct_admin.pks
 show errors
 
---prompt &h3.Install plugin SCT
---prompt &s1.Plugin with embedded JS file
---@&sql_dir.dynamic_action_plugin_de_condes_plugin_sct.sql
+prompt &s1.Create package BL_SCT
+@&plsql_dir.bl_sct.pks
+show errors
+
+prompt &s1.Create package Body SCT_ADMIN
+@&plsql_dir.sct_admin.pkb
+show errors
+
+prompt &s1.Create package Body BL_SCT
+@&plsql_dir.bl_sct.pkb
+show errors
