@@ -2,6 +2,10 @@
   color:red;
 }
 
+.sct-on-error {
+  color:blue;
+}
+
 .sct-disabled{
   color:grey;
 }
