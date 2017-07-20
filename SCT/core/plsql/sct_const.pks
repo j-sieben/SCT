@@ -1,5 +1,3 @@
-set define off
-
 create or replace  package sct_const
   authid definer
 as 
@@ -11,6 +9,7 @@ as
   c_true constant number(1,0) := 1;
   c_false constant number(1,0) := 0;
   c_delimiter constant char(1 byte) := ',';
+  c_yes constant char(1 byte) := 'Y';
   c_view_name_prefix constant varchar2(25) := 'SCT_RULES_GROUP_';
   c_js_function constant varchar2(50 byte) := 'de_condes_plugin_sct';
   c_js_namespace constant varchar2(50 byte) := 'de.condes.plugin.sct';
@@ -23,26 +22,26 @@ as
   c_app_item_page constant number(1,0) := 0;
   
   -- Templates zur Erzeugung der Regelview
-  c_column_delimiter constant varchar2(20 byte) := ',' || c_cr || '              ';
-  c_join_delimiter constant varchar2(20 byte) := c_cr || '           or ';
+  c_column_delimiter constant varchar2(100 byte) := ',' || c_cr || '              ';
+  c_join_delimiter constant varchar2(100 byte) := c_cr || '           or ';
   c_join_clause_template constant varchar2(100 byte) := q'~(r.sru_id = #ID# and ((#CONDITION#) or sru_fire_on_page_load = initializing))~';
-  c_rule_view_template constant varchar2(1000 byte) := 
+  c_rule_view_template constant varchar2(2000 byte) := 
 q'~create or replace force view #NAME# as
   with session_state as(
-       select sct_admin.get_firing_item firing_item,
-              case sct_admin.get_firing_item when 'DOCUMENT' then 1 else 0 end initializing#DATA_COLS#
+       select bl_sct.get_firing_item firing_item,
+              case bl_sct.get_firing_item when 'DOCUMENT' then 1 else 0 end initializing#DATA_COLS#
          from dual),
        data as (
        select /*+ NO_MERGE(s) */
               r.sru_id, r.sru_name, r.sru_firing_items, r.sru_fire_on_page_load,
-              r.sra_spi_id, r.sra_sat_id, r.sra_attribute, r.sra_attribute_2, r.sra_sort_seq,
+              r.sra_spi_id, r.sra_sat_id, r.sra_attribute, r.sra_attribute_2, r. sra_on_error, r.sra_sort_seq,
               rank() over (order by r.sru_sort_seq) rang, s.initializing
          from sct_bl_rules r
          join session_state s
            on (instr(r.sru_firing_items, ',' || s.firing_item || ',') > 0 or sru_fire_on_page_load = 1)
         where r.sgr_id = #SGR_ID#
           and (#WHERE_CLAUSE#))
-select sru_id, sru_name, sra_spi_id, sra_sat_id, sra_attribute, sra_attribute_2, sra_sort_seq
+select sru_id, sru_name, sra_spi_id, sra_sat_id, sra_attribute, sra_attribute_2, sra_on_error, sra_sort_seq
   from data
  where rang = 1 or sru_fire_on_page_load = initializing
  order by sru_fire_on_page_load desc, rang~';
@@ -50,7 +49,7 @@ select sru_id, sru_name, sra_spi_id, sra_sat_id, sra_attribute, sra_attribute_2,
   -- Templates zur Erzeugung der Seiten-Aktion
   c_plsql_action_template constant varchar2(200 byte) := 'begin#CR#  #CODE##CR#  commit;#CR#end;';
   c_plsql_item_value_template constant varchar2(100 byte) := q'~v('#ITEM#')~';
-  c_plsql_template constant varchar2(20 byte) := '#PLSQL#';
+  c_plsql_template constant varchar2(100 byte) := '#PLSQL#';
 
   c_js_item_value_template constant varchar2(100 byte) := q'~apex.item('#ITEM#').getValue()~';
   c_js_template constant varchar2(100 byte) := '#CODE#';
@@ -58,8 +57,8 @@ select sru_id, sru_name, sra_spi_id, sra_sat_id, sra_attribute, sra_attribute_2,
   
   c_stmt_template constant varchar2(32767) :=
 q'~select sru.sru_id, sru.sru_sort_seq, sru.sru_name, sru.sru_firing_items, sru_fire_on_page_load,
-       sra_spi_id item, sat_pl_sql pl_sql, sat_js js, sra_attribute attribute, sra_attribute_2 attribute_2,
-       case row_number() over (partition by sru_sort_seq order by sru.sru_name) when 1 then 1 else 0 end is_first_row
+       sra_spi_id item, sat_pl_sql pl_sql, sat_js js, sra_attribute attribute, sra_attribute_2 attribute_2, sra_on_error,
+       case row_number() over (partition by sru_sort_seq order by srg.sra_sort_seq) when 1 then 1 else 0 end is_first_row
   from #RULE_VIEW# srg
   join sct_rule sru
     on srg.sru_id = sru.sru_id
@@ -132,6 +131,7 @@ q'^
     p_sra_attribute => q'~#SRA_ATTRIBUTE#~',
     p_sra_attribute_2 => q'~#SRA_ATTRIBUTE_2#~',
     p_sra_sort_seq => #SRA_SORT_SEQ#,
+    p_sra_on_error => #SRA_ON_ERROR#,
     p_sra_active => #SRA_ACTIVE#);
 ^';
 
@@ -159,5 +159,4 @@ select *
  
 end sct_const;
 /
-
-set define on
+                                                                  
