@@ -1,3 +1,5 @@
 - Auslagerung Logik von PLUGIN_SCT => BL_SCT
-- Erweiterung: RAISE_RECURSIVE auf Regelaktionsebene ermöglichen
+- Erweiterung: RAISE_RECURSIVE verhindern auf Regelaktionsebene ermöglichen
 - Ausgabeprozess JavaScript optimieren und in BL_SCT verlagern
+- Neuen Anker JQUERY integrieren, um Change-Events an jQuery Klassen und ID-Listen zu binden
+- Neue Spalte FIRING_ITEM_VALUE einrichten, die Wert des aktuell feuernden Elements zeigt (wichtig bei Mengenoperationen)
