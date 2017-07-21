@@ -120,9 +120,11 @@ as
   begin
     pit.enter_optional('harmonize_sct_page_item', c_pkg);
     
-      -- Schritt 1: REQUIRED-Flags entfernen
+      -- Schritt 1: REQUIRED-Flags entfernen, Mandatory zurueckstellen
       update sct_page_item
          set spi_is_required = 0,
+             spi_is_mandatory = 0,
+             spi_mandatory_message = null,
               -- Alle zunaechst fehlerhaft markieren, wird spaeter bereinigt
              spi_has_error = sct_const.c_true
        where spi_sgr_id = p_sgr_id;
