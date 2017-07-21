@@ -1,4 +1,4 @@
-create or replace  package sct_const
+create or replace package sct_const
   authid definer
 as 
 
@@ -69,7 +69,7 @@ q'~select sru.sru_id, sru.sru_sort_seq, sru.sru_name, sru.sru_firing_items, sru_
  order by sru.sru_sort_seq desc, srg.sra_sort_seq~';  
   
   -- Template zur Generierung des Initialisierungscodes
-  c_col_val_template constant varchar2(100) := q'~    apex_util.set_session_state('#ITEM#', itm.#COLUMN#);#CR#~';
+  c_col_val_template constant varchar2(100) := q'~    apex_util.set_session_state('#ITEM#', #COLUMN#);#CR#~';
   c_col_sql_stmt varchar2(200) := 
 q'~select * 
         from #ATTRIBUTE_02# 
@@ -160,4 +160,3 @@ select *
   c_action_type_help_entry constant varchar2(200 char) := q'~<dt class="sct-dt">#SAT_NAME# #SAT_IS_EDITABLE#</dt><dd>#SAT_DESCRIPTION#</dd>~';
  
 end sct_const;
-/
