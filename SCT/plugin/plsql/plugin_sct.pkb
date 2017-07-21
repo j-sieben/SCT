@@ -40,13 +40,6 @@ as
   C_PKG constant varchar2(30 byte) := $$PLSQL_UNIT;
   C_PARAM_GROUP constant varchar2(30 byte) := 'SCT';
   
-  /* TODO: Vereinheitlichen BOOL as Zahl oder CHAR */
-  C_YES constant char(1 byte) := 'Y';
-  C_NUMBER_ITEM constant sct_page_item_type.sit_id%type := 'NUMBER_ITEM';
-  C_DATE_ITEM constant sct_page_item_type.sit_id%type := 'DATE_ITEM';
-  C_NUMBER_CONVERSION_TEMPLATE constant varchar2(200 byte) := q'~begin :x := to_number(v('#ITEM#'), '#CONVERSION#'); end;~';
-  C_DATE_CONVERSION_TEMPLATE constant varchar2(200 byte) := q'~begin :x := to_date(v('#ITEM#'), '#CONVERSION#'); end;~';
-  
   C_BIND_JSON_TEMPLATE constant varchar2(100) := '[#JSON#]';
   C_BIND_JSON_ELEMENT constant varchar2(100) := '{"id":"#ID#","event":"#EVENT#"}';
   C_PAGE_JSON_ELEMENT constant varchar2(100) := '{"id":"#ID#","value":"#VALUE#"}';
@@ -71,6 +64,9 @@ as
     l_spi_conversion sct_page_item.spi_conversion%type;
     l_number_val number;
     l_date_val date;
+    -- lokale Konstanten
+    C_NUMBER_ITEM constant sct_page_item_type.sit_id%type := 'NUMBER_ITEM';
+    C_DATE_ITEM constant sct_page_item_type.sit_id%type := 'DATE_ITEM';
   begin
     pit.enter_optional('format_firing_item', C_PKG);
     
@@ -100,12 +96,7 @@ as
       when C_DATE_ITEM then
         begin
           -- Konvertiere in Datum
-          execute immediate 
-            utl_text.bulk_replace(
-              C_DATE_CONVERSION_TEMPLATE, char_table(
-                '#CONVERSION#', l_spi_conversion,
-                '#ITEM#', g_param.firing_item))
-            using out l_date_val;
+          l_date_val := to_date(v(g_param.firing_item), l_spi_conversion, 'G');
           -- Konvertierung erfolgreich, setze formatierten String in Session State
           set_session_state(g_param.firing_item, to_char(l_date_val, l_spi_conversion), sct_const.c_true, null);
         exception
@@ -241,7 +232,7 @@ as
     pit.leave_optional;
   exception
     when no_data_found then
-      register_error('DOCUMENT', msg.SCT_RULE_DOES_NOT_EXIST, msg_args(p_dynamic_action.attribute_01));
+      register_error(sct_const.c_no_firing_item, msg.SCT_RULE_DOES_NOT_EXIST, msg_args(p_dynamic_action.attribute_01));
   end read_settings;
   
   
@@ -278,7 +269,7 @@ as
         utl_text.bulk_replace(c_bind_json_element, char_table(
           '#ID#', item.spi_id,
           '#EVENT#', item.sit_event)),
-        sct_const.c_delimiter, C_YES);
+        sct_const.c_delimiter, sct_const.C_YES);
       -- relevante Elemente mit Session State registrieren, damit beim initialen Aufruf
       -- die aktuellen Seitenwerte dieser Elemente übermittelt werden
       -- (diese Aufgabe uebernimmt anschliessend REGISTER_ITEM)
@@ -320,7 +311,7 @@ as
         utl_text.bulk_replace(c_page_json_element, char_table(
           '#ID#', l_item,
           '#VALUE#', htf.escape_sc(v(l_item)))),
-        sct_const.c_delimiter, C_YES);
+        sct_const.c_delimiter, sct_const.C_YES);
       l_item := g_param.page_items.next(l_item);
     end loop;
     
@@ -344,7 +335,7 @@ as
   begin
     pit.enter_optional('get_json_from_errors', C_PKG);
     for i in 1 .. g_param.error_stack.count loop
-      if g_param.error_stack(i).page_item_name = 'DOCUMENT' then
+      if g_param.error_stack(i).page_item_name = sct_const.c_no_firing_item then
         l_location := '"page"';
       else
         l_location := '["inline","page"]';
@@ -356,7 +347,7 @@ as
           '#MESSAGE#', htf.escape_sc(g_param.error_stack(i).message),
           '#LOCATION#', l_location,
           '#INFO#', htf.escape_sc(g_param.error_stack(i).additional_info))),
-        sct_const.c_delimiter, C_YES);
+        sct_const.c_delimiter, sct_const.C_YES);
     end loop;
     l_json := utl_text.bulk_replace(c_error_json_template, char_table(
                 '#COUNT#', g_param.error_stack.count,
@@ -462,7 +453,7 @@ as
         
       exception
         when others then
-          register_error('DOCUMENT', substr(sqlerrm, 11, 100), ''); --'Ein Fehler ist auf der Seite aufgetreten', '');
+          register_error(sct_const.c_no_firing_item, substr(sqlerrm, 11), '');
           g_param.recursive_stack.delete;
           exit;
       end;
@@ -799,11 +790,15 @@ as
   
   
   procedure check_mandatory(
-    p_firing_item in sct_page_item.spi_id%type)
+    p_firing_item in sct_page_item.spi_id%type,
+    p_attribute in varchar2 default null)
   as
     l_message sct_page_item.spi_mandatory_message%type;
+    l_firing_item sct_page_item.spi_id%type;
   begin
     pit.enter_mandatory('check_mandatory', C_PKG);
+    
+    l_firing_item := case p_firing_item when sct_const.c_no_firing_item then p_attribute else p_firing_item end;
     
     -- Die Abfrage registriert eine Fehlermeldung, wenn
     -- - Das Element aktuell Pflichtfeld ist
@@ -811,17 +806,17 @@ as
     select spi_mandatory_message
       into l_message
       from sct_page_item
-     where spi_id = p_firing_item
+     where spi_id = l_firing_item
        and spi_sgr_id = g_param.sgr_id
        and spi_is_mandatory = sct_const.c_true
-       and (select v(p_firing_item) from dual) is null;
-    register_error(p_firing_item, l_message, '');
+       and (select v(l_firing_item) from dual) is null;
+    register_error(l_firing_item, l_message, '');
     
     pit.leave_mandatory;
   exception
     when no_data_found then
       -- Pflichtfeld hat einen Wert, registrieren um eventuelle Fehlermeldung zu entfernen
-       push_firing_item(p_firing_item);
+       push_firing_item(l_firing_item);
       pit.leave_mandatory;
     when too_many_rows then 
       htp.p(sqlerrm);
@@ -1006,7 +1001,7 @@ as
   as
     l_result varchar2(32767);
   begin
-    execute immediate 'begin :x := ' || p_plsql || '; end;' using out l_result;
+    execute immediate 'begin :x := ' || replace(p_plsql, ';') || '; end;' using out l_result;
     g_dynamic_javascript := g_dynamic_javascript || sct_const.C_CR || replace(l_result, 'javascript:');
   end execute_javascript;
   
@@ -1026,7 +1021,7 @@ as
         p_dynamic_action => p_dynamic_action);
     end if;
     -- Kommentareinstellung persistieren
-    bl_sct.set_with_comments(p_plugin.attribute_02 = 'Y');
+    bl_sct.set_with_comments(p_plugin.attribute_02 = sct_const.c_yes);
     
     read_settings(p_dynamic_action);
     
@@ -1066,7 +1061,7 @@ as
         p_dynamic_action => p_dynamic_action);
     end if;
     -- Kommentareinstellung persistieren
-    bl_sct.set_with_comments(p_plugin.attribute_02 = 'Y');
+    bl_sct.set_with_comments(p_plugin.attribute_02 = sct_const.c_yes);
     
     -- Initialisieren
     read_settings(p_dynamic_action);
