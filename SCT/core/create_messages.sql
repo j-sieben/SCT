@@ -36,7 +36,13 @@ begin
     p_error_number => -20000
   );
 
-  begin
+  pit_admin.merge_message(
+    p_pms_name => 'SCT_CLOB_JS_SCRIPT',
+    p_pms_text => '#1#',
+    p_pms_pse_id => 70,
+    p_pms_pml_name => 'GERMAN'
+  );
+
   pit_admin.merge_message(
     p_pms_name => 'SCT_INVALID_FORMAT',
     p_pms_text => q'~Ungueltiges Datum. Erwartetes Format: "#1#".~',
@@ -50,12 +56,6 @@ begin
     p_pms_text => q'~Invalid date. Expected format: "#1#",~',
     p_pms_pml_name => 'AMERICAN'
   );
-  exception
-    when others then
-      if sqlcode != -20000 then
-        raise;
-      end if;
-  end;
 
   pit_admin.merge_message(
     p_pms_name => 'SCT_INVALID_NUMBER',
@@ -213,7 +213,7 @@ begin
 
   pit_admin.merge_message(
     p_pms_name => 'SCT_SESSION_STATE_SET',
-    p_pms_text => q'~Element "#1#" wurde auf den Wert "#2#" gesetzt~',
+    p_pms_text => q'~// Element "#1#" wurde auf den Wert "#2#" gesetzt~',
     p_pms_pse_id => 70,
     p_pms_pml_name => 'GERMAN',
     p_error_number => null
@@ -221,7 +221,7 @@ begin
   
   pit_admin.translate_message(
     p_pms_name => 'SCT_SESSION_STATE_SET',
-    p_pms_text => q'~Page item "#1#" set to "#2#".~',
+    p_pms_text => q'~// Page item "#1#" set to "#2#".~',
     p_pms_pml_name => 'AMERICAN'
   );
 
@@ -343,30 +343,30 @@ begin
   
   pit_admin.merge_message(
     p_pms_name => 'SCT_NO_JAVASCRIPT',
-    p_pms_text => q'^#2#  // Kein JavaScript-Code fuer Regel "#1#"^',
+    p_pms_text => q'^// Kein JavaScript-Code fuer Regel "#1#"^',
     p_pms_pse_id => 70,
     p_pms_pml_name => 'GERMAN');
     
   pit_admin.translate_message(
     p_pms_name => 'SCT_NO_JAVASCRIPT',
-    p_pms_text => q'^#2#  // No JavaScript code for rule "#1#"^',
+    p_pms_text => q'^// No JavaScript code for rule "#1#"^',
     p_pms_pml_name => 'AMERICAN');
     
   pit_admin.merge_message(
     p_pms_name => 'SCT_DYNAMIC_JAVASCRIPT',
-    p_pms_text => q'^#1#  // Dynamisch erzeugtes JavaScript^',
-    p_pms_pse_id => 70,
+    p_pms_text => q'^// Dynamisch erzeugtes JavaScript^',
+    p_pms_pse_id => 50,
     p_pms_pml_name => 'GERMAN');
     
   pit_admin.translate_message(
     p_pms_name => 'SCT_DYNAMIC_JAVASCRIPT',
-    p_pms_text => q'^#1#  // Dynamically created JavaScript^',
+    p_pms_text => q'^// Dynamically created JavaScript^',
     p_pms_pml_name => 'AMERICAN');
     
   pit_admin.merge_message(
     p_pms_name => 'SCT_INIT_ORIGIN',
     p_pms_text => q'~// Regel #1# (#2#), ausgeloest beim Seitenladen~',
-    p_pms_pse_id => 70,
+    p_pms_pse_id => 40,
     p_pms_pml_name => 'GERMAN');
     
   pit_admin.translate_message(
@@ -376,13 +376,35 @@ begin
     
   pit_admin.merge_message(
     p_pms_name => 'SCT_RULE_ORIGIN',
-    p_pms_text => q'~#4#  // Rekursion #RECURSION#: #1# (#2#), Ausloesendes Element: "#3#", Dauer: #TIME##NOTIFICATION#~',
-    p_pms_pse_id => 70,
+    p_pms_text => q'~// Rekursion #1#: #2# (#3#), Ausloesendes Element: "#4#"~',
+    p_pms_pse_id => 40,
     p_pms_pml_name => 'GERMAN');
     
   pit_admin.translate_message(
     p_pms_name => 'SCT_RULE_ORIGIN',
-    p_pms_text => q'~#4#  // Recursion #RECURSION#: #1# (#2#), Firing Item: "#3#", elapsed: #TIME##NOTIFICATION#~',
+    p_pms_text => q'~// Recursion #1#: #2# (#3#), Firing Item: "#4#"~',
+    p_pms_pml_name => 'AMERICAN');
+    
+  pit_admin.merge_message(
+    p_pms_name => 'SCT_ERROR_HANDLING',
+    p_pms_text => q'~// Fehler bei #1#: #2# (#3#), Ausloesendes Element: "#4#", Führe Fehleraktionen aus~',
+    p_pms_pse_id => 50,
+    p_pms_pml_name => 'GERMAN');
+    
+  pit_admin.translate_message(
+    p_pms_name => 'SCT_ERROR_HANDLING',
+    p_pms_text => q'~// Error at #1#: #2# (#3#), Firing Item: "#4#", proceed with error actions~',
+    p_pms_pml_name => 'AMERICAN');
+    
+  pit_admin.merge_message(
+    p_pms_name => 'SCT_STANDARD_JS',
+    p_pms_text => q'~// Standard-SCT JavaScript~',
+    p_pms_pse_id => 70,
+    p_pms_pml_name => 'GERMAN');
+    
+  pit_admin.translate_message(
+    p_pms_name => 'SCT_STANDARD_JS',
+    p_pms_text => q'~// Standard SCT JavaScript~',
     p_pms_pml_name => 'AMERICAN');
     
   commit;

@@ -12,7 +12,7 @@ declare
             from all_objects
            where (object_name in (
                  '', -- Typen
-                 'SCT_ADMIN', 'SCT_CONST', -- Packages
+                 'BL_SCT', 'SCT_ADMIN', 'SCT_CONST', -- Packages
                  'SCT_BL_RULES', 'SCT_BL_PAGE_TARGETS', -- Views
                  'SCT_RULE_ACTION', 'SCT_RULE', 'SCT_PAGE_ITEM', 'SCT_PAGE_ITEM_TYPE', 
                  'SCT_ACTION_TYPE', 'SCT_RULE_GROUP',   -- Tabellen

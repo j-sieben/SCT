@@ -8,20 +8,9 @@ as
    
   procedure stop_rule;
   
-  
-  /* Methode zur Registrierung eines Elements im Rekursionsstack
-   * %param p_item Name des Elements
-   * %param p_allow_recursion Flag, das anzeigt, ob Rekursion erlaubt ist oder nicht
-   * %usage Wird normalerweise nicht explizit benoetigt.
-   */
-  procedure register_item(
-    p_item in varchar2,
-    p_allow_recursion in number default sct_const.c_true);
-  
   /* Prozedur zum Registrieren von Fehlern
    * %param p_spi_id Name des Feldes, das den Fehler enthaelt
    * %param p_error_msg Fehlermeldung, die registriert werden soll
-   * %param p_internal_error Optionale zweite, technische Fehlermeldung
    * %usage Wird automatisiert aufgerufen, wenn eine Aktivitaet ausgefuehrt wird.
    *        Existiert eine technische Fehlermeldung und wird eine anwendungsseitige
    *        Fehlermeldung produziert kann die technische Fehlermeldung als
@@ -30,14 +19,7 @@ as
    */
   procedure register_error(
     p_spi_id in varchar2,
-    p_error_msg in varchar2,
-    p_internal_error in varchar2 default null);
-  
-  function has_errors
-    return boolean;
-    
-  function has_no_errors
-    return boolean;
+    p_error_msg in varchar2);
   
   
   /* Ueberladung als Schnittstelle zu PIT
@@ -51,8 +33,16 @@ as
    */
   procedure register_error(
     p_spi_id in varchar2,
-    p_message_name in varchar2,
-    p_arg_list in msg_args default null);
+    p_message in varchar2,
+    p_msg_args in msg_args);
+    
+  
+  function has_errors
+    return boolean;
+    
+    
+  function has_no_errors
+    return boolean;
     
   
   /* Prozedur zum Registrieren von Meldungen
@@ -75,8 +65,8 @@ as
    *        die erforderlichen Parameter uebergeben.
    */
   procedure register_notification(
-    p_message_name in varchar2,
-    p_arg_list in msg_args);
+    p_message in varchar2,
+    p_msg_args in msg_args);
     
     
   /* Prozedur zur (De-)Registrierung von Pflichtelementen auf der Seite
@@ -131,18 +121,6 @@ as
     p_value in varchar2,
     p_allow_recursion in number default sct_const.c_true,
     p_attribute_2 in sct_rule_action.sra_attribute_2%type default null);
-    
-  /*procedure set_session_state(
-    p_item in sct_page_item.spi_id%type,
-    p_value in date,
-    p_allow_recursion in number default sct_const.c_true,
-    p_attribute_2 in sct_rule_action.sra_attribute_2%type default null);
-    
-  procedure set_session_state(
-    p_item in sct_page_item.spi_id%type,
-    p_value in number,
-    p_allow_recursion in number default sct_const.c_true,
-    p_attribute_2 in sct_rule_action.sra_attribute_2%type default null);*/
     
     
   /* Prozedur zum Setzen des Session Status, falls kein Fehler vorliegt.

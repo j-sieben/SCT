@@ -65,6 +65,15 @@ show errors
 prompt &s1.Create package Body SCT_ADMIN
 @&plsql_dir.sct_admin.pkb
 show errors
+show errors
+
+prompt &s1.Create package BL_SCT
+@&plsql_dir.bl_sct.pks
+show errors
+
+prompt &s1.Create package Body BL_SCT
+@&plsql_dir.bl_sct.pkb
+show errors
 
 prompt &h3.Create base action types
 @core/merge_base_action_types.sql

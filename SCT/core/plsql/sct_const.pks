@@ -17,9 +17,24 @@ as
   c_null constant varchar2(10 byte) := 'null;';
   c_no_firing_item constant varchar2(30 byte) := 'DOCUMENT';
   c_directory constant varchar2(30 byte) := 'SCT_DIR';
+  c_comment constant varchar2(10) := '// ';
   
   -- Ersatzseitennummer fuer Anwendungselemente
   c_app_item_page constant number(1,0) := 0;
+  
+  C_BIND_JSON_TEMPLATE constant varchar2(100) := '[#JSON#]';
+  C_BIND_JSON_ELEMENT constant varchar2(100) := '{"id":"#ID#","event":"#EVENT#"}';
+  C_PAGE_JSON_ELEMENT constant varchar2(100) := '{"id":"#ID#","value":"#VALUE#"}';
+  C_SET_ITEM_JSON_TEMPLATE constant varchar2(100) := 'sct.setItemValues([#JSON#]);';
+  C_ERROR_JSON_TEMPLATE constant varchar2(200) := q'^sct.setErrors({"count":#COUNT#,"errorDependentButtons":"#DEPENDENT_BUTTONS#","firingItems":"#FIRING_ITEMS#","errors":[#ERRORS#]});^';
+  C_ERROR_JSON_ELEMENT constant varchar2(200) := q'^{"type":"error","item":"#ITEM#","message":"#MESSAGE#","location":#LOCATION#,"additionalInfo":"#INFO#","unsafe":"false"}^';
+  
+  C_JS_ACTION_START constant varchar2(300) := q'^<script>
+(function(sct){^';
+  C_JS_ACTION_END constant varchar2(300) := q'^
+})(#JS_FILE#);
+</script>^';
+  C_NO_JS_ACTION constant varchar2(100) := '// No JavaScript Action';
   
   -- Templates zur Erzeugung der Regelview
   c_column_delimiter constant varchar2(100 byte) := ',' || c_cr || '              ';
@@ -49,7 +64,7 @@ select sru_id, sru_name, sra_spi_id, sra_sat_id, sra_attribute, sra_attribute_2,
   -- Templates zur Erzeugung der Seiten-Aktion
   c_plsql_action_template constant varchar2(200 byte) := 'begin#CR#  #CODE##CR#  commit;#CR#end;';
   c_plsql_item_value_template constant varchar2(100 byte) := q'~v('#ITEM#')~';
-  c_plsql_template constant varchar2(100 byte) := '#PLSQL#';
+  c_plsql_template constant varchar2(100 byte) := 'begin #PLSQL#; end;';
 
   c_js_item_value_template constant varchar2(100 byte) := q'~apex.item('#ITEM#').getValue()~';
   c_js_template constant varchar2(100 byte) := '#CODE#';
@@ -160,3 +175,4 @@ select *
   c_action_type_help_entry constant varchar2(200 char) := q'~<dt class="sct-dt">#SAT_NAME# #SAT_IS_EDITABLE#</dt><dd>#SAT_DESCRIPTION#</dd>~';
  
 end sct_const;
+/

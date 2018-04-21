@@ -46,7 +46,7 @@ as
       l_error_list := l_error_list || sct_admin.validate_rule_group(sgr.sgr_id);
     end loop;
     if l_error_list is not null then
-      plugin_sct.register_error('B8_EXPORT', l_error_list, '');
+      plugin_sct.register_error('B8_EXPORT', l_error_list, msg_args());
     end if;
     
     pit.leave_mandatory;

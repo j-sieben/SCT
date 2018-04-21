@@ -15,7 +15,7 @@ comment on column sct_page_item_type.sit_name is 'Display name of element type';
 comment on column sct_page_item_type.sit_has_value is 'Flag to indicate whether element type maintains a value in Session State';
 comment on column sct_page_item_type.sit_event is 'JavaScript event to be bound to this element type by the plugin. If null, SCT won''t react on changes.';
 comment on column sct_page_item_type.sit_col_template is 'Template zur Erzeugung einer Spalte in der Regel-View.';
-comment on column sct_page_item_type.sit_col_template is 'Template zur Erstellung des Initialisisierungscodes.';
+comment on column sct_page_item_type.sit_init_template is 'Template zur Erstellung des Initialisisierungscodes.';
 
 delete from sct_page_item_type;
 
@@ -31,7 +31,7 @@ using (select 'ITEM' sit_id,
        select 'NUMBER_ITEM', 'Element (Zahl)', 1, 'change', q'~to_number(v('#ITEM#'), '#CONVERSION#') #ITEM#~', q'~to_char(itm.#ITEM#, '#CONVERSION#')~' from dual union all
        select 'DATE_ITEM', 'Element (Datum)', 1, 'change', q'~to_date(v('#ITEM#'), '#CONVERSION#') #ITEM#~', q'~to_char(to_date(itm.#ITEM#), '#CONVERSION#')~' from dual union all
        select 'APP_ITEM', 'Anwendungselement', 1, 'change', q'~v('#ITEM#') #ITEM#~', q'~itm.#ITEM#~' from dual union all
-       select 'BUTTON', 'Schaltfläche', 0, 'click', q'~case sct_admin.get_firing_item when '#ITEM#', q'~~' then 1 else 0 end #ITEM#~' from dual union all
+       select 'BUTTON', 'Schaltfläche', 0, 'click', q'~case bl_sct.get_firing_item when '#ITEM#' then 1 else 0 end #ITEM#~', q'~~' from dual union all
        select 'REGION', 'Region', 0, null, q'~null #ITEM#~', q'~~' from dual union all
        select 'DOCUMENT', 'Dokument', 0, null, q'~null #ITEM#~', q'~~' from dual) v
    on (s.sit_id = v.sit_id)

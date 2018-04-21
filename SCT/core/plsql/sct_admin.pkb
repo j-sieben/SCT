@@ -806,7 +806,7 @@ as
 
     -- Einzelne Teilbereiche berechnen
     dbms_lob.append(l_stmt, read_rule_group(p_sgr_id));
-    dbms_lob.append(l_stmt, sct_const.c_export_end_template);
+    dbms_lob.append(l_stmt, replace(sct_const.c_export_start_template, '#CR#', sct_const.c_cr));
 
     pit.leave_mandatory;
     return l_stmt;
@@ -1060,7 +1060,6 @@ as
           sra_attribute = v.sra_attribute,
           sra_attribute_2 = v.sra_attribute_2,
           sra_sort_seq = v.sra_sort_seq,
-          sra_on_error = v.sra_on_error,
           sra_raise_recursive = v.sra_raise_recursive,
           sra_active = v.sra_active,
           sra_comment = v.sra_comment
