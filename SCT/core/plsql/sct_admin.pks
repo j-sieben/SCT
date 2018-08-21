@@ -237,27 +237,27 @@ as
   procedure merge_apex_action(    
     p_row sct_apex_action%rowtype);  
     
-  procedure merge_apex_action(    
-    p_saa_sgr_id in number,
-    p_saa_name in varchar2,
-    p_saa_type in varchar2,
-    p_saa_label in varchar2,
-    p_saa_on_label in varchar2,
-    p_saa_off_label in varchar2,
-    p_saa_context_label in varchar2,
-    p_saa_icon in varchar2,
-    p_saa_icon_type in varchar2,
-    p_saa_title in varchar2,
-    p_saa_shortcut in varchar2,
-    p_saa_href in varchar2,
-    p_saa_action in varchar2,
-    p_saa_get in varchar2,
-    p_saa_set in varchar2,
-    p_saa_choices in varchar2,
-    p_saa_label_classes in varchar2,
-    p_saa_label_start_classes in varchar2,
-    p_saa_label_end_classes in varchar2,
-    p_saa_item_wrap_class in varchar2);  
+  procedure merge_apex_action(
+    p_saa_sgr_id in sct_apex_action.saa_sgr_id%type,
+    p_saa_name in sct_apex_action.saa_name%type,
+    p_saa_type in sct_apex_action.saa_type%type,
+    p_saa_label in sct_apex_action.saa_label%type,
+    p_saa_on_label in sct_apex_action.saa_on_label%type,
+    p_saa_off_label in sct_apex_action.saa_off_label%type,
+    p_saa_context_label in sct_apex_action.saa_context_label%type,
+    p_saa_icon in sct_apex_action.saa_icon%type,
+    p_saa_icon_type in sct_apex_action.saa_icon_type%type,
+    p_saa_title in sct_apex_action.saa_title%type,
+    p_saa_shortcut in sct_apex_action.saa_shortcut%type,
+    p_saa_href in sct_apex_action.saa_href%type,
+    p_saa_action in sct_apex_action.saa_action%type,
+    p_saa_get in sct_apex_action.saa_get%type,
+    p_saa_set in sct_apex_action.saa_set%type,
+    p_saa_choices in sct_apex_action.saa_choices%type,
+    p_saa_label_classes in sct_apex_action.saa_label_classes%type,
+    p_saa_label_start_classes in sct_apex_action.saa_label_start_classes%type,
+    p_saa_label_end_classes in sct_apex_action.saa_label_end_classes%type,
+    p_saa_item_wrap_class in sct_apex_action.saa_item_wrap_class%type);  
     
     
   /* Administration von Aktionstypen */

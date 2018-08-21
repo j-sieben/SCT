@@ -88,46 +88,6 @@ q'^
     p_sat_raise_recursive => #SAT_RAISE_RECURSIVE#);
 ^';
 
-  c_rule_group_template constant varchar2(32767) :=
-q'^
-  dbms_output.put_line('.    - Rulegroup #SGR_NAME#');
-  sct_admin.merge_rule_group(
-    p_sgr_id => sct_admin.map_id(#SGR_ID#),
-    p_sgr_name => q'~#SGR_NAME#~',
-    p_sgr_description => q'~#SGR_DESCRIPTION#~',
-    p_sgr_app_id => coalesce(apex_application_install.get_application_id, ^APP_ID.),
-    p_sgr_page_id => #SGR_PAGE_ID#,
-    p_sgr_with_recursion => #SGR_WITH_RECURSION#,
-    p_sgr_active => #SGR_ACTIVE#);
-^';
-
-  c_rule_template constant varchar2(32767) := 
-q'^
-  sct_admin.merge_rule(
-    p_sru_id => sct_admin.map_id(#SRU_ID#),
-    p_sru_sgr_id => sct_admin.map_id(#SGR_ID#),
-    p_sru_name => q'~#SRU_NAME#~',
-    p_sru_condition => q'~#SRU_CONDITION#~',
-    p_sru_sort_seq => #SRU_SORT_SEQ#,
-    p_sru_fire_on_page_load => #SRU_FIRE_ON_PAGE_LOAD#,
-    p_sru_active => #SRU_ACTIVE#);
-^';
-
-  c_rule_action_template constant varchar2(32767) := 
-q'^
-  sct_admin.merge_rule_action(
-    p_sra_sru_id => sct_admin.map_id(#SRU_ID#),
-    p_sra_sgr_id => sct_admin.map_id(#SGR_ID#),
-    p_sra_spi_id => '#SPI_ID#',
-    p_sra_sat_id => '#SAT_ID#',
-    p_sra_attribute => q'~#SRA_ATTRIBUTE#~',
-    p_sra_attribute_2 => q'~#SRA_ATTRIBUTE_2#~',
-    p_sra_sort_seq => #SRA_SORT_SEQ#,
-    p_sra_on_error => #SRA_ON_ERROR#,
-    p_sra_raise_recursive => #SRA_RAISE_RECURSIVE#,
-    p_sra_active => #SRA_ACTIVE#);
-^';
-
   c_rule_group_validation constant varchar2(200) := 
 q'~
   sct_admin.propagate_rule_change(sct_admin.map_id(#SGR_ID#));

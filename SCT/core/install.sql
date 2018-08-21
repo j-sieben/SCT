@@ -55,7 +55,7 @@ prompt &h3.Create SCT messages
 
 
 prompt &h3.Create CodeGenerator templates
-@&script_dir.create_code_generator_templates.sql
+@&script_dir.merge_code_generator_templates.sql
 
 
 prompt &h3.Create packages

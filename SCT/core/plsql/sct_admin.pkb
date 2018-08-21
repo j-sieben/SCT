@@ -5,6 +5,8 @@ as
   c_pkg constant varchar2(30 byte) := $$PLSQL_UNIT;
   c_cr constant char(1 byte) := chr(10);
   c_yes constant char(1 byte) := 'Y';
+  c_cgtm_type constant varchar2(10) := 'SCT';
+  c_default constant varchar2(10) := 'DEFAULT';
 
   /* Globale Variablen */
   g_offset binary_integer;
@@ -42,66 +44,62 @@ as
     p_sgr_id in sct_rule_group.sgr_id%type)
     return varchar2
   as
-    cursor fetch_row_cur (p_sgr_id in sct_rule_group.sgr_id%type) is
-      select attribute_02, attribute_03, attribute_04
-        from apex_application_page_proc api
-        join sct_rule_group sgr
-          on api.application_id = sgr.sgr_app_id
-         and api.page_id = sgr.sgr_page_id
-       where sgr.sgr_id = p_sgr_id
-         and api.process_type_code = 'DML_FETCH_ROW';
-    cursor item_cur(p_sgr_id in sct_rule_group.sgr_id%type) is
-      select item_name, 
-             utl_text.bulk_replace(sit_init_template, char_table(
-               '#CONVERSION#', spi_conversion, 
-               '#ITEM#', item_source)) item_source
-        from apex_application_page_items api
-        join sct_rule_group sgr
-          on api.application_id = sgr.sgr_app_id
-         and api.page_id = sgr.sgr_page_id
-        join sct_page_item spi
-          on sgr.sgr_id = spi.spi_sgr_id
-         and api.item_name = spi.spi_id
-        join sct_page_item_type sit
-          on spi.spi_sit_id = sit.sit_id
-       where api.item_source_type = 'Database Column'
-         and sgr.sgr_id = p_sgr_id
-         and spi.spi_is_required = 1;
-    l_sql_stmt varchar2(1000);
-    l_item_stmt varchar2(32767);
-    l_initialization_code varchar2(32767);
+    l_stmt clob;
   begin
-    -- 1. Schritt: Fetch Row-Anweisung generieren
-    for src in fetch_row_cur(p_sgr_id) loop
-      l_sql_stmt := utl_text.bulk_replace(
-                      case src.attribute_04
-                      when 'ROWID' then sct_const.c_col_sql_rowid_stmt
-                      else sct_const.c_col_sql_stmt end,
-                      char_table(
-                        '#ATTRIBUTE_02#', src.attribute_02,
-                        '#ATTRIBUTE_03#', src.attribute_03,
-                        '#ATTRIBUTE_04#', src.attribute_04
-                      ));
-    end loop;
-    if l_sql_stmt is not null then
-      -- 2. Schritt: Anweisungsliste fuer Sessionstatus erzeugen
-      for itm in item_cur(p_sgr_id) loop
-        l_item_stmt := l_item_stmt 
-                    || utl_text.bulk_replace(sct_const.c_col_val_template, char_table(
-                         '#ITEM#', itm.item_name,
-                         '#COLUMN#', itm.item_source,
-                         '#CR#', c_cr
-                       ));
-      end loop;
-      -- 3. Schritt: Template mit Anweisungen anreichern und returnieren
-      if l_item_stmt is not null then
-        l_initialization_code := replace(replace(replace(sct_const.c_initialize_code,
-                                   '#SQL_STMT#', l_sql_stmt),
-                                   '#ITEM_STMT#', l_item_stmt),
-                                   '#CR#', c_cr);
-      end if;
-    end if;
-    return l_initialization_code;
+      with params as(
+           select p_sgr_id sgr_id, c_cgtm_type cgtm_type, 'INITIALIZE_CODE' cgtm_name, chr(10) cr
+             from dual)
+    select code_generator.generate_text(cursor(
+             select cgtm_text template, cgtm_log_text log_template, p.sgr_id,
+                    code_generator.generate_text(cursor(
+                      select cgtm_text, attribute_02, attribute_03, attribute_04
+                        from apex_application_page_proc api
+                        join sct_rule_group sgr
+                          on api.application_id = sgr.sgr_app_id
+                         and api.page_id = sgr.sgr_page_id
+                        join code_generator_templates
+                          on cgtm_mode = case attribute_04 when 'ROWID' then attribute_04 else c_default end
+                       where sgr.sgr_id = 1
+                         and api.process_type_code = 'DML_FETCH_ROW'
+                         and cgtm_type = p.cgtm_type
+                         and cgtm_name = p.cgtm_name
+                    ), p.cr, 4) sql_stmt,
+                    code_generator.generate_text(cursor(
+                      select (select cgtm_text
+                                from code_generator_templates
+                               where cgtm_type = p.cgtm_type
+                                 and cgtm_name = p.cgtm_name
+                                 and cgtm_mode = 'VALUE') template, 
+                             item_name item, 
+                             code_generator.bulk_replace(cgtm_text, char_table(
+                               '#CONVERSION#', spi_conversion,
+                               '#ITEM#', item_source)) item_source
+                        from apex_application_page_items api
+                        join sct_rule_group sgr
+                          on api.application_id = sgr.sgr_app_id
+                         and api.page_id = sgr.sgr_page_id
+                        join sct_page_item spi
+                          on sgr.sgr_id = spi.spi_sgr_id
+                         and api.item_name = spi.spi_id
+                        join sct_page_item_type sit
+                          on spi.spi_sit_id = sit.sit_id
+                        join code_generator_templates
+                          on cgtm_mode = sit.sit_id
+                       where api.item_source_type = 'Database Column'
+                         and sgr.sgr_id = 1
+                         and spi.spi_is_required = 1
+                         and cgtm_name = 'VIEW_INIT'
+                         and cgtm_type = p.cgtm_type
+                    ), p.cr, 4) item_stmt
+               from code_generator_templates
+              where cgtm_type = p.cgtm_type
+                and cgtm_name = p.cgtm_name
+                and cgtm_mode = 'FRAME'
+           )) resultat
+      into l_stmt
+      from params p;
+      
+    return l_stmt;
   end create_initialization_code;
   
   
@@ -260,90 +258,6 @@ as
     pit.leave_detailed;
   end delete_pending_rule_views;
 
-
-  /* Prozedur zur Erzeugung einer Zeichenkette, die als Teil der Regelview verwendet wird
-   * %param p_sgr_id ID der Regelgruppe
-   * %param p_validation Flag, das anzeigt, ob die Spaltenliste fuer Regelpruefungen
-   *        benoetigt wird.
-   * %return Liste der Spalten, die fuer die Regelgruppe verwendet werden
-   * %usage Erzeugt die Spaltenliste fuer eine Regelview. Die Liste umfasst alle
-   *        relevanten Seitenelemente einer Regelgruppe.
-   *        Wird die Prozedur zur Validierung aufgerufen, umfasst die Spaltenliste
-   *        alle Elemente der Seite, um keine falsch negative Validierung einer
-   *        Regelbedingung zu erhalten.
-   * TODO: Refaktorisieren auf CODE_GENERATOR?
-   */
-  function create_column_list(
-    p_sgr_id in sct_rule_group.sgr_id%type,
-    p_validation in number default sct_const.c_false)
-    return varchar2
-  as
-    cursor column_cur(p_sgr_id in sct_rule_group.sgr_id%type, p_validation in number) is
-      select sct_const.c_column_delimiter
-             || utl_text.bulk_replace(sit_col_template, char_table(
-                  '#CONVERSION#', replace(spi_conversion, 'G'), 
-                  '#ITEM#', spi_id))
-             column_name
-        from sct_page_item spi
-        join sct_page_item_type sit
-          on spi.spi_sit_id = sit.sit_id
-       where spi_sgr_id = p_sgr_id
-         and ((spi_is_required = sct_const.c_true
-          or p_validation = sct_const.c_true)
-          or (sit.sit_id = 'DOCUMENT'))
-       order by spi_id;
-    l_data_cols varchar2(32767);
-  begin
-    pit.enter_detailed('create_column_list', c_pkg);
-    -- Record loop statt LISTAGG wegen Limitierung auf 4000 Byte
-    for spi in column_cur(p_sgr_id, p_validation) loop
-      l_data_cols := l_data_cols || spi.column_name;
-    end loop;
-    pit.leave_detailed;
-    return l_data_cols;
-  end create_column_list;
-
-
-  /* Methode zur Erzeugung einer WHERE-Klausel fuer die Regelview
-   * %param p_sgr_id ID der Regelgruppe
-   * %return WHERE-Klausel, die fuer die Regelview verwendet wird
-   * %usage Wird verwendet, um die WHERE-Klausel der Regelview zu erzeugen.
-   *        Die Klausel besteht aus der Relgel-ID und der Regelbedingung
-   * TODO: Refaktorisieren auf CODE_GENERATOR?
-   */
-  function create_where_clause(
-    p_sgr_id in sct_rule_group.sgr_id%type)
-    return varchar2
-  as
-    cursor rule_cur(p_sgr_id in sct_rule_group.sgr_id%type) is
-      select sru_id, sru_name, sru_condition, sru_firing_items,
-             row_number() over (order by sru_id) sort_seq
-        from sct_rule
-       where sru_sgr_id in (0, p_sgr_id)
-         and sru_active = sct_const.c_true
-       order by sru_id;
-    l_where_clause varchar2(32767);
-  begin
-    pit.enter_detailed('create_where_clause', c_pkg);
-    for sru in rule_cur(p_sgr_id) loop
-      if sru.sort_seq > 1 then
-        l_where_clause := l_where_clause || sct_const.c_join_delimiter;
-      end if;
-      l_where_clause :=
-        l_where_clause ||
-        utl_text.bulk_replace(sct_const.c_join_clause_template, char_table(
-          '#ID#', sru.sru_id,
-          '#CONDITION#', sru.sru_condition));
-    end loop;
-    pit.leave_detailed;
-    return coalesce(l_where_clause, 'null is not null');
-  exception
-    when others then
-      pit.sql_exception(msg.SCT_WHERE_CLAUSE);
-      raise;
-  end create_where_clause;
-
-
   /* Methode zur Erzeugung einer Regelview
    * %param p_sgr_id ID der Regelgruppe
    * %usage Wird verwendet, um fuer eine Regelgruppe eine Regelview zu erzeugen.
@@ -354,23 +268,59 @@ as
   procedure create_rule_view(
     p_sgr_id in sct_rule_group.sgr_id%type)
   as
-    l_view_name varchar2(30 byte);
-    l_stmt varchar2(32767);
+    l_stmt clob;
   begin
     pit.enter_optional('create_rule_view', c_pkg);
     delete_pending_rule_views;
 
-    l_view_name := sct_const.c_view_name_prefix || p_sgr_id;
-
-    -- Erzeuge die Regelview
-    l_stmt := replace(replace(replace(replace(sct_const.c_rule_view_template, 
-                '#NAME#', l_view_name),
-                '#DATA_COLS#', create_column_list(p_sgr_id)),
-                '#WHERE_CLAUSE#', create_where_clause(p_sgr_id)),
-                '#SGR_ID#', p_sgr_id);
+        with params as(
+             select p_sgr_id sgr_id,
+                    chr(10) cr
+               from dual)
+      select code_generator.generate_text(cursor(
+           select cgtm_text template,
+                  cgtm_log_text log_template,
+                  sct_const.c_view_name_prefix prefix,
+                  p.sgr_id,
+                  code_generator.generate_text(cursor(
+                    select cgtm_text template,
+                           replace(spi_conversion, 'G') conversion, 
+                           spi_id item
+                      from sct_page_item spi
+                      join sct_page_item_type sit
+                        on spi.spi_sit_id = sit.sit_id
+                      join code_generator_templates cgtm
+                        on sit.sit_id = cgtm.cgtm_mode
+                     where spi_sgr_id = sgr_id
+                       and cgtm_name = 'VIEW_ITEM'
+                       and cgtm_type = c_cgtm_type
+                       and (spi_is_required = sct_const.c_true
+                        or sit.sit_id = 'DOCUMENT')
+                     order by spi_id
+                  ), ',' || p.cr, 14) column_list,
+                  code_generator.generate_text(cursor(
+                    select cgtm_text template,
+                           sru_id, sru_name, sru_condition, sru_firing_items,
+                           row_number() over (order by sru_id) sort_seq
+                      from sct_rule
+                     cross join code_generator_templates
+                     where cgtm_name = 'JOIN_CLAUSE'
+                       and cgtm_type = c_cgtm_type
+                       and cgtm_mode = c_default
+                       and sru_sgr_id in (0, p.sgr_id)
+                       and sru_active = sct_const.c_true
+                     order by sru_id
+                  ), p.cr || '           or ') where_clause
+             from code_generator_templates
+            where cgtm_type = c_cgtm_type
+              and cgtm_name = 'RULE_VIEW'
+              and cgtm_mode = c_default
+         )) resultat
+    into l_stmt
+    from params p;
+    
     execute immediate l_stmt;
 
-    pit.verbose(msg.SCT_VIEW_CREATED, msg_args(l_view_name));
     pit.leave_optional;
   exception
     when others then
@@ -378,50 +328,7 @@ as
   end create_rule_view;
 
 
-  /* Prozeduren fuer den DDL-Export */
-  /* Methode zur Erzeugung eines Skripts zum Exportieren der Aktionstypen
-   * %param p_sat_is_editable Flag, das anzeigt, ob die Aktionstypen, die durch
-   *        die Entwickler editiert wurden, exportiert werden sollen, oder die 
-   *        mit SCT gelieferten Aktionstypen
-   * %return CLOB-Instanz mit dem Exportskript
-   * %usage Wird verwendet, um einen CLOB zu erzeugen, der alle Aktionstypen
-   *        erzeugen kann
-   * TODO: Refaktorisieren auf CODE_GENERATOR?
-   */
-  function read_action_type(
-    p_sat_is_editable in sct_action_type.sat_is_editable%type)
-    return clob
-  as
-    cursor action_type_cur(p_sat_is_editable in sct_action_type.sat_is_editable%type) is
-      select *
-        from sct_action_type
-       where sat_is_editable = p_sat_is_editable;
-    l_action_type clob;
-  begin
-    pit.enter_optional('read_action_type', c_pkg);
-    dbms_lob.createtemporary(l_action_type, false, dbms_lob.call);
-
-    dbms_lob.append(l_action_type, sct_const.c_cr || '  -- ACTION TYPES');
-
-    -- Exportiere Aktionstypen
-    for sat in action_type_cur(p_sat_is_editable) loop
-      dbms_lob.append(
-        l_action_type,
-        utl_text.bulk_replace(sct_const.c_action_type_template, char_table(
-          '#SAT_ID#', sat.sat_id,
-          '#SAT_NAME#', sat.sat_name,
-          '#SAT_DESCRIPTION#', sat.sat_description,
-          '#SAT_PL_SQL#', sat.sat_pl_sql,
-          '#SAT_JS#', sat.sat_js,
-          '#SAT_IS_EDITABLE#', sat.sat_is_editable,
-          '#SAT_RAISE_RECURSIVE#', sat.sat_raise_recursive)));
-    end loop;
-
-    pit.leave_optional;
-    return l_action_type;
-  end read_action_type;
-  
-  
+  /* Prozeduren fuer den DDL-Export */  
   /* Hilfsmethode zur Renummerierung der Regeln und Aktionen
    * %param p_sgr_id Regelgruppen-ID
    * %usage Die Methode wird bei jeder Aenderung der Regelgruppe oder Einzelregel
@@ -476,7 +383,7 @@ as
       with params as(
            select p_sgr_id sgr_id,
                   'EXPORT_RULE_GROUP' cgtm_name,
-                  'SCT' cgtm_type
+                  c_cgtm_type cgtm_type
              from dual)
     select code_generator.generate_text(cursor(
              -- Skriptrahmen und Anlage der Regelgruppe
@@ -520,7 +427,7 @@ as
               cross join sct_rule_group sgr
               where cgtm_name = p.cgtm_name
                 and cgtm_type = p.cgtm_type
-                and cgtm_mode = 'DEFAULT'
+                and cgtm_mode = c_default
                 and sgr.sgr_id = p.sgr_id
            )) resultat
       into l_stmt
@@ -778,17 +685,34 @@ as
     l_sat_is_editable sct_action_type.sat_is_editable%type := 1;
   begin
     pit.enter_mandatory('export_action_types', c_pkg);
+    
     if p_core_flag then
       l_sat_is_editable := 0;
     end if;
     
-    -- Initialisierung
-    dbms_lob.createtemporary(l_stmt, false, dbms_lob.call);
-    dbms_lob.append(l_stmt, replace(sct_const.c_export_start_template, '#CR#', sct_const.c_cr));
-    dbms_lob.append(l_stmt, read_action_type(l_sat_is_editable));
-    dbms_lob.append(l_stmt, replace(sct_const.c_export_end_template, '#CR#', sct_const.c_cr));
-    
-    pit.leave_mandatory;
+    pit.enter_optional('read_action_type', c_pkg);
+      with params as(
+           select cgtm_text template, cgtm_type, cgtm_name, l_sat_is_editable is_editable
+             from code_generator_templates
+            where cgtm_type = c_cgtm_type
+              and cgtm_name = 'ACTION_TYPE'
+              and cgtm_mode = 'FRAME')
+    select code_generator.generate_text(cursor(
+             select p.template,
+                    code_generator.generate_text(cursor(
+                      select cgtm_text template, sat.*
+                        from sct_action_type sat
+                       cross join code_generator_templates t
+                       where sat_is_editable = p.is_editable
+                         and t.cgtm_type = p.cgtm_type
+                         and t.cgtm_name = p.cgtm_name
+                         and t.cgtm_mode = c_default)) action_types
+               from dual
+           )) resultat
+      into l_stmt
+      from params p;
+
+    pit.leave_optional;
     return l_stmt;
   end export_action_types;
 
@@ -797,39 +721,49 @@ as
     p_sgr_id in sct_rule_group.sgr_id%type)
     return varchar2
   as
-    cursor missing_element_cur(p_sgr_id in sct_rule_group.sgr_id%type) is
-      select sgr.sgr_name, sgr.sgr_app_id, spi.spi_id, sit.sit_name
-        from sct_page_item spi
-        join sct_page_item_type sit
-          on spi.spi_sit_id = sit.sit_id
-        join sct_rule_group sgr
-          on spi.spi_sgr_id = sgr.sgr_id
-       where sgr.sgr_id = p_sgr_id
-         and spi.spi_has_error = sct_const.c_true;
-    l_error_list varchar2(32767);
-    l_sgr_name sct_rule_group.sgr_name%type;
+    l_stmt clob;
+    l_has_errors binary_integer;
   begin
     pit.enter_mandatory('validate_rule_group', c_pkg);
     harmonize_sct_page_item(p_sgr_id);
     
-    for spi in missing_element_cur(p_sgr_id) loop
-      l_sgr_name := spi.sgr_name;
-      utl_text.append(
-        l_error_list,
-        utl_text.bulk_replace(sct_const.c_page_item_error, char_table(
-          '#SIT_NAME#', spi.sit_name,
-          '#SPI_ID#', spi.spi_id,
-          '#SGR_APP_ID#', spi.sgr_app_id)),
-        c_cr, c_yes);
-    end loop;
-    if l_error_list is not null then
-      l_error_list := utl_text.bulk_replace(sct_const.c_rule_group_error, char_table(
-                        '#SGR_NAME#', l_sgr_name,
-                        '#ERROR_LIST#', l_error_list));
+    select count(*)
+      into l_has_errors
+      from sct_page_item
+     where spi_sgr_id = p_sgr_id
+       and spi_has_error = 1;
+       
+    if l_has_errors = 1 then
+        with params as(
+             select cgtm_text template, cgtm_type, cgtm_name, p_sgr_id sgr_id
+               from code_generator_templates
+              where cgtm_type = c_cgtm_type
+                and cgtm_name = 'PAGE_ITEM_ERROR'
+                and cgtm_mode = 'FRAME')
+      select code_generator.generate_text(cursor(
+               select p.template, g.sgr_name,
+                      code_generator.generate_text(cursor(
+                        select cgtm_text template, sgr.sgr_name, sgr.sgr_app_id, spi.spi_id, sit.sit_name
+                          from sct_page_item spi
+                          join sct_page_item_type sit
+                            on spi.spi_sit_id = sit.sit_id
+                          join sct_rule_group sgr
+                            on spi.spi_sgr_id = sgr.sgr_id
+                         cross join code_generator_templates t
+                         where sgr.sgr_id = p.sgr_id
+                           and spi.spi_has_error = 1 --sct_const.c_true
+                           and t.cgtm_type = p.cgtm_type
+                           and t.cgtm_name = p.cgtm_name
+                           and t.cgtm_mode = c_default)) error_list
+                 from sct_rule_group g
+                where g.sgr_id = p.sgr_id
+             )) resultat
+        into l_stmt
+        from params p;
     end if;
-
+    
     pit.leave_mandatory;
-    return l_error_list;
+    return l_stmt;
   end validate_rule_group;
 
 
@@ -960,16 +894,46 @@ as
     p_sru_condition in sct_rule.sru_condition%type,
     p_error out nocopy varchar2)
   as
-    l_data_cols varchar2(32767);
-    l_stmt varchar2(32767);
+    l_stmt clob;
     l_ctx pls_integer;
   begin
     pit.enter_mandatory('validate_rule', c_pkg);
     harmonize_sct_page_item(p_sgr_id);
-    l_data_cols := create_column_list(p_sgr_id, sct_const.c_true);
-    l_stmt := replace(replace(sct_const.c_rule_validation_template,
-                '#DATA_COLS#', l_data_cols),
-                '#CONDITION#', p_sru_condition);
+      with params as(
+            select 1 sgr_id,
+                  'P8_EXPORT_TYPE = ''APP''' condition,
+                  chr(10) cr
+             from dual)
+    select code_generator.generate_text(cursor(
+             select cgtm_text template,
+                    cgtm_log_text log_template,
+                    sct_const.c_view_name_prefix prefix,
+                    p.sgr_id,
+                    p.condition,
+                    code_generator.generate_text(cursor(
+                      select cgtm_text template,
+                             replace(spi_conversion, 'G') conversion, 
+                             spi_id item
+                        from sct_page_item spi
+                        join sct_page_item_type sit
+                          on spi.spi_sit_id = sit.sit_id
+                        join code_generator_templates cgtm
+                          on sit.sit_id = cgtm.cgtm_mode
+                       where spi_sgr_id = sgr_id
+                         and cgtm_name = 'VIEW_ITEM'
+                         and cgtm_type = c_cgtm_type
+                         and (spi_is_required = sct_const.c_true 
+                          or sit.sit_id = 'DOCUMENT')
+                       order by spi_id
+                    ), ',' || p.cr, 14) column_list
+               from code_generator_templates
+              where cgtm_type = c_cgtm_type
+                and cgtm_name = 'RULE_VALIDATION'
+                and cgtm_mode = c_default
+           )) resultat
+      into l_stmt
+      from params p;
+      
     l_ctx := dbms_sql.open_cursor;
     dbms_sql.parse(l_ctx, l_stmt, dbms_sql.native);
     dbms_sql.close_cursor(l_ctx);
@@ -1087,33 +1051,37 @@ as
             t.saa_label_end_classes = s.saa_label_end_classes,
             t.saa_item_wrap_class = s.saa_item_wrap_class 
      when not matched then insert(            
-            t.saa_sgr_id, t.saa_name, t.saa_type, t.saa_label, t.saa_on_label, t.saa_off_label, t.saa_context_label, t.saa_icon, t.saa_icon_type, t.saa_title, t.saa_shortcut, t.saa_href, t.saa_action, t.saa_get, t.saa_set, t.saa_choices, t.saa_label_classes, t.saa_label_start_classes, t.saa_label_end_classes, t.saa_item_wrap_class)          
+            t.saa_sgr_id, t.saa_name, t.saa_type, t.saa_label, t.saa_on_label, t.saa_off_label, t.saa_context_label, t.saa_icon, 
+            t.saa_icon_type, t.saa_title, t.saa_shortcut, t.saa_href, t.saa_action, t.saa_get, t.saa_set, t.saa_choices, 
+            t.saa_label_classes, t.saa_label_start_classes, t.saa_label_end_classes, t.saa_item_wrap_class)          
           values(            
-            s.saa_sgr_id, s.saa_name, s.saa_type, s.saa_label, s.saa_on_label, s.saa_off_label, s.saa_context_label, s.saa_icon, s.saa_icon_type, s.saa_title, s.saa_shortcut, s.saa_href, s.saa_action, s.saa_get, s.saa_set, s.saa_choices, s.saa_label_classes, s.saa_label_start_classes, s.saa_label_end_classes, s.saa_item_wrap_class);  
+            s.saa_sgr_id, s.saa_name, s.saa_type, s.saa_label, s.saa_on_label, s.saa_off_label, s.saa_context_label, s.saa_icon, 
+            s.saa_icon_type, s.saa_title, s.saa_shortcut, s.saa_href, s.saa_action, s.saa_get, s.saa_set, s.saa_choices, 
+            s.saa_label_classes, s.saa_label_start_classes, s.saa_label_end_classes, s.saa_item_wrap_class);  
   end merge_apex_action;
   
   
   procedure merge_apex_action(    
-    p_saa_sgr_id in number,
-    p_saa_name in varchar2,
-    p_saa_type in varchar2,
-    p_saa_label in varchar2,
-    p_saa_on_label in varchar2,
-    p_saa_off_label in varchar2,
-    p_saa_context_label in varchar2,
-    p_saa_icon in varchar2,
-    p_saa_icon_type in varchar2,
-    p_saa_title in varchar2,
-    p_saa_shortcut in varchar2,
-    p_saa_href in varchar2,
-    p_saa_action in varchar2,
-    p_saa_get in varchar2,
-    p_saa_set in varchar2,
-    p_saa_choices in varchar2,
-    p_saa_label_classes in varchar2,
-    p_saa_label_start_classes in varchar2,
-    p_saa_label_end_classes in varchar2,
-    p_saa_item_wrap_class in varchar2)   
+    p_saa_sgr_id in sct_apex_action.saa_sgr_id%type,
+    p_saa_name in sct_apex_action.saa_name%type,
+    p_saa_type in sct_apex_action.saa_type%type,
+    p_saa_label in sct_apex_action.saa_label%type,
+    p_saa_on_label in sct_apex_action.saa_on_label%type,
+    p_saa_off_label in sct_apex_action.saa_off_label%type,
+    p_saa_context_label in sct_apex_action.saa_context_label%type,
+    p_saa_icon in sct_apex_action.saa_icon%type,
+    p_saa_icon_type in sct_apex_action.saa_icon_type%type,
+    p_saa_title in sct_apex_action.saa_title%type,
+    p_saa_shortcut in sct_apex_action.saa_shortcut%type,
+    p_saa_href in sct_apex_action.saa_href%type,
+    p_saa_action in sct_apex_action.saa_action%type,
+    p_saa_get in sct_apex_action.saa_get%type,
+    p_saa_set in sct_apex_action.saa_set%type,
+    p_saa_choices in sct_apex_action.saa_choices%type,
+    p_saa_label_classes in sct_apex_action.saa_label_classes%type,
+    p_saa_label_start_classes in sct_apex_action.saa_label_start_classes%type,
+    p_saa_label_end_classes in sct_apex_action.saa_label_end_classes%type,
+    p_saa_item_wrap_class in sct_apex_action.saa_item_wrap_class%type)   
   as    
     l_row sct_apex_action%rowtype;  
   begin    
