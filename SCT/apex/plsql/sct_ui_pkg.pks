@@ -49,30 +49,36 @@ as
    * werden als Datei auf den Client-rechner geladen
    */
   procedure export_rule_group;
-
-
-  /* Propagiert das Speichern einer Einzelregel
-   * %param p_sgr_id ID der betroffenen Regelgruppe
-   * %usage Wird nach dem Aendern von Regelgruppen oder Einzelregeln aufgerufen.
-   *        Die Prozedur hat folgende Aufgaben:
-   *        - Tabelle SCT_PAGE_ITEM aktualisieren
-   *        - SCT_RULES_GROUP_n-View aktualisieren
-   *        - Regeln auf die erforderlichen Events einstellen
+  
+  
+  /* Methode zum Validieren der Seite EDIT_GROUP
    */
-  procedure process_rule_change(
-    p_sgr_id in sct_rule_group.sgr_id%type);
-
-
-  /* Validierungsfunktion fuer Einzelregeln
-   * %param p_sgr_id ID der Regelgruppe
-   * %param p_sru_rule Bedingung der Einzelregel
-   * %usage Wird als Validierung aufgerufen, wenn eine Regel erstellt oder geandert
-   *        wird. Prueft, ob die Bedingung gegen SCT_RULES_GROUP_n ausfuehrbar ist.
+  function validate_edit_group
+    return boolean;
+    
+  /* Methode zur Verarbeiten der Seite EDIT_GROUP
    */
-  function validate_rule_is_valid(
-    p_sgr_id in sct_rule_group.sgr_id%type,
-    p_sru_condition in sct_rule.sru_condition%type)
-    return varchar2;
+  procedure process_edit_group;
+  
+  
+  /* Methode zum Validieren der Seite EDIT_RULE
+   */
+  function validate_edit_rule
+    return boolean;
+    
+  /* Methode zur Verarbeiten der Seite EDIT_RULE
+   */
+  procedure process_edit_rule;
+  
+  
+  /* Methode zum Validieren der Seite EDIT_RULE, Interactive Grid RULE_ACTION
+   */
+  function validate_edit_rule_action
+    return boolean;
+    
+  /* Methode zur Verarbeiten der Seite EDIT_RULE, Interactive Grid RULE_ACTION
+   */
+  procedure process_edit_rule_action;
     
 
   /* Hilfsfunktion zur Ermittlung der n�chsten Sequenznummer f�r Regeln

@@ -1,8 +1,10 @@
 define sql_dir=core/sql/
-define seq_dir=&sql_dir./sequences/
-define table_dir=&sql_dir./tables/
-define type_dir=&sql_dir./types/
-define view_dir=&sql_dir./views/
+define seq_dir=&sql_dir.sequences/
+define table_dir=&sql_dir.tables/
+define type_dir=&sql_dir.types/
+define view_dir=&sql_dir.views/
+define script_dir=&sql_dir.scripts/
+define message_dir=&sql_dir.messages/&DEFAULT_LANGUAGE./
 define plsql_dir=core/plsql/
 
 prompt &h3.Check installation prerequisites
@@ -47,8 +49,10 @@ prompt &s1.Create view SCT_BL_PAGE_TARGETS
 
 
 prompt &h3.Create SCT messages
-@core/create_messages.sql
+@&message_dir.create_messages.sql
 
+prompt &h3.Create CodeGenerator templates
+@&script_dir.merge_code_generator_templates.sql
 
 prompt &h3.Create packages
 prompt &s1.Checking UTL_TEXT exists

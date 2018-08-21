@@ -3,8 +3,9 @@
 -- 2: APEX workspace name, into which the APEX application will be installed. Needs access to Owner of SCT
 -- 3: ALIAS of the APEX-application. 
 -- 4: APP_ID of the APEX-application.
+-- 5: Default language of the messages
 
-@init.sql &1. &2. &3. &4.
+@init.sql &1. &2. &3. &4. &5.
 
 alter session set current_schema=sys;
 prompt

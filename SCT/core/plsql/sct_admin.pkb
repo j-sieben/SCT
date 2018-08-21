@@ -261,89 +261,6 @@ as
   end delete_pending_rule_views;
 
 
-  /* Prozedur zur Erzeugung einer Zeichenkette, die als Teil der Regelview verwendet wird
-   * %param p_sgr_id ID der Regelgruppe
-   * %param p_validation Flag, das anzeigt, ob die Spaltenliste fuer Regelpruefungen
-   *        benoetigt wird.
-   * %return Liste der Spalten, die fuer die Regelgruppe verwendet werden
-   * %usage Erzeugt die Spaltenliste fuer eine Regelview. Die Liste umfasst alle
-   *        relevanten Seitenelemente einer Regelgruppe.
-   *        Wird die Prozedur zur Validierung aufgerufen, umfasst die Spaltenliste
-   *        alle Elemente der Seite, um keine falsch negative Validierung einer
-   *        Regelbedingung zu erhalten.
-   * TODO: Refaktorisieren auf CODE_GENERATOR?
-   */
-  function create_column_list(
-    p_sgr_id in sct_rule_group.sgr_id%type,
-    p_validation in number default sct_const.c_false)
-    return varchar2
-  as
-    cursor column_cur(p_sgr_id in sct_rule_group.sgr_id%type, p_validation in number) is
-      select sct_const.c_column_delimiter
-             || utl_text.bulk_replace(sit_col_template, char_table(
-                  '#CONVERSION#', replace(spi_conversion, 'G'), 
-                  '#ITEM#', spi_id))
-             column_name
-        from sct_page_item spi
-        join sct_page_item_type sit
-          on spi.spi_sit_id = sit.sit_id
-       where spi_sgr_id = p_sgr_id
-         and ((spi_is_required = sct_const.c_true
-          or p_validation = sct_const.c_true)
-          or (sit.sit_id = 'DOCUMENT'))
-       order by spi_id;
-    l_data_cols varchar2(32767);
-  begin
-    pit.enter_detailed('create_column_list', c_pkg);
-    -- Record loop statt LISTAGG wegen Limitierung auf 4000 Byte
-    for spi in column_cur(p_sgr_id, p_validation) loop
-      l_data_cols := l_data_cols || spi.column_name;
-    end loop;
-    pit.leave_detailed;
-    return l_data_cols;
-  end create_column_list;
-
-
-  /* Methode zur Erzeugung einer WHERE-Klausel fuer die Regelview
-   * %param p_sgr_id ID der Regelgruppe
-   * %return WHERE-Klausel, die fuer die Regelview verwendet wird
-   * %usage Wird verwendet, um die WHERE-Klausel der Regelview zu erzeugen.
-   *        Die Klausel besteht aus der Relgel-ID und der Regelbedingung
-   * TODO: Refaktorisieren auf CODE_GENERATOR?
-   */
-  function create_where_clause(
-    p_sgr_id in sct_rule_group.sgr_id%type)
-    return varchar2
-  as
-    cursor rule_cur(p_sgr_id in sct_rule_group.sgr_id%type) is
-      select sru_id, sru_name, sru_condition, sru_firing_items,
-             row_number() over (order by sru_id) sort_seq
-        from sct_rule
-       where sru_sgr_id in (0, p_sgr_id)
-         and sru_active = sct_const.c_true
-       order by sru_id;
-    l_where_clause varchar2(32767);
-  begin
-    pit.enter_detailed('create_where_clause', c_pkg);
-    for sru in rule_cur(p_sgr_id) loop
-      if sru.sort_seq > 1 then
-        l_where_clause := l_where_clause || sct_const.c_join_delimiter;
-      end if;
-      l_where_clause :=
-        l_where_clause ||
-        utl_text.bulk_replace(sct_const.c_join_clause_template, char_table(
-          '#ID#', sru.sru_id,
-          '#CONDITION#', sru.sru_condition));
-    end loop;
-    pit.leave_detailed;
-    return coalesce(l_where_clause, 'null is not null');
-  exception
-    when others then
-      pit.sql_exception(msg.SCT_WHERE_CLAUSE);
-      raise;
-  end create_where_clause;
-
-
   /* Methode zur Erzeugung einer Regelview
    * %param p_sgr_id ID der Regelgruppe
    * %usage Wird verwendet, um fuer eine Regelgruppe eine Regelview zu erzeugen.
@@ -354,23 +271,59 @@ as
   procedure create_rule_view(
     p_sgr_id in sct_rule_group.sgr_id%type)
   as
-    l_view_name varchar2(30 byte);
-    l_stmt varchar2(32767);
+    l_stmt clob;
   begin
     pit.enter_optional('create_rule_view', c_pkg);
     delete_pending_rule_views;
 
-    l_view_name := sct_const.c_view_name_prefix || p_sgr_id;
-
-    -- Erzeuge die Regelview
-    l_stmt := replace(replace(replace(replace(sct_const.c_rule_view_template, 
-                '#NAME#', l_view_name),
-                '#DATA_COLS#', create_column_list(p_sgr_id)),
-                '#WHERE_CLAUSE#', create_where_clause(p_sgr_id)),
-                '#SGR_ID#', p_sgr_id);
+        with params as(
+             select p_sgr_id sgr_id,
+                    chr(10) cr
+               from dual)
+      select code_generator.generate_text(cursor(
+           select cgtm_text template,
+                  cgtm_log_text log_template,
+                  sct_const.c_view_name_prefix prefix,
+                  p.sgr_id,
+                  code_generator.generate_text(cursor(
+                    select cgtm_text template,
+                           replace(spi_conversion, 'G') conversion, 
+                           spi_id item
+                      from sct_page_item spi
+                      join sct_page_item_type sit
+                        on spi.spi_sit_id = sit.sit_id
+                      join code_generator_templates cgtm
+                        on sit.sit_id = cgtm.cgtm_mode
+                     where spi_sgr_id = sgr_id
+                       and cgtm_name = 'VIEW_ITEM'
+                       and cgtm_type = 'SCT'
+                       and (spi_is_required = sct_const.c_true
+                        or sit.sit_id = 'DOCUMENT')
+                     order by spi_id
+                  ), ',' || p.cr, 14) column_list,
+                  code_generator.generate_text(cursor(
+                    select cgtm_text template,
+                           sru_id, sru_name, sru_condition, sru_firing_items,
+                           row_number() over (order by sru_id) sort_seq
+                      from sct_rule
+                     cross join code_generator_templates
+                     where cgtm_name = 'JOIN_CLAUSE'
+                       and cgtm_type = 'SCT'
+                       and cgtm_mode = 'DEFAULT'
+                       and sru_sgr_id in (0, p.sgr_id)
+                       and sru_active = sct_const.c_true
+                     order by sru_id
+                  ), p.cr || '           or ') where_clause
+             from code_generator_templates
+            where cgtm_type = 'SCT'
+              and cgtm_name = 'RULE_VIEW'
+              and cgtm_mode = 'DEFAULT'
+         )) resultat
+    into l_stmt
+    from params p;
+    
     execute immediate l_stmt;
 
-    pit.verbose(msg.SCT_VIEW_CREATED, msg_args(l_view_name));
     pit.leave_optional;
   exception
     when others then
@@ -983,6 +936,15 @@ as
     when others then
       pit.sql_exception(msg.SCT_MERGE_RULE, msg_args(p_sru_name));
   end merge_rule;
+  
+  
+  procedure delete_rule(
+    p_sru_id in sct_rule.sru_id%type)
+  as
+  begin
+    delete from sct_rule
+     where sru_id = p_sru_id;
+  end delete_rule;
 
 
   procedure propagate_rule_change(
@@ -1009,10 +971,41 @@ as
   begin
     pit.enter_mandatory('validate_rule', c_pkg);
     harmonize_sct_page_item(p_sgr_id);
-    l_data_cols := create_column_list(p_sgr_id, sct_const.c_true);
-    l_stmt := replace(replace(sct_const.c_rule_validation_template,
-                '#DATA_COLS#', l_data_cols),
-                '#CONDITION#', p_sru_condition);
+      with params as(
+            select 1 sgr_id,
+                  'P8_EXPORT_TYPE = ''APP''' condition,
+                  chr(10) cr
+             from dual)
+    select code_generator.generate_text(cursor(
+             select cgtm_text template,
+                    cgtm_log_text log_template,
+                    sct_const.c_view_name_prefix prefix,
+                    p.sgr_id,
+                    p.condition,
+                    code_generator.generate_text(cursor(
+                      select cgtm_text template,
+                             replace(spi_conversion, 'G') conversion, 
+                             spi_id item
+                        from sct_page_item spi
+                        join sct_page_item_type sit
+                          on spi.spi_sit_id = sit.sit_id
+                        join code_generator_templates cgtm
+                          on sit.sit_id = cgtm.cgtm_mode
+                       where spi_sgr_id = sgr_id
+                         and cgtm_name = 'VIEW_ITEM'
+                         and cgtm_type = 'SCT'
+                         and (spi_is_required = sct_const.c_true 
+                          or sit.sit_id = 'DOCUMENT')
+                       order by spi_id
+                    ), ',' || p.cr, 14) column_list
+               from code_generator_templates
+              where cgtm_type = 'SCT'
+                and cgtm_name = 'RULE_VALIDATION'
+                and cgtm_mode = 'DEFAULT'
+           )) resultat
+      into l_stmt
+      from params p;
+      
     l_ctx := dbms_sql.open_cursor;
     dbms_sql.parse(l_ctx, l_stmt, dbms_sql.native);
     dbms_sql.close_cursor(l_ctx);
@@ -1070,6 +1063,26 @@ as
     when others then
       pit.stop(msg.SCT_MERGE_RULE_ACTION, msg_args(to_char(p_sra_sru_id), to_char( p_sra_spi_id)));
   end merge_rule_action;
+  
+  
+  procedure delete_rule_action(
+    p_sra_sru_id in sct_rule.sru_id%type,
+    p_sra_sgr_id in sct_rule_group.sgr_id%type,
+    p_sra_spi_id in sct_page_item.spi_id%type,
+    p_sra_sat_id in sct_action_type.sat_id%type,
+    p_sra_on_error in sct_rule_action.sra_on_error%type default sct_const.c_false)
+  as
+  begin
+    pit.enter_mandatory('delete_rule_action', c_pkg);
+    delete from sct_rule_action
+     where sra_sru_id = p_sra_sru_id
+       and sra_sgr_id = p_sra_sgr_id
+       and sra_spi_id = p_sra_spi_id
+       and sra_sat_id = p_sra_sat_id
+       and sra_on_error = p_sra_on_error;
+    pit.leave_mandatory;
+  end delete_rule_action;
+
 
 
   procedure merge_action_type(

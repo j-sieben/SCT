@@ -171,6 +171,14 @@ as
     p_sru_active in sct_rule.sru_active%type default sct_const.c_true);
     
     
+  /* Entfernt eine Regel
+   * %param  p_sru_id  ID der Regel, die entfernt werden soll
+   * %usage  Wird von UI_SCT_PKG aufgerufen, um eine Regel zu entfernen
+   */
+  procedure delete_rule(
+    p_sru_id in sct_rule.sru_id%type);
+    
+    
   /* Methode zur Nachbereitung einer Regelaenderung, falls diese ueber eine
    * APEX-Seite durchgefuehrt wurde (Assistent-basierte Seite)
    * %param p_sgr_id ID der Regelgruppe
@@ -197,14 +205,17 @@ as
     
   /* Administration von Regelaktivitaeten */
   /* Methode zur Erzeugung einer Regeelaktivitaet
-   * %param p_sra_sru_id Referenz auf eine Einzelregel
-   * %param p_sra_sgr_id Referenz auf eine Regelgruppe
-   * %param p_sra_spi_id Referenz auf ein Seitenelement
-   * %param p_sra_sat_id Referenz auf einen Aktionstyp
-   * %param p_sra_attribute Optionaler Parameter der Aktivitaet
-   * %param p_sra_attribute_2 Zweiter optionaler Parameter der Aktivitaet
-   * %param p_sort_seq Ausfuehrungsreihenfolge der Aktivitaeten
-   * %param p_sra_active Flag, das anzeigt, ob die Aktivitaet aktuell verwendet wird.
+   * %param  p_sra_sru_id           Referenz auf eine Einzelregel
+   * %param  p_sra_sgr_id           Referenz auf eine Regelgruppe
+   * %param  p_sra_spi_id           Referenz auf ein Seitenelement
+   * %param  p_sra_sat_id           Referenz auf einen Aktionstyp
+   * %param  p_sra_attribute        Optionaler Parameter der Aktivitaet
+   * %param  p_sra_attribute_2      Zweiter optionaler Parameter der Aktivitaet
+   * %param  p_sort_seq             Ausfuehrungsreihenfolge der Aktivitaeten
+   * %param [p_sra_on_error]        Flag, das anzeigt, ob diese Aktion im Fehlerfall ausgefuehrt wird.
+   * %param [p_sra_raise_recursive] Flag, das anzeigt, ob diese Aktion rekursive Regelausloesung erlaubt
+   * %param [p_sra_active]          Flag, das anzeigt, ob die Aktivitaet aktuell verwendet wird.
+   * %param [p_sra_comment]         Optionaler Entwicklerkommentar zu einer Aktion
    */
   procedure merge_rule_action(
     p_sra_sru_id in sct_rule.sru_id%type,
@@ -218,6 +229,20 @@ as
     p_sra_raise_recursive in sct_rule_action.sra_raise_recursive%type default sct_const.c_true,
     p_sra_active in sct_rule_action.sra_active%type default sct_const.c_true,
     p_sra_comment in sct_rule_action.sra_comment%type default null);
+    
+    
+  /* Methode zum Entfernen einer Regelaktoin
+   * %param p_sra_sru_id Referenz auf eine Einzelregel
+   * %param p_sra_sgr_id Referenz auf eine Regelgruppe
+   * %param p_sra_spi_id Referenz auf ein Seitenelement
+   * %param p_sra_sat_id Referenz auf einen Aktionstyp
+   */
+  procedure delete_rule_action(
+    p_sra_sru_id in sct_rule.sru_id%type,
+    p_sra_sgr_id in sct_rule_group.sgr_id%type,
+    p_sra_spi_id in sct_page_item.spi_id%type,
+    p_sra_sat_id in sct_action_type.sat_id%type,
+    p_sra_on_error in sct_rule_action.sra_on_error%type default sct_const.c_false);  
     
     
   /* Administration von Aktionstypen */
