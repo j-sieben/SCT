@@ -1,9 +1,9 @@
--- drop table sct_apex_action purge;
+drop table sct_apex_action purge;
 
 create table sct_apex_action(
   saa_sgr_id number,
   saa_name varchar2(50 char),
-  saa_type varchar2(10 char),
+  saa_type varchar2(11 char),
   saa_label varchar2(50 char),
   saa_on_label varchar2(50 char),
   saa_off_label varchar2(50 char),
