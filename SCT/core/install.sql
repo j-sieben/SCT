@@ -1,9 +1,10 @@
 define sql_dir=core/sql/
-define seq_dir=&sql_dir./sequences/
-define table_dir=&sql_dir./tables/
-define type_dir=&sql_dir./types/
-define view_dir=&sql_dir./views/
+define seq_dir=&sql_dir.sequences/
+define table_dir=&sql_dir.tables/
+define type_dir=&sql_dir.types/
+define view_dir=&sql_dir.views/
 define plsql_dir=core/plsql/
+define script_dir=&sql_dir.scripts/
 
 prompt &h3.Check installation prerequisites
 @core/check_prerequisites.sql
@@ -38,6 +39,9 @@ prompt &s1.Create table SCT_RULE
 prompt &s1.Create table SCT_RULE_ACTION
 @&table_dir.sct_rule_action.tbl
 
+prompt &s1.Create table SCT_APEX_ACTION
+@&table_dir.sct_apex_action.tbl
+
 
 prompt &s1.Create view SCT_BL_RULES
 @&view_dir.sct_bl_rules.vw
@@ -48,6 +52,10 @@ prompt &s1.Create view SCT_BL_PAGE_TARGETS
 
 prompt &h3.Create SCT messages
 @core/create_messages.sql
+
+
+prompt &h3.Create CodeGenerator templates
+@&script_dir.create_code_generator_templates.sql
 
 
 prompt &h3.Create packages

@@ -464,98 +464,67 @@ as
    * %param p_sgr_id ID der Regelgruppe
    * %return CLOB-Instanz mit dem Exportskript
    * %usage Wird verwendet, um eine Regelgruppe komplett zu exportieren.
-   * TODO: Refaktorisieren auf CODE_GENERATOR?
    */
   function read_rule_group(
     p_sgr_id in sct_rule_group.sgr_id%type)
     return clob
   as
-    cursor rule_group_cur(p_sgr_id in sct_rule_group.sgr_id%type) is
-      select *
-        from sct_rule_group sgr
-       where sgr_id = p_sgr_id;
-
-    cursor rule_cur(p_sgr_id in sct_rule_group.sgr_id%type) is
-      select *
-        from sct_rule sru
-       where sru.sru_sgr_id = p_sgr_id;
-
-    cursor action_cur(p_sru_id in sct_rule.sru_id%type, p_sgr_id in sct_rule_group.sgr_id%type) is
-      select *
-        from sct_rule_action sra
-       where sra.sra_sru_id = p_sru_id
-         and sra.sra_sgr_id = p_sgr_id;
-
     l_stmt clob;
-    l_sgr clob;
-    l_rule clob;
-    l_rule_action clob;
-    l_rule_group_name varchar2(200 byte);
   begin
     pit.enter_optional('read_rule_group', c_pkg);
-    -- Initialisierung
-    dbms_lob.createtemporary(l_stmt, false, dbms_lob.call);
-    dbms_lob.createtemporary(l_sgr, false, dbms_lob.call);
-    dbms_lob.createtemporary(l_rule, false, dbms_lob.call);
-    dbms_lob.createtemporary(l_rule_action, false, dbms_lob.call);
-
-    /* Geschachtelte CURSOR-FOR-LOOPS anstelle Cursor-Ausdruck, weil:
-       - einfacherer Code
-       - kein Nebenlaeufigkeitsproblem (Stammdaten)
-       - kein Performanzproblem
-       - deutlich weniger Variablen (%ROWTYPE unterstuetzt keine Cursor-Ausdruecke
-     */
-    for sgr in rule_group_cur(p_sgr_id) loop
-      l_rule_group_name := sgr.sgr_name || ' (ID ' || sgr.sgr_id || ')';
-      dbms_lob.append(
-        l_sgr,
-        utl_text.bulk_replace(sct_const.c_rule_group_template, char_table(
-          '#SGR_APP_ID#', to_char(sgr.sgr_app_id),
-          '#SGR_PAGE_ID#', to_char(sgr.sgr_page_id),
-          '#SGR_ID#', to_char(sgr.sgr_id),
-          '#SGR_NAME#', sgr.sgr_name,
-          '#SGR_DESCRIPTION#', sgr.sgr_description,
-          '#SGR_WITH_RECURSION#', to_char(sgr.sgr_with_recursion),
-          '#SGR_ACTIVE#', to_char(sgr.sgr_active))));
-          
-      for sru in rule_cur(sgr.sgr_id) loop
-        dbms_lob.append(
-          l_rule,
-          utl_text.bulk_replace(sct_const.c_rule_template, char_table(
-            '#SRU_ID#', to_char(sru.sru_id),
-            '#SGR_ID#', to_char(sru.sru_sgr_id),
-            '#SRU_NAME#', sru.sru_name,
-            '#SRU_CONDITION#', sru.sru_condition,
-            '#SRU_FIRE_ON_PAGE_LOAD#', to_char(sru.sru_fire_on_page_load),
-            '#SRU_SORT_SEQ#', to_char(sru.sru_sort_seq),
-            '#SRU_ACTIVE#', to_char(sru.sru_active))));
-        for sra in action_cur(sru.sru_id, sru.sru_sgr_id) loop
-          dbms_lob.append(
-            l_rule_action,
-            utl_text.bulk_replace(sct_const.c_rule_action_template, char_table(
-              '#SRU_ID#', to_char(sra.sra_sru_id),
-              '#SGR_ID#', to_char(sra.sra_sgr_id),
-              '#SPI_ID#', sra.sra_spi_id,
-              '#SAT_ID#', sra.sra_sat_id,
-              '#SRA_ATTRIBUTE#', sra.sra_attribute,
-              '#SRA_ATTRIBUTE_2#', sra.sra_attribute_2,
-              '#SRA_ON_ERROR#', to_char(sra.sra_on_error),
-              '#SRA_RAISE_RECURSIVE#', to_char(sra.sra_raise_recursive),
-              '#SRA_SORT_SEQ#', to_char(sra.sra_sort_seq),
-              '#SRA_ACTIVE#', to_char(sra.sra_active))));
-        end loop;
-      end loop;
-      -- Bei DDL-Templates keine tatsaechlichen Absatzzeichen einbauen,
-      -- da Installationsskripte ansonsten COMMIT, END etc. als Kommando ausfuehren
-      dbms_lob.append(l_stmt, replace('~  -- RULE GROUP ' || l_rule_group_name, '~', sct_const.c_cr));
-      dbms_lob.append(l_stmt, l_sgr);
-      dbms_lob.append(l_stmt, replace('~  -- RULES', '~', sct_const.c_cr));
-      dbms_lob.append(l_stmt, l_rule);
-      dbms_lob.append(l_stmt, replace('~  -- RULE ACTIONS', '~', sct_const.c_cr));
-      dbms_lob.append(l_stmt, l_rule_action);
-    end loop;
-
-    dbms_lob.append(l_stmt, replace(sct_const.c_rule_group_validation, '#SGR_ID#', p_sgr_id));
+    
+      with params as(
+           select p_sgr_id sgr_id,
+                  'EXPORT_RULE_GROUP' cgtm_name,
+                  'SCT' cgtm_type
+             from dual)
+    select code_generator.generate_text(cursor(
+             -- Skriptrahmen und Anlage der Regelgruppe
+             select cgtm_text template, cgtm_log_text log_template,
+                    sgr.*,
+                    -- Einzelregeln
+                    code_generator.generate_text(cursor(
+                      select cgtm_text template,
+                             sru.*,
+                             -- Regelaktionen der Einzelregeln
+                             code_generator.generate_text(cursor(
+                               select cgtm_text template,
+                                      sra.*
+                                 from sct_rule_action sra
+                                cross join code_generator_templates
+                                where cgtm_name = p.cgtm_name
+                                  and cgtm_type = p.cgtm_type
+                                  and cgtm_mode = 'RULE_ACTION'
+                                  and sra.sra_sgr_id = p.sgr_id
+                                  and sra.sra_sru_id = sru.sru_id
+                             )) rule_actions
+                        from sct_rule sru
+                       cross join code_generator_templates
+                       where cgtm_name = p.cgtm_name
+                         and cgtm_type = p.cgtm_type
+                         and cgtm_mode = 'RULE'
+                         and sru.sru_sgr_id = p.sgr_id
+                    )) rules,
+                    -- APEX-Actions
+                    code_generator.generate_text(cursor(
+                      select cgtm_text template,
+                             saa.*
+                        from sct_apex_action saa
+                        join code_generator_templates
+                          on cgtm_mode = 'APEX_ACTION_' || saa.saa_type
+                       where cgtm_name = p.cgtm_name
+                         and cgtm_type = p.cgtm_type
+                         and saa.saa_sgr_id = p.sgr_id
+                    )) apex_actions
+               from code_generator_templates
+              cross join sct_rule_group sgr
+              where cgtm_name = p.cgtm_name
+                and cgtm_type = p.cgtm_type
+                and cgtm_mode = 'DEFAULT'
+                and sgr.sgr_id = p.sgr_id
+           )) resultat
+      into l_stmt
+      from params p;
 
     pit.leave_optional;
     return l_stmt;
@@ -791,23 +760,11 @@ as
     return clob
   as
     l_stmt clob;
-    l_app_id sct_rule_group.sgr_app_id%type;
   begin
     pit.enter_mandatory('export_rule_group', c_pkg);
-    -- Initialisierung
-    dbms_lob.createtemporary(l_stmt, false, dbms_lob.call);
-
-    -- Import-Rahmenbedingungen fuer APEX schaffen
-    select sgr_app_id
-      into l_app_id
-      from sct_rule_group
-     where sgr_id = p_sgr_id;
-    dbms_lob.append(l_stmt, replace(sct_const.c_export_start_template, '#CR#', sct_const.c_cr));
-
-    -- Einzelne Teilbereiche berechnen
-    dbms_lob.append(l_stmt, read_rule_group(p_sgr_id));
-    dbms_lob.append(l_stmt, replace(sct_const.c_export_start_template, '#CR#', sct_const.c_cr));
-
+    
+    l_stmt := read_rule_group(p_sgr_id);
+    
     pit.leave_mandatory;
     return l_stmt;
   end export_rule_group;
@@ -1070,8 +1027,121 @@ as
     when others then
       pit.stop(msg.SCT_MERGE_RULE_ACTION, msg_args(to_char(p_sra_sru_id), to_char( p_sra_spi_id)));
   end merge_rule_action;
+  
 
-
+  procedure delete_apex_action(    
+    p_row sct_apex_action%rowtype)  
+  as  
+  begin    
+    delete from sct_apex_action     
+     where saa_sgr_id = p_row.saa_sgr_id
+       and saa_name = p_row.saa_name;  
+  end delete_apex_action;  
+  
+  
+  procedure merge_apex_action(   
+    p_row sct_apex_action%rowtype)  
+  as  
+  begin    
+    merge into sct_apex_action t    
+    using (select p_row.saa_sgr_id saa_sgr_id,
+                  p_row.saa_name saa_name,
+                  p_row.saa_type saa_type,
+                  p_row.saa_label saa_label,
+                  p_row.saa_on_label saa_on_label,
+                  p_row.saa_off_label saa_off_label,
+                  p_row.saa_context_label saa_context_label,
+                  p_row.saa_icon saa_icon,
+                  p_row.saa_icon_type saa_icon_type,
+                  p_row.saa_title saa_title,
+                  p_row.saa_shortcut saa_shortcut,
+                  p_row.saa_href saa_href,
+                  p_row.saa_action saa_action,
+                  p_row.saa_get saa_get,
+                  p_row.saa_set saa_set,
+                  p_row.saa_choices saa_choices,
+                  p_row.saa_label_classes saa_label_classes,
+                  p_row.saa_label_start_classes saa_label_start_classes,
+                  p_row.saa_label_end_classes saa_label_end_classes,
+                  p_row.saa_item_wrap_class saa_item_wrap_class
+             from dual) s       
+       on (t.saa_sgr_id = s.saa_sgr_id
+      and t.saa_name = s.saa_name)    
+     when matched then update set               
+            t.saa_type = s.saa_type,  
+            t.saa_label = s.saa_label,
+            t.saa_on_label = s.saa_on_label,
+            t.saa_off_label = s.saa_off_label,
+            t.saa_context_label = s.saa_context_label,
+            t.saa_icon = s.saa_icon,
+            t.saa_icon_type = s.saa_icon_type,
+            t.saa_title = s.saa_title,
+            t.saa_shortcut = s.saa_shortcut,
+            t.saa_href = s.saa_href,
+            t.saa_action = s.saa_action,
+            t.saa_get = s.saa_get,
+            t.saa_set = s.saa_set,
+            t.saa_choices = s.saa_choices,
+            t.saa_label_classes = s.saa_label_classes,
+            t.saa_label_start_classes = s.saa_label_start_classes,
+            t.saa_label_end_classes = s.saa_label_end_classes,
+            t.saa_item_wrap_class = s.saa_item_wrap_class 
+     when not matched then insert(            
+            t.saa_sgr_id, t.saa_name, t.saa_type, t.saa_label, t.saa_on_label, t.saa_off_label, t.saa_context_label, t.saa_icon, t.saa_icon_type, t.saa_title, t.saa_shortcut, t.saa_href, t.saa_action, t.saa_get, t.saa_set, t.saa_choices, t.saa_label_classes, t.saa_label_start_classes, t.saa_label_end_classes, t.saa_item_wrap_class)          
+          values(            
+            s.saa_sgr_id, s.saa_name, s.saa_type, s.saa_label, s.saa_on_label, s.saa_off_label, s.saa_context_label, s.saa_icon, s.saa_icon_type, s.saa_title, s.saa_shortcut, s.saa_href, s.saa_action, s.saa_get, s.saa_set, s.saa_choices, s.saa_label_classes, s.saa_label_start_classes, s.saa_label_end_classes, s.saa_item_wrap_class);  
+  end merge_apex_action;
+  
+  
+  procedure merge_apex_action(    
+    p_saa_sgr_id in number,
+    p_saa_name in varchar2,
+    p_saa_type in varchar2,
+    p_saa_label in varchar2,
+    p_saa_on_label in varchar2,
+    p_saa_off_label in varchar2,
+    p_saa_context_label in varchar2,
+    p_saa_icon in varchar2,
+    p_saa_icon_type in varchar2,
+    p_saa_title in varchar2,
+    p_saa_shortcut in varchar2,
+    p_saa_href in varchar2,
+    p_saa_action in varchar2,
+    p_saa_get in varchar2,
+    p_saa_set in varchar2,
+    p_saa_choices in varchar2,
+    p_saa_label_classes in varchar2,
+    p_saa_label_start_classes in varchar2,
+    p_saa_label_end_classes in varchar2,
+    p_saa_item_wrap_class in varchar2)   
+  as    
+    l_row sct_apex_action%rowtype;  
+  begin    
+    l_row.saa_sgr_id := p_saa_sgr_id;
+    l_row.saa_name := p_saa_name;
+    l_row.saa_type := p_saa_type;
+    l_row.saa_label := p_saa_label;
+    l_row.saa_on_label := p_saa_on_label;
+    l_row.saa_off_label := p_saa_off_label;
+    l_row.saa_context_label := p_saa_context_label;
+    l_row.saa_icon := p_saa_icon;
+    l_row.saa_icon_type := p_saa_icon_type;
+    l_row.saa_title := p_saa_title;
+    l_row.saa_shortcut := p_saa_shortcut;
+    l_row.saa_href := p_saa_href;
+    l_row.saa_action := p_saa_action;
+    l_row.saa_get := p_saa_get;
+    l_row.saa_set := p_saa_set;
+    l_row.saa_choices := p_saa_choices;
+    l_row.saa_label_classes := p_saa_label_classes;
+    l_row.saa_label_start_classes := p_saa_label_start_classes;
+    l_row.saa_label_end_classes := p_saa_label_end_classes;
+    l_row.saa_item_wrap_class := p_saa_item_wrap_class;    
+    
+    merge_apex_action(l_row);  
+  end merge_apex_action;
+  
+  
   procedure merge_action_type(
     p_sat_id in sct_action_type.sat_id%type,
     p_sat_name in sct_action_type.sat_name%type,

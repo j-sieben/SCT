@@ -220,6 +220,46 @@ as
     p_sra_comment in sct_rule_action.sra_comment%type default null);
     
     
+  /* Administration von Regelaktivitaeten */
+  /* Methode zur Erzeugung einer APEX-Aktivitaet (Wrapper um apex.actions-Namespace)
+   * %param p_sra_sru_id Referenz auf eine Einzelregel
+   * %param p_sra_sgr_id Referenz auf eine Regelgruppe
+   * %param p_sra_spi_id Referenz auf ein Seitenelement
+   * %param p_sra_sat_id Referenz auf einen Aktionstyp
+   * %param p_sra_attribute Optionaler Parameter der Aktivitaet
+   * %param p_sra_attribute_2 Zweiter optionaler Parameter der Aktivitaet
+   * %param p_sort_seq Ausfuehrungsreihenfolge der Aktivitaeten
+   * %param p_sra_active Flag, das anzeigt, ob die Aktivitaet aktuell verwendet wird.
+   */
+  procedure delete_apex_action(    
+    p_row sct_apex_action%rowtype);  
+    
+  procedure merge_apex_action(    
+    p_row sct_apex_action%rowtype);  
+    
+  procedure merge_apex_action(    
+    p_saa_sgr_id in number,
+    p_saa_name in varchar2,
+    p_saa_type in varchar2,
+    p_saa_label in varchar2,
+    p_saa_on_label in varchar2,
+    p_saa_off_label in varchar2,
+    p_saa_context_label in varchar2,
+    p_saa_icon in varchar2,
+    p_saa_icon_type in varchar2,
+    p_saa_title in varchar2,
+    p_saa_shortcut in varchar2,
+    p_saa_href in varchar2,
+    p_saa_action in varchar2,
+    p_saa_get in varchar2,
+    p_saa_set in varchar2,
+    p_saa_choices in varchar2,
+    p_saa_label_classes in varchar2,
+    p_saa_label_start_classes in varchar2,
+    p_saa_label_end_classes in varchar2,
+    p_saa_item_wrap_class in varchar2);  
+    
+    
   /* Administration von Aktionstypen */
   /* Methode zur Erzeugung eines Aktionstyps
    * %param p_sat_id ID des Aktionstyps
