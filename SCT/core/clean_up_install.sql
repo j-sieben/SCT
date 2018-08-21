@@ -50,6 +50,10 @@ begin
     pit_admin.remove_message(msg.pms_name, msg.pms_pml_name);
     dbms_output.put_line('&s1.Message ' || msg.pms_name || ' deleted.');
   end loop;
+  
+  delete from code_generator_templates
+   where cgtm_type = 'SCT';
+   
   commit;
   dbms_session.reset_package;
   pit_admin.create_message_package;

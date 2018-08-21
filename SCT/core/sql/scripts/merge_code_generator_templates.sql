@@ -143,7 +143,7 @@ q'°°',
   code_generator.merge_template(
     p_cgtm_name => 'RULE_VIEW',
     p_cgtm_type => 'SCT',
-    p_cgtm_mode => 'DEFAULT',
+    p_cgtm_mode => 'FRAME',
     p_cgtm_text => q'°create or replace force view #PREFIX##SGR_ID# as\CR\°' || 
 q'°  with session_state as(\CR\°' || 
 q'°       select bl_sct.get_firing_item firing_item,\CR\°' || 
@@ -185,9 +185,9 @@ q'° where #CONDITION#°',
   );
 
   code_generator.merge_template(
-    p_cgtm_name => 'JOIN_CLAUSE',
+    p_cgtm_name => 'RULE_VIEW',
     p_cgtm_type => 'SCT',
-    p_cgtm_mode => 'DEFAULT',
+    p_cgtm_mode => 'JOIN_CLAUSE',
     p_cgtm_text => q'°(r.sru_id = #SRU_ID# and ((#SRU_CONDITION#) or sru_fire_on_page_load = initializing))°',
     p_cgtm_log_text => q'°°',
     p_cgtm_log_severity => 70

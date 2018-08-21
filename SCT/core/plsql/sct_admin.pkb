@@ -47,8 +47,13 @@ as
     l_stmt clob;
   begin
       with params as(
-           select p_sgr_id sgr_id, c_cgtm_type cgtm_type, 'INITIALIZE_CODE' cgtm_name, chr(10) cr
-             from dual)
+           select p_sgr_id sgr_id, chr(10) cr
+             from dual),
+           templates as(
+           select cgtm_text, cgtm_log_text, cgtm_mode
+             from code_generator_templates
+            where cgtm_type = c_cgtm_type
+              and cgtm_name = 'INITIALIZE_CODE')
     select code_generator.generate_text(cursor(
              select cgtm_text template, cgtm_log_text log_template, p.sgr_id,
                     code_generator.generate_text(cursor(
@@ -57,20 +62,16 @@ as
                         join sct_rule_group sgr
                           on api.application_id = sgr.sgr_app_id
                          and api.page_id = sgr.sgr_page_id
-                        join code_generator_templates
+                        join templates
                           on cgtm_mode = case attribute_04 when 'ROWID' then attribute_04 else c_default end
                        where sgr.sgr_id = 1
                          and api.process_type_code = 'DML_FETCH_ROW'
-                         and cgtm_type = p.cgtm_type
-                         and cgtm_name = p.cgtm_name
                     ), p.cr, 4) sql_stmt,
                     code_generator.generate_text(cursor(
                       select (select cgtm_text
-                                from code_generator_templates
-                               where cgtm_type = p.cgtm_type
-                                 and cgtm_name = p.cgtm_name
-                                 and cgtm_mode = 'VALUE') template, 
-                             item_name item, 
+                                from templates
+                               where cgtm_mode = 'VALUE') template, 
+                             item_name item,
                              code_generator.bulk_replace(cgtm_text, char_table(
                                '#CONVERSION#', spi_conversion,
                                '#ITEM#', item_source)) item_source
@@ -89,12 +90,10 @@ as
                          and sgr.sgr_id = 1
                          and spi.spi_is_required = 1
                          and cgtm_name = 'VIEW_INIT'
-                         and cgtm_type = p.cgtm_type
+                         and cgtm_type = c_cgtm_type
                     ), p.cr, 4) item_stmt
-               from code_generator_templates
-              where cgtm_type = p.cgtm_type
-                and cgtm_name = p.cgtm_name
-                and cgtm_mode = 'FRAME'
+               from templates
+              where cgtm_mode = 'FRAME'
            )) resultat
       into l_stmt
       from params p;
@@ -276,7 +275,12 @@ as
         with params as(
              select p_sgr_id sgr_id,
                     chr(10) cr
-               from dual)
+               from dual),
+           templates as(
+           select cgtm_text, cgtm_log_text, cgtm_mode
+             from code_generator_templates
+            where cgtm_type = c_cgtm_type
+              and cgtm_name = 'RULE_VIEW')
       select code_generator.generate_text(cursor(
            select cgtm_text template,
                   cgtm_log_text log_template,
@@ -303,18 +307,14 @@ as
                            sru_id, sru_name, sru_condition, sru_firing_items,
                            row_number() over (order by sru_id) sort_seq
                       from sct_rule
-                     cross join code_generator_templates
-                     where cgtm_name = 'JOIN_CLAUSE'
-                       and cgtm_type = c_cgtm_type
-                       and cgtm_mode = c_default
+                     cross join templates
+                     where cgtm_mode = 'JOIN_CLAUSE'
                        and sru_sgr_id in (0, p.sgr_id)
                        and sru_active = sct_const.c_true
                      order by sru_id
                   ), p.cr || '           or ') where_clause
-             from code_generator_templates
-            where cgtm_type = c_cgtm_type
-              and cgtm_name = 'RULE_VIEW'
-              and cgtm_mode = c_default
+             from templates
+            where cgtm_mode = 'FRAME'
          )) resultat
     into l_stmt
     from params p;
@@ -381,10 +381,13 @@ as
     pit.enter_optional('read_rule_group', c_pkg);
     
       with params as(
-           select p_sgr_id sgr_id,
-                  'EXPORT_RULE_GROUP' cgtm_name,
-                  c_cgtm_type cgtm_type
-             from dual)
+           select p_sgr_id sgr_id
+             from dual),
+           templates as(
+           select cgtm_text, cgtm_log_text, cgtm_mode
+             from code_generator_templates
+            where cgtm_type = c_cgtm_type
+              and cgtm_name = 'EXPORT_RULE_GROUP')
     select code_generator.generate_text(cursor(
              -- Skriptrahmen und Anlage der Regelgruppe
              select cgtm_text template, cgtm_log_text log_template,
@@ -398,18 +401,14 @@ as
                                select cgtm_text template,
                                       sra.*
                                  from sct_rule_action sra
-                                cross join code_generator_templates
-                                where cgtm_name = p.cgtm_name
-                                  and cgtm_type = p.cgtm_type
-                                  and cgtm_mode = 'RULE_ACTION'
+                                cross join templates
+                                where cgtm_mode = 'RULE_ACTION'
                                   and sra.sra_sgr_id = p.sgr_id
                                   and sra.sra_sru_id = sru.sru_id
                              )) rule_actions
                         from sct_rule sru
-                       cross join code_generator_templates
-                       where cgtm_name = p.cgtm_name
-                         and cgtm_type = p.cgtm_type
-                         and cgtm_mode = 'RULE'
+                       cross join templates
+                       where cgtm_mode = 'RULE'
                          and sru.sru_sgr_id = p.sgr_id
                     )) rules,
                     -- APEX-Actions
@@ -417,17 +416,13 @@ as
                       select cgtm_text template,
                              saa.*
                         from sct_apex_action saa
-                        join code_generator_templates
+                        join templates
                           on cgtm_mode = 'APEX_ACTION_' || saa.saa_type
-                       where cgtm_name = p.cgtm_name
-                         and cgtm_type = p.cgtm_type
-                         and saa.saa_sgr_id = p.sgr_id
+                       where saa.saa_sgr_id = p.sgr_id
                     )) apex_actions
-               from code_generator_templates
+               from templates
               cross join sct_rule_group sgr
-              where cgtm_name = p.cgtm_name
-                and cgtm_type = p.cgtm_type
-                and cgtm_mode = c_default
+              where cgtm_mode = c_default
                 and sgr.sgr_id = p.sgr_id
            )) resultat
       into l_stmt
@@ -692,25 +687,26 @@ as
     
     pit.enter_optional('read_action_type', c_pkg);
       with params as(
-           select cgtm_text template, cgtm_type, cgtm_name, l_sat_is_editable is_editable
+           select l_sat_is_editable is_editable
+             from dual),
+           templates as(
+           select cgtm_text, cgtm_log_text, cgtm_mode
              from code_generator_templates
             where cgtm_type = c_cgtm_type
-              and cgtm_name = 'ACTION_TYPE'
-              and cgtm_mode = 'FRAME')
+              and cgtm_name = 'ACTION_TYPE')
     select code_generator.generate_text(cursor(
-             select p.template,
+             select cgtm_text template,
                     code_generator.generate_text(cursor(
                       select cgtm_text template, sat.*
                         from sct_action_type sat
-                       cross join code_generator_templates t
+                       cross join templates t
                        where sat_is_editable = p.is_editable
-                         and t.cgtm_type = p.cgtm_type
-                         and t.cgtm_name = p.cgtm_name
                          and t.cgtm_mode = c_default)) action_types
-               from dual
+               from params p
            )) resultat
       into l_stmt
-      from params p;
+      from templates
+     where cgtm_mode = 'FRAME';
 
     pit.leave_optional;
     return l_stmt;
@@ -735,13 +731,15 @@ as
        
     if l_has_errors = 1 then
         with params as(
-             select cgtm_text template, cgtm_type, cgtm_name, p_sgr_id sgr_id
-               from code_generator_templates
-              where cgtm_type = c_cgtm_type
-                and cgtm_name = 'PAGE_ITEM_ERROR'
-                and cgtm_mode = 'FRAME')
+             select p_sgr_id sgr_id
+               from dual),
+           templates as(
+           select cgtm_text, cgtm_log_text, cgtm_mode
+             from code_generator_templates
+            where cgtm_type = c_cgtm_type
+              and cgtm_name = 'PAGE_ITEM_ERROR')
       select code_generator.generate_text(cursor(
-               select p.template, g.sgr_name,
+               select cgtm_text template, g.sgr_name,
                       code_generator.generate_text(cursor(
                         select cgtm_text template, sgr.sgr_name, sgr.sgr_app_id, spi.spi_id, sit.sit_name
                           from sct_page_item spi
@@ -749,17 +747,17 @@ as
                             on spi.spi_sit_id = sit.sit_id
                           join sct_rule_group sgr
                             on spi.spi_sgr_id = sgr.sgr_id
-                         cross join code_generator_templates t
+                         cross join templates t
                          where sgr.sgr_id = p.sgr_id
-                           and spi.spi_has_error = 1 --sct_const.c_true
-                           and t.cgtm_type = p.cgtm_type
-                           and t.cgtm_name = p.cgtm_name
+                           and spi.spi_has_error = sct_const.c_true
                            and t.cgtm_mode = c_default)) error_list
                  from sct_rule_group g
-                where g.sgr_id = p.sgr_id
+                 join params p
+                   on g.sgr_id = p.sgr_id
              )) resultat
         into l_stmt
-        from params p;
+        from templates
+       where cgtm_mode = 'FRAME';
     end if;
     
     pit.leave_mandatory;
@@ -900,10 +898,15 @@ as
     pit.enter_mandatory('validate_rule', c_pkg);
     harmonize_sct_page_item(p_sgr_id);
       with params as(
-            select 1 sgr_id,
-                  'P8_EXPORT_TYPE = ''APP''' condition,
+           select p_sgr_id sgr_id,
+                  p_sru_condition condition,
                   chr(10) cr
-             from dual)
+             from dual),
+           templates as(
+           select cgtm_text, cgtm_log_text, cgtm_mode
+             from code_generator_templates
+            where cgtm_type = c_cgtm_type
+              and cgtm_name = 'RULE_VALIDATION')
     select code_generator.generate_text(cursor(
              select cgtm_text template,
                     cgtm_log_text log_template,
@@ -926,10 +929,8 @@ as
                           or sit.sit_id = 'DOCUMENT')
                        order by spi_id
                     ), ',' || p.cr, 14) column_list
-               from code_generator_templates
-              where cgtm_type = c_cgtm_type
-                and cgtm_name = 'RULE_VALIDATION'
-                and cgtm_mode = c_default
+               from templates
+              where cgtm_mode = c_default
            )) resultat
       into l_stmt
       from params p;
