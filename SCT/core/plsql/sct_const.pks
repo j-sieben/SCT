@@ -2,8 +2,7 @@ create or replace package sct_const
   authid definer
 as 
 
-  /* Das Package sammelt Konstanten, die zur Generierung von DDL-Anweisungen
-   * und JavaScript-Bloecken verwendet werden. Entzerrt den Code in SCT_ADMIN
+  /* Central package for templates, constants and datatypes for SCT-Plugin
    */
   c_cr constant varchar2(2 byte) := chr(10);
   c_true constant number(1,0) := 1;
@@ -19,7 +18,7 @@ as
   c_directory constant varchar2(30 byte) := 'SCT_DIR';
   c_comment constant varchar2(10) := '// ';
   
-  -- Ersatzseitennummer fuer Anwendungselemente
+  -- Dummy page number for global elements
   c_app_item_page constant number(1,0) := 0;
   
   C_BIND_JSON_TEMPLATE constant varchar2(100) := '[#JSON#]';
@@ -37,29 +36,6 @@ as
   C_NO_JS_ACTION constant varchar2(100) := '// No JavaScript Action';
   
   -- Templates zur Erzeugung der Regelview
-  c_column_delimiter constant varchar2(100 byte) := ',' || c_cr || '              ';
-  c_join_delimiter constant varchar2(100 byte) := c_cr || '           or ';
-  c_join_clause_template constant varchar2(100 byte) := q'~(r.sru_id = #ID# and ((#CONDITION#) or sru_fire_on_page_load = initializing))~';
-  c_rule_view_template constant varchar2(2000 byte) := 
-q'~create or replace force view #NAME# as
-  with session_state as(
-       select bl_sct.get_firing_item firing_item,
-              case bl_sct.get_firing_item when 'DOCUMENT' then 1 else 0 end initializing#DATA_COLS#
-         from dual),
-       data as (
-       select /*+ NO_MERGE(s) */
-              r.sru_id, r.sru_name, r.sru_firing_items, r.sru_fire_on_page_load,
-              r.sra_spi_id, r.sra_sat_id, r.sra_attribute, r.sra_attribute_2, r.sra_on_error, r.sra_raise_recursive, r.sra_sort_seq,
-              rank() over (order by r.sru_sort_seq) rang, s.initializing
-         from sct_bl_rules r
-         join session_state s
-           on (instr(r.sru_firing_items, ',' || s.firing_item || ',') > 0 or sru_fire_on_page_load = 1)
-        where r.sgr_id = #SGR_ID#
-          and (#WHERE_CLAUSE#))
-select sru_id, sru_name, sra_spi_id, sra_sat_id, sra_attribute, sra_attribute_2, sra_on_error, sra_raise_recursive, sra_sort_seq
-  from data
- where rang = 1 or sru_fire_on_page_load = initializing
- order by sru_fire_on_page_load desc, rang~';
   
   -- Templates zur Erzeugung der Seiten-Aktion
   c_plsql_action_template constant varchar2(200 byte) := 'begin#CR#  #CODE##CR#  commit;#CR#end;';
@@ -158,14 +134,6 @@ q'~
 ~';
 
   -- Templates zur Validierung von Regelgruppen
-  c_rule_validation_template constant varchar2(2000 byte) := 
-q'~  with session_state as(
-       select null firing_item,
-              null initializing#DATA_COLS#
-         from dual)
-select *
-  from session_state
- where #CONDITION#~';
  
   c_rule_group_error constant varchar2(200 char) := q'~<p>Regelgruppe "#SGR_NAME#" kann nicht exportiert werden:</p><ul>#ERROR_LIST#</ul>~';
   c_page_item_error constant varchar2(200 char) := q'~<li>#SIT_NAME# "#SPI_ID#" existiert in Anwendung #SGR_APP_ID# nicht</li>~';

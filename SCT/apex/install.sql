@@ -27,8 +27,14 @@ prompt &h3.CREATE VIEWS
 prompt &s1.Create view SCT_UI_ACTION_TYPE
 @&view_dir.sct_ui_action_type.vw
 
+prompt &s1.Create view SCT_UI_EDIT_GROUP
+@&view_dir.sct_ui_edit_group.vw
+
 prompt &s1.Create view SCT_UI_EDIT_RULE
 @&view_dir.sct_ui_edit_rule.vw
+
+prompt &s1.Create view SCT_UI_EDIT_RULE_ACTION
+@&view_dir.sct_ui_edit_rule_action.vw
 
 prompt &s1.Create view SCT_UI_LIST_ACTION_TYPE
 @&view_dir.sct_ui_list_action_type.vw
@@ -59,6 +65,10 @@ prompt &s1.Create view SCT_UI_MAIN_GROUPS
 
 prompt &s1.Create view SCT_UI_MAIN_RULES
 @&view_dir.sct_ui_main_rules.vw
+
+
+prompt &h3.Create MESSAGES
+@create_messages.sql
 
 
 prompt &h3.Create PACKAGES
