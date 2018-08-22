@@ -143,9 +143,9 @@ as
     return l_clob;
   end stack_to_clob;
 
+
   /* Hilfsprozedur zum Formatieren von ausloesenden Elementen.
-   * %usage Die Methode analysiert, ob das ausloesende Element eine Formatmaske
-   *        hinterlegt hat. Falls ja,
+   * %usage Die Methode analysiert, ob das ausloesende Element eine Formatmaske hinterlegt hat. Falls ja,
    *        - wird das Element testweise konvertiert, um Fehler abzufangen
    *        - wird das konvertierte Element mit der Formatierung in eine Zeichen-
    *          kette konvertiert und im Session State gespeichert, um auf der 
@@ -584,11 +584,11 @@ as
   /* Funktion wertet die Regel der angeforderten Regelgruppe aus
    * %return HTML-Script mit den Javascript-Anweisungen fuer die clientseitige
    *         Verarbeitung
-   * %usage Wird durch das Plugin beim Refresh aufgerufen
-   *        - Erstellt einen PL/SQL-Skript, der sofort ausgefuehrt wird
-   *        - Erstellt einen JavaScript-Skript, der zurueckgeliefert wird
-   *        - Analysiert, ob Regel rekursive Ausfuehrung erfordert und ruft
-   *          sich selbst mit den rekursiven Regeln auf
+   * %usage  Wird durch das Plugin beim Refresh aufgerufen
+   *         - Erstellt einen PL/SQL-Skript, der sofort ausgefuehrt wird
+   *         - Erstellt einen JavaScript-Skript, der zurueckgeliefert wird
+   *         - Analysiert, ob Regel rekursive Ausfuehrung erfordert und ruft
+   *           sich selbst mit den rekursiven Regeln auf
    */
   procedure process_rule
   as

@@ -874,6 +874,15 @@ as
   end merge_rule;
 
 
+  procedure delete_rule(
+    p_sru_id in sct_rule.sru_id%type default null)
+  as
+  begin
+    delete from sct_rule
+     where sru_id = p_sru_id;
+  end delete_rule;
+  
+  
   procedure propagate_rule_change(
     p_sgr_id in sct_rule_group.sgr_id%type)
   as
@@ -992,6 +1001,23 @@ as
     when others then
       pit.stop(msg.SCT_MERGE_RULE_ACTION, msg_args(to_char(p_sra_sru_id), to_char( p_sra_spi_id)));
   end merge_rule_action;
+  
+  
+  procedure delete_rule_action(
+    p_sra_sru_id in sct_rule.sru_id%type,
+    p_sra_sgr_id in sct_rule_group.sgr_id%type,
+    p_sra_spi_id in sct_page_item.spi_id%type,
+    p_sra_sat_id in sct_action_type.sat_id%type,
+    p_sra_on_error in sct_rule_action.sra_on_error%type)
+  as
+  begin
+    delete from sct_rule_action
+     where sra_sru_id = p_sra_sru_id
+       and sra_sgr_id = p_sra_sgr_id
+       and sra_spi_id = p_sra_spi_id
+       and sra_sat_id = p_sra_sat_id
+       and sra_on_error = p_sra_on_error;
+  end delete_rule_action;
   
 
   procedure delete_apex_action(    

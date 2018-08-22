@@ -5,6 +5,7 @@ define type_dir=&sql_dir.types/
 define view_dir=&sql_dir.views/
 define plsql_dir=apex/plsql/
 define apex_dir=apex/apex/
+define msg_dir=&sql_dir.messages/&DEFAULT_LANGUAGE./
 
 
 prompt &h3.Check installation prerquisites
@@ -68,7 +69,7 @@ prompt &s1.Create view SCT_UI_MAIN_RULES
 
 
 prompt &h3.Create MESSAGES
-@create_messages.sql
+@&msg_dir.create_messages.sql
 
 
 prompt &h3.Create PACKAGES

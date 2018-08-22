@@ -5,6 +5,7 @@ define type_dir=&sql_dir.types/
 define view_dir=&sql_dir.views/
 define plsql_dir=core/plsql/
 define script_dir=&sql_dir.scripts/
+define msg_dir=&sql_dir.messages/&DEFAULT_LANGUAGE./
 
 prompt &h3.Check installation prerequisites
 @core/check_prerequisites.sql
@@ -51,7 +52,7 @@ prompt &s1.Create view SCT_BL_PAGE_TARGETS
 
 
 prompt &h3.Create SCT messages
-@core/create_messages.sql
+@&msg_dir.create_messages.sql
 
 
 prompt &h3.Create CodeGenerator templates
