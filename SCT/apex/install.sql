@@ -34,6 +34,9 @@ prompt &s1.Create view SCT_UI_EDIT_GROUP
 prompt &s1.Create view SCT_UI_EDIT_RULE
 @&view_dir.sct_ui_edit_rule.vw
 
+prompt &s1.Create view SCT_UI_EDIT_APEX_ACTION
+@&view_dir.sct_ui_edit_apex_action.vw
+
 prompt &s1.Create view SCT_UI_EDIT_RULE_ACTION
 @&view_dir.sct_ui_edit_rule_action.vw
 

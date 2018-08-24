@@ -417,7 +417,7 @@ as
                              saa.*
                         from sct_apex_action saa
                         join templates
-                          on cgtm_mode = 'APEX_ACTION_' || saa.saa_type
+                          on cgtm_mode = 'APEX_ACTION_' || saa.saa_sty_id
                        where saa.saa_sgr_id = p.sgr_id
                     )) apex_actions
                from templates
@@ -1037,17 +1037,19 @@ as
     merge into sct_apex_action t    
     using (select p_row.saa_sgr_id saa_sgr_id,
                   p_row.saa_name saa_name,
-                  p_row.saa_type saa_type,
+                  p_row.saa_sty_id saa_sty_id,
                   p_row.saa_label saa_label,
-                  p_row.saa_on_label saa_on_label,
-                  p_row.saa_off_label saa_off_label,
                   p_row.saa_context_label saa_context_label,
                   p_row.saa_icon saa_icon,
                   p_row.saa_icon_type saa_icon_type,
                   p_row.saa_title saa_title,
                   p_row.saa_shortcut saa_shortcut,
+                  p_row.saa_initially_disabled saa_initially_disabled,
+                  p_row.saa_initially_hidden saa_initially_hidden,
                   p_row.saa_href saa_href,
                   p_row.saa_action saa_action,
+                  p_row.saa_on_label saa_on_label,
+                  p_row.saa_off_label saa_off_label,
                   p_row.saa_get saa_get,
                   p_row.saa_set saa_set,
                   p_row.saa_choices saa_choices,
@@ -1059,72 +1061,84 @@ as
        on (t.saa_sgr_id = s.saa_sgr_id
       and t.saa_name = s.saa_name)    
      when matched then update set               
-            t.saa_type = s.saa_type,  
+            t.saa_sty_id = s.saa_sty_id,  
             t.saa_label = s.saa_label,
-            t.saa_on_label = s.saa_on_label,
-            t.saa_off_label = s.saa_off_label,
             t.saa_context_label = s.saa_context_label,
             t.saa_icon = s.saa_icon,
             t.saa_icon_type = s.saa_icon_type,
             t.saa_title = s.saa_title,
             t.saa_shortcut = s.saa_shortcut,
+            t.saa_initially_disabled = s.saa_initially_disabled,
+            t.saa_initially_hidden = s.saa_initially_hidden,
             t.saa_href = s.saa_href,
             t.saa_action = s.saa_action,
             t.saa_get = s.saa_get,
             t.saa_set = s.saa_set,
+            t.saa_on_label = s.saa_on_label,
+            t.saa_off_label = s.saa_off_label,
             t.saa_choices = s.saa_choices,
             t.saa_label_classes = s.saa_label_classes,
             t.saa_label_start_classes = s.saa_label_start_classes,
             t.saa_label_end_classes = s.saa_label_end_classes,
             t.saa_item_wrap_class = s.saa_item_wrap_class 
      when not matched then insert(            
-            t.saa_sgr_id, t.saa_name, t.saa_type, t.saa_label, t.saa_on_label, t.saa_off_label, t.saa_context_label, t.saa_icon, 
-            t.saa_icon_type, t.saa_title, t.saa_shortcut, t.saa_href, t.saa_action, t.saa_get, t.saa_set, t.saa_choices, 
-            t.saa_label_classes, t.saa_label_start_classes, t.saa_label_end_classes, t.saa_item_wrap_class)          
+            t.saa_sgr_id, t.saa_name, t.saa_sty_id, t.saa_label, t.saa_context_label, t.saa_icon, t.saa_icon_type, t.saa_title, 
+            t.saa_shortcut, t.saa_initially_disabled, t.saa_initially_hidden, t.saa_href, t.saa_action, t.saa_get, t.saa_set, 
+            t.saa_on_label, t.saa_off_label, t.saa_choices, t.saa_label_classes, t.saa_label_start_classes, 
+            t.saa_label_end_classes, t.saa_item_wrap_class)          
           values(            
-            s.saa_sgr_id, s.saa_name, s.saa_type, s.saa_label, s.saa_on_label, s.saa_off_label, s.saa_context_label, s.saa_icon, 
-            s.saa_icon_type, s.saa_title, s.saa_shortcut, s.saa_href, s.saa_action, s.saa_get, s.saa_set, s.saa_choices, 
-            s.saa_label_classes, s.saa_label_start_classes, s.saa_label_end_classes, s.saa_item_wrap_class);  
+            s.saa_sgr_id, s.saa_name, s.saa_sty_id, s.saa_label, s.saa_context_label, s.saa_icon, s.saa_icon_type, s.saa_title, 
+            s.saa_shortcut, s.saa_initially_disabled, s.saa_initially_hidden, s.saa_href, s.saa_action, s.saa_get, s.saa_set, 
+            s.saa_on_label, s.saa_off_label, s.saa_choices, s.saa_label_classes, s.saa_label_start_classes, 
+            s.saa_label_end_classes, s.saa_item_wrap_class);  
   end merge_apex_action;
   
   
   procedure merge_apex_action(    
     p_saa_sgr_id in sct_apex_action.saa_sgr_id%type,
+    p_saa_sty_id in sct_apex_action.saa_sty_id%type,
     p_saa_name in sct_apex_action.saa_name%type,
-    p_saa_type in sct_apex_action.saa_type%type,
     p_saa_label in sct_apex_action.saa_label%type,
-    p_saa_on_label in sct_apex_action.saa_on_label%type,
-    p_saa_off_label in sct_apex_action.saa_off_label%type,
-    p_saa_context_label in sct_apex_action.saa_context_label%type,
-    p_saa_icon in sct_apex_action.saa_icon%type,
-    p_saa_icon_type in sct_apex_action.saa_icon_type%type,
-    p_saa_title in sct_apex_action.saa_title%type,
-    p_saa_shortcut in sct_apex_action.saa_shortcut%type,
-    p_saa_href in sct_apex_action.saa_href%type,
-    p_saa_action in sct_apex_action.saa_action%type,
-    p_saa_get in sct_apex_action.saa_get%type,
-    p_saa_set in sct_apex_action.saa_set%type,
-    p_saa_choices in sct_apex_action.saa_choices%type,
-    p_saa_label_classes in sct_apex_action.saa_label_classes%type,
-    p_saa_label_start_classes in sct_apex_action.saa_label_start_classes%type,
-    p_saa_label_end_classes in sct_apex_action.saa_label_end_classes%type,
-    p_saa_item_wrap_class in sct_apex_action.saa_item_wrap_class%type)   
+    p_saa_context_label in sct_apex_action.saa_context_label%type default null,
+    p_saa_icon in sct_apex_action.saa_icon%type default null,
+    p_saa_icon_type in sct_apex_action.saa_icon_type%type default 'fa',
+    p_saa_title in sct_apex_action.saa_title%type default null,
+    p_saa_shortcut in sct_apex_action.saa_shortcut%type default null,
+    p_saa_initially_disabled in sct_apex_action.saa_initially_disabled%type default 0,
+    p_saa_initially_hidden in sct_apex_action.saa_initially_hidden%type default 0,
+    -- ACTION
+    p_saa_href in sct_apex_action.saa_href%type default null,
+    p_saa_action in sct_apex_action.saa_action%type default null,
+    -- TOGGLE
+    p_saa_on_label in sct_apex_action.saa_on_label%type default null,
+    p_saa_off_label in sct_apex_action.saa_off_label%type default null,
+    -- TOGGLE | RADIO_GROUP
+    p_saa_get in sct_apex_action.saa_get%type default null,
+    p_saa_set in sct_apex_action.saa_set%type default null,
+    -- RADIO_GROUP
+    p_saa_choices in sct_apex_action.saa_choices%type default null,
+    p_saa_label_classes in sct_apex_action.saa_label_classes%type default null,
+    p_saa_label_start_classes in sct_apex_action.saa_label_start_classes%type default null,
+    p_saa_label_end_classes in sct_apex_action.saa_label_end_classes%type default null,
+    p_saa_item_wrap_class in sct_apex_action.saa_item_wrap_class%type default null)   
   as    
     l_row sct_apex_action%rowtype;  
   begin    
     l_row.saa_sgr_id := p_saa_sgr_id;
     l_row.saa_name := p_saa_name;
-    l_row.saa_type := p_saa_type;
+    l_row.saa_sty_id := p_saa_sty_id;
     l_row.saa_label := p_saa_label;
-    l_row.saa_on_label := p_saa_on_label;
-    l_row.saa_off_label := p_saa_off_label;
     l_row.saa_context_label := p_saa_context_label;
     l_row.saa_icon := p_saa_icon;
     l_row.saa_icon_type := p_saa_icon_type;
     l_row.saa_title := p_saa_title;
     l_row.saa_shortcut := p_saa_shortcut;
+    l_row.saa_initially_disabled := p_saa_initially_disabled;
+    l_row.saa_initially_hidden := p_saa_initially_hidden;
     l_row.saa_href := p_saa_href;
     l_row.saa_action := p_saa_action;
+    l_row.saa_on_label := p_saa_on_label;
+    l_row.saa_off_label := p_saa_off_label;
     l_row.saa_get := p_saa_get;
     l_row.saa_set := p_saa_set;
     l_row.saa_choices := p_saa_choices;

@@ -1,0 +1,11 @@
+create table sct_apex_action_type(
+  sty_id varchar2(50 char),
+  sty_display_name varchar2(50 char),
+  sty_description varchar2(200 char),
+  constraint pk_sct_apex_action_type primary key(sty_id)
+) organization index;
+
+comment on table sct_apex_action_type is 'Table to store the allowed apex action types (ACTION|TOGGLE|RADIO_GROUP)';
+comment on column sct_apex_action_type.sty_id is 'Primary Key. One of the allowed apex action types';
+comment on column sct_apex_action_type.sty_display_name is 'Display name for LOV and UI purposes';
+comment on column sct_apex_action_type.sty_description is 'Optional description';

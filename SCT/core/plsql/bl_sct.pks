@@ -113,6 +113,16 @@ as
    */
   function get_bind_items
     return varchar2;
+    
+    
+  /* Funktion zur Ermittlung eines JSON-Strings mit den APEX-Actions dieser Regelgruppe
+   * %param  p_sgr_id  ID der Regelgruppe, deren Aktionen ermittelt werden sollen
+   * %usage  Wird verwendet, um beim Rendern der Seite eventuelle APEX-Actions auf der Seite zu platzieren.
+   * %return JSON-Instanz, die auf der Seite im entsprechendne Kontext die APEX-Actions anlegt.
+   */
+  function get_apex_actions(
+    p_sgr_id in sct_rule_group.sgr_id%type)
+    return clob;
   
   
   /* Methode zum Aufraeumen nach einem SCT-Aufruf

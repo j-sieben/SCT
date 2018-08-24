@@ -28,6 +28,12 @@ prompt &s1.Create table SCT_RULE_GROUP
 prompt &s1.Create table SCT_ACTION_TYPE
 @&table_dir.sct_action_type.tbl
 
+prompt &s1.Create table SCT_APEX_ACTION_TYPE
+@&table_dir.sct_apex_action_type.tbl
+
+prompt &s1.Create table SCT_APEX_ACTION
+@&table_dir.sct_apex_action.tbl
+
 prompt &s1.Create table SCT_PAGE_ITEM_TYPE
 @&table_dir.sct_page_item_type.tbl
 
@@ -39,9 +45,6 @@ prompt &s1.Create table SCT_RULE
 
 prompt &s1.Create table SCT_RULE_ACTION
 @&table_dir.sct_rule_action.tbl
-
-prompt &s1.Create table SCT_APEX_ACTION
-@&table_dir.sct_apex_action.tbl
 
 
 prompt &s1.Create view SCT_BL_RULES
@@ -84,5 +87,8 @@ prompt &s1.Create package Body BL_SCT
 @&plsql_dir.bl_sct.pkb
 show errors
 
-prompt &h3.Create base action types
-@core/merge_base_action_types.sql
+prompt &h3.Create SCT action types
+@&script_dir.merge_sct_action_type.sql
+
+prompt &h3.Create APEX action types
+@&script_dir.merge_apex_action_type.sql

@@ -78,7 +78,9 @@ q'°    p_saa_context_label => '#SAA_CONTEXT_LABEL#',\CR\°' ||
 q'°    p_saa_icon => '#SAA_ICON#',\CR\°' || 
 q'°    p_saa_icon_type => '#SAA_ICON_TYPE#',\CR\°' || 
 q'°    p_saa_title => '#SAA_TITLE#',\CR\°' || 
-q'°    p_saa_shortcut => '#SAA_SHORTCUT#',\CR\°' || 
+q'°    p_saa_shortcut => '#SAA_SHORTCUT#',\CR\°' ||
+q'°    p_saa_initially_disabled => '#SAA_INITIALLY_DISABLED#',\CR\°' || 
+q'°    p_saa_initially_hidden => '#SAA_INITIALLY_HIDDEN#',\CR\°' || 
 q'°    p_saa_href => '#SAA_HREF#',\CR\°' || 
 q'°    p_saa_action => '#SAA_ACTION#');\CR\°' || 
 q'°°',
@@ -103,6 +105,8 @@ q'°    p_saa_icon => '#SAA_ICON#',\CR\°' ||
 q'°    p_saa_icon_type => '#SAA_ICON_TYPE#',\CR\°' || 
 q'°    p_saa_title => '#SAA_TITLE#',\CR\°' || 
 q'°    p_saa_shortcut => '#SAA_SHORTCUT#',\CR\°' || 
+q'°    p_saa_initially_disabled => '#SAA_INITIALLY_DISABLED#',\CR\°' || 
+q'°    p_saa_initially_hidden => '#SAA_INITIALLY_HIDDEN#',\CR\°' ||
 q'°    p_saa_href => '#SAA_HREF#',\CR\°' || 
 q'°    p_saa_action => '#SAA_ACTION#',\CR\°' || 
 q'°    p_saa_get => '#SAA_GET#',\CR\°' || 
@@ -119,8 +123,8 @@ q'°°',
     p_cgtm_text => q'°\CR\°' || 
 q'°  sct_admin.merge_apex_action(    \CR\°' || 
 q'°    p_saa_sgr_id => sct_admin.map_id(#SGR_ID#),\CR\°' || 
+q'°    p_saa_sty_id => '#SAA_STY_ID#',\CR\°' || 
 q'°    p_saa_name => '#SAA_NAME#',\CR\°' || 
-q'°    p_saa_type => '#SAA_TYPE#',\CR\°' || 
 q'°    p_saa_label => '#SAA_LABEL#',\CR\°' || 
 q'°    p_saa_context_label => '#SAA_CONTEXT_LABEL#',\CR\°' || 
 q'°    p_saa_icon => '#SAA_ICON#',\CR\°' || 
@@ -128,6 +132,8 @@ q'°    p_saa_icon_type => '#SAA_ICON_TYPE#',\CR\°' ||
 q'°    p_saa_title => '#SAA_TITLE#',\CR\°' || 
 q'°    p_saa_href => '#SAA_HREF#',\CR\°' || 
 q'°    p_saa_action => '#SAA_ACTION#',\CR\°' || 
+q'°    p_saa_initially_disabled => '#SAA_INITIALLY_DISABLED#',\CR\°' || 
+q'°    p_saa_initially_hidden => '#SAA_INITIALLY_HIDDEN#',\CR\°' ||
 q'°    p_saa_get => '#SAA_GET#',\CR\°' || 
 q'°    p_saa_set => '#SAA_SET#',\CR\°' || 
 q'°    p_saa_choices => '#SAA_CHOICES#',\CR\°' || 
@@ -389,6 +395,104 @@ q'° where #ATTRIBUTE_04# = (select v('#ATTRIBUTE_03#') from dual)°',
     p_cgtm_type => 'SCT',
     p_cgtm_mode => 'DEFAULT',
     p_cgtm_text => q'°<li>#SIT_NAME# "#SPI_ID#" existiert in Anwendung #SGR_APP_ID# nicht</li>°',
+    p_cgtm_log_text => q'°°',
+    p_cgtm_log_severity => 70
+  );
+  
+  code_generator.merge_template(
+    p_cgtm_name => 'APEX_ACTION',
+    p_cgtm_type => 'SCT',
+    p_cgtm_mode => 'FRAME',
+    p_cgtm_text => q'°apex.actions.add(\CR\°' || 
+q'°[#ACTION_LIST#\CR\°' || 
+q'°]);°',
+    p_cgtm_log_text => q'°APEX actions created°',
+    p_cgtm_log_severity => 70
+  );
+  
+  code_generator.merge_template(
+    p_cgtm_name => 'APEX_ACTION',
+    p_cgtm_type => 'SCT',
+    p_cgtm_mode => 'ACTION',
+    p_cgtm_text => q'°{"action":\CR\°' || 
+q'°  {"name":"#SAA_NAME#",\CR\°' || 
+q'°   "#LABEL_KEY#":"#SAA_LABEL#",\CR\°' || 
+q'°   "contextLabel":"#SAA_CONTEXT_LABEL#",\CR\°' || 
+q'°   "icon":"#SAA_ICON#",\CR\°' || 
+q'°   "iconType":"#SAA_ICON_TYPE#",\CR\°' || 
+q'°   "disabled":"#SAA_INITIALLY_DISABLED#",\CR\°' || 
+q'°   "hide":"#SAA_INITIALLY_HIDDEN#",\CR\°' || 
+q'°   "title":"#SAA_TITLE#",\CR\°' || 
+q'°   "shortcut":"#SAA_SHORTCUT#",\CR\°' || 
+q'°   #SAA_HREF|"href:""|"|##SAA_ACTION|"action":"|"|#\CR\°' || 
+q'°  }\CR\°' || 
+q'°}°',
+    p_cgtm_log_text => q'°°',
+    p_cgtm_log_severity => 70
+  );
+  
+  code_generator.merge_template(
+    p_cgtm_name => 'APEX_ACTION',
+    p_cgtm_type => 'SCT',
+    p_cgtm_mode => 'TOGGLE',
+    p_cgtm_text => q'°{"action":\CR\°' || 
+q'°  {"name":"#SAA_NAME#",\CR\°' || 
+q'°   "#LABEL_KEY#":"#SAA_LABEL#",\CR\°' || 
+q'°   "#ON_LABEL_KEY#":"#SAA_ON_LABEL#",\CR\°' || 
+q'°   "#OFF_LABEL_KEY#":"#SAA_OFF_LABEL#",\CR\°' || 
+q'°   "contextLabel":"#SAA_CONTEXT_LABEL#",\CR\°' || 
+q'°   "icon":"#SAA_ICON#",\CR\°' || 
+q'°   "iconType":"#SAA_ICON_TYPE#",\CR\°' || 
+q'°   "disabled":"#SAA_INITIALLY_DISABLED#",\CR\°' || 
+q'°   "hide":"#SAA_INITIALLY_HIDDEN#",\CR\°' || 
+q'°   "title":"#SAA_TITLE#",\CR\°' || 
+q'°   "shortcut":"#SAA_SHORTCUT#",\CR\°' || 
+q'°   "get":"#SAA_GET#",\CR\°' || 
+q'°   "set":"#SAA_SET#",\CR\°' || 
+q'°  }\CR\°' || 
+q'°}°',
+    p_cgtm_log_text => q'°°',
+    p_cgtm_log_severity => 70
+  );
+  
+  code_generator.merge_template(
+    p_cgtm_name => 'APEX_ACTION',
+    p_cgtm_type => 'SCT',
+    p_cgtm_mode => 'RADIO_GROUP',
+    p_cgtm_text => q'°{"action":\CR\°' || 
+q'°  {"name":"#SAA_NAME#",\CR\°' || 
+q'°   "#LABEL_KEY#":"#SAA_LABEL#",\CR\°' || 
+q'°   "contextLabel":"#SAA_CONTEXT_LABEL#",\CR\°' || 
+q'°   "icon":"#SAA_ICON#",\CR\°' || 
+q'°   "iconType":"#SAA_ICON_TYPE#",\CR\°' || 
+q'°   "disabled":"#SAA_INITIALLY_DISABLED#",\CR\°' || 
+q'°   "hide":"#SAA_INITIALLY_HIDDEN#",\CR\°' || 
+q'°   "title":"#SAA_TITLE#",\CR\°' || 
+q'°   "shortcut":"#SAA_SHORTCUT#",\CR\°' || 
+q'°   "get":"#SAA_GET#",\CR\°' || 
+q'°   "set":"#SAA_SET#",\CR\°' || 
+q'°   "choices":[#SAA_CHOICES#],\CR\°' || 
+q'°   "labelClasses":"#SAA_LABEL_CLASSES#",\CR\°' || 
+q'°   "labelStartClasses":"#SAA_LABEL_START_CLASSES#",\CR\°' || 
+q'°   "labelEndClasses":"#SAA_LABEL_END_CLASSES#",\CR\°' || 
+q'°   "itemWrapClasses":"#SAA_ITEM_WRAP_CLASS#",\CR\°' || 
+q'°  }\CR\°' || 
+q'°}°',
+    p_cgtm_log_text => q'°°',
+    p_cgtm_log_severity => 70
+  );
+  
+  code_generator.merge_template(
+    p_cgtm_name => 'APEX_ACTION',
+    p_cgtm_type => 'SCT',
+    p_cgtm_mode => 'RADIO_GROUP_CHOICE',
+    p_cgtm_text => q'°{#RG_LABEL_KEY#:"#RG_LABEL#",\CR\°' || 
+q'° "value":"#RG_VALUE#",\CR\°' ||  
+q'° "icon":"#RG_ICON#",\CR\°' || 
+q'° "iconType":"#RG_ICON_TYPE#",\CR\°' || 
+q'° "disabled":"#RG_INITIALLY_DISABLED#",\CR\°' ||
+q'° "shortcut":"#RG_SHORTCUT#"#RG_GROUP|,^CR^"group":"|^"|#\CR\°' || 
+q'°}°',
     p_cgtm_log_text => q'°°',
     p_cgtm_log_severity => 70
   );

@@ -768,6 +768,60 @@ as
   begin
     g_has_errors := true;
   end set_error_flag; 
+  
+  
+  function get_apex_actions(
+    p_sgr_id in sct_rule_group.sgr_id%type)
+    return clob
+  as
+    l_actions clob;
+  begin  
+      with params as(
+           select sct_const.c_cr cr
+             from dual),
+           templates as (
+           select cgtm_text template, cgtm_mode template_mode
+             from code_generator_templates
+            where cgtm_type = 'SCT'
+              and cgtm_name = 'APEX_ACTION')
+    select code_generator.generate_text(cursor(
+             select t.template, 
+                    code_generator.generate_text(cursor(
+                      select ta.template, 
+                             lower(saa_name) saa_name, 
+                             replace(saa_label, '"') saa_label, 
+                             case when saa_label like '"%' then 'labelKey' else 'label' end label_key, 
+                             replace(saa_on_label, '"') saa_on_label, 
+                             case when saa_on_label like '"%' then 'onLabelKey' else 'onLabel' end on_label_key, 
+                             replace(saa_off_label, '"') saa_off_label, 
+                             case when saa_off_label like '"%' then 'offLabelKey' else 'offLabel' end off_label_key,
+                             saa_context_label, 
+                             saa_icon, 
+                             saa_icon_type,
+                             case saa_initially_disabled when 0 then 'false' else 'true' end saa_initially_disabled,
+                             case saa_initially_hidden when 0 then 'false' else 'true' end saa_initially_hidden,
+                             apex_escape.json(saa_title) saa_title,
+                             saa_shortcut, 
+                             apex_escape.json(saa_href) saa_href, 
+                             apex_escape.json(saa_action) saa_action,
+                             apex_escape.json(saa_get) saa_get, 
+                             apex_escape.json(saa_set) saa_set,
+                             saa_choices, 
+                             saa_label_classes, 
+                             saa_label_start_classes, 
+                             saa_label_end_classes, 
+                             saa_item_wrap_class,
+                             p.cr
+                        from sct_apex_action
+                        join templates ta
+                          on saa_sty_id = ta.template_mode), ',' || p.cr, 2) action_list
+               from templates t
+              where template_mode = 'FRAME')) resultat
+      into l_actions
+      from params p;
+      
+    return l_actions;
+  end get_apex_actions;
 
   
   -- Business Logic

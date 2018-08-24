@@ -255,7 +255,7 @@ as
   /* Methode zur Erzeugung einer APEX-Aktivitaet (Wrapper um apex.actions-Namespace)
    * %param  p_saa_sgr_id               Referenz auf eine Regelgruppe
    * %param  p_saa_name                 Eindeutiger Bezeichner, wird in APEX als data-<Name> verwendet.
-   * %param  p_saa_type                 Typ der Aktion (ACTION|TOGGLE|RADIO_GROUP),
+   * %param  p_saa_sty_id                 Typ der Aktion (ACTION|TOGGLE|RADIO_GROUP),
    * %param  p_saa_label                Darstellungsnahme der Aktion,
    * %param [p_saa_context_label]       Erweiterter Name, wird in Uebersichten verwendet
    * %param [p_saa_icon]                Icon, das angezeigt werden soll, falls das Seitenelement Icons anzeigen kann
@@ -286,20 +286,26 @@ as
     
   procedure merge_apex_action(
     p_saa_sgr_id in sct_apex_action.saa_sgr_id%type,
+    p_saa_sty_id in sct_apex_action.saa_sty_id%type,
     p_saa_name in sct_apex_action.saa_name%type,
-    p_saa_type in sct_apex_action.saa_type%type,
     p_saa_label in sct_apex_action.saa_label%type,
-    p_saa_on_label in sct_apex_action.saa_on_label%type default null,
-    p_saa_off_label in sct_apex_action.saa_off_label%type default null,
     p_saa_context_label in sct_apex_action.saa_context_label%type default null,
     p_saa_icon in sct_apex_action.saa_icon%type default null,
     p_saa_icon_type in sct_apex_action.saa_icon_type%type default 'fa',
     p_saa_title in sct_apex_action.saa_title%type default null,
     p_saa_shortcut in sct_apex_action.saa_shortcut%type default null,
+    p_saa_initially_disabled in sct_apex_action.saa_initially_disabled%type default 0,
+    p_saa_initially_hidden in sct_apex_action.saa_initially_hidden%type default 0,
+    -- ACTION
     p_saa_href in sct_apex_action.saa_href%type default null,
     p_saa_action in sct_apex_action.saa_action%type default null,
+    -- TOGGLE
+    p_saa_on_label in sct_apex_action.saa_on_label%type default null,
+    p_saa_off_label in sct_apex_action.saa_off_label%type default null,
+    -- TOGGLE | RADIO_GROUP
     p_saa_get in sct_apex_action.saa_get%type default null,
     p_saa_set in sct_apex_action.saa_set%type default null,
+    -- RADIO_GROUP
     p_saa_choices in sct_apex_action.saa_choices%type default null,
     p_saa_label_classes in sct_apex_action.saa_label_classes%type default null,
     p_saa_label_start_classes in sct_apex_action.saa_label_start_classes%type default null,
