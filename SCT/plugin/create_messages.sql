@@ -1,7 +1,21 @@
 begin
 
-
-
+  pit_admin.merge_message(
+    p_pms_name => 'ALLG_PASS_INFORMATION',
+    p_pms_text => q'~#1#~',
+    p_pms_pse_id => 70,
+    p_pms_pml_name => 'GERMAN',
+    p_error_number => null
+  );
+  
+  pit_admin.merge_message(
+    p_pms_name => 'CONVERSION_IMPOSSIBLE',
+    p_pms_text => q'~Eine Umwandlung konnte nicht ausgeführt werden~',
+    p_pms_pse_id => 20,
+    p_pms_pml_name => 'GERMAN',
+    p_error_number => -20000
+  );
+  
   pit_admin.merge_message(
     p_pms_name => 'SCT_APP_DOES_NOT_EXIST',
     p_pms_text => q'~APEX-Anwendung #1# existiert nicht.~',
@@ -251,6 +265,6 @@ begin
   );
 
   commit;
-  --pit_admin.create_message_package;
+  pit_admin.create_message_package;
 end;
 /
