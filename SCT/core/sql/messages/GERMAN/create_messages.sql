@@ -4,6 +4,55 @@ begin
     p_pmg_name => 'SCT',
     p_pmg_description => 'Meldungen für das SCT Plugin');
 
+
+  pit_admin.merge_message(
+    p_pms_name => 'INVALID_DATE',
+    p_pms_text => q'~Ungültiges Datum: #1#~',
+    p_pms_pse_id => 30,
+    p_pms_pml_name => 'GERMAN',
+    p_error_number => -1858
+  );
+
+  pit_admin.merge_message(
+    p_pms_name => 'INVALID_DATE_FORMAT',
+    p_pms_text => q'~Ungültiges Datumsformat: #1#~',
+    p_pms_pse_id => 30,
+    p_pms_pml_name => 'GERMAN',
+    p_error_number => -1861
+  );
+
+  pit_admin.merge_message(
+    p_pms_name => 'INVALID_DAY',
+    p_pms_text => q'~#1#~',
+    p_pms_pse_id => 30,
+    p_pms_pml_name => 'GERMAN',
+    p_error_number => -1847
+  );
+
+  pit_admin.merge_message(
+    p_pms_name => 'INVALID_MONTH',
+    p_pms_text => q'~#1#~',
+    p_pms_pse_id => 30,
+    p_pms_pml_name => 'GERMAN',
+    p_error_number => -1843
+  );
+
+  pit_admin.merge_message(
+    p_pms_name => 'INVALID_NUMBER_FORMAT',
+    p_pms_text => q'~Ungültiges Zahlformat: #1#~',
+    p_pms_pse_id => 30,
+    p_pms_pml_name => 'GERMAN',
+    p_error_number => -1481
+  );
+
+  pit_admin.merge_message(
+    p_pms_name => 'INVALID_YEAR',
+    p_pms_text => q'~#1#~',
+    p_pms_pse_id => 30,
+    p_pms_pml_name => 'GERMAN',
+    p_error_number => -1841
+  );
+  
   pit_admin.merge_message(
     p_pms_name => 'SCT_APP_DOES_NOT_EXIST',
     p_pms_pmg_name => 'SCT',
