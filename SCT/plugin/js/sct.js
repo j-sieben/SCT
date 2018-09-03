@@ -48,25 +48,65 @@ de.condes.plugin.sct = {};
 
   var
   eventData = {'ajaxIdentifier':sct.ajaxIdentifier,'pageItems':sct.pageItems},
+  triggeringElement = {'id':'','$element':{},'$button':{},'isClick':false},
   C_BIND_EVENT = 'change',
   C_CLICK_EVENT = 'click',
   C_APEX_REFRESH = 'apexrefresh',
+  C_DISABLED_CSS = 'apex_disabled';
   C_APEX_BEFORE_REFRESH = 'apexbeforerefresh',
   C_APEX_AFTER_REFRESH = 'apexafterrefresh',
-  C_NO_TRIGGERING_ITEM = 'DOCUMENT';
+  C_NO_TRIGGERING_ITEM = 'DOCUMENT',
+  C_BUTTON = 'button',
+  C_APEX_BUTTON = 't-Button';
 
   sct.ajaxIdentifier = {};
   sct.lastItemValues = {};
-
+  
 
   /*
     Private Hilfsmethoden
    */
-
+  // Hilfsmethode deaktiviert die geklickte Schaltflaeche, um Doppelklick zu verhindern
+  function lockButton(){
+    if (triggeringElement.isClick){
+      apex.item(triggeringElement.id).disable();
+      // Eventuell vorhandene weitere Events (Doppelklick etc.) aus Queue entfernen
+      $('body').clearQueue();
+    };
+  };
+  
+  
   // Hilfsmethode, wird als Callback-Methode für den Change-Event verwendet
   function changeCallback(e){
-    apex.debug.log(`Event »${e.type}« raised at ${e.target}`);
-    sct.execute(e);
+    getTriggeringElement(e);
+    
+    // Anforderung in Queue legen, um mehrere Events der Reihe nach abzuarbeiten
+    $('body').queue(function(){
+      sct.execute(e);
+    });
+  };
+  
+  
+  // Hilfsmethode, wird verwendet, um vor dem Absenden des Events einen Bestätigungsdialog zu zeigen
+  function confirmCallback(e){
+    getTriggeringElement(e);
+    
+    // Anforderung in Queue legen, um mehrere Events der Reihe nach abzuarbeiten
+    $('body').queue(function(){
+      // Schaltflaeche
+      lockButton();
+      // Eigentliches Callback wird an positive Antwort auf Bestaetigung gebunden
+      sct.ApexJS.confirmRequest(e, changeCallback);
+    });
+  };
+
+
+  // Hilfsfunktion fügt Element der Liste der Seitenelemente hinzu, deren Werte beim Auslösen von SCT
+  // an den Server gesendet werden müssen
+  function addPageItem(itemName){
+    if($.inArray(itemName, sct.pageItems) === -1){
+      sct.pageItems.push(itemName);
+    };
   };
 
 
@@ -81,17 +121,17 @@ de.condes.plugin.sct = {};
       if (eventList == undefined || eventList[event] == undefined){
         // Element hat noch keinen entsprechenden Event, binden
         $this
-        .on(event, {'ajaxIdentifier':sct.ajaxIdentifier,'pageItems':sct.pageItems}, changeCallback);
+        .on(event, eventData, changeCallback);
         if(event == C_BIND_EVENT){
           // CHANGE-Events sollen bei APEXREFRESH nicht ausgelöst werden, pausieren
           $this
           .on(C_APEX_BEFORE_REFRESH, function(e){
             $(this).off(C_BIND_EVENT);
-            apex.debug.log(`Event »${C_BIND_EVENT}« paused at ${item}`);
+            apex.debug.log(`Event "${C_BIND_EVENT}" paused at ${item}`);
           })
           .on(C_APEX_AFTER_REFRESH, function(e){
-            $(this).on(C_BIND_EVENT, {'ajaxIdentifier':sct.ajaxIdentifier,'pageItems':sct.pageItems}, changeCallback);
-            apex.debug.log(`Event »${C_BIND_EVENT}« re-established at ${item}`);
+            $(this).on(C_BIND_EVENT, eventData, changeCallback);
+            apex.debug.log(`Event "${C_BIND_EVENT}" re-established at ${item}`);
           });
         };
       };
@@ -106,8 +146,34 @@ de.condes.plugin.sct = {};
   function bindEvents() {
     $.each(sct.bindItems, function(){
       bindEvent(this.id, this.event);
+      if(this.event == C_BIND_EVENT){
+        addPageItem(this.id);
+      }
     });
   };
+
+
+  // Hilfsfunktion ermittelt die Liste von Elementen, deren aktuelle Werte bei jedem Event
+  // in den SessionState kopiert werden. Es kann eine (Liste von) CSS-Klassen oder Element-IDs
+  // übergeben werden
+  function bindObserverElements(selector){
+    var selectorList;
+    if (selector) {
+      selectorList = selector.split(',');
+      $.each(selectorList, function(idx, element){
+        if(this.substring(0,1) == '.'){
+          $(element).each(function(idx, element){
+            addPageItem($(element).attr('id'));
+          });
+        }
+        else{
+          if($.inArray(element, sct.pageItems) === -1){
+            sct.pageItems.push(element);
+          };
+        };
+      });
+    };
+  }
 
 
   // Methode findet ein konkretes Element in einem JSON-Array und liefert dessen Wert zurück
@@ -120,7 +186,7 @@ de.condes.plugin.sct = {};
     });
 
     // Liefere VALUE
-    if(result){
+    if(result.length > 0){
       return result[0].value;
     }
   };
@@ -128,7 +194,7 @@ de.condes.plugin.sct = {};
 
   // Methode zur Konvertierung einer hexadezimalen Darstellung in einen Text
   // Wird verwendet, um beliebige Text per JSON übermitteln zu können, ohne aufwändiges Escaping
-  // durchzufhren. In der Datenbank wird der Text mittels utl_raw.cast_to_raw(<TEXT>) erzeugt.
+  // durchzuführen. In der Datenbank wird der Text mittels utl_raw.cast_to_raw(<TEXT>) erzeugt.
   function hexToChar(rawString) {
     var code = '';
     var hexString;
@@ -144,24 +210,35 @@ de.condes.plugin.sct = {};
   // Methode zur Ermittlung der ID des auslösenden Elements.
   function getTriggeringElement(e){
     // Falls PageLoad, wird "document" verwendet
-    var triggeringElement = C_NO_TRIGGERING_ITEM
+    triggeringElement.id = C_NO_TRIGGERING_ITEM;
+    triggeringElement.isClick = e.type == C_CLICK_EVENT;
 
     if (typeof e.target != 'undefined'){
-      triggeringElement = e.target.id;
-      if (triggeringElement == '') {
+		//TODO: Ursache dafür finden, dass target.id für Buttons manchmal leer ist. WA: currentTarget.id nutzten
+      triggeringElement.id = e.target.id != '' ? e.target.id : e.currentTarget.id;
+      if (triggeringElement.id == '') {
         // Einige Browser senden accessKey-span anstatt Schaltfläche als triggerndes Element
         // In diesen Fällen parent-Element ansprechen und ID von dort lesen
-        triggeringElement = e.target.parentElement.id;
+        triggeringElement.id = e.target.parentElement.id;
       };
-      $triggeringElement = $('#' + triggeringElement);
+      triggeringElement.$element = $(`#${triggeringElement.id}`);
 
-      if($triggeringElement.attr('type') == 'radio'){
+      if(triggeringElement.$element.attr('type') == 'radio' || triggeringElement.$element.attr('type') == 'checkbox'){
         // Radio-Buttons haben ihre ID im parent-Fieldset
-        triggeringElement = $triggeringElement.parents('fieldset').attr('id');
+        triggeringElement.id = triggeringElement.$element.parents('fieldset').attr('id');
+        triggeringElement.$element = $(`#${triggeringElement.id}`);
       }
-      apex.debug.log(`Triggering element: ${triggeringElement}`);
+       apex.debug.log(`Event "${e.type}" raised at Triggering element "${triggeringElement.id}"`);
     }
-    return triggeringElement;
+    
+    if(triggeringElement.isClick){
+      triggeringElement.$button = $(`#${triggeringElement.id}`);
+      // Je nach Art der Auslösung des CLICK-Events (mit Maus oder durch Code)
+      // wird ein unterschiedliches Objekt angesprochen. Dies wird hier behandelt.
+      if (!triggeringElement.$button.hasClass(C_APEX_BUTTON)){
+        triggeringElement.$button = $(`#${triggeringElement.id}`).parent(C_BUTTON);
+      };
+    };
   };
 
 
@@ -175,15 +252,16 @@ de.condes.plugin.sct = {};
       $('body').append(code);
       $('#' + $(code).attr('id')).remove();
     };
+    $('body').dequeue();
   };
-  
-   
+
+
   // Hilfsmethode zur Ausführung des Callbacks auf
   // - dem identifizierten Element
   // - dem jQuery-Selektor
   function forEach(item, callback){
     if(!($.isArray(item) || item.search(/[\.# :\[\]]+/) >= 0)){
-      // Übergebenes ITEM ist Elementname, um # erweitern
+      // übergebenes ITEM ist Elementname, um # erweitern
       item = `#${item}`;
     }
     $(item).each(callback);
@@ -193,7 +271,7 @@ de.condes.plugin.sct = {};
   /*
     Implementierung der Plugin-Funktionalität
    */
-  
+
 
   // Funktionen, die durch Script aus Response aufgerufen werden.
   sct.setRuleName = function(ruleName){
@@ -215,8 +293,8 @@ de.condes.plugin.sct = {};
       };
     });
   };
-  
-  
+
+
   sct.setItemValue = function(item, value){
     forEach(item, function(){
         var itemId = $(this).attr('id');
@@ -227,7 +305,27 @@ de.condes.plugin.sct = {};
 
   // Wrapper um sct.ApexJS
   sct.setErrors = function(errorList) {
+    if(errorList.errors.length > 0){
+      // Werden Fehler gemeldet, sollen alle eventuell weiteren Events unterdrueckt werden
+      $('body').clearQueue();
+    };
     sct.ApexJS.maintainErrors(errorList);
+  };
+  
+  
+  // Bindet einen Confirmation-Handler an eine Schaltfläche
+  sct.bindConfirmation = function(item, message, title){
+    var $this = $(`#${item}`);
+
+    if ($this.length > 0){
+      // Element ist auf Seite auch vorhanden (könnte durch Condition fehlen)
+      var eventList = $._data($this.get(0), 'events');
+      if (eventList[C_CLICK_EVENT]){
+        $this.off(C_CLICK_EVENT);
+      };
+      // Click-Event mit Confirmation-Handler binden
+      $this.on(C_CLICK_EVENT, {'ajaxIdentifier':sct.ajaxIdentifier,'pageItems':sct.pageItems,'message':message,'title':title}, confirmCallback);
+    };
   };
 
 
@@ -238,7 +336,7 @@ de.condes.plugin.sct = {};
 
   sct.setMandatory = function(item, mandatory){
     forEach(item, function(){
-      var itemId = $(this).attr('id');
+      var itemId = $(this).attr('id').replace('_CONTAINER','');
       if (mandatory){
         bindEvent(itemId, C_BIND_EVENT);
         sct.pageItems.push(itemId);
@@ -267,7 +365,7 @@ de.condes.plugin.sct = {};
     .one(C_APEX_AFTER_REFRESH, function(e){
           $(this).off(C_BIND_EVENT);
           $s(item, itemValue);
-          $(this).on(C_BIND_EVENT, {'ajaxIdentifier':sct.ajaxIdentifier,'pageItems':sct.pageItems}, changeCallback);
+          $(this).on(C_BIND_EVENT, eventData, changeCallback);
         })
     .trigger(C_APEX_REFRESH);
     sct.enable(item);
@@ -278,6 +376,11 @@ de.condes.plugin.sct = {};
     forEach(item, function(){
       var itemId = $(this).attr('id');
       sct.ApexJS.disableElement(itemId);
+      // Sonderfall: click-Event, waehrend der Cursor in Eingabefeld stand:
+      // Eventfolge change - click. Hat change-Event ein disable zur Folge, 
+      // muss der click-Event aus der Queue entfernt werden, damit er nicht
+      // ausgefuehrt wird.
+      $('body').clearQueue();
     });
   };
 
@@ -310,28 +413,45 @@ de.condes.plugin.sct = {};
 
   // Plugin-Funktionalität
   sct.execute = function(e){
+    
+    // Falls click-Event, zugehoerige Schatlflaeche sperren
+    lockButton();
+    console.log('Behandle Event ' + e.type);
     server.plugin(
-      e.data.ajaxIdentifier,
+      sct.ajaxIdentifier,
       {
-        'x01':getTriggeringElement(e),
+        'x01':triggeringElement.id,
         // Kopiere alle relevanten Seitenelemente in den SessionState
-        'pageItems':e.data.pageItems
+        'pageItems':sct.pageItems
       },
       {
         'dataType':'html',
-        'success':executeCode
+        'success':function(data){
+          if(triggeringElement.isClick){
+            apex.item(triggeringElement.id).enable();
+          }
+          executeCode(data);
+        }
       }
     );
   };
 
 
   sct.init = function(me){
+    // me.action enthält folgende Parameter:
+    // me.action.attribute_01: JSON-Liste aller Elemente, die einen Eventhandler benötigen, sowie den zu bindenden Event;
+    // me.action.attribute_02: Liste der Elemente, deren Elementwert sich durch SCT im SessionState geändert hat mit den aktuellen Werten
+    // me.action.attribute_03: Namensraumobjekt der JavaScript-Datei, die für die Darstellung von SCT auf der Seite verantwortlich ist (SCT_APEX_...)
+    // me.action.attribute_04: JavaScript-Instanz, mit Aktionen, die auf der Seite ausgeführt werden sollen
+    // me.action.attribute_05: Liste mit Elementnamen oder CSS-Klassenselektoren, deren Elementwerte bei jedem Ereignis in den SessionState kopiert werden sollen
     // Binde auslösende Events an Elemente, die über Attribut 01 übergeben werden
     sct.bindItems = $.parseJSON(me.action.attribute01.replace(/~/g, '"'));
     sct.pageItems = [];
     if (me.action.attribute02) {
       sct.pageItems = me.action.attribute02.split(',');
     };
+
+    bindObserverElements(me.action.attribute05);
 
     // Registriere APEX-JavaScript Objekt
     sct.ApexJS = eval(me.action.attribute03);
