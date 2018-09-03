@@ -319,6 +319,18 @@ de.condes.plugin.sct.apex_42_5_1 = {};
   };
   
   
+  /**
+   * Methode zur Darstellung einer Bestätigungsnachricht auf der Seite
+   */
+  sct.confirmRequest = function(e, callback){
+    apex.dialog.confirm(e.data.message,e.data.title).then(function (answer) {
+      if(answer == "true"){
+         callback(e);
+      };
+    });
+  };
+  
+  
   sct.disableElement = function (item){
     // Normales Element, nicht deaktivieren, da ansonsten Sessionstate nicht gefüllt wird.
     // Stattdessen readonly und CSS-Klasse setzen, so dass es wie deaktiviert aussieht
