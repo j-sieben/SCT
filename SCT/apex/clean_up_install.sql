@@ -12,9 +12,12 @@ declare
             from all_objects
            where object_name in (
                  '', -- Typen
-                 'UI_SCT', -- Packages
-                 'UI_SCT_ACTION_TYPE', 'UI_SCT_EDIT_RULE', 'UI_SCT_LIST_ACTION_TYPE', 'UI_SCT_LIST_PAGE_ITEMS',
-                 'UI_SCT_LOV_PAGE_ITEMS', 'UI_SCT_MAIN_GROUPS', 'UI_SCT_MAIN_RULES', -- Views
+                 'SCT_UI_PKG', -- Packages
+                 'SCT_UI_ACTION_TYPE', 'SCT_UI_ACTION_TYPE_HELP', 'SCT_UI_EDIT_APEX_ACTION', 'SCT_UI_EDIT_GROUP', 'SCT_UI_EDIT_GROUP_ACTION', 
+                 'SCT_UI_EDIT_GROUP_APEX_ACTION',
+                 'SCT_UI_EDIT_RULE', 'SCT_UI_EDIT_RULE_ACTION', 'SCT_UI_EDIT_SAA', 'SCT_UI_LIST_ACTION_TYPE', 'SCT_UI_LIST_PAGE_ITEMS',
+                 'SCT_UI_LOV_APEX_ACTION_TYPE', 'SCT_UI_LOV_APP_PAGES', 'SCT_UI_LOV_APPLICATIONS', 'SCT_UI_LOV_PAGE_ITEMS',
+                 'SCT_UI_LOV_SGR_APP_PAGES', 'SCT_UI_LOV_SGR_APPLICATIONS', 'SCT_UI_LOV_SGR_PAGE_ITEMS', 'SCT_UI_MAIN_GROUPS', 'SCT_UI_MAIN_RULES', -- Views
                  '',   -- Tabellen
                  '',  -- Synonyme
                  '' -- Sequenzen
@@ -25,7 +28,7 @@ declare
 begin
   for obj in delete_object_cur loop
     begin
-      execute immediate 'drop ' || obj.type || ' ' || obj.name ||
+      execute immediate 'drop ' || obj.type || ' &INSTALL_USER..' || obj.name ||
                         case obj.type 
                         when 'TYPE' then ' force' 
                         when 'TABLE' then ' cascade constraints' 
@@ -49,7 +52,7 @@ prompt &h3.Checking whether app already exist.
 declare
   l_app_id number;
   l_ws number;
-  c_app_alias constant varchar2(30 byte) := 'SCT_ADMIN';  
+  c_app_alias constant varchar2(30 byte) := '&APEX_ALIAS.';  
 begin
   select application_id, workspace_id
     into l_app_id, l_ws

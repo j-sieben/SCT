@@ -1,30 +1,23 @@
-define sql_dir=plugin/sql/
-define seq_dir=&sql_dir.sequences/
-define table_dir=&sql_dir.tables/
-define type_dir=&sql_dir.types/
-define view_dir=&sql_dir.views/
-define plsql_dir=plugin/plsql/
+define plugin_dir=plugin/
+define msg_dir=&plugin_dir.messages/&DEFAULT_LANGUAGE./
 
 prompt &h3.Check installation prerequisites
-@plugin/check_prerequisites.sql
+@&plugin_dir.check_prerequisites.sql
 
 prompt &h3.Remove existing installation
-@plugin/clean_up_install.sql
-
-prompt &h3.Setting compile flags
-@plugin/set_compile_flags.sql
+@&plugin_dir.clean_up_install.sql
 
 prompt &h3.Create SCT parameters
-@plugin/create_parameters.sql
+@&plugin_dir.scripts/create_parameters.sql
 
 prompt &h3.Create SCT messages
-@plugin/create_messages.sql
+@&msg_dir.create_messages.sql
 
 prompt &h3.Create packages
 prompt &s1.Create package PLUGIN_SCT
-@&plsql_dir.plugin_sct.pks
+@&plugin_dir.packages/plugin_sct.pks
 show errors
 
 prompt &s1.Create package Body PLUGIN_SCT
-@&plsql_dir.plugin_sct.pkb
+@&plugin_dir.packages/plugin_sct.pkb
 show errors

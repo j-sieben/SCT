@@ -5,10 +5,10 @@ begin
     into l_is_installed
 	  from all_objects
    where owner = '&INSTALL_USER.'
-     and object_type in ('PACKAGE', 'SYNONYM')
-	   and object_name in ('PIT');
+     and object_type in ('PACKAGE')
+     and object_name in ('UTL_APEX');
   if l_is_installed < 1 then
-    raise_application_error(-20000, 'Installation of PIT is required to install SCT. PIT is available at GitHub');
+    raise_application_error(-20000, 'Installation of UTL_APEX is required to install SCT. Please install this package or its client install.');
   else
     dbms_output.put_line('&s1.Installation prerequisites checked succesfully.');
   end if;

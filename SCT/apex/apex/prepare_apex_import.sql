@@ -10,7 +10,7 @@ begin
     
   --apex_application_install.generate_application_id;
   apex_application_install.set_application_id(&APP_ID.);
-    apex_application_install.set_application_alias('&APEX_ALIAS.');
+  apex_application_install.set_application_alias('&APEX_ALIAS.');
   apex_application_install.set_workspace_id(l_workspace_id);
   apex_application_install.generate_offset;
   apex_application_install.set_schema( '&INSTALL_USER.' );

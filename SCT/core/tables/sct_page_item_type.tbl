@@ -1,0 +1,18 @@
+create table sct_page_item_type(
+  sit_id varchar2(50 char),
+  sit_name varchar2(50 char),
+  sit_has_value number(1,0) default 1,
+  sit_event varchar2(30 byte),
+  sit_col_template varchar2(100 char),
+  sit_init_template varchar2(100 char),
+  constraint p_sct_page_item_type primary key(sit_id),
+  constraint c_sit_has_value check(sit_has_value in (0,1))
+) organization index;
+
+comment on table sct_page_item_type is 'Table to store page item types which are supported by SCT.';
+comment on column sct_page_item_type.sit_id is 'PK, alphanumerical key';
+comment on column sct_page_item_type.sit_name is 'Display name of element type';
+comment on column sct_page_item_type.sit_has_value is 'Flag to indicate whether element type maintains a value in Session State';
+comment on column sct_page_item_type.sit_event is 'JavaScript event to be bound to this element type by the plugin. If null, SCT won''t react on changes.';
+comment on column sct_page_item_type.sit_col_template is 'Template zur Erzeugung einer Spalte in der Regel-View.';
+comment on column sct_page_item_type.sit_init_template is 'Template zur Erzeugung des Initialisierungscodes';

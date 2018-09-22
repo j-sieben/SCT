@@ -25,7 +25,7 @@ declare
 begin
   for obj in delete_object_cur loop
     begin
-      execute immediate 'drop ' || obj.type || ' ' || obj.name ||
+      execute immediate 'drop ' || obj.type || ' &INSTALL_USER..' || obj.name ||
                         case obj.type 
                         when 'TYPE' then ' force' 
                         when 'TABLE' then ' cascade constraints' 

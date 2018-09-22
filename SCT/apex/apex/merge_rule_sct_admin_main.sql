@@ -30,7 +30,7 @@ begin
     p_sru_id => sct_admin.map_id(19),
     p_sru_sgr_id => sct_admin.map_id(17),
     p_sru_name => q'~Anwendungsfilter ist nicht leer~',
-    p_sru_condition => q'~P1_SGR_APPLICATION is not null~',
+    p_sru_condition => q'~P1_SGR_APP_ID is not null~',
     p_sru_sort_seq => 50,
     p_sru_fire_on_page_load => -1,
     p_sru_active => 1);
@@ -39,7 +39,7 @@ begin
     p_sru_id => sct_admin.map_id(20),
     p_sru_sgr_id => sct_admin.map_id(17),
     p_sru_name => q'~Anwendungsfilter ist leer~',
-    p_sru_condition => q'~P1_SGR_APPLICATION is null~',
+    p_sru_condition => q'~P1_SGR_APP_ID is null~',
     p_sru_sort_seq => 40,
     p_sru_fire_on_page_load => -1,
     p_sru_active => 1);
@@ -66,7 +66,7 @@ begin
     p_sru_id => sct_admin.map_id(23),
     p_sru_sgr_id => sct_admin.map_id(17),
     p_sru_name => q'~Seitenfilter ist nicht leer~',
-    p_sru_condition => q'~P1_SGR_PAGE is not null~',
+    p_sru_condition => q'~P1_SGR_PAGE_ID is not null~',
     p_sru_sort_seq => 70,
     p_sru_fire_on_page_load => -1,
     p_sru_active => 1);
@@ -75,7 +75,7 @@ begin
     p_sru_id => sct_admin.map_id(24),
     p_sru_sgr_id => sct_admin.map_id(17),
     p_sru_name => q'~Seitenfilter ist leer~',
-    p_sru_condition => q'~P1_SGR_PAGE is null~',
+    p_sru_condition => q'~P1_SGR_PAGE_ID is null~',
     p_sru_sort_seq => 60,
     p_sru_fire_on_page_load => -1,
     p_sru_active => 1);
@@ -114,7 +114,7 @@ begin
   sct_admin.merge_rule_action(
     p_sra_sru_id => sct_admin.map_id(19),
     p_sra_sgr_id => sct_admin.map_id(17),
-    p_sra_spi_id => 'P1_SGR_PAGE',
+    p_sra_spi_id => 'P1_SGR_PAGE_ID',
     p_sra_sat_id => 'REFRESH_ITEM',
     p_sra_attribute => q'~~',
     p_sra_attribute_2 => q'~~',
@@ -134,7 +134,7 @@ begin
   sct_admin.merge_rule_action(
     p_sra_sru_id => sct_admin.map_id(20),
     p_sra_sgr_id => sct_admin.map_id(17),
-    p_sra_spi_id => 'P1_SGR_PAGE',
+    p_sra_spi_id => 'P1_SGR_PAGE_ID',
     p_sra_sat_id => 'DISABLE_ITEM',
     p_sra_attribute => q'~~',
     p_sra_attribute_2 => q'~~',
@@ -144,7 +144,7 @@ begin
   sct_admin.merge_rule_action(
     p_sra_sru_id => sct_admin.map_id(20),
     p_sra_sgr_id => sct_admin.map_id(17),
-    p_sra_spi_id => 'P1_SGR_PAGE',
+    p_sra_spi_id => 'P1_SGR_PAGE_ID',
     p_sra_sat_id => 'EMPTY_FIELD',
     p_sra_attribute => q'~~',
     p_sra_attribute_2 => q'~~',

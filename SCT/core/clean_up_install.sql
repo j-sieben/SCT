@@ -23,11 +23,6 @@ declare
              and object_type not like '%BODY'
              and owner = upper('&INSTALL_USER.')
            order by object_type, object_name;
-  cursor message_cur is
-    select pms_name, pms_pml_name
-      from pit_message
-     where pms_name like 'SCT%'
-       and pms_id is not null;
 begin
   for obj in delete_object_cur loop
     begin
@@ -46,13 +41,11 @@ begin
     end;
   end loop;
   
-  for msg in message_cur loop
-    pit_admin.remove_message(msg.pms_name, msg.pms_pml_name);
-    dbms_output.put_line('&s1.Message ' || msg.pms_name || ' deleted.');
-  end loop;
+
+  pit_admin.remove_message_group('SCT');
+  dbms_output.put_line('&s1.Messages deleted.');
   
-  delete from code_generator_templates
-   where cgtm_type = 'SCT';
+  utl_text.remove_templates(p_uttm_type => 'SCT');
    
   commit;
   dbms_session.reset_package;
