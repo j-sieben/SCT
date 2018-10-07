@@ -3,14 +3,13 @@ define view_dir=&base_dir.views/
 define pkg_dir=&base_dir.packages/
 define msg_dir=&base_dir.messages/&DEFAULT_LANGUAGE./
 define apex_dir=&base_dir.apex/
+define script_dir=&base_dir.scripts/
 
-prompt &h3.Remove existing installation
-@apex/clean_up_install.sql
+prompt &h2.Remove existing installation
+@&base_dir.clean_up_install.sql
 
-
+prompt &h2.Create database objects
 prompt &h3.CREATE VIEWS
-prompt &s1.Create view APEX_UI_LIST_MENU
-@&view_dir.apex_ui_list_menu.vw
 
 prompt &s1.Create view SCT_UI_ACTION_TYPE
 @&view_dir.sct_ui_action_type.vw
@@ -66,27 +65,29 @@ prompt &s1.Create view SCT_UI_MAIN_RULES
 prompt &s1.Create view SCT_UI_EDIT_SAA
 @&view_dir.sct_ui_edit_saa.vw
 
-
+prompt &h2.Merge default data
 prompt &h3.Create MESSAGES
 @&msg_dir.create_messages.sql
 
 
-prompt &h3.Create PACKAGES
+prompt &h2.Create PL/SQL objects
+prompt &h3.Create packages
 prompt &s1.Create package SCT_UI_PKG
 @&pkg_dir.sct_ui_pkg.pks
 show errors
 
+prompt &h3.Create package bodies
 prompt &s1.Create package Body SCT_UI_PKG
 @&pkg_dir.sct_ui_pkg.pkb
 show errors
 
 
 set serveroutput on
-prompt &h3.Install APEX application
-prompt &s1.Prepare APEX import
-@&apex_dir.prepare_apex_import.sql
+prompt &h2.Install APEX application
+prompt &h3.Prepare APEX import
+@&base_dir.prepare_apex_import.sql
 
-prompt &s1.Install application
+prompt &h3.Install application
 @&apex_dir.sct.sql
 
 -- After APEX installation, reset output settings
@@ -100,10 +101,15 @@ set pages 9999
 whenever sqlerror exit
 alter session set current_schema=&INSTALL_USER.;
 
-prompt &h3.Recompiling SCT_ADMIN to prepare SCT rules import
+prompt &h2.Recompiling SCT_ADMIN to prepare SCT rules import
 alter package sct_admin compile package;
 
-prompt &s1.Import SCT rules
-@&apex_dir.merge_rule_sct_admin_export_rule.sql
-@&apex_dir.merge_rule_sct_admin_main.sql
-@&apex_dir.merge_rule_sct_copy_rulegroup.sql
+call dbms_session.reset_package();
+
+prompt &h2.Create SCT rules
+prompt &s1.Import SCT_ADMIN_EXPORT rule
+@&script_dir.merge_rule_sct_admin_export_rule.sql
+prompt &s1.Import SCT_ADMIN_MAIN rule
+@&script_dir.merge_rule_sct_admin_main.sql
+prompt &s1.Import SCT_COPY_RULE rule
+@&script_dir.merge_rule_sct_copy_rulegroup.sql

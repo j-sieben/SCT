@@ -1,4 +1,5 @@
-create or replace package plugin_sct 
+create or replace package plugin_sct
+  authid definer
 as 
 
   /* Package PLUGIN_SCT zur Verwaltung von State Charts
@@ -16,7 +17,7 @@ as
    */
   procedure register_item(
     p_item in varchar2,
-    p_allow_recursion in number default sct_const.c_true);
+    p_allow_recursion in number default sct_admin.c_true);
   
   /* Prozedur zum Registrieren von Fehlern
    * %param p_spi_id Name des Feldes, das den Fehler enthaelt
@@ -199,27 +200,14 @@ as
    * %param p_value Wert, der gesetzt werden soll
    * %usage Wird verwendet, um den Session Status eines Elementes zu aendern.
    *        Die Prozedur ist ein Wrapper um APEX_UTIL.SET_SESSION_STATE,
-   *        die aber nicht verwendet werden sollte, weil mit PLUGIN_SCT.SET_SESSION_STATE
-   *        Weg das Plugin alle Aenderungen am Session State registrieren und
-   *        and die Oberflaeche zurueckliefern kann
+   *        die aber nicht verwendet werden sollte, weil PLUGIN_SCT.SET_SESSION_STATE
+   *        alle Aenderungen am Session State registriert und an die Oberflaeche zurueckliefert
    */
   procedure set_session_state(
     p_item in sct_page_item.spi_id%type,
     p_value in varchar2,
-    p_allow_recursion in number default sct_const.c_true,
+    p_allow_recursion in number default sct_admin.c_true,
     p_attribute_2 in sct_rule_action.sra_attribute_2%type default null);
-    
-  /*procedure set_session_state(
-    p_item in sct_page_item.spi_id%type,
-    p_value in date,
-    p_allow_recursion in number default sct_const.c_true,
-    p_attribute_2 in sct_rule_action.sra_attribute_2%type default null);
-    
-  procedure set_session_state(
-    p_item in sct_page_item.spi_id%type,
-    p_value in number,
-    p_allow_recursion in number default sct_const.c_true,
-    p_attribute_2 in sct_rule_action.sra_attribute_2%type default null);*/
     
     
   /* Prozedur zum Setzen des Session Status, falls kein Fehler vorliegt.
@@ -234,7 +222,7 @@ as
     p_item in sct_page_item.spi_id%type,
     p_value in varchar2,
     p_error in varchar2,
-    p_allow_recursion in number default sct_const.c_true);
+    p_allow_recursion in number default sct_admin.c_true);
     
     
   /* Prozedur zum Setzen des Session Status, basierend auf einer SQL-Anweisung
@@ -337,17 +325,6 @@ as
   function not_null(
     p_value_list in varchar2)
     return number;
-    
-  
-  /* Hilfsmethode zur Ausgabe von Seitenelementwerten, basierend auf einem Filter
-   * %param  p_filter  Instanz von CHAR_TABLE mit einer Kombination aus CSS-Klassen oder Elementnamen
-   * %return Werte der gewählten Instanzen, ohne Verweis auf die Herkunft, nur die Werte
-   * %usage  Wird verwendet, um fuer eine Liste von Selektoren die Elementwerte auszugeben
-   *         Nur zur internen Verwendung, nicht ausserhalb des Packages verwenden.
-   */
-  function pipe_page_values(
-    p_filter in varchar2)
-    return char_table pipelined;
     
 
   /* RENDER-Funktion des Plugins gem. APEX-Vorgaben */

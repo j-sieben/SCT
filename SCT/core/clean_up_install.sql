@@ -23,10 +23,16 @@ declare
              and object_type not like '%BODY'
              and owner = upper('&INSTALL_USER.')
            order by object_type, object_name;
+           
+  cursor sct_rule_cur is
+    select view_name
+      from all_views
+     where owner = upper('&INSTALL_USER.')
+       and view_name like 'SCT_RULE_GROUP%';
 begin
   for obj in delete_object_cur loop
     begin
-      execute immediate 'drop ' || obj.type || ' ' || obj.name ||
+      execute immediate 'drop ' || obj.type || ' &INSTALL_USER..' || obj.name ||
                         case obj.type 
                         when 'TYPE' then ' force' 
                         when 'TABLE' then ' cascade constraints' 
@@ -41,14 +47,17 @@ begin
     end;
   end loop;
   
+  -- drop rule group views
+  for vw in sct_rule_cur loop
+    execute immediate 'drop view &INSTALL_USER..' || vw.view_name;
+  end loop;
 
   pit_admin.remove_message_group('SCT');
+  dbms_session.reset_package;
+  pit_admin.create_message_package;
   dbms_output.put_line('&s1.Messages deleted.');
   
   utl_text.remove_templates(p_uttm_type => 'SCT');
-   
   commit;
-  dbms_session.reset_package;
-  pit_admin.create_message_package;
 end;
 /

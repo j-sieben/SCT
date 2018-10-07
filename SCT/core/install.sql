@@ -7,12 +7,13 @@ define pkg_dir=&core_dir.packages/
 define script_dir=&core_dir.scripts/
 define msg_dir=&core_dir.messages/&DEFAULT_LANGUAGE./
 
-prompt &h3.Check installation prerequisites
+prompt &h2.Check installation prerequisites
 @core/check_prerequisites.sql
 
-prompt &h3.Remove existing installation
+prompt &h2.Remove existing installation
 @core/clean_up_install.sql
 
+prompt &h2.Create database objects
 prompt &h3.Create sequences
 prompt &s1.Create sequence SCT_SEQ
 @&seq_dir.sct_seq.seq
@@ -51,17 +52,16 @@ prompt &s1.Create view SCT_BL_PAGE_TARGETS
 @&view_dir.sct_bl_page_targets.vw
 
 
+prompt &h2.Merge default data
 prompt &h3.Create SCT messages
 @&msg_dir.create_messages.sql
-
 
 prompt &h3.Create UTL_TEXT templates
 @&script_dir.merge_utl_text_templates.sql
 
+
+prompt &h2.Create PL/SQL objects
 prompt &h3.Create packages
-prompt &s1.Create package SCT_CONST
-@&pkg_dir.sct_const.pks
-show errors
 
 prompt &s1.Create package SCT_ADMIN
 @&pkg_dir.sct_admin.pks
@@ -72,15 +72,7 @@ prompt &s1.Create package Body SCT_ADMIN
 show errors
 show errors
 
-prompt &s1.Create package BL_SCT
-@&pkg_dir.bl_sct.pks
-show errors
-
-prompt &s1.Create package Body BL_SCT
-@&pkg_dir.bl_sct.pkb
-show errors
-
-prompt &h3.Merge initial data
+prompt &h2.Merge initial data
 prompt &s1.Create internal SCT rule group
 @&script_dir.merge_sct_rule_group.sql
 

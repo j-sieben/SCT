@@ -1,6 +1,14 @@
 create or replace package sct_admin
   authid current_user
 as 
+  C_TRUE constant number(1,0) := 1;
+  C_FALSE constant number(1,0) := 0;
+  C_YES constant char(1 byte) := 'Y';
+  C_NO constant char(1 byte) := 'N';
+  C_CR constant char(1 byte) := chr(10);
+  
+  C_NO_FIRING_ITEM constant varchar2(30 byte) := 'DOCUMENT';
+  C_VIEW_NAME_PREFIX constant varchar2(25) := 'SCT_RULES_GROUP_';
     
   /* setter-Methode fuer eine Zahl, die auf APP_ID aufgeschlagen wird, wenn Regeln importiert
    * werden. Kann verwendet werden, um ID-Systeme aufeinander abzubilden
@@ -28,7 +36,7 @@ as
     p_sgr_name in sct_rule_group.sgr_name%type,
     p_sgr_description in sct_rule_group.sgr_description%type,
     p_sgr_with_recursion in sct_rule_group.sgr_with_recursion%type,
-    p_sgr_active in sct_rule_group.sgr_active%type default sct_const.c_true);
+    p_sgr_active in sct_rule_group.sgr_active%type default C_TRUE);
     
     
   /* Entfernt eine Regelgruppe 
@@ -85,13 +93,14 @@ as
     
   
   /* Export der Aktionstypen
-   * %param p_core_flag Flag, das steuert, ob die nicht-editierbaren oder die
-   *        editierbaren Aktionstypen exportiert werden sollen
-   * %usage Exportiert alle Aktionstypen, entweder die editierbaren oder die
-   *        mitgelieferten
+   * %param  p_sat_is_editable  Controls, which SCT rules to export:
+   *                            - C_TRUE: User defined action types
+   *                            - C_FALSE: Internally defined action types
+   *                            - NULL: Both, internally and user defined action types
+   * %usage  creatte a CLOB instance with the requested action types for export
    */
   function export_action_types(
-    p_core_flag in boolean default false)
+    p_sat_is_editable in sct_action_type.sat_is_editable%type default C_TRUE)
     return clob;
     
   
@@ -247,7 +256,7 @@ as
     p_sru_condition in sct_rule.sru_condition%type,
     p_sru_fire_on_page_load in sct_rule.sru_fire_on_page_load%type,
     p_sru_sort_seq in sct_rule.sru_sort_seq%type,
-    p_sru_active in sct_rule.sru_active%type default sct_const.c_true);
+    p_sru_active in sct_rule.sru_active%type default C_TRUE);
 
 
   /* Methode zum Loeschen einer Einzelregel
@@ -303,9 +312,9 @@ as
     p_sra_attribute in sct_rule_action.sra_attribute%type,
     p_sra_attribute_2 in sct_rule_action.sra_attribute_2%type,
     p_sra_sort_seq in sct_rule_action.sra_sort_seq%type,
-    p_sra_on_error in sct_rule_action.sra_on_error%type default sct_const.c_false,
-    p_sra_raise_recursive in sct_rule_action.sra_raise_recursive%type default sct_const.c_true,
-    p_sra_active in sct_rule_action.sra_active%type default sct_const.c_true,
+    p_sra_on_error in sct_rule_action.sra_on_error%type default C_FALSE,
+    p_sra_raise_recursive in sct_rule_action.sra_raise_recursive%type default C_TRUE,
+    p_sra_active in sct_rule_action.sra_active%type default C_TRUE,
     p_sra_comment in sct_rule_action.sra_comment%type default null);
     
     
@@ -355,8 +364,42 @@ as
     p_sat_check_attribute_1 sct_action_type.sat_check_attribute_1%type default null,
     p_sat_default_attribute_2 sct_action_type.sat_default_attribute_2%type default null,
     p_sat_check_attribute_2 sct_action_type.sat_check_attribute_2%type default null,
-    p_sat_is_editable in sct_action_type.sat_is_editable%type default sct_const.c_true,
-    p_sat_raise_recursive in sct_action_type.sat_raise_recursive%type default sct_const.c_true);
+    p_sat_is_editable in sct_action_type.sat_is_editable%type default C_TRUE,
+    p_sat_raise_recursive in sct_action_type.sat_raise_recursive%type default C_TRUE);
 
+
+  /* Administration von APEX-Aktionen */
+  procedure delete_apex_action_type(
+    p_row in sct_apex_action%rowtype);
+    
+  procedure merge_apex_action_type(
+    p_row in out nocopy sct_apex_action%rowtype);
+    
+  procedure merge_apex_action_type(
+    p_saa_sgr_id              in sct_apex_action.saa_sgr_id%type,
+    p_saa_sty_id              in sct_apex_action.saa_sty_id%type,
+    p_saa_name                in sct_apex_action.saa_name%type,
+    p_saa_label               in sct_apex_action.saa_label%type,
+    p_saa_context_label       in sct_apex_action.saa_context_label%type,
+    p_saa_icon                in sct_apex_action.saa_icon%type,
+    p_saa_icon_type           in sct_apex_action.saa_icon_type%type,
+    p_saa_title               in sct_apex_action.saa_title%type,
+    p_saa_shortcut            in sct_apex_action.saa_shortcut%type,
+    p_saa_initially_disabled  in sct_apex_action.saa_initially_disabled%type,
+    p_saa_initially_hidden    in sct_apex_action.saa_initially_hidden%type,
+    p_saa_href                in sct_apex_action.saa_href%type,
+    p_saa_href_noop           in sct_apex_action.saa_href_noop%type,
+    p_saa_action              in sct_apex_action.saa_action%type,
+    p_saa_action_noop         in sct_apex_action.saa_action_noop%type,
+    p_saa_on_label            in sct_apex_action.saa_on_label%type,
+    p_saa_off_label           in sct_apex_action.saa_off_label%type,
+    p_saa_get                 in sct_apex_action.saa_get%type,
+    p_saa_set                 in sct_apex_action.saa_set%type,
+    p_saa_choices             in sct_apex_action.saa_choices%type,
+    p_saa_label_classes       in sct_apex_action.saa_label_classes%type,
+    p_saa_label_start_classes in sct_apex_action.saa_label_start_classes%type,
+    p_saa_label_end_classes   in sct_apex_action.saa_label_end_classes%type,
+    p_saa_item_wrap_class     in sct_apex_action.saa_item_wrap_class%type);
+    
 end sct_admin;
 /

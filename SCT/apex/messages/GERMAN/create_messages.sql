@@ -27,6 +27,15 @@ begin
   );
 
   pit_admin.merge_message(
+    p_pms_name => 'APEX_REQUIRED_VAL_MISSING',
+    p_pms_pmg_name => 'APEX',
+    p_pms_text => q'~Element "#LABEL#" ist ein Pflichtfeld.~',
+    p_pms_pse_id => 30,
+    p_pms_pml_name => 'GERMAN',
+    p_error_number => -20000
+  );
+
+  pit_admin.merge_message(
     p_pms_name => 'APEX_LOG_MESSAGE',
     p_pms_pmg_name => 'APEX',
     p_pms_text => q'~#1#~',

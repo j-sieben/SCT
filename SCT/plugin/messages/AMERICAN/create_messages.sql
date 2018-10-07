@@ -41,8 +41,35 @@ begin
   );
 
   pit_admin.merge_message(
+    p_pms_name => 'SCT_NO_JAVASCRIPT_ACTION',
+    p_pms_text => q'~// No JavaScript action~',
+    p_pms_pse_id => 70,
+    p_pms_pml_name => 'AMERICAN',
+    p_pms_pmg_name => 'SCT',
+    p_error_number => null
+  );
+
+  pit_admin.merge_message(
+    p_pms_name => 'SCT_OUTPUT_REDUCED',
+    p_pms_text => q'~'// Output reduced to level #1# because of length~',
+    p_pms_pse_id => 70,
+    p_pms_pml_name => 'AMERICAN',
+    p_pms_pmg_name => 'SCT',
+    p_error_number => null
+  );
+
+  pit_admin.merge_message(
+    p_pms_name => 'SCT_OUTPUT_CLIPPED',
+    p_pms_text => q'~'// Additional JavaScript skipped, too long~',
+    p_pms_pse_id => 70,
+    p_pms_pml_name => 'AMERICAN',
+    p_pms_pmg_name => 'SCT',
+    p_error_number => null
+  );
+
+  pit_admin.merge_message(
     p_pms_name => 'SCT_ERROR_HANDLING',
-    p_pms_text => q'~#4#  // Error in recursion #RECURSION#: #1# (#2#), firing element: "#3#", proceeding with exception handling~',
+    p_pms_text => q'~// Error in recursion #1#, rule #2# (#3#), firing element: "#4#", proceeding with exception handling~',
     p_pms_pse_id => 70,
     p_pms_pml_name => 'AMERICAN',
     p_pms_pmg_name => 'SCT',
@@ -213,7 +240,7 @@ begin
 
   pit_admin.merge_message(
     p_pms_name => 'SCT_RULE_ORIGIN',
-    p_pms_text => q'~#4#  // Recursion #RECURSION#: #1# (#2#), firing element: "#3#", duration: #TIME##NOTIFICATION#~',
+    p_pms_text => q'~// Recursion #1#: #2# (#3#), firing element: "#4#", duration: #TIME##NOTIFICATION#~',
     p_pms_pse_id => 70,
     p_pms_pml_name => 'AMERICAN',
     p_pms_pmg_name => 'SCT',
@@ -267,7 +294,7 @@ begin
   );
 
   pit_admin.merge_message(
-    p_pms_name => 'SCT_UNHANDELED_EXCEPTION',
+    p_pms_name => 'SCT_UNHANDLED_EXCEPTION',
     p_pms_text => q'~Exception when executing rule "#1#". Cannot proceed.~',
     p_pms_pse_id => 30,
     p_pms_pml_name => 'AMERICAN',

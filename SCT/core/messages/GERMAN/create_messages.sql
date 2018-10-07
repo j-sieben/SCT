@@ -311,6 +311,22 @@ begin
     p_pms_pml_name => 'GERMAN'
   );
     
+  pit_admin.merge_message(
+    p_pms_name => 'SCT_INITIALZE_SGR_FAILED',
+    p_pms_pmg_name => 'SCT',
+    p_pms_text => q'~Fehler bei der Initialisierung der Regelgruppe #1#: #2#~',
+    p_pms_pse_id => 30,
+    p_pms_pml_name => 'GERMAN'
+  );
+    
+  pit_admin.merge_message(
+    p_pms_name => 'SCT_INITIALZE_SRU_FAILED',
+    p_pms_pmg_name => 'SCT',
+    p_pms_text => q'~Fehler bei der Initialisierung der Einzelregel #1#: #2#~',
+    p_pms_pse_id => 30,
+    p_pms_pml_name => 'GERMAN'
+  );
+    
   commit;
   pit_admin.create_message_package;
 end;

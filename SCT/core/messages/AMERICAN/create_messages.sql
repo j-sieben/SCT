@@ -279,6 +279,22 @@ begin
     p_pms_pse_id => 70,
     p_pms_pml_name => 'AMERICAN');
     
+  pit_admin.merge_message(
+    p_pms_name => 'SCT_INITIALZE_SGR_FAILED',
+    p_pms_pmg_name => 'SCT',
+    p_pms_text => q'~Error during initialization of rule group #1#: #2#~',
+    p_pms_pse_id => 30,
+    p_pms_pml_name => 'AMERICAN'
+  );
+    
+  pit_admin.merge_message(
+    p_pms_name => 'SCT_INITIALZE_SRU_FAILED',
+    p_pms_pmg_name => 'SCT',
+    p_pms_text => q'~Error during initialization of single rule #1#: #2#~',
+    p_pms_pse_id => 30,
+    p_pms_pml_name => 'AMERICAN'
+  );
+    
   commit;
   pit_admin.create_message_package;
 end;

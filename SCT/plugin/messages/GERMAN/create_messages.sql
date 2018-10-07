@@ -33,7 +33,34 @@ begin
 
   pit_admin.merge_message(
     p_pms_name => 'SCT_DYNAMIC_JAVASCRIPT',
-    p_pms_text => q'~#1#  // Dynamisch erzeugtes JavaScript~',
+    p_pms_text => q'~#1#// Dynamisch erzeugtes JavaScript~',
+    p_pms_pse_id => 70,
+    p_pms_pml_name => 'GERMAN',
+    p_pms_pmg_name => 'SCT',
+    p_error_number => null
+  );
+
+  pit_admin.merge_message(
+    p_pms_name => 'SCT_NO_JAVASCRIPT_ACTION',
+    p_pms_text => q'~// Keine JavaScript-Aktion~',
+    p_pms_pse_id => 70,
+    p_pms_pml_name => 'GERMAN',
+    p_pms_pmg_name => 'SCT',
+    p_error_number => null
+  );
+
+  pit_admin.merge_message(
+    p_pms_name => 'SCT_OUTPUT_REDUCED',
+    p_pms_text => q'~'// Ausgabe wegen Laenge auf Level #1# reduziert'~',
+    p_pms_pse_id => 70,
+    p_pms_pml_name => 'GERMAN',
+    p_pms_pmg_name => 'SCT',
+    p_error_number => null
+  );
+
+  pit_admin.merge_message(
+    p_pms_name => 'SCT_OUTPUT_CLIPPED',
+    p_pms_text => q'~'// Weitere JavaScript-Aktion unterdrueckt, weil zu lang~',
     p_pms_pse_id => 70,
     p_pms_pml_name => 'GERMAN',
     p_pms_pmg_name => 'SCT',
@@ -42,7 +69,7 @@ begin
 
   pit_admin.merge_message(
     p_pms_name => 'SCT_ERROR_HANDLING',
-    p_pms_text => q'~#4#  // Fehler in  #RECURSION#: #1# (#2#), Ausloesendes Element: "#3#" aufgetreten, fuehre Fehlerbehandlung aus~',
+    p_pms_text => q'~// Fehler in Rekursion #1#, Regel #2# (#3#), Ausloesendes Element: "#4#" aufgetreten, fuehre Fehlerbehandlung aus~',
     p_pms_pse_id => 70,
     p_pms_pml_name => 'GERMAN',
     p_pms_pmg_name => 'SCT',
@@ -150,7 +177,7 @@ begin
 
   pit_admin.merge_message(
     p_pms_name => 'SCT_NO_JAVASCRIPT',
-    p_pms_text => q'~#2#  // Kein JavaScript-Code fuer Regel "#1#"~',
+    p_pms_text => q'~#2#// Kein JavaScript-Code fuer Regel "#1#"~',
     p_pms_pse_id => 70,
     p_pms_pml_name => 'GERMAN',
     p_pms_pmg_name => 'SCT',
@@ -213,7 +240,7 @@ begin
 
   pit_admin.merge_message(
     p_pms_name => 'SCT_RULE_ORIGIN',
-    p_pms_text => q'~#4#  // Rekursion #RECURSION#: #1# (#2#), Ausloesendes Element: "#3#", Dauer: #TIME##NOTIFICATION#~',
+    p_pms_text => q'~// Rekursion #1#: #2# (#3#), Ausloesendes Element: "#4#", Dauer: #TIME##NOTIFICATION#~',
     p_pms_pse_id => 70,
     p_pms_pml_name => 'GERMAN',
     p_pms_pmg_name => 'SCT',
@@ -266,7 +293,7 @@ begin
   );
 
   pit_admin.merge_message(
-    p_pms_name => 'SCT_UNHANDELED_EXCEPTION',
+    p_pms_name => 'SCT_UNHANDLED_EXCEPTION',
     p_pms_text => q'~Fehler beim Ausfuehren von "#1#", kann Arbeit nicht fortsetzen.~',
     p_pms_pse_id => 30,
     p_pms_pml_name => 'GERMAN',

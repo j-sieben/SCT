@@ -525,6 +525,62 @@ q'°}°',
     p_uttm_log_severity => 70
   );
   
+  utl_text.merge_template(
+    p_uttm_name => 'JSON_ERRORS',
+    p_uttm_type => 'SCT',
+    p_uttm_mode => 'FRAME',
+    p_uttm_text => q'°{"count":#ERROR_COUNT#,"errorDependentButtons":"#DEPENDENT_BUTTONS#","firingItems":"#FIRING_ITEMS#","errors":[#JSON_ERRORS#]}°',
+    p_uttm_log_text => q'°°',
+    p_uttm_log_severity => 70
+  );
+  
+  utl_text.merge_template(
+    p_uttm_name => 'JSON_ERRORS',
+    p_uttm_type => 'SCT',
+    p_uttm_mode => 'ERROR',
+    p_uttm_text => q'°{"type":"error","item":"#ITEM#","message":"#MESSAGE#","location":#LOCATION#,"additionalInfo":"#INFO#","unsafe":"false"}°',
+    p_uttm_log_text => q'°°',
+    p_uttm_log_severity => 70
+  );
+  
+  utl_text.merge_template(
+    p_uttm_name => 'RULE_STMT',
+    p_uttm_type => 'SCT',
+    p_uttm_mode => 'DEFAULT',
+    p_uttm_text => q'°select sru.sru_id, sru.sru_sort_seq, sru.sru_name, sru.sru_firing_items, sru_fire_on_page_load,\CR\°' || 
+q'°       sra_spi_id item, sat_pl_sql pl_sql, sat_js js, sra_attribute attribute, sra_attribute_2 attribute_2, sra_on_error,\CR\°' || 
+q'°       max(sra_on_error) over (partition by sru_sort_seq) sru_on_error,\CR\°' || 
+q'°       case row_number() over (partition by sru_sort_seq, sra_on_error order by srg.sra_sort_seq) when 1 then 1 else 0 end is_first_row\CR\°' || 
+q'°  from #RULE_VIEW# srg\CR\°' || 
+q'°  join sct_rule sru\CR\°' || 
+q'°    on srg.sru_id = sru.sru_id\CR\°' || 
+q'°  join sct_action_type sat\CR\°' || 
+q'°    on srg.sra_sat_id = sat.sat_id\CR\°' || 
+q'° where sat.sat_raise_recursive >= #IS_RECURSIVE#\CR\°' || 
+q'°   and srg.sra_raise_recursive >= #IS_RECURSIVE#\CR\°' || 
+q'° order by sru.sru_sort_seq desc, srg.sra_sort_seq°',
+    p_uttm_log_text => q'°°',
+    p_uttm_log_severity => 70
+  );
+  
+  utl_text.merge_template(
+    p_uttm_name => 'ACTION_TYPE_HELP',
+    p_uttm_type => 'SCT',
+    p_uttm_mode => 'FRAME',
+    p_uttm_text => q'°<h2>Hilfe zu Aktionstypen</h2><dl>#HELP_LIST#</dl>°',
+    p_uttm_log_text => q'°°',
+    p_uttm_log_severity => 70
+  );
+  
+  utl_text.merge_template(
+    p_uttm_name => 'ACTION_TYPE_HELP',
+    p_uttm_type => 'SCT',
+    p_uttm_mode => 'HELP',
+    p_uttm_text => q'°<dt class="sct-dt">#SAT_NAME# #SAT_IS_EDITABLE#</dt><dd>#SAT_DESCRIPTION#</dd>°',
+    p_uttm_log_text => q'°°',
+    p_uttm_log_severity => 70
+  );
+  
   commit;
 end;
 /
