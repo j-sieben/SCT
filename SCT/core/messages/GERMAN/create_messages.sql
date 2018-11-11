@@ -3,10 +3,23 @@ begin
   pit_admin.merge_message_group(
     p_pmg_name => 'SCT',
     p_pmg_description => 'Meldungen für das SCT Plugin');
+    
+  pit_admin.merge_message_group(
+    p_pmg_name => 'ALLG',
+    p_pmg_description => 'Allgemeine Meldungen');
+
+  pit_admin.merge_message(
+    p_pms_name => 'ALLG_PASS_INFORMATION',
+    p_pms_pmg_name => 'ALLG',
+    p_pms_text => q'~Ungültiges Datum: #1#~',
+    p_pms_pse_id => 70,
+    p_pms_pml_name => 'GERMAN'
+  );
 
 
   pit_admin.merge_message(
     p_pms_name => 'INVALID_DATE',
+    p_pms_pmg_name => 'ALLG',
     p_pms_text => q'~Ungültiges Datum: #1#~',
     p_pms_pse_id => 30,
     p_pms_pml_name => 'GERMAN',
@@ -15,6 +28,7 @@ begin
 
   pit_admin.merge_message(
     p_pms_name => 'INVALID_DATE_FORMAT',
+    p_pms_pmg_name => 'ALLG',
     p_pms_text => q'~Ungültiges Datumsformat: #1#~',
     p_pms_pse_id => 30,
     p_pms_pml_name => 'GERMAN',
@@ -23,6 +37,7 @@ begin
 
   pit_admin.merge_message(
     p_pms_name => 'INVALID_DAY',
+    p_pms_pmg_name => 'ALLG',
     p_pms_text => q'~#1#~',
     p_pms_pse_id => 30,
     p_pms_pml_name => 'GERMAN',
@@ -31,6 +46,7 @@ begin
 
   pit_admin.merge_message(
     p_pms_name => 'INVALID_MONTH',
+    p_pms_pmg_name => 'ALLG',
     p_pms_text => q'~#1#~',
     p_pms_pse_id => 30,
     p_pms_pml_name => 'GERMAN',
@@ -39,6 +55,7 @@ begin
 
   pit_admin.merge_message(
     p_pms_name => 'INVALID_NUMBER_FORMAT',
+    p_pms_pmg_name => 'ALLG',
     p_pms_text => q'~Ungültiges Zahlformat: #1#~',
     p_pms_pse_id => 30,
     p_pms_pml_name => 'GERMAN',
@@ -47,6 +64,7 @@ begin
 
   pit_admin.merge_message(
     p_pms_name => 'INVALID_YEAR',
+    p_pms_pmg_name => 'ALLG',
     p_pms_text => q'~#1#~',
     p_pms_pse_id => 30,
     p_pms_pml_name => 'GERMAN',
@@ -324,6 +342,14 @@ begin
     p_pms_pmg_name => 'SCT',
     p_pms_text => q'~Fehler bei der Initialisierung der Einzelregel #1#: #2#~',
     p_pms_pse_id => 30,
+    p_pms_pml_name => 'GERMAN'
+  );
+    
+  pit_admin.merge_message(
+    p_pms_name => 'SCT_NO_RULE_GROUP_FOUND',
+    p_pms_pmg_name => 'SCT',
+    p_pms_text => q'~Keine Daten für Workspace #1# und Anwendung #2# gefunden~',
+    p_pms_pse_id => 50,
     p_pms_pml_name => 'GERMAN'
   );
     

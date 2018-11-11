@@ -3,6 +3,18 @@ begin
   pit_admin.merge_message_group(
     p_pmg_name => 'SCT',
     p_pmg_description => 'SCT Plugin messages');
+    
+  pit_admin.merge_message_group(
+    p_pmg_name => 'ALLG',
+    p_pmg_description => 'Generic messages');
+
+  pit_admin.merge_message(
+    p_pms_name => 'ALLG_PASS_INFORMATION',
+    p_pms_pmg_name => 'ALLG',
+    p_pms_text => q'~Ungültiges Datum: #1#~',
+    p_pms_pse_id => 70,
+    p_pms_pml_name => 'AMERICAN'
+  );
 
   pit_admin.merge_message(
     p_pms_name => 'SCT_APP_DOES_NOT_EXIST',
@@ -292,6 +304,14 @@ begin
     p_pms_pmg_name => 'SCT',
     p_pms_text => q'~Error during initialization of single rule #1#: #2#~',
     p_pms_pse_id => 30,
+    p_pms_pml_name => 'AMERICAN'
+  );
+    
+  pit_admin.merge_message(
+    p_pms_name => 'SCT_NO_RULE_GROUP_FOUND',
+    p_pms_pmg_name => 'SCT',
+    p_pms_text => q'~No data found for workspace #1# and application alias #2#~',
+    p_pms_pse_id => 50,
     p_pms_pml_name => 'AMERICAN'
   );
     

@@ -243,7 +243,7 @@ as
    * %usage  If in debug mode, this method adds descriptive messages to the response
    */
   procedure add_comment(
-    p_msg pit_message.pms_name%type,
+    p_msg varchar2,
     p_msg_args msg_args default null)
   as
   begin
@@ -1397,6 +1397,7 @@ as
                    p_message_name => p_message_name,
                    p_message_language => null,
                    p_affected_id => p_spi_id,
+                   p_error_code => null,
                    p_session_id => null,
                    p_user_name => v('APP_USER'),
                    p_arg_list => p_arg_list);

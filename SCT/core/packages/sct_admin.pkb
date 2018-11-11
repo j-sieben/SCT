@@ -2,7 +2,6 @@ create or replace package body sct_admin
 as
 
   C_PKG constant varchar2(30 byte) := $$PLSQL_UNIT;
-  
   C_UTTM_TYPE constant utl_text_templates.uttm_type%type := 'SCT';
 
   /* Globale Variablen */
@@ -25,7 +24,7 @@ as
   as
     l_initialization_code varchar2(32767);
   begin
-    pit.enter_optional('create_initialization_code', C_PKG, msg_params(msg_param('p_sgr_id', to_char(p_sgr_id))));
+    pit.enter_optional(p_params => msg_params(msg_param('p_sgr_id', to_char(p_sgr_id))));
     
       with params as (
            -- Get common values, depending on whether the page contains a DML_FETCH_ROW process
@@ -40,7 +39,7 @@ as
             where app.process_type_code = 'DML_FETCH_ROW'
               and uttm_type = C_UTTM_TYPE
               and uttm_name like 'INITIALIZE%'
-              and sgr.sgr_id = C_TRUE)
+              and sgr.sgr_id = p_sgr_id)
     select utl_text.generate_text(cursor(
              select template,
                     cr,
@@ -71,8 +70,12 @@ as
       from params
      where uttm_name = 'INITIALIZE';
      
-    pit.leave_optional;
+    pit.leave_optional(p_params => msg_params(msg_param('Initialization Code', l_initialization_code)));
     return l_initialization_code;
+  exception
+    when no_data_found then 
+      pit.leave_optional(p_params => msg_params(msg_param('Initialization Code', 'NULL')));
+      return null;
   end create_initialization_code;
   
   
@@ -88,7 +91,7 @@ as
   as
     l_initialization_code sct_rule_group.sgr_initialization_code%type;
   begin
-    pit.enter_optional('harmonize_sct_page_item', C_PKG, msg_params(msg_param('p_sgr_id', to_char(p_sgr_id))));
+    pit.enter_optional(p_params => msg_params(msg_param('p_sgr_id', to_char(p_sgr_id))));
     
       -- Step 1: remove REQUIRED flags
       update sct_page_item
@@ -96,6 +99,8 @@ as
               -- mark any element as erroneus, will be cleared later on
              spi_has_error = C_TRUE
        where spi_sgr_id = p_sgr_id;
+       
+      pit.verbose(msg.ALLG_PASS_INFORMATION, msg_args('REQUIRED flags set'));
       
       -- Step 2: Merge APEX page items into SCT_PAGE_ITEMS
       merge into sct_page_item spi
@@ -117,6 +122,8 @@ as
             spi.spi_has_error = v.spi_has_error
        when not matched then insert(spi_id, spi_sit_id, spi_sgr_id, spi_conversion, spi_item_default, spi_css)
             values(v.spi_id, v.spi_sit_id, v.spi_sgr_id, v.spi_conversion, v.spi_item_default, v.spi_css);
+            
+      pit.verbose(msg.ALLG_PASS_INFORMATION, msg_args('APEX items merged into SCT_PAGE_ITEMS'));
       
       -- Step 3: mark page items referenced in a single rule as relevant
       merge into sct_page_item spi
@@ -130,6 +137,8 @@ as
         and spi.spi_sgr_id = v.spi_sgr_id)
        when matched then update set
             spi.spi_is_required = C_TRUE;
+            
+      pit.verbose(msg.ALLG_PASS_INFORMATION, msg_args('Relevant items marked'));
       
       -- Step 4: remove elements which are
       -- - irrelevant and
@@ -143,6 +152,8 @@ as
              select sra_spi_id
                from sct_rule_action
               where sra_sgr_id = p_sgr_id);
+            
+      pit.verbose(msg.ALLG_PASS_INFORMATION, msg_args('Irrelevant, erroneous and not referenced items removed'));
               
       -- Mark errors in SCT_RULE and SCT_RULE_ACTION
       update sct_rule
@@ -153,7 +164,7 @@ as
        using (select distinct sru.sru_id
                 from sct_page_item spi
                 join sct_rule sru
-                  on utl_text.contains(sru_firing_items, spi_id) > 0
+                  on utl_text.contains(sru_firing_items, spi_id) = C_YES
                where spi_sgr_id = p_sgr_id
                  and spi_has_error = C_TRUE) v
           on (sru.sru_id = v.sru_id)
@@ -162,7 +173,7 @@ as
       
       update sct_rule_action
          set sra_has_error = C_FALSE
-       where sra_sgr_id  = p_sgr_id;
+       where sra_sgr_id = p_sgr_id;
       
        merge into sct_rule_action sra
        using (select spi_sgr_id sra_sgr_id, spi_id sra_spi_id
@@ -172,6 +183,8 @@ as
           on (sra.sra_sgr_id = v.sra_sgr_id and sra.sra_spi_id = v.sra_spi_id)
         when matched then update set
              sra_has_error = C_TRUE;
+            
+      pit.verbose(msg.ALLG_PASS_INFORMATION, msg_args('Errors marked'));
              
       -- create initialization code and persist at SCT_RULE_GROUP for fast page initialization
       l_initialization_code := create_initialization_code(p_sgr_id);
@@ -182,7 +195,7 @@ as
     pit.leave_optional;
   exception
     when others then
-      pit.stop(msg.SCT_INITIALZE_SGR_FAILED, msg_args(to_char(p_sgr_id), sqlerrm));
+      pit.stop(msg.SCT_INITIALZE_SGR_FAILED, msg_args(to_char(p_sgr_id)));
   end harmonize_sct_page_item;
   
 
@@ -197,7 +210,7 @@ as
     C_REGEX_ITEM constant varchar2(50 byte) := q'~(^|[ '\(])#ITEM#([ ',=<^>\)]|$)~';
     C_REGEX_CSS constant varchar2(50 byte) := q'~'.+'~';
   begin
-    pit.enter_detailed('harmonize_firing_items', C_PKG, msg_params(msg_param('p_sgr_id', to_char(p_sgr_id))));
+    pit.enter_detailed(p_params => msg_params(msg_param('p_sgr_id', to_char(p_sgr_id))));
     
     merge into sct_rule sru
     using (select sru.sru_id,
@@ -215,9 +228,6 @@ as
           sru.sru_firing_items = v.sru_firing_items;
           
     pit.leave_detailed;
-  exception
-    when others then
-      pit.stop(msg.SCT_INITIALZE_SRU_FAILED, msg_args(to_char(p_sgr_id), sqlerrm));
   end harmonize_firing_items;
 
 
@@ -234,7 +244,7 @@ as
              select C_VIEW_NAME_PREFIX || sgr_id
                from sct_rule_group);
   begin
-    pit.enter_detailed('delete_pending_rule_views', C_PKG);
+    pit.enter_detailed;
     
     for vw in pending_view_cur loop
       execute immediate 'drop view ' || vw.view_name;
@@ -255,28 +265,29 @@ as
     l_stmt clob;
     C_UTTM_NAME constant utl_text_templates.uttm_name%type := 'RULE_VIEW';
   begin
-    pit.enter_optional('create_rule_view', C_PKG, msg_params(msg_param('p_sgr_id', to_char(p_sgr_id))));
+    pit.enter_optional(p_params => msg_params(msg_param('p_sgr_id', to_char(p_sgr_id))));
     
     delete_pending_rule_views;
 
     -- generate view SQL
       with params as(
-           select uttm_text template, uttm_name, uttm_mode, p_sgr_id sgr_id
+           select uttm_text template, uttm_log_text log_template,
+                  uttm_name, uttm_mode, p_sgr_id sgr_id
              from utl_text_templates
             where uttm_type = C_UTTM_TYPE
               and uttm_name = C_UTTM_NAME)
     select utl_text.generate_text(cursor(
-             select p.template, sgr_id,
+             select p.template, p.log_template, C_VIEW_NAME_PREFIX prefix, sgr_id,
                     utl_text.generate_text(cursor(
                       select sit_col_template template, replace(spi_conversion, 'G') conversion, spi_id item
                         from sct_page_item spi
                         join sct_page_item_type sit
                           on spi.spi_sit_id = sit.sit_id
-                       where spi_sgr_id = C_TRUE
+                       where spi_sgr_id = p_sgr_id
                          and ((spi_is_required = C_TRUE)
                           or (sit.sit_id = 'DOCUMENT'))
                          and sit_col_template is not null
-                       order by spi_id), ',' || C_CR || '              ') data_cols,
+                       order by spi_id), ',' || C_CR || '              ') column_list,
                     utl_text.generate_text(cursor(
                       select p.template,
                              sru_id, sru_condition 
@@ -303,13 +314,13 @@ as
   
   /* Helper to resequence rules and rule acrtions
    * %param  p_sgr_id  Rule group ID
-   * %usage  Is called automaticall upon change of a rule group to resequence all entries in steps of 10
+   * %usage  Is called automatically upon change of a rule group to resequence all entries in steps of 10
    */
   procedure resequence_rule_group(
     p_sgr_id in sct_rule_group.sgr_id%type)
   as
   begin
-    pit.enter_optional('resequence_rule_group', C_PKG, msg_params(msg_param('p_sgr_id', to_char(p_sgr_id))));
+    pit.enter_optional(p_params => msg_params(msg_param('p_sgr_id', to_char(p_sgr_id))));
     
     -- resequence rules
     merge into sct_rule sru
@@ -369,11 +380,18 @@ as
   as
     l_sgr_id sct_rule_group.sgr_id%type;
   begin
-    pit.enter_mandatory('merge_rule_group', C_PKG);
+    pit.enter_mandatory(p_params => msg_params(
+      msg_param('p_sgr_app_id', to_char(p_sgr_app_id)),
+      msg_param('p_sgr_page_id', to_char(p_sgr_page_id)),
+      msg_param('p_sgr_id', to_char(p_sgr_id)),
+      msg_param('p_sgr_name', p_sgr_name),
+      msg_param('p_sgr_description', p_sgr_description),
+      msg_param('p_sgr_with_recursion', to_char(p_sgr_with_recursion)),
+      msg_param('p_sgr_active', to_char(p_sgr_active))));
     
     l_sgr_id := coalesce(p_sgr_id, sct_seq.nextval);
     
-    -- Falls vorhanden, existierende Regelgruppe loeschen
+    -- If present, delete cascade existing rule group
     delete from sct_rule_group
      where sgr_page_id = p_sgr_page_id
        and sgr_name = p_sgr_name;
@@ -410,7 +428,7 @@ as
     p_sgr_id in sct_rule_group.sgr_id%type)
   as
   begin
-    pit.enter_mandatory('delete_rule_group', C_PKG);
+    pit.enter_mandatory;
     begin
       execute immediate 'drop view ' || C_VIEW_NAME_PREFIX || p_sgr_id;
     exception
@@ -433,6 +451,13 @@ as
     l_foo number;
     l_sgr_id sct_rule_group.sgr_id%type;
   begin
+    pit.enter_mandatory(p_params => msg_params(
+      msg_param('p_sgr_app_id', to_char(p_sgr_app_id)),
+      msg_param('p_sgr_page_id', to_char(p_sgr_page_id)),
+      msg_param('p_sgr_id', to_char(p_sgr_id)),
+      msg_param('p_sgr_app_to', to_char(p_sgr_app_to)),
+      msg_param('p_sgr_page_to', to_char(p_sgr_page_to))));
+      
     -- Pruefe, ob Quellseite existiert
     pit.assert_exists(
       'select null ' ||
@@ -464,7 +489,7 @@ as
         pit.stop(msg.SCT_RULE_DOES_NOT_EXIST, msg_args(to_char(p_sgr_id)));
     end;
 
-    -- Schliesse aus, dass Regel ueber sich selbst kopiert wird (hat zur Folge, dass die Regelgruppe geloescht wuerde)
+    -- Make sure that rule does not copy over itself to prevent deleting the rule group
     if (p_sgr_app_id != p_sgr_app_to or p_sgr_page_id != p_sgr_page_to) then
       -- Loesche existierende Regelgruppe in Zielanwendung
       delete from sct_rule_group
@@ -474,7 +499,7 @@ as
                            from sct_rule_group
                           where sgr_id = p_sgr_id);
 
-      -- Lese Regelgruppendetails
+      -- Read rule group details
       insert into sct_rule_group(sgr_id, sgr_name, sgr_description, sgr_app_id, sgr_page_id)
       select map_id(sgr_id), sgr_name, sgr_description, p_sgr_app_to, p_sgr_page_to
         from sct_rule_group
@@ -490,14 +515,19 @@ as
 
       propagate_rule_change(map_id(l_sgr_id));
 
-     insert into sct_rule_action(sra_sgr_id, sra_sru_id, sra_spi_id, sra_sat_id, sra_on_error, sra_raise_recursive, sra_attribute, sra_attribute_2, sra_sort_seq, sra_active, sra_comment)
+     -- Read rule actions
+     insert into sct_rule_action(sra_sgr_id, sra_sru_id, sra_spi_id, sra_sat_id, sra_on_error, sra_raise_recursive, 
+              sra_attribute, sra_attribute_2, sra_sort_seq, sra_active, sra_comment)
       select map_id(sra_sgr_id), map_id(sra_sru_id), sra_spi_id, sra_sat_id, sra_on_error, sra_raise_recursive,
              replace(upper(sra_attribute), 'P' || p_sgr_page_id || '_',  'P' || p_sgr_page_to || '_'),
              replace(upper(sra_attribute_2), 'P' || p_sgr_page_id || '_',  'P' || p_sgr_page_to || '_'),
              sra_sort_seq, sra_active, sra_comment
         from sct_rule_action
        where sra_sgr_id = l_sgr_id;
+       
+      -- TODO: Copy apex actions
     end if;
+    
     pit.leave_mandatory;
   end copy_rule_group;
 
@@ -508,7 +538,7 @@ as
   as
     l_new_id binary_integer;
   begin
-    pit.enter_mandatory('map_id', C_PKG);
+    pit.enter_mandatory;
     
     if p_id is null then
       init_map;
@@ -519,7 +549,7 @@ as
       l_new_id := g_id_map(p_id);
     end if;
     
-    pit.leave_mandatory;
+    pit.leave_mandatory(p_params => msg_params(msg_param('Return', to_char(l_new_id))));
     return l_new_id;
   end map_id;
 
@@ -527,7 +557,7 @@ as
   procedure init_map
   as
   begin
-    pit.enter_mandatory('init_map', C_PKG);
+    pit.enter_mandatory;
     
     g_id_map.delete;
     
@@ -544,15 +574,15 @@ as
     l_stmt clob;
     c_sgr_delimiter constant varchar2(20) := C_CR || C_CR || C_CR;
   begin
-    pit.enter_mandatory('export_all_rule_groups', C_PKG);
+    pit.enter_mandatory;
     dbms_lob.createTemporary(l_stmt, false, dbms_lob.call);
 
-    -- Einzelne Regelgruppen berechnen
+    -- Create and append script for each rule group
     for sgr in rule_group_cur loop
       dbms_lob.append(l_stmt, export_rule_group(sgr.sgr_id));
     end loop;
     
-    pit.leave_mandatory;
+    pit.leave_mandatory(p_params => msg_params(msg_param('Return', l_stmt)));
     return l_stmt;
   end export_all_rule_groups;
 
@@ -567,14 +597,14 @@ as
        where sgr_app_id = p_sgr_app_id;
     l_stmt clob;
   begin
-    pit.enter_mandatory('export_rule_groups', C_PKG);
+    pit.enter_mandatory(p_params => msg_params(msg_param('p_sgr_app_id', to_char(p_sgr_app_id))));
     dbms_lob.createtemporary(l_stmt, false, dbms_lob.call);
 
     for sgr in rule_group_cur(p_sgr_app_id) loop
       dbms_lob.append(l_stmt, export_rule_group(sgr.sgr_id));
     end loop;
 
-    pit.leave_mandatory;
+    pit.leave_mandatory(p_params => msg_params(msg_param('Return', l_stmt)));
     return l_stmt;
   end export_rule_groups;
 
@@ -587,7 +617,7 @@ as
     l_stmt clob;
     l_app_id sct_rule_group.sgr_app_id%type;
   begin
-    pit.enter_mandatory('export_rule_group', C_PKG);
+    pit.enter_mandatory(p_params => msg_params(msg_param('p_sgr_id', to_char(p_sgr_id))));
 
       with params as (
            select uttm_mode, uttm_text template, 
@@ -596,7 +626,7 @@ as
             cross join sct_rule_group sgr
             where uttm_type = C_UTTM_TYPE
               and uttm_name = C_UTTM_NAME
-              and sgr_id = 1)
+              and sgr_id = p_sgr_id)
     select utl_text.generate_text(cursor(
              select template, sgr_id, sgr_name, sgr_description, sgr_page_id, sgr_active, sgr_with_recursion,
                     -- apex_actions
@@ -627,7 +657,7 @@ as
       from params p
      where uttm_mode = 'FRAME';
 
-    pit.leave_mandatory;
+    pit.leave_mandatory(p_params => msg_params(msg_param('Return', l_stmt)));
     return l_stmt;
   end export_rule_group;
   
@@ -639,7 +669,7 @@ as
     C_UTTM_NAME constant utl_text_templates.uttm_name%type := 'EXPORT_ACTION_TYPE';
     l_stmt clob;
   begin
-    pit.enter_mandatory('export_action_types', C_PKG);
+    pit.enter_mandatory(p_params => msg_params(msg_param('p_sat_is_editable', to_char(p_sat_is_editable))));
     
     -- create export statement
       with params as (
@@ -669,7 +699,7 @@ as
       from params
      where uttm_mode = 'FRAME';
     
-    pit.leave_mandatory;
+    pit.leave_mandatory(p_params => msg_params(msg_param('Return', l_stmt)));
     return l_stmt;
   end export_action_types;
 
@@ -681,7 +711,7 @@ as
     C_UTTM_NAME constant utl_text_templates.uttm_name%type := 'VALIDATE_RULE_GROUP_EXPORT';
     l_error_list clob;
   begin
-    pit.enter_mandatory('validate_rule_group', C_PKG);
+    pit.enter_mandatory(p_params => msg_params(msg_param('p_sgr_id', to_char(p_sgr_id))));
     
     harmonize_sct_page_item(p_sgr_id);
     
@@ -715,7 +745,7 @@ as
       from params
      where uttm_mode = 'FRAME';
 
-    pit.leave_mandatory;
+    pit.leave_mandatory(p_params => msg_params(msg_param('Return', l_error_list)));
     return l_error_list;
   end validate_rule_group;
 
@@ -727,7 +757,9 @@ as
     l_ws_id number;
     l_app_id number;
   begin
-    pit.enter_mandatory('prepare_rule_group_import', C_PKG);
+    pit.enter_mandatory(p_params => msg_params(
+      msg_param('p_workspace', p_workspace),
+      msg_param('p_app_alias', p_app_alias)));
     
     select workspace_id, application_id
       into l_ws_id, l_app_id
@@ -741,8 +773,7 @@ as
     pit.leave_mandatory;
   exception
     when no_data_found then
-      -- Is called during import script execution, simply write to console
-      dbms_output.put_line('No data found for workspace ' || p_workspace || ' and alias ' || p_app_alias); 
+      pit.warn(msg.SCT_NO_RULE_GROUP_FOUND, msg_args(p_workspace, p_app_alias)); 
       pit.leave_mandatory;
   end prepare_rule_group_import;
 
@@ -753,7 +784,9 @@ as
   as
     l_ws_id number;
   begin
-    pit.enter_mandatory('prepare_rule_group_import', C_PKG);
+    pit.enter_mandatory(p_params => msg_params(
+      msg_param('p_workspace', p_workspace),
+      msg_param('p_app_id', to_char(p_app_id))));
     
     select workspace_id
       into l_ws_id
@@ -772,7 +805,7 @@ as
     p_row sct_apex_action%rowtype)  
   as  
   begin
-    pit.enter_mandatory('merge_apex_action', C_PKG);
+    pit.enter_mandatory;
     
     delete from sct_apex_action  
      where saa_sgr_id = p_row.saa_sgr_id
@@ -786,7 +819,7 @@ as
     p_row sct_apex_action%rowtype)  
   as  
   begin
-    pit.enter_mandatory('merge_apex_action', C_PKG);
+    pit.enter_mandatory;
     
     merge into sct_apex_action t    
     using (select p_row.saa_sgr_id saa_sgr_id,
@@ -927,7 +960,7 @@ as
     p_sru_active in sct_rule.sru_active%type default C_TRUE)
   as
   begin
-    pit.enter_mandatory('merge_rule', C_PKG);
+    pit.enter_mandatory;
     
     merge into sct_rule sru
     using (select p_sru_id sru_id,
@@ -960,7 +993,7 @@ as
     p_sru_id in sct_rule.sru_id%type default null)
   as
   begin
-    pit.enter_mandatory('delete_rule', C_PKG);
+    pit.enter_mandatory;
     
     delete from sct_rule
      where sru_id = p_sru_id;
@@ -973,7 +1006,7 @@ as
     p_sgr_id in sct_rule_group.sgr_id%type)
   as
   begin
-    pit.enter_mandatory('propagate_rule_change', C_PKG);
+    pit.enter_mandatory(p_params => msg_params(msg_param('p_sgr_id', to_char(p_sgr_id))));
     
     harmonize_firing_items(p_sgr_id);
     harmonize_sct_page_item(p_sgr_id);
@@ -981,6 +1014,9 @@ as
     resequence_rule_group(p_sgr_id);
     
     pit.leave_mandatory;
+  exception
+    when others then
+      pit.leave_mandatory;
   end propagate_rule_change;
 
 
@@ -994,7 +1030,7 @@ as
     l_stmt varchar2(32767);
     l_ctx pls_integer;
   begin
-    pit.enter_mandatory('validate_rule', C_PKG);
+    pit.enter_mandatory;
     
     harmonize_sct_page_item(p_sgr_id);
     
@@ -1049,7 +1085,7 @@ as
     p_sra_comment in sct_rule_action.sra_comment%type default null)
   as
   begin
-    pit.enter_mandatory('merge_rule_action', C_PKG);
+    pit.enter_mandatory;
     
     merge into sct_rule_action sra
     using (select p_sra_sru_id sra_sru_id,
@@ -1090,7 +1126,7 @@ as
     p_row in out nocopy sct_rule_action%rowtype)
   as
   begin
-    pit.enter_mandatory('merge_rule_action', C_PKG);
+    pit.enter_mandatory;
     
     merge_rule_action(
       p_sra_sru_id => p_row.sra_sru_id,
@@ -1117,7 +1153,7 @@ as
     p_sra_on_error in sct_rule_action.sra_on_error%type)
   as
   begin
-    pit.enter_mandatory('delete_rule_action', C_PKG);
+    pit.enter_mandatory;
     
     delete from sct_rule_action
      where sra_sru_id = p_sra_sru_id
@@ -1144,7 +1180,7 @@ as
     p_sat_raise_recursive in sct_action_type.sat_raise_recursive%type default C_TRUE)
   as
   begin
-    pit.enter_mandatory('merge_action_type', C_PKG);
+    pit.enter_mandatory;
     
     merge into sct_action_type sat
     using (select p_sat_id sat_id,
@@ -1188,7 +1224,7 @@ as
     p_row in sct_apex_action%rowtype)
   as
   begin
-    pit.enter_mandatory('delete_apex_action_type', C_PKG);
+    pit.enter_mandatory;
     
     delete from sct_apex_action
      where saa_sgr_id = p_row.saa_sgr_id
@@ -1202,7 +1238,7 @@ as
     p_row in out nocopy sct_apex_action%rowtype)
   as
   begin
-    pit.enter_mandatory('merge_apex_action_type', C_PKG);
+    pit.enter_mandatory;
     
     merge into sct_apex_action t
     using (select p_row.saa_sgr_id saa_sgr_id,
