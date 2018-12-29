@@ -1,0 +1,18 @@
+create table sct_action_item_focus(
+  sif_id varchar2(50 char),
+  sif_name varchar2(50 char),
+  sif_description varchar2(200 char),
+  sif_active char(1 byte) default 'Y',
+  constraint pk_sct_action_item_focus primary key(sif_id),
+  constraint nn_sif_name check(sif_name is not null),
+  constraint chk_sif_active check(sif_active in ('Y', 'N'))
+) 
+organization index;
+
+create unique index idx_sif_name on sct_action_item_focus(sif_name);
+
+comment on table sct_action_item_focus is 'Table to store SCT Action Item focus, used to define the kind of ITEMS that may be referenced by the action';
+comment on column sct_action_item_focus.sif_id is 'PK, technical key';
+comment on column sct_action_item_focus.sif_name is 'NOT NULL, Unique name';
+comment on column sct_action_item_focus.sif_description is 'Optional description';
+comment on column sct_action_item_focus.sif_active is 'Flag to indicate whether rule group is in use';

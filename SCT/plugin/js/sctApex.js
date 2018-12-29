@@ -4,58 +4,46 @@ de.condes = de.condes || {};
 de.condes.plugin = de.condes.plugin || {};
 de.condes.plugin.sct = de.condes.plugin.sct || {};
 de.condes.plugin.sct.apex_42_5_0 = {};
-de.condes.plugin.sct.apex_42_5_1 = {};
+de.condes.plugin.sct.apex_42_5_1 = Object.create(de.condes.plugin.sct.apex_42_5_0);
+de.condes.plugin.sct.apex_42_18_2 = Object.create(de.condes.plugin.sct.apex_42_5_1);
 
-/*!
- * Hilfsmethoden zur Darstellung der Plugin-Funktionalität auf der APEX-Oberfläche
+/**
+ * Interface between the SCT plugin and the APEX uiser interface
  */
-/** @fileOverview
- * Da sich in dieser Datei der Code befindet, der mit der Oberfläche von APEX interagiert,
- * besteht eine Abhängigkeit von der verwendeten APEX-Version.
- * Diese Version orientiert sich am Verhalten der Version 5.0, Theme 42. Sollte eine neuere Version verwendet werden,
- * oder ein StyleGuide eingesetzt werden, der ein erweitertes oder geändertes Verhalten erfordert, kann dies implementiert
- * werden, indem eine angepasste Version dieser Datei verwendet und über einen entsprechend benannten Namensraum zur 
- * Verfügung gestellt wird. Dieser kann dem Plugin als Component-Parameter übergeben werden, standardmäßig ist es
- * de.condes.plugin.sct.apex_42_5_0.
- *
- * Abgeleitete Implementierungen müssen folgende Funktionen implementieren:
- * - submitPage(request, message)
- *   Methode prüft, ob Fehlermeldungen auf der Seite angezeigt werden und wirft eine Fehlermeldung, ansonsten
- *   wird die Seite über apex.submit(request) abgeschickt
- * - setFieldMandatory(item, mandatory)
- *   Die Methode stattet ITEM mit den Klassen eines Pflichtfeldes aus, falls MANDATORY true ist, ansonsten
- *   entfernt die Methode die Klassen
- * - maintainErrors(errorList)
- *   Die Methode implementiert die Anzeige von Fehlermeldungen auf der Oberfläche.
- *   Die Fehlerdarstellung und die Benachrichtigung sind in APEX in den Render-Prozess der Seite integriert
- *   und müssen, wenn sie durch das Plugin verwendet werden sollen, hier nachgebildet werden.
- *   Die Methode erhält ein JSON-Objekt mit Fehlern, die aufgetreten sind und dargestellt werden müssen.
- *   Dieses JSON-Objekt wird in folgendem Format übergeben:
- *     {"count":0, // Anzahl der Fehler, die aufgetreten sind
- *        "errorDependentButtons":"", // Liste von Seitenelementen (normalerweise Schaltflächen), die deaktiviert
- *                                    // werden sollen, wenn wenigstens ein Fehler auf der Seite angezeigt wird
- *        "firingItems":"",           // Liste von Elementen, die durch die aktuelle Regel betroffen sind. Von diesen Elementen
- *                                    // müssen eventuell vorhandene Fehlermeldungen entfernt werden.
- *        "errors":[                  // Liste der aufgetretenen Fehler
- *          {"item":"",               // ID des Elements, das den Fehler erhält, oder DOCUMENT, 
- *                                    // um anzuzeigen, dass ein genereller Fehler vorliegt
- *           "message":"",            // Fehlermeldung
- *           "additionalInfo":""      // optionale Zusatzinformationen, z.B. CallStack etc.
- *          }
- *        ]
- *     }
- *   Die Methode entfernt zunächst alle Fehlermeldungen der Elemente aus FIRINGITMES und fügt anschließend die übergebenen Fehler ein.
- * - setNotification(message)
- *   Die Methode zeigt eine Benachrichtigung auf der Oberfläche. Wird auf der Oberfläche bereits eine Nachricht angezeigt, 
- *   wird diese vorab entfernt. Benachrichtigungen und Fehlermeldungen müssen daraufhin geprüft werden, ob sie auch bei modalen
- *   Dialogen korrekt funktionieren
- * - clearNotification
- *   Die Metode entfernt eine Benachrichtigung von der Oberfläche
+/** 
+ * @namespace de.condes.plugin.sct
+ * @since 5.0
+ * @desc
+ * <p>SCT needs to interact with the APEX UI to achieve the visual effects requested by the page rules. APEX on the other hand
+ * comes in different versions and themes, making it difficult for on central code to take care of all the different strategies
+ * used to show content</p>
+ * <p>SCT caters for this by delegating the UI specific methods into a separate file, implementing the visual code for a specific
+ * combination of APEX version and theme. The required file may be chosen by utilizing a component parameter of the plugin. There,
+ * the namespace of the required UI code implementation can be set.</p>
+ * <p>This object implements the visual effects of version 5.0, Theme 42. If you use the same version but a different template or
+ * if you extended your theme by addressing specific needs for your company, you may have to add or overwrite functionality of this object.</p>
+ * <p>To provide your own version, it is recommended to create a new object that inherits from this object and overwrite the functionality
+ * you need. How this is achieved can be explored by looking at the other objects within this file, dealing with later apex versions.</p>
+ * <p>For a description of the structure of the objects passed in see the documentation of sct.js</p>
  */
  
- // Version 5.0, Theme 42
+/** IIFE for the root object, version 5.0, Theme 42
+ * @namespace de.condes.plugin.sct.apex_42_5_0
+ * @desc
+ * <p>This object forms the basic implementation and indicates the minuimum supported apex version of SCT. Later releases may decide to remove support 
+ * for this version and base it's functionality on a more recent APEX version.</p>
+ * @param {Object} sct Namespace object to adpot SCT to the given APEX version and theme
+ */
 (function(sct){
-   // APEX-Fehlerbehandlung
+  "use strict";
+
+  /**
+   * APEX error handling
+   * In APEX 5.0 the standard error region is not part of the normal page rendering process, as validating the page
+   * is implemented in a round trip to the server. If errors occur, the page is rendered again, this time with the error regions.
+   * SCT follows an AJAX based approach and therefore needs to add the missing error regions onto the page to be able to show the 
+   * error messages as APEX itself does.
+   */
   var C_APEX_ERROR_CLASS = 'apex-page-item-error';
   var C_APEX_ERROR_CLASS_SEL = `.${C_APEX_ERROR_CLASS}, .DOCUMENT`;
   
@@ -69,58 +57,66 @@ de.condes.plugin.sct.apex_42_5_1 = {};
   var C_CAROUSEL_ERROR_CLASS = 'sct-carousel-hasError';
   
   var C_APEX_ERROR_ID_SEL = '#t_Alert_Notification';
-  var C_PAGE_ERROR_TEMPLATE = `<div class="t-Body-alert">
-  <div class="t-Alert t-Alert--defaultIcons t-Alert--warning t-Alert--horizontal t-Alert--page t-Alert--colorBG is-visible" id="t_Alert_Notification" role="alert">
-    <div class="t-Alert-wrap">
-      <div class="t-Alert-icon">
-        <span class="t-Icon"></span>
-      </div>
-      <div class="t-Alert-content">
-        <div class="t-Alert-header">
-          <h2 class="t-Alert-title"></h2>
+
+  // Standard APEX error region
+  var C_PAGE_ERROR_TEMPLATE = 
+  `<div class="t-Body-alert">
+    <div class="t-Alert t-Alert--defaultIcons t-Alert--warning t-Alert--horizontal t-Alert--page t-Alert--colorBG is-visible" id="t_Alert_Notification" role="alert">
+      <div class="t-Alert-wrap">
+        <div class="t-Alert-icon">
+          <span class="t-Icon"></span>
         </div>
-        <div class="t-Alert-body">
-          <ul class="htmldbUlErr"></ul>
+        <div class="t-Alert-content">
+          <div class="t-Alert-header">
+            <h2 class="t-Alert-title"></h2>
+          </div>
+          <div class="t-Alert-body">
+            <ul class="htmldbUlErr"></ul>
+          </div>
         </div>
-      </div>
-      <div class="t-Alert-buttons">
-        <button class="t-Button t-Button--noUI t-Button--icon t-Button--closeAlert" type="button" title="Schließen"><span class="t-Icon icon-close"></span></button>
+        <div class="t-Alert-buttons">
+          <button class="t-Button t-Button--noUI t-Button--icon t-Button--closeAlert" type="button" title="Schließen"><span class="t-Icon icon-close"></span></button>
+        </div>
       </div>
     </div>
-  </div>
-</div>`;
-  
-  // Standard APEX Fehlermeldung beim Element
+  </div>`;
+    
+  // Standard APEX error messages inline
   var C_ELEMENT_ERROR_TEMPLATE = `<span class="t-Form-error">${this.message}</span>`;
   var C_ELEMENT_ERROR_SEL = ' .t-Form-error';
 
-  // Benachrichtigungen
+  // Notifications
   var C_APEX_NOTIFICATION_ID_SEL = '#t_Alert_Success';
-  var C_PAGE_NOTIFICATION_TEMPLATE = `<div class="t-Body-alert">
-  <div id="t_Alert_Success" class="t-Alert t-Alert--defaultIcons t-Alert--success t-Alert--horizontal t-Alert--page t-Alert--colorBG is-visible" role="alert">
-    <div class="t-Alert-wrap">
-      <div class="t-Alert-icon">
-        <span class="t-Icon"></span>
-      </div>
-      <div class="t-Alert-content">
-        <div class="t-Alert-header">
-          <h2 class="t-Alert-title"></h2>
+  var C_PAGE_NOTIFICATION_TEMPLATE = 
+  `<div class="t-Body-alert">
+    <div id="t_Alert_Success" class="t-Alert t-Alert--defaultIcons t-Alert--success t-Alert--horizontal t-Alert--page t-Alert--colorBG is-visible" role="alert">
+      <div class="t-Alert-wrap">
+        <div class="t-Alert-icon">
+          <span class="t-Icon"></span>
+        </div>
+        <div class="t-Alert-content">
+          <div class="t-Alert-header">
+            <h2 class="t-Alert-title"></h2>
+          </div>
+        </div>
+          <div class="t-Alert-body"></div>
+        <div class="t-Alert-buttons">
+          <button class="t-Button t-Button--noUI t-Button--icon t-Button--closeAlert" type="button" title="Schließen"><span class="t-Icon icon-close"></span></button>
         </div>
       </div>
-        <div class="t-Alert-body"></div>
-      <div class="t-Alert-buttons">
-        <button class="t-Button t-Button--noUI t-Button--icon t-Button--closeAlert" type="button" title="Schließen"><span class="t-Icon icon-close"></span></button>
-      </div>
     </div>
-  </div>
-</div>`;
+  </div>`;
   
-  // Pflichtfelder
+  // Mandatory items
   var C_REQUIRED_SPAN_SEL = 'span.t-Form-required';
   var C_FIELD_REQUIRED_TEMPLATE = '<span class="t-Form-required"><span class="a-Icon icon-asterisk"></span></span>';
   var errorCount;
 
-  // Hilfsfunktionen
+  // Helpers
+  /** 
+   * Helper method to adjust the introducing message sentence according to the amount of errors
+   * @private
+   */
   function setMessage() {
     errorCount = $(C_APEX_ERROR_CLASS_SEL).length;
     apex.debug.log(`Anzahl Fehler: ${errorCount}`);
@@ -141,7 +137,10 @@ de.condes.plugin.sct.apex_42_5_1 = {};
   };
   
   
-  // Hilfsfunktion zum Bereinigen der Seite von Fehlermeldungen
+  /** 
+   * Method to remove error messages
+   * @private
+   */
   function removeErrors(errorList) {
     var firingItems = errorList.firingItems.split(',');
     
@@ -159,7 +158,7 @@ de.condes.plugin.sct.apex_42_5_1 = {};
         $(`${C_ERROR_CLASS_SEL} .${this}`).remove();
       }
       
-      // Lösche Fehler aus Registerkarten-Reitern, falls keine Fehler enthalten sind
+      // Remove error notifications from all tabs if present
       var carouselID = $(`#${this}`).closest(C_CAROUSEL_SEL).attr('id');
       if ((carouselID) && ($(`#${carouselID} ${C_APEX_ERROR_CLASS_SEL}`).length == 0)) {
         $(`a.a-Region-carouselLink[href="#${carouselID}"]`).removeClass(C_CAROUSEL_ERROR_CLASS);
@@ -167,30 +166,40 @@ de.condes.plugin.sct.apex_42_5_1 = {};
     });
   };
 
-  
-  // Die Methode setErrors wird von Response aufgerufen und darf daher nicht umbenannt oder entfernt werden
+
   /**
-   * Die Methode behandelt alle Einzelfehler aus errorList, bereinigt die bestehende Fehlerliste
-   * und fügt die neuen Fehler hinzu. Zusätzlich zur APEX-Grundfunktionalität werden Fehler auch 
-   * in Registerkartenreitern angezeigt, wenn der Fehler sich auf der entsprechenden Registerkarte befindet.
+   * Adds an error region on the page if it is not present
+   * @private
+   */
+  function createErrorRegion(){	   
+    if ($(`${C_ERROR_CLASS_SEL} ${C_APEX_ERROR_ID_SEL}`).length == 0){
+      // No error region exists on page, add. Distinguish between modal and normal page
+      if ($(C_ERROR_DIALOG_POSITION_SEL).length){ 
+        $(C_ERROR_DIALOG_POSITION_SEL).prepend(C_PAGE_ERROR_TEMPLATE);
+      }
+      else{
+        $(C_ERROR_REGION_POSITION_SEL).prepend(C_PAGE_ERROR_TEMPLATE);
+      }
+    }
+  }
+
+  
+  /**
+   * Method iterates over all errors from errorList, removes existing error messages for any of the items
+   * which are marked as firing items by this roundtrip and adds new errors contained in the errorList.
+   * If the page item that has received an error is placed in a tabular region, a marker is added to the tab of that region
+   * to indicate that this tab contains an erroneus page item.
+   * @param {errorList} Error list
+   * @private
    */
   function setErrors(errorList) {
     
     if (errorList.count > 0){
       apex.debug.log(`Anzahl Fehler PlugIn: ${errorList.count}`);
-	   
-      if ($(`${C_ERROR_CLASS_SEL} ${C_APEX_ERROR_ID_SEL}`).length == 0){
-        // Es ist keine Fehlerregion auf der Seite vorhanden, anzeigen
-        if ($(C_ERROR_DIALOG_POSITION_SEL).length){ 
-          // Es wird eine modale Seite angezeigt
-          $(C_ERROR_DIALOG_POSITION_SEL).prepend(C_PAGE_ERROR_TEMPLATE);
-        }
-        else{
-          $(C_ERROR_REGION_POSITION_SEL).prepend(C_PAGE_ERROR_TEMPLATE);
-        }
-      }
+
+      createErrorRegion();
       
-      // Alle Einzelfehler behandeln
+      // show any error
       $.each(errorList.errors, function() {
         var itemID = this.item;
         var $item = $(`#${this.item}`);
@@ -198,18 +207,17 @@ de.condes.plugin.sct.apex_42_5_1 = {};
         var linkTarget;
         var linkText;
         
-        // APEX-Fehlerklasse und -meldung an das Element hängen
+        // Show inline error
         $item
         .addClass(C_APEX_ERROR_CLASS)
         .siblings('span').remove();
         $item.parent().append(`<span class='t-Form-error'>${this.message}</span>`);
         
-        // Fehlerregion aktualisieren
-        // Fehlermeldung in Fehlerregion erhält Link auf das Feld (Gehe zu Fehler) sowie ID zum selektiven Löschen
+        // Update error region, including link to page item
         linkTarget = `javascript: apex.item('${itemID}').setFocus();void(0);`;
         linkText = `Gehe zu Fehler: <span class='ek-itemLabelText'>${itemLabel}</span>`;
         
-        // Teil eines Caroussels? Dann Link überarbeiten
+        // If page item is placed within a tabular region, add marker to the tab
         var $carousel = $item.closest(C_CAROUSEL_SEL);
         if ($carousel.length){
           var carouselId = $carousel.attr('id');
@@ -219,15 +227,16 @@ de.condes.plugin.sct.apex_42_5_1 = {};
           linkText += ` im Register: ${carouselName}`;
         }
         
-        // Fehler als LI in Fehlerregion einfügen
+        // Add error message
         $(C_ERROR_UL_SEL).append(`<li class='htmldbStdErr ${itemID}'>${this.message} (<a href=${linkTarget}>${linkText}</a>)</li>`);
 	    });
     };
   };  
 
   /**
-   * Die Methode prüft, ob das Plugin abhängige Elemente verwaltet und steuert deren Aktivität abhängig davon,
-   * ob auf der Seite Fehler angezeigt werden oder nicht.
+   * If the plugin contains a list of error dependent elements, these elements are dis- or enabled based on the amount of errors
+   * @param {errorList} errorList List of errors
+   * @private
    */
   function maintainDependentElements(errorList){
     if (errorList.errorDependentButtons != null && errorList.errorDependentButtons != ''){
@@ -247,7 +256,10 @@ de.condes.plugin.sct.apex_42_5_1 = {};
 
   
   /** 
-   * Methode sendet die Seite ab, falls keine Fehler auf der Seite gefunden werden.
+   * Method submits page with the given request if no errors are on the page
+   * @param {string} request Request for the server
+   * @param {string} message Alert message warning the user if submit couldn't be executed due to errors on page
+   * @public
    */
   sct.submitPage = function(request, message){
     if ($(C_APEX_ERROR_CLASS_SEL).length == 0) {
@@ -260,11 +272,14 @@ de.condes.plugin.sct.apex_42_5_1 = {};
   
   
   /**
-   * Methode zur Steuerung der Darstellung von Pflichtelementen
+   * Controls the mandatory status of a page item
+   * @param {string} item Page item ID of the item to set mandatory or optional
+   * @param {boolean} mandatory Flag to set a page item mandatory (true) or optional (false)
+   * @public
    */
   sct.setFieldMandatory = function(item, mandatory){
     var $mandatoryItem = $(`#${item}_LABEL`);
-    // evtl. vorhandene Markierung entfernen
+    // clean any existing mandatory markup upfront
     $mandatoryItem.siblings(C_REQUIRED_SPAN_SEL).remove();
     
     if(mandatory){
@@ -274,7 +289,9 @@ de.condes.plugin.sct.apex_42_5_1 = {};
   
   
   /**
-   * Methode, um Fehler auf der Seite zu verwalten.
+   * Maintains the error list on the page
+   * @param {errorList} List of errors
+   * @public
    */
   sct.maintainErrors = function(errorList){
     if (errorList.firingItems != '' || errorList.firingItems != ''){      
@@ -284,9 +301,8 @@ de.condes.plugin.sct.apex_42_5_1 = {};
     }
     else {
       if ($(C_ERROR_CLASS_SEL).length > 0){
-        // beim Seiteladen, eventuell in der Meldungsregion vorhandene Fehler mit unseren Klassen versehen
-        // können nur Fehler enthalten sein, die aus der APEX-Seitenverarbeitung resultieren
-        // Vermerke in diesen Fehlern die ID des referenzierten Elements um selektiven Löschen über JavaScript
+        // On page load we try to find any existing errors and enrich them with IDs of the referenced items
+        // If those errors are present, they can only be created by the render process of APEX
         $(`${C_ERROR_CLASS_SEL} li.htmldbStdErr a`).each(function(){
           var itemLink = $(this).attr('href');
           var itemName = itemLink.match('apex.item(.*).setFocus')[1].replace(/('\(\))/g, '');
@@ -294,33 +310,29 @@ de.condes.plugin.sct.apex_42_5_1 = {};
         });
       };
     };
-    // In jedem Fall fehlerabhängige Elemente aktualisieren
+    // maintain error dependent page items
     maintainDependentElements(errorList);
   };
   
   
   /**
-   * Methode zur Anzeige einer Nachricht auf der Oberfläche
+   * Shows a message on the page
+   * @param {string} message Message text to show
+   * @public
    */
   sct.setNotification = function(message){
     sct.clearNotification;
-     if ($(`${C_ERROR_CLASS_SEL} ${C_APEX_ERROR_ID_SEL}`).length == 0){
-      // Es ist keine Fehlerregion auf der Seite vorhanden, anzeigen
-      if ($(C_ERROR_DIALOG_POSITION_SEL).length){ 
-        // Es wird eine modale Seite angezeigt
-        $(C_ERROR_DIALOG_POSITION_SEL).prepend(C_PAGE_NOTIFICATION_TEMPLATE);
-      }
-      else{
-        $(C_ERROR_REGION_POSITION_SEL).prepend(C_PAGE_NOTIFICATION_TEMPLATE);
-      }
-    };
+    createErrorRegion();
     $(C_MESSAGE_TITLE_SEL).text(message);    
     $('.t-Button--closeAlert').on('click', sct.clearNotification);
   };
   
   
   /**
-   * Methode zur Darstellung einer Bestätigungsnachricht auf der Seite
+   * Shows a confirmation dialog to the user before calling the intended rfunctionality
+   * @param {event} e Event that was raised by the user
+   * @param {callback} callback Method to be called if the user confirmes this dialog
+   * @public
    */
   sct.confirmRequest = function(e, callback){
     apex.dialog.confirm(e.data.message,e.data.title).then(function (answer) {
@@ -331,74 +343,80 @@ de.condes.plugin.sct.apex_42_5_1 = {};
   };
   
   
-  sct.disableElement = function (item){
+  /**
+   * Disables a page item. Handles deactivation of 
+   * - page items with values to allow to include them in a submit
+   * - select lists
+   * - buttons
+   * @param {string} itemId ID of the page item to disable
+   * @public
+   */
+  sct.disableElement = function (itemId){
     // Normales Element, nicht deaktivieren, da ansonsten Sessionstate nicht gefüllt wird.
     // Stattdessen readonly und CSS-Klasse setzen, so dass es wie deaktiviert aussieht
-    $('#item').prop('readonly', true).addClass('sct-disabled');
-    
-      $this = $(item);
-      var itemId = $this.attr('id');
-      if ($this.is('select')){
-        // Select-Liste, deaktiviere alle Einträge außer dem gewählten
-        $(`#${itemId}:not(:selected)`).prop('disabled', false);
-      }
-      else if ($this.is('button')){
-        // Button, wird »normal« aktiviert
-        apex.item(itemId).enable();
-      }
-      else if ($this.is('input')){
-        sct.ApexJS.enableElement(itemId);
-      };
-      apex.item(itemId).show();
-  };
-  
-  
-  sct.enableElement = function (item){
-    // Normales Element, nicht deaktivieren, da ansonsten Sessionstate nicht gefüllt wird.
-    // Stattdessen readonly und CSS-Klasse setzen, so dass es wie deaktiviert aussieht
-    $('#item').prop('readonly', false).removeClass('sct-disabled');
-    
-      $this = $(item);
-      var itemId = $this.attr('id');
-      if ($this.is('select')){
-        // Select-Liste, deaktiviere alle Einträge außer dem gewählten
-        $(`#${itemId}:not(:selected)`).prop('disabled', false);
-      }
-      else if ($this.is('button')){
-        // Button, wird »normal« aktiviert
-        apex.item(itemId).enable();
-      }
-      else if ($this.is('input')){
-        sct.ApexJS.enableElement(itemId);
-      };
-      apex.item(itemId).show();
-      
-      /** TODO Erweiterung integrieren:
-      
-	// wenn es sich bei dem Seitenelement um ein Datumsfeld handelt, dann auch die Schaltflaeche
-	// zur Datumsauswahl aktivieren
-	if (itemId.hasClass("hasDatepicker")) {
-		itemId.parent().find("button").prop('readonly', false).removeClass(C_APEX_DISABLED_CLASS);
-	}
+    var $this = $(`#${itemId}`);
+    $this.prop('readonly', true).addClass('sct-disabled');
 
-	// wenn es sich bei dem Seitenelement um ein Farbfeld handelt, dann auch die Schaltflaeche
-	// zur Farbauswahl aktivieren
-	else if (itemId.hasClass("color_picker")) {
-		$('#' + pItem + '_fieldset').prop('readonly', false).removeClass(C_APEX_DISABLED_CLASS);
-	}
-
-	// wenn es sich bei dem Seitenelement um eine Popup-Liste handelt, dann auch die Schaltflaeche
-	// zur Auswahl der Listeneintraege aktivieren
-	else if (itemId.hasClass("popup_lov")) {
-		itemId.closest('#' + pItem + '_fieldset').find('.a-Button--popupLOV')
-		   .prop('readonly', false).removeClass(C_APEX_DISABLED_CLASS);
-	};
-  */
+    if ($this.is('select')){
+      // Select-Liste, deaktiviere alle Einträge außer dem gewählten
+      $(`#${itemId}:not(:selected)`).prop('disabled', false);
+    }
+    else if ($this.is('button')){
+      // Button, wird »normal« aktiviert
+      apex.item(itemId).disable();
+    }
+    else if ($this.is('input')){
+      apex.item(itemId).disable();
+    };
+    apex.item(itemId).show();
   };
   
   
   /**
-   * Methode zum Entfernen einer Benachrichtigung auf der Option
+   * Enables a page item. Handles deactivation of 
+   * - page items with values to allow to include them in a submit
+   * - select lists
+   * - buttons
+   * @param {string} itemId ID of the page item to disable
+   * @public
+   */
+  sct.enableElement = function (itemId){
+    var $this = $(`#${itemId}`);
+    $this.prop('readonly', false).removeClass('sct-disabled');
+
+    if ($this.is('select')){
+      $(`#${itemId}:not(:selected)`).prop('disabled', false);
+    }
+    else if ($this.is('button')){
+      apex.item(itemId).enable();
+    }
+    else if ($this.is('input')){
+      apex.item(itemId).enable();
+    };
+    apex.item(itemId).show();
+    apex.item(itemId).enable();
+    
+    // if page item is a date picker, enable button as well
+    if ($this.hasClass("hasDatepicker")) {
+      $this.parent().find("button").prop('readonly', false).removeClass(C_APEX_DISABLED_CLASS);
+    }
+
+    // if page item is a colour picker, enable button as well
+    else if ($this.hasClass("color_picker")) {
+      $('#' + pItem + '_fieldset').prop('readonly', false).removeClass(C_APEX_DISABLED_CLASS);
+    }
+
+    // if page item is a popup list, enable button as well
+    else if ($this.hasClass("popup_lov")) {
+      $this.closest('#' + pItem + '_fieldset').find('.a-Button--popupLOV')
+         .prop('readonly', false).removeClass(C_APEX_DISABLED_CLASS);
+    };
+  };
+  
+  
+  /**
+   * Removes all messages in the notification region
+   * @public
    */
   sct.clearNotification = function(){
     $(`${C_ERROR_CLASS_SEL} ${C_APEX_NOTIFICATION_ID_SEL}`).parent().remove();     
@@ -407,21 +425,29 @@ de.condes.plugin.sct.apex_42_5_1 = {};
 
 
 
-
-
- // Version 5.1, Theme 42
+/**
+ * IIFE for Version 5.1, Theme 42
+ * @namespace de.condes.plugin.sct.apex_42_5_1
+ * @since 5.1
+ * @desc
+ * Main difference in version 5.1 is that the APEX team changed the validation process to an AJAX-based approach becuase of the
+ * invention of editable grids. As a consequence, the error regions are now present on the page upon normal rendering and need not
+ * to be included by this logic. Additionally, APEX 5.1 offers a new apex.message namespace, making the notification process even easier.
+ * @param {Object} sct Namespace object to adpot SCT to the given APEX version and theme
+ * @param {apex.message} New message object provided by APEX
+ */
 (function(sct, msg){
 
   var C_APEX_ERROR_CLASS_SEL = 'div.a-Notification--error';
 
-  // Die Methode setErrors wird von Response aufgerufen und darf daher nicht umbenannt oder entfernt werden
   /**
-   * Die Methode behandelt alle Einzelfehler aus errorList, bereinigt die bestehende Fehlerliste
-   * und fügt die neuen Fehler hinzu.
+   * Maintain errors
+   * @param {errorList} errorList List of errors
+   * @override
    */
   function setErrors(errorList) {
 
-    // Alle Einzelfehler behandeln und auf apex.message.errorObject abbilden
+    // Map errors to apex.message.errorObject
     apex.debug.log(`Anzahl Fehler PlugIn: ${errorList.count}`);
     msg.clearErrors();
 	
@@ -431,28 +457,32 @@ de.condes.plugin.sct.apex_42_5_1 = {};
   };
 
   /**
-   * Die Methode prüft, ob das Plugin abhängige Elemente verwaltet und steuert deren Aktivität abhängig davon,
-   * ob auf der Seite Fehler angezeigt werden oder nicht.
+   * Maintain error dependent elements on page
+   * @param {errorList} errorList List of errors
+   * @override
    */
   function maintainDependentElements(errorList){
-    if (errorList.errorDependentButtons != null && errorList.errorDependentButtons != ''){
-      var errorDependentButtons = errorList.errorDependentButtons.split(',');
+    if (errorList.errorDependentItems != null && errorList.errorDependentItems != ''){
+      var errorDependentItems = errorList.errorDependentItems.split(',');
       if ($(C_APEX_ERROR_CLASS_SEL).length == 0){
-        $.each(errorDependentButtons, function() {
+        $.each(errorDependentItems, function() {
           apex.item(this).enable();
         });
       }
       else {
-        $.each(errorDependentButtons, function() {
+        $.each(errorDependentItems, function() {
           apex.item(this).disable();
         });
       };
     };
   };
 
-  
   /** 
-   * Methode sendet die Seite ab, falls keine Fehler auf der Seite gefunden werden.
+   * Method submits page with the given request if no errors are on the page
+   * @param {string} request Request for the server
+   * @param {string} message Alert message warning the user if submit couldn't be executed due to errors on page
+   * @public
+   * @override
    */
   sct.submitPage = function(request, message){
 
@@ -469,14 +499,17 @@ de.condes.plugin.sct.apex_42_5_1 = {};
   
   
   /**
-   * Methode zur Steuerung der Darstellung von Pflichtelementen
+   * Controls the mandatory status of a page item
+   * @param {string} item Page item ID of the item to set mandatory or optional
+   * @param {boolean} mandatory Flag to set a page item mandatory (true) or optional (false)
+   * @public
+   * @override
    */
   sct.setFieldMandatory = function(item, mandatory){
 
     var $mandatoryItem = $(`#${item}_CONTAINER`);
     var C_REQUIRED_CLASS = 'is-required';
 
-    // evtl. vorhandene Markierung entfernen
     $mandatoryItem.removeClass(C_REQUIRED_CLASS);
     
     if(mandatory){
@@ -486,7 +519,10 @@ de.condes.plugin.sct.apex_42_5_1 = {};
   
   
   /**
-   * Methode, um Fehler auf der Seite zu verwalten.
+   * Maintains the error list on the page
+   * @param {errorList} List of errors
+   * @public
+   * @override
    */
   sct.maintainErrors = function(errorList){
     msg.clearErrors()
@@ -499,7 +535,10 @@ de.condes.plugin.sct.apex_42_5_1 = {};
   
   
   /**
-   * Methode zur Anzeige einer Nachricht auf der Oberfläche
+   * Shows a message on the page
+   * @param {string} message Message text to show
+   * @public
+   * @override
    */
   sct.setNotification = function(message){
     msg.hidePageSuccess();
@@ -508,10 +547,27 @@ de.condes.plugin.sct.apex_42_5_1 = {};
   
   
   /**
-   * Methode zum Entfernen einer Benachrichtigung auf der Option
+   * Removes all messages in the notification region
+   * @public
+   * @override
    */
   sct.clearNotification = function(){
     msg.hidePageSuccess();
   };
 
 })(de.condes.plugin.sct.apex_42_5_1, apex.message);
+
+
+
+/**
+ * IIFE for Version 18.2, Theme 42
+ * @namespace de.condes.plugin.sct.apex_42_18_2
+ * @since 5.1
+ * @desc
+ * 
+ * @param {Object} sct Namespace object to adpot SCT to the given APEX version and theme
+ * @param {apex.message} New message object provided by APEX
+ */
+(function(sct, msg){
+
+})(de.condes.plugin.sct.apex_42_18_2, apex.message);

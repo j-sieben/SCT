@@ -1,54 +1,34 @@
 create or replace package sct_ui_pkg
-  authid current_user
+  authid definer
 as
 
-  /* Package SCT_ADMIN zur Verwaltung von State Charts
+  /* Maintain SCT rules via an APEX frontend
    * %author Juergen Sieben, ConDeS GmbH
-   * %usage Das Package dient als Schnittstelle zu einer APEX-Anwendung, um das SCT
-   *        zu administrieren
+   * %usage  This package implements the methods required to maintain SCT rule groups via an APEX application
    */
-
-  /* Loescht eine bestehende Regelgruppe
-   * %param p_sgr_id ID der Regelgruppe, die geloescht werden soll
-   * %usage Wird verwendet, um eine bestehende Regelgruppe zu loeschen.
-   */
-  procedure delete_rule_group(
-    p_sgr_id in sct_rule_group.sgr_id%type);
+   
+  /* Getter/Setter */
+  
+  /* Methode zur Aktualisierung der Regionsueberschrift von Regelgruppen */
+  function set_rule_overview_heading
+    return varchar2;
 
 
   /* Kopiert eine Regelgruppe auf eine andere Anwendung/Anwendungsseite
    * %usage Soll eine Anwendung kopiert werden, koennen mit dieser Funktion
    *        die definierten Regelgruppen in die neue Anwendung uebernommen werden.
    */
-  procedure copy_rule_group;
-  
-  
-  /* Funktion zur Pruefung einer Regelgruppe vor dem Export
-   * %return Fehlermeldung, falls existent
-   * %usage Die Methode wird vor dem Export einer Regelgruppe aufgerufen, um 
-   *        sicherzustellen, dass sie fehlerfrei exportiert werden kann.
-   */
-  procedure validate_rule_group;
-  
-  
-  /* Ueberladung fuer eine konkrete Regelgruppe
-   * %param p_sgr_id ID der Regelgruppe, die geprueft werden soll
-   * %usage Wird verwendet, um eine Regelgruppe explizit zu pruefen
-   */
-  procedure validate_rule_group(
-    p_sgr_id in sct_rule_group.sgr_id%type);
-    
-  
-  /* Prozedur veranlasst den Export aller Regelgruppen. Die Regelgruppen
-   * werden als Datei auf den Client-rechner geladen
-   */
-  procedure export_all_rule_groups;
+  procedure copy_sgr;
     
   
   /* Prozedur veranlasst den Export einer oder mehrerer Regelgruppen. Die Regelgruppen
    * werden als Datei auf den Client-rechner geladen
    */
-  procedure export_rule_group;
+  procedure process_export_sgr;
+  
+  /* Methode ermittelt auf Basis des SessionState die initiale Art des Regelgruppenexports */
+  function get_export_type
+    return varchar2;
   
   
   /* Methode zum Validieren der Seite EDIT_GROUP
@@ -61,6 +41,29 @@ as
   procedure process_edit_sgr;
   
   
+  /* Methode zum Fuellen einer APEX-Collection der Regelaktionen
+   * %usage  Wird beim Initialisieren der Seite EDIT_SRU aufgerufen, um bestehende Aktionen in die Collection zu kopieren-
+   *         Erforderlich, um per modalen Dialog neue Aktionen aufnehmen zu koennen, ohne diese direkt in die DB speichern
+   *         zu muessen
+   */
+  procedure initialize_sra_collection;
+  
+  
+  /* Methode zum Fuellen einer APEX-Collection der APEX-Aktionen
+   * %usage  Wird beim Initialisieren der Seite EDIT_SAA aufgerufen, um bestehende Aktionen in die Collection zu kopieren-
+   *         Erforderlich, um per modalen Dialog neue Aktionen aufnehmen zu koennen, ohne diese direkt in die DB speichern
+   *         zu muessen
+   */
+  procedure initialize_saa_collection;
+  
+  
+  /* Methode zur Validierung einer Regelbedingung
+   * %usage  Wird aufgerufen, um eine Regelbedingung zu testen.
+   *         Registriert eventuelle Fehler im APEX Error Stack
+   */
+  procedure validate_rule;
+  
+  
   /* Methode zum Validieren der Seite EDIT_RULE
    */
   function validate_edit_sru
@@ -69,6 +72,11 @@ as
   /* Methode zur Verarbeiten der Seite EDIT_RULE
    */
   procedure process_edit_sru;
+  
+  
+  /* Method to prepare or update page EDIT_SRA based on Action Type selection
+   */
+  procedure configure_edit_sra;
   
   
   /* Methode zum Validieren der Seite EDIT_RULE, Interactive Grid RULE_ACTION
@@ -91,31 +99,35 @@ as
   procedure process_edit_saa;
     
 
-  /* Hilfsfunktion zur Ermittlung der n�chsten Sequenznummer f�r Regeln
-   * %param p_sgr_id ID der Regelgruppe
+  /* Hilfsfunktion zur Ermittlung der naechsten Sequenznummer fuer Regeln
    * %return Naechste Sequenznummer
    * %usage Wird von der Anwendung genutzt, um eine neue Sequenznummer vorzublenden
    */
-  function get_sru_sort_seq(
-    p_sgr_id in sct_rule_group.sgr_id%type)
+  function get_sru_sort_seq
     return number;
     
 
-  /* Hilfsfunktion zur Ermittlung der n�chsten Sequenznummer f�r Regelaktionen
-   * %param p_sgr_id ID der Regelgruppe
-   * %param p_sru_id ID der Einzelregel
+  /* Hilfsfunktion zur Ermittlung der naechsten Sequenznummer fuer Regelaktionen
    * %return Naechste Sequenznummer
    * %usage Wird von der Anwendung genutzt, um eine neue Sequenznummer vorzublenden
    */
-  function get_sra_sort_seq(
-    p_sgr_id in sct_rule_group.sgr_id%type,
-    p_sru_id in sct_rule.sru_id%type)
+  function get_sra_sort_seq
     return number;
     
   /* Hilfsfunktionen fuer Aktionstypen
    * %usage Liefert einen Hilfstext fuer Aktionstypen
    */
   procedure get_action_type_help;
+    
+    
+  /* Methoden zur Kontrolle von APEX-Aktionen */
+  procedure set_action_admin_sgr;
+  
+  procedure set_action_edit_sgr;
+  
+  procedure set_action_export_sgr;
+  
+  procedure set_action_edit_sru;
 
 end sct_ui_pkg;
 /

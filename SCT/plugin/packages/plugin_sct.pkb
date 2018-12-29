@@ -18,16 +18,16 @@ as
   procedure stop_rule
   as
   begin
-    bl_sct.stop_rule;
+    sct_internal.stop_rule;
   end stop_rule;
   
   
   procedure register_item(
     p_item in varchar2,
-    p_allow_recursion in number default sct_admin.C_TRUE)
+    p_allow_recursion in number default utl_apex.C_TRUE)
   as
   begin
-    bl_sct.register_item(p_item, p_allow_recursion);
+    sct_internal.register_item(p_item, p_allow_recursion);
   end register_item;
   
   
@@ -38,16 +38,16 @@ as
   as
     l_error apex_error.t_error;  -- APEX-Fehler-Record
     l_sqlcode number := sqlcode;
-    l_sqlerrm varchar2(2000) := substr(sqlerrm, instr(sqlerrm, ':', 1) + 2);
+    l_sqlerrm varchar2(2000) := substr(sqlerrm, 12);
   begin
     pit.enter_mandatory('register_error', c_pkg);
-    bl_sct.push_firing_item(p_spi_id);
+    sct_internal.push_firing_item(p_spi_id);
     l_error.message := p_error_msg;
     
     if l_error.message is not null then
       l_error.page_item_name := p_spi_id;
-      l_error.additional_info := p_internal_error || replace(dbms_utility.format_error_backtrace, chr(10), '<br/>');
-      bl_sct.push_error(l_error);
+      l_error.additional_info := apex_escape.json(p_internal_error || pit_util.get_call_stack);
+      sct_internal.push_error(l_error);
     end if;
     
     pit.leave_mandatory;
@@ -64,7 +64,7 @@ as
   begin
     pit.enter_mandatory('register_error', C_PKG);
     
-    bl_sct.register_error(p_spi_id, p_message_name, p_arg_list);
+    sct_internal.register_error(p_spi_id, p_message_name, p_arg_list);
     
     pit.leave_mandatory;
   end register_error;
@@ -74,7 +74,7 @@ as
     return boolean
   as
   begin
-    return bl_sct.get_error_flag;
+    return sct_internal.get_error_flag;
   end has_errors;
   
     
@@ -82,7 +82,7 @@ as
     return boolean
   as
   begin
-    return not bl_sct.get_error_flag;
+    return not sct_internal.get_error_flag;
   end has_no_errors;
   
   
@@ -92,7 +92,7 @@ as
   begin
     pit.enter_mandatory('register_notification', C_PKG);
     
-    bl_sct.register_notification(p_text);
+    sct_internal.register_notification(p_text);
     
     pit.leave_mandatory;
   end register_notification;
@@ -105,7 +105,7 @@ as
   begin
     pit.enter_mandatory('register_notification', C_PKG);
     
-    bl_sct.register_notification(p_message_name, p_arg_list);
+    sct_internal.register_notification(p_message_name, p_arg_list);
     
     pit.leave_mandatory;
   end register_notification;
@@ -115,16 +115,16 @@ as
     p_spi_id in sct_page_item.spi_id%type,
     p_spi_mandatory_message in varchar2,
     p_is_mandatory in boolean,
-    p_attribute_2 in sct_rule_action.sra_attribute_2%type default null)
+    p_param_2 in sct_rule_action.sra_param_2%type default null)
   as
   begin
     pit.enter_mandatory('register_mandatory', C_PKG);
     
-    bl_sct.register_mandatory(
+    sct_internal.register_mandatory(
       p_spi_id => p_spi_id,
       p_spi_mandatory_message => p_spi_mandatory_message,
       p_is_mandatory => p_is_mandatory,
-      p_attribute_2 => p_attribute_2);
+      p_param_2 => p_param_2);
     
     pit.leave_mandatory;
   end register_mandatory;
@@ -138,14 +138,30 @@ as
   begin
     pit.enter_mandatory('check_mandatory', C_PKG);
     
-    bl_sct.check_mandatory(
+    sct_internal.check_mandatory(
       p_firing_item => p_firing_item,
       p_push_item => l_push_item);
     
-    bl_sct.push_firing_item(l_push_item);
+    sct_internal.push_firing_item(l_push_item);
     
     pit.leave_mandatory;
   end check_mandatory;
+  
+  
+  function get_firing_item
+    return varchar2
+  as
+  begin
+    return sct_internal.get_firing_item;
+  end get_firing_item;
+  
+    
+  function get_event
+    return varchar2
+  as
+  begin
+    return sct_internal.get_event;
+  end get_event;
   
   
   function get_char(
@@ -153,7 +169,7 @@ as
     return varchar2
   as
   begin
-    return bl_sct.get_char(p_spi_id);
+    return sct_internal.get_char(p_spi_id);
   end get_char;
   
   
@@ -164,10 +180,10 @@ as
     return number
   as
   begin
-    return bl_sct.get_number(p_spi_id, p_format_mask, p_throw_error);
+    return sct_internal.get_number(p_spi_id, p_format_mask, p_throw_error);
   exception
     when others then
-      bl_sct.register_error(p_spi_id, sqlerrm, '');
+      sct_internal.register_error(p_spi_id, sqlerrm, '');
       return null;
   end get_number;
   
@@ -176,7 +192,7 @@ as
     p_spi_id in varchar2)
   as
   begin
-    bl_sct.check_number(p_spi_id);
+    sct_internal.check_number(p_spi_id);
   end check_number;
   
   
@@ -187,10 +203,10 @@ as
     return date
   as
   begin
-    return bl_sct.get_date(p_spi_id, p_format_mask, p_throw_error);
+    return sct_internal.get_date(p_spi_id, p_format_mask, p_throw_error);
   exception
     when others then
-      bl_sct.register_error(p_spi_id, sqlerrm, '');
+      sct_internal.register_error(p_spi_id, sqlerrm, '');
       return null;
   end get_date;
   
@@ -199,16 +215,27 @@ as
     p_spi_id in varchar2)
   as
   begin
-    bl_sct.check_date(p_spi_id);
+    sct_internal.check_date(p_spi_id);
   end check_date;
-    
+  
+  
+  procedure do_cmd(
+    p_cmd in varchar2)
+  as
+    C_CMD_TEMPLATE constant varchar2(100) := 'begin #CMD# end;';
+    l_cmd varchar2(32767);
+  begin
+    l_cmd := rtrim(p_cmd, ';') || ';';
+    execute immediate replace(C_CMD_TEMPLATE, '#CMD#', l_cmd);
+  end do_cmd;
+  
   
   procedure submit_page
   as
   begin
     pit.enter_mandatory('submit_page', C_PKG);
     
-    bl_sct.submit_page;
+    sct_internal.submit_page;
     
     pit.leave_mandatory;
   end submit_page;
@@ -217,39 +244,15 @@ as
   procedure set_session_state(
     p_item in sct_page_item.spi_id%type,
     p_value in varchar2,
-    p_allow_recursion in number default sct_admin.C_TRUE,
-    p_attribute_2 in sct_rule_action.sra_attribute_2%type default null)
+    p_allow_recursion in utl_apex.flag_type default utl_apex.C_TRUE,
+    p_param_2 in sct_rule_action.sra_param_2%type default null)
   as
   begin
     pit.enter_mandatory('set_session_state', C_PKG);
     
-    bl_sct.set_session_state(p_item, p_value, p_allow_recursion, p_attribute_2);
+    sct_internal.set_session_state(p_item, p_value, p_allow_recursion, p_param_2);
     
     pit.leave_mandatory;
-  end set_session_state;
-  
-  /* Ueberladungen fuer DATE und NUMBER */
-  procedure set_session_state(
-    p_item in sct_page_item.spi_id%type,
-    p_value in date,
-    p_allow_recursion in number default sct_admin.C_TRUE,
-    p_attribute_2 in sct_rule_action.sra_attribute_2%type default null)
-  as
-    l_item_list char_table;
-  begin
-    set_session_state(p_item, to_char(p_value), p_allow_recursion, p_attribute_2);
-  end set_session_state;
-  
-    
-  procedure set_session_state(
-    p_item in sct_page_item.spi_id%type,
-    p_value in number,
-    p_allow_recursion in number default sct_admin.C_TRUE,
-    p_attribute_2 in sct_rule_action.sra_attribute_2%type default null)
-  as
-    l_item_list char_table;
-  begin
-    set_session_state(p_item, to_char(p_value), p_allow_recursion, p_attribute_2);
   end set_session_state;
   
   
@@ -257,7 +260,7 @@ as
     p_item in sct_page_item.spi_id%type,
     p_value in varchar2,
     p_error in varchar2,
-    p_allow_recursion in number default sct_admin.C_TRUE)
+    p_allow_recursion in utl_apex.flag_type default utl_apex.C_TRUE)
   as
   begin
     pit.enter_mandatory('set_session_state_or_error', C_PKG);
@@ -277,7 +280,7 @@ as
     p_stmt in varchar2)
   as
     c_stmt constant varchar2(200) := 'select * from (#STMT#) where rownum = 1';
-    l_stmt varchar2(32767);
+    l_stmt utl_apex.max_char;
     l_result varchar2(4000);
     l_cur integer;
     l_cnt integer;
@@ -288,7 +291,7 @@ as
     
     l_stmt := replace(c_stmt, '#STMT#', p_stmt);
     
-    if p_item = sct_admin.c_no_firing_item or p_item is null then
+    if p_item = sct_util.c_no_firing_item or p_item is null then
       -- Wird kein Element angegeben, werden die Elemente gemaess des Spaltennamens gesetzt
       l_cur := dbms_sql.open_cursor;
       -- SQL parsen, um Spaltenbezeichner zu ermitteln
@@ -311,14 +314,14 @@ as
     else
       -- Konkretes Element angefordert, laut Konvention ist nur eine Spalte enthalten
       execute immediate l_stmt into l_result;
-      set_session_state(p_item, l_result, sct_admin.C_TRUE, null);
+      set_session_state(p_item, l_result, utl_apex.C_TRUE, null);
     end if;
     
     pit.leave_mandatory;
   exception
     when others then
       register_notification(msg.SCT_NO_DATA_FOR_ITEM, msg_args(p_item));
-      set_session_state(p_item, '', sct_admin.C_TRUE, null);
+      set_session_state(p_item, '', utl_apex.C_TRUE, null);
       pit.leave_mandatory;
   end set_value_from_stmt;
     
@@ -328,14 +331,14 @@ as
     p_stmt in varchar2)
   as
     c_stmt constant varchar2(200) := q'~select listagg(value, ':') within group (order by value) from (#STMT#)~';
-    l_stmt varchar2(32767);
+    l_stmt utl_apex.max_char;
     l_result varchar2(4000);
   begin
     pit.enter_mandatory('set_list_from_stmt', C_PKG);
     
     l_stmt := replace(c_stmt, '#STMT#', p_stmt);
     execute immediate l_stmt into l_result;
-    set_session_state(p_item, l_result, sct_admin.C_TRUE, null);
+    set_session_state(p_item, l_result, utl_apex.C_TRUE, null);
     
     pit.leave_mandatory;
   end set_list_from_stmt;
@@ -345,16 +348,67 @@ as
     p_message in varchar2)
   as
   begin
-    bl_sct.notify(p_message);
+    sct_internal.notify(p_message);
   end notify;
+  
+  
+  procedure execute_action(
+    p_sat_id in varchar2,
+    p_item in varchar2,
+    p_param_1 in varchar2 default null,
+    p_param_2 in varchar2 default null,
+    p_param_3 in varchar2 default null)
+  as
+    l_row sct_action_type%rowtype;
+    l_plsql sct_action_type.sat_pl_sql%type;
+    l_js sct_action_type.sat_js%type;
+  begin
+    select * 
+      into l_row
+      from sct_action_type 
+     where sat_id = p_sat_id;
+    
+    if l_row.sat_pl_sql is not null then
+      l_plsql := utl_text.bulk_replace(l_row.sat_pl_sql, char_table(
+                   'ITEM', p_item,
+                   'PARAM_1', p_param_1,
+                   'PARAM_2', p_param_2,
+                   'PARAM_3', p_param_3));
+      pit.verbose(msg.ALLG_PASS_INFORMATION, msg_args('Fuehre PL/SQL-Code aus: ' || l_plsql));
+      execute immediate l_plsql;
+    end if;
+    
+    if l_row.sat_js is not null then
+      l_js := utl_text.bulk_replace(l_row.sat_js, char_table(
+                'ITEM', p_item,
+                'SELECTOR', p_item,
+                'PARAM_1', p_param_1,
+                'PARAM_2', p_param_2,
+                'PARAM_3', p_param_3));
+      pit.verbose(msg.ALLG_PASS_INFORMATION, msg_args('Fuege JS-Code hinzu: ' || l_js));
+      add_javascript(l_js);
+    end if;
+  exception
+    when NO_DATA_FOUND then
+      pit.verbose(msg.ALLG_PASS_INFORMATION, msg_args('Fehler aufgetreten: ' || sqlerrm));
+      register_error('DOCUMENT', 'Fehler: Aktion ' || p_sat_id || ' existiert nicht', '');
+  end execute_action;
   
   
   procedure execute_javascript(
     p_plsql in varchar2)
   as
   begin
-    bl_sct.execute_javascript(p_plsql);
+    sct_internal.execute_javascript(p_plsql);
   end execute_javascript;
+  
+  
+  procedure add_javascript(
+    p_javascript in varchar2)
+  as
+  begin
+    sct_internal.add_javascript(p_javascript);
+  end add_javascript;
   
   
   procedure xor(
@@ -364,7 +418,7 @@ as
     p_error_on_null in boolean default false)
   as
   begin
-    bl_sct.xor(p_item, p_value_list, p_message, p_error_on_null);
+    sct_internal.xor(p_item, p_value_list, p_message, p_error_on_null);
   end xor;
     
     
@@ -373,7 +427,7 @@ as
     return number
   as
   begin
-    return bl_sct.xor(p_value_list);
+    return sct_internal.xor(p_value_list);
   end xor;
     
     
@@ -383,7 +437,7 @@ as
     p_message in varchar2 default msg.ASSERTION_FAILED)
   as
   begin
-    bl_sct.not_null(p_item, p_value_list, p_message);
+    sct_internal.not_null(p_item, p_value_list, p_message);
   end not_null;
     
     
@@ -392,7 +446,7 @@ as
     return number
   as
   begin
-    return bl_sct.not_null(p_value_list);
+    return sct_internal.not_null(p_value_list);
   end not_null;
   
   
@@ -403,7 +457,7 @@ as
   as
     l_result apex_plugin.t_dynamic_action_render_result;
     l_hsec binary_integer := dbms_utility.get_time;
-    l_js varchar2(32767);
+    l_js utl_apex.max_char;
     l_item_list char_table;
   begin
     pit.enter_mandatory('render', C_PKG);
@@ -415,24 +469,25 @@ as
     end if;
     
     -- Initialisieren
-    bl_sct.read_settings(
+    sct_internal.read_settings(
       p_firing_item => apex_application.g_x01,
+      p_event => apex_application.g_x02,
       p_with_comments => p_plugin.attribute_02,
       p_rule_group_name => p_dynamic_action.attribute_01,
-      p_error_dependent_buttons => p_dynamic_action.attribute_02);
+      p_error_dependent_items => p_dynamic_action.attribute_02);
     
     l_result.javascript_function := C_JS_FUNCTION;
     l_result.ajax_identifier := apex_plugin.get_ajax_identifier; 
     
-    bl_sct.process_initialization_code;
+    sct_internal.process_initialization_code;
     
-    l_js := bl_sct.process_request;
+    l_js := sct_internal.process_request;
     
-    l_result.attribute_01 := bl_sct.get_json_from_bind_items;
-    l_result.attribute_02 := bl_sct.join_list(bl_sct.c_page_items);
+    l_result.attribute_01 := sct_internal.get_json_from_bind_items;
+    l_result.attribute_02 := sct_internal.join_list(sct_internal.c_page_items);
     l_result.attribute_03 := p_plugin.attribute_01;
     l_result.attribute_04 := utl_raw.cast_to_raw(l_js);
-    l_result.attribute_05 := bl_sct.register_observer;
+    l_result.attribute_05 := sct_internal.register_observer;
     
     pit.leave_mandatory;
     return l_result;
@@ -446,7 +501,7 @@ as
   as
     l_result apex_plugin.t_dynamic_action_ajax_result;
     l_hsec binary_integer := dbms_utility.get_time;
-    l_js varchar2(32767);
+    l_js utl_apex.max_char;
   begin
     pit.enter_mandatory('ajax', c_pkg);
     
@@ -457,14 +512,15 @@ as
     end if;
     
     -- Initialisieren
-    bl_sct.read_settings(
+    sct_internal.read_settings(
       p_firing_item => apex_application.g_x01,
+      p_event => apex_application.g_x02,
       p_with_comments => p_plugin.attribute_02,
       p_rule_group_name => p_dynamic_action.attribute_01,
-      p_error_dependent_buttons => p_dynamic_action.attribute_02);
+      p_error_dependent_items => p_dynamic_action.attribute_02);
     
     -- Returniere Ergebnis der Regelpruefung
-    l_js := bl_sct.process_request;
+    l_js := sct_internal.process_request;
     
     htp.p(l_js);
     

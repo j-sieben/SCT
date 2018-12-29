@@ -1,7 +1,7 @@
 
 prompt &h3.Grant SYSTEM privileges
-prompt &s1.create session, create procedure, create table, create type to &INSTALL_USER.
-grant create session, create procedure, create table, create type to &INSTALL_USER.;
+prompt &s1.create session, create procedure, create table, create type, create view to &INSTALL_USER.
+grant create session, create procedure, create table, create type, create view to &INSTALL_USER.;
 
 prompt &h3.Grant OBJECT privileges
 

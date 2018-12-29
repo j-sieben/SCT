@@ -1,0 +1,34 @@
+create table sct_action_type_group(
+  stg_id varchar2(50 char),
+  stg_name varchar2(50 char),
+  stg_description varchar2(200 char),
+  stg_active char(1 byte) default 'Y',
+  constraint pk_sct_action_type_group primary key(stg_id),
+  constraint nn_stg_name check(stg_name is not null),
+  constraint chk_stg_active check(stg_active in ('Y', 'N'))
+) 
+organization index;
+
+create unique index idx_stg_name on sct_action_type_group(stg_name);
+
+comment on table sct_action_type_group is 'Table to store SCT Action Type groups';
+comment on column sct_action_type_group.stg_id is 'PK, technical key';
+comment on column sct_action_type_group.stg_name is 'NOT NULL, Unique name';
+comment on column sct_action_type_group.stg_description is 'Optional description';
+comment on column sct_action_type_group.stg_active is 'Flag to indicate whether rule group is in use';
+
+merge into sct_action_type_group t
+using (select 'ITEM' stg_id,
+              'Seitenelemente' stg_name,
+              'Aktionen für Seitenelemente' stg_description,
+              'Y' stg_active
+         from dual) s
+   on (t.stg_id = s.stg_id)
+ when matched then update set
+      t.stg_name = s.stg_name,
+      t.stg_description = s.stg_description,
+      t.stg_active = s.stg_active
+ when not matched then insert(stg_id, stg_name, stg_description, stg_active)
+      values(s.stg_id, s.stg_name, s.stg_description, s.stg_active);
+      
+commit;

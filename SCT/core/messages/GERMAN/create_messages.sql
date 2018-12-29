@@ -79,6 +79,15 @@ begin
     p_pms_pml_name => 'GERMAN',
     p_error_number => -20000
   );
+  
+  pit_admin.merge_message(
+    p_pms_name => 'SCT_TARGET_EQUALS_SOURCE',
+    p_pms_pmg_name => 'SCT',
+    p_pms_text => q'~Regelgruppe #1# ist bereits auf Anwendung #2#, Seite #3# und kann nicht über sich selbst kopiert werden.~',
+    p_pms_pse_id => 30,
+    p_pms_pml_name => 'GERMAN',
+    p_error_number => -20000
+  );
 
   pit_admin.merge_message(
     p_pms_name => 'SCT_EXPECTED_FORMAT',

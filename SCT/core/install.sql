@@ -37,6 +37,9 @@ prompt &s1.Create table SCT_PAGE_ITEM_TYPE
 prompt &s1.Create table SCT_PAGE_ITEM
 @&table_dir.sct_page_item.tbl
 
+prompt &s1.Create table SCT_APEX_ACTION_ITEM
+@&table_dir.sct_apex_action_item.tbl
+
 prompt &s1.Create table SCT_RULE
 @&table_dir.sct_rule.tbl
 

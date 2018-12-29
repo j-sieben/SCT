@@ -1,20 +1,20 @@
 create table sct_rule(
-  sru_id number, 
+  sru_id number default on null sct_seq.nextval, 
   sru_sgr_id number, 
   sru_name varchar2(200 byte), 
-  sru_condition clob, 
+  sru_condition varchar2(4000 byte), 
   sru_sort_seq number, 
   sru_firing_items varchar2(300 byte),
-  sru_active number(1,0) default 1,
-  sru_has_error number(1,0) default 0,
-  sru_fire_on_page_load number(1,0) default -1,
-  constraint p_sct_rules primary key (sru_id, sru_sgr_id),
+  sru_active char(1) default 'Y',
+  sru_fire_on_page_load char(1) default 'N',
+  sru_has_error char(1) default 'N',
+  constraint p_sct_rules primary key (sru_id),
   constraint r_sru_sgr_id foreign key (sru_sgr_id)
     references sct_rule_group (sgr_id) on delete cascade,
-  constraint c_sru_active check(sru_active in (0,1)),
-  constraint c_sru_has_error check(sru_has_error in (0,1)),
-  constraint c_sru_fire_on_page_load check(sru_fire_on_page_load in (1, -1))
-) organization index;
+  constraint c_sru_active check(sru_active in ('Y', 'N')),
+  constraint c_sru_has_error check(sru_has_error in ('Y', 'N')),
+  constraint c_sru_fire_on_page_load check(sru_fire_on_page_load in ('Y', 'N'))
+);
 
 create index ix_r_sru_sgr_id on sct_rule(sru_sgr_id, sru_id);
 

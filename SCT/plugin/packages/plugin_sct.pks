@@ -17,7 +17,8 @@ as
    */
   procedure register_item(
     p_item in varchar2,
-    p_allow_recursion in number default sct_admin.c_true);
+    p_allow_recursion in number default utl_apex.C_TRUE);
+    
   
   /* Prozedur zum Registrieren von Fehlern
    * %param p_spi_id Name des Feldes, das den Fehler enthaelt
@@ -85,7 +86,7 @@ as
    * %param p_spi_mandatory_message Optionale Benachrichtigung beim Regelverstoss
    * %param p_is_mandatory Flag, das anzeigt, ob das Element ein Pflichtelement
    *        ist oder nicht.
-   * %param p_attribute_2 Optionales Argument, das genutzt wird, wenn mehrere Elemente
+   * %param p_param_2 Optionales Argument, das genutzt wird, wenn mehrere Elemente
    *        ueber einen jQuery-Ausdruck angesprochen werden.
    * %usage Wird aufgerufen, um Pflichtelemente im Plugin zu registrieren.
    *        Pflichtelemente werden vor dem Absenden der Seite durch das Plugin
@@ -97,7 +98,7 @@ as
     p_spi_id in sct_page_item.spi_id%type,
     p_spi_mandatory_message in varchar2,
     p_is_mandatory in boolean,
-    p_attribute_2 in sct_rule_action.sra_attribute_2%type default null);
+    p_param_2 in sct_rule_action.sra_param_2%type default null);
     
     
   /* Hilfsmethode, prueft, ob ein Pflichtfeld NULL ist und registriert entsprechenden Fehler
@@ -106,6 +107,15 @@ as
    */
   procedure check_mandatory(
     p_firing_item in sct_page_item.spi_id%type);
+    
+  
+  /* Getter Methods
+   */
+  function get_firing_item
+    return varchar2;
+    
+  function get_event
+    return varchar2;
     
     
   /* Hilfsmethode, ermittelt den Zeichenkettenwert eines Anwendungselements.
@@ -184,6 +194,14 @@ as
   procedure check_date(
     p_spi_id in varchar2);
     
+  
+  /* Prozedur zum Ausfuehren eines PL/SQL-Blocks
+   * %param  p_cmd  Anweisung, die ausgefuehrt werden soll.
+   * %usage  Wird verwendet, um dynamische PL/SQL-Aufrufe auszufuehren
+   */
+  procedure do_cmd(
+    p_cmd in varchar2);
+    
     
   /* Prozedur zur Vorbereitung des Speicherns der Seite
    * %usage Diese Prozedur sollte nur verwendet werden, wenn SCT eine Seite
@@ -206,8 +224,8 @@ as
   procedure set_session_state(
     p_item in sct_page_item.spi_id%type,
     p_value in varchar2,
-    p_allow_recursion in number default sct_admin.c_true,
-    p_attribute_2 in sct_rule_action.sra_attribute_2%type default null);
+    p_allow_recursion in utl_apex.flag_type default utl_apex.C_TRUE,
+    p_param_2 in sct_rule_action.sra_param_2%type default null);
     
     
   /* Prozedur zum Setzen des Session Status, falls kein Fehler vorliegt.
@@ -222,7 +240,7 @@ as
     p_item in sct_page_item.spi_id%type,
     p_value in varchar2,
     p_error in varchar2,
-    p_allow_recursion in number default sct_admin.c_true);
+    p_allow_recursion in utl_apex.flag_type default utl_apex.C_TRUE);
     
     
   /* Prozedur zum Setzen des Session Status, basierend auf einer SQL-Anweisung
@@ -264,6 +282,24 @@ as
     p_message in varchar2);
     
     
+  /* Method to directly execute a SCT action from PL/SQL
+   * %param  p_sat_id   Reference to SCT_ACTION_TYPE, action to execute
+   * %param  p_item     Page item or DOCUMENT, references the page item the action shall work with
+   * %param [p_param_1] Optional first parameter
+   * %param [p_param_2] Optional second parameter
+   * %param [p_param_3] Optional third parameter
+   * %usage  Is used to directly execute an SCT action in case logic needs to perfrom a wider variety of
+   *         steps, fi when configuring a page. Executing the SCT actions directly helps reduce the need 
+   *         to create many rules with rather similar conditions
+   */
+  procedure execute_action(
+    p_sat_id in varchar2,
+    p_item in varchar2,
+    p_param_1 in varchar2 default null,
+    p_param_2 in varchar2 default null,
+    p_param_3 in varchar2 default null);
+    
+    
   /* Prozedur zum dynamischen Ausfuehren eines berechneten JavaScript-Blocks
    * %param p_plsql PL/SQL-Anweisung, die das JavaScript berechnet, das ausgefuehrt werden soll
    * %usage Wird verwendet, um in PL/SQL einen JavaScript-Block berechnen zu lassen,
@@ -272,6 +308,15 @@ as
   procedure execute_javascript(
     p_plsql in varchar2);
     
+    
+  /* Prozedur fuegt berechnetes JavaScript der Antwort hinzu
+   * %param  p_javascript  JavaScript-Code der ausgefuehrt werden soll
+   * %usage  Wird verwendet, um andernorts berechnetes JavaScript in die Antwort zu integrieren.
+   *         Funktional eine Ueberladung der Prozedur EXECUTE_JAVSCRIPT, nur das hier extern der
+   *         auszufuehrende Script berechnet wird.
+   */
+  procedure add_javascript(
+    p_javascript in varchar2);
     
   /* XOR-Methoden
    * %param  p_value_list     Liste von Element-NAMEN, die geprueft werden sollen

@@ -5,169 +5,218 @@ de.condes.plugin = de.condes.plugin || {};
 de.condes.plugin.sct = {};
 
 
-/*!
-  Plugin zur Steuerung komplexer APEX-Formulare
- */
 /**
- * @fileOverview
- * Das Plugin delegiert die Berechnung des Status von Formularelementen einer APEX-Seite an die Datenbank.
- * Hierzu spricht es in der Datenbank eine Regelgruppe an, die Regeln enthält. Diese Regeln berechnen
- * den Status der Anwendungselemente der aktuellen Seite, basierend auf dem momentanen Sessionstatus.
- *
- * Das Plugin benötigt nur wenige Parameter:
- * ajaxIdentifier: APEX-generierter Identifier
- * bindItems: Liste von Seitenelementen, an die an Events gebunden wird. Die Liste wird durch die Datenbank
- *            berechnet (basierend auf den Einzelregeln) und als JSON-Objekt geliefert. Zu jedem Seitenelement
- *            wird die ID und der Event angegeben, der gebunden werden soll.
- * pageItems: Liste von Seitenelementen, deren aktueller Elementwert beim Auslösen eines Events auf einem
- *            gebundenen Element ausgelesen und an die Datenbank geschickt werden soll.
- *            Die Liste wird von der Datenbank berechnet und bei der Initialisierung vermerkt
- * ApexJS:    Objekt, das die Visualisierung von Pluginfunktionen auf der Oberfläche kapselt.
- *            Dieser Parameter wird als Application-Parameter des Plugins verwaltet und gestattet es, die JavaScript-
- *            Library, die für die Darstellung verwendet wird, einzustellen.
- *            Die konkrete Implementierung kann durch differierende Anforderungen, geänderte Templates oder sonstige
- *            Gründe nicht generisch definiert werden. Standardmäßig wird de.condes.plugin.sct.apex_42_5_0 verwendet.
- *            Details zu einer Überschreibung dieser Datei findet sich in der Dokumentation der Datei sctApex.js
- *            - submit
- *                Sendet die Seite ab, nachdem sichergestellt wurde, dass alle Pflichtfelder Werte enthalten
- *            - setMandatory
- *                Macht ein Seitenelement zum Pflicht- oder optionalen Feld, basierend auf einem booleschen Parameter
- *            - notify
- *                Zeigt eine Erfolgsmeldung
- *            - setErrors
- *                Zeigt Fehlermeldungen auf der Seite. Falls eine Fehlerregion existiert, werden die Fehlermeldungen
- *                hinzugefügt, anonsten wird eine Fehlerregion erstellt
- *            Wird eine eigene Implementierung vorgenommen, empfiehlt es sich, von der existierenden sctApex.js abzuleiten.
- *
- * Das Plugin wird auf der Seite als Dynamic Action zum Zeitpunkt PAGE_LOAD eingebunden.
- * Beim Einfügen wird der Name der referenzierten Regelgruppe angegeben sowie optional eine Liste von Seitenelementen,
- * die deaktiviert werden sollen, wenn ein Fehler auf der Seite angezeigt wird.
- * Weitere administrative Arbeit ist nicht erforderlich
+ * @namespace de.condes.plugin.sct
+ * @since 5.0
+ * @classdesc
+ * <p>This plugion delegates the maintenance of the visual state of the page items and all JavaScript related
+ * activity of the form to a rule set within the database. To achieve this goal, the database offers a rule
+ * set of business rules. These business rules control rule actions which fire if the respective rule is selected.
+ * Selection of rules is based on the actual status of the user data entry.</p>
+ * <p>SCT calculates a response consisting of JavaScript actions which are performed on the page.<br>
+ * A rule within the database may cause recursive rules to be executed based on the action they take. Therefore, 
+ * even complex validations and processing can be done with a single round trip to the database.</p>
+ * <p>To work, this plugin only requires one (optionally two) parameters:
+ * <ul><li>The name of the rule group that is related to this APEX page</li>
+ * <li>Optionally a list of page items which shall be deactivated if SCT recognizes any error on the page, based on user data input</li></ul></p>
  */
-(function(sct, $, server){
+(function (sct, $, server) {
+  "use strict";
 
-  var
-  eventData = {'ajaxIdentifier':sct.ajaxIdentifier,'pageItems':sct.pageItems},
-  triggeringElement = {'id':'','$element':{},'$button':{},'isClick':false},
-  C_BIND_EVENT = 'change',
-  C_CLICK_EVENT = 'click',
-  C_APEX_REFRESH = 'apexrefresh',
-  C_DISABLED_CSS = 'apex_disabled';
-  C_APEX_BEFORE_REFRESH = 'apexbeforerefresh',
-  C_APEX_AFTER_REFRESH = 'apexafterrefresh',
-  C_NO_TRIGGERING_ITEM = 'DOCUMENT',
-  C_BUTTON = 'button',
-  C_APEX_BUTTON = 't-Button';
-
-  sct.ajaxIdentifier = {};
-  sct.lastItemValues = {};
-  
-
-  /*
-    Private Hilfsmethoden
+  /**
+   * @typedef {Object} error
+   * @description
+   * <p>An error is a JSON object representing an error. It contains information about the error message, the affected page item and additional
+   * information that shows only if the page is rendered in debug mode.</p>
+   * @type Object
+   * 
+   * @property {string} item Page item that is affected by this error
+   * @property {string} message Error message
+   * @property {string} additionalInfo Developer information, normally call stack and internal error name
    */
-  // Hilfsmethode deaktiviert die geklickte Schaltflaeche, um Doppelklick zu verhindern
-  function lockButton(){
-    if (triggeringElement.isClick){
+
+  /**
+   * @typedef {Object} errorList
+   * @desc
+   * <p>An errorList is a collection of errors that occurred on the page. It also contains arrays for error dependent items (i.e. items that 
+   * have to be disabled if an error occurred on the page) and firingItems. Firing items provide information about page items that have been
+   * "touched" by executed rules. Intention is to remove any error that is related to a firing item from the collection of errors on the page
+   * and replace it with the newly provided error message, if any. This way, error messages which don't apply are removed, but errors relating
+   * to other page items on the page stay on page.</p>
+   * @type Object
+   * 
+   * @property {string} count Amount of errors
+   * @property {string[]} errorDependentButtons Array of page items that shall be disabled if an error has occurred on the page
+   * @property {string[]} firingItems Array of page items that are affected by the executed rules. Used to remove errors that
+   *                                  refer to these page items before adding new errors
+   * @property {error[]} errors Array of error instances
+   * @param {Object} sct This code
+   * @param {Object} $ jQuery instance of APEX
+   * @param {Object} server apex.server instance
+   */
+
+  
+  var
+    eventData = { 'ajaxIdentifier': sct.ajaxIdentifier, 'pageItems': sct.pageItems },
+    triggeringElement = { 'id': '', 'event': '', 'data': '', 'isClick': false },
+    C_CHANGE_EVENT = 'change',
+    C_CLICK_EVENT = 'click',
+    C_KEYPRESS_EVENT = 'keypress',
+    C_ENTER_EVENT = 'enter',
+    C_APEX_REFRESH = 'apexrefresh',
+    C_APEX_BEFORE_REFRESH = 'apexbeforerefresh',
+    C_APEX_AFTER_REFRESH = 'apexafterrefresh',
+    C_APEX_AFTER_CLOSE_DIALOG = 'apexafterclosedialog',
+    C_NO_TRIGGERING_ITEM = 'DOCUMENT',
+    C_BODY = 'body',
+    C_BUTTON = 'button',
+    C_APEX_BUTTON = 't-Button';
+
+  /** APEX unique identifier for the dynamic action
+   * @public
+   */
+  sct.ajaxIdentifier = {};
+
+  /** List of page items that received changes lately
+   * @public
+   */
+  sct.lastItemValues = {};
+
+
+  /** Locks a button to prevent a second click before the action is processed completely
+   * @private
+   */
+  function lockButton() {
+    if (triggeringElement.isClick) {
       apex.item(triggeringElement.id).disable();
-      // Eventuell vorhandene weitere Events (Doppelklick etc.) aus Queue entfernen
-      $('body').clearQueue();
+      // Clear event queue to prevent multiple clicks before the dynamic action has returned
+      $(C_BODY).clearQueue();
     };
   };
-  
-  
-  // Hilfsmethode, wird als Callback-Methode für den Change-Event verwendet
-  function changeCallback(e){
+
+
+  /** Callback method for a change event
+   * Any event is pushed to a queue to process them one by one, depending on the outcome of the predecessor.
+   * As an example, if a page item is focussed and the user clicks on a button, two events occur:
+   * <ol><li>change event on the page item</li><li>click event on the button</li></ol>
+   * If the change event triggers a computation that returns an error (such as a page item validation), in many cases the click event
+   * of the button shall not be processed anymore. But because these events appear so quickly, SCT is unable to respond before the 
+   * click event is handled. Therefore, these events a queued. If SCT returns with an error, the queue is cleared and the next events
+   * will not be processed.
+   * @private
+   */
+  function changeCallback(e, data) {
     getTriggeringElement(e);
-    
-    // Anforderung in Queue legen, um mehrere Events der Reihe nach abzuarbeiten
-    $('body').queue(function(){
-      sct.execute(e);
+
+    $(C_BODY).queue(function () {
+      sct.execute(e, data);
     });
   };
-  
-  
-  // Hilfsmethode, wird verwendet, um vor dem Absenden des Events einen Bestätigungsdialog zu zeigen
-  function confirmCallback(e){
+
+
+  /** Wraps the call to the database in a confirmation dialog to enable the user to surpress this event
+   * @param {event} e Event that occured
+   * @private
+   */
+  function confirmCallback(e) {
     getTriggeringElement(e);
-    
-    // Anforderung in Queue legen, um mehrere Events der Reihe nach abzuarbeiten
-    $('body').queue(function(){
-      // Schaltflaeche
+
+    $(C_BODY).queue(function () {
+
       lockButton();
-      // Eigentliches Callback wird an positive Antwort auf Bestaetigung gebunden
+      // Handle event only after confirmation from the user
       sct.ApexJS.confirmRequest(e, changeCallback);
     });
   };
 
 
-  // Hilfsfunktion fügt Element der Liste der Seitenelemente hinzu, deren Werte beim Auslösen von SCT
-  // an den Server gesendet werden müssen
-  function addPageItem(itemName){
-    if($.inArray(itemName, sct.pageItems) === -1){
+  /**
+   * Method adds a page item to a list of page items to be sent to the server with every call
+   * @param {string} itemName Name of the page item that ahould be added
+   * @private
+   */
+  function addPageItem(itemName) {
+    if ($.inArray(itemName, sct.pageItems) === -1) {
       sct.pageItems.push(itemName);
     };
   };
 
+  /**
+   * Binds an event to a page item
+   * @param {string} item Name of the element to bind
+   * @param {string} event Event that is bound.
+   * @param {function} action Optional callback method. Overrides default behaviour of calling changeCallback()
+   */
+  function bindEvent(item, event, action) {
+    if (item.search(/[\.# :\[\]]+/) < 0) {
+      item = `#${item}`;
+    }
 
-  // Bindet einen konkreten Event an ein Element
-  function bindEvent(item, event){
-    var $this = $(`#${item}`);
+    var $this = $(item);
 
-    if ($this.length > 0){
-      // Element ist auf Seite auch vorhanden (könnte durch Condition fehlen)
+    if ($this.length > 0) {
+      // Check whether element exists on page (could be missing due to a server condition)
       var eventList = $._data($this.get(0), 'events');
+      var callback = typeof action != 'undefined' && action.length > 0 ? new Function(action) : changeCallback;
 
-      if (eventList == undefined || eventList[event] == undefined){
-        // Element hat noch keinen entsprechenden Event, binden
+      if (eventList == undefined || eventList[event] == undefined) {
+        // Event is not bound already, so do it
         $this
-        .on(event, eventData, changeCallback);
-        if(event == C_BIND_EVENT){
-          // CHANGE-Events sollen bei APEXREFRESH nicht ausgelöst werden, pausieren
+          .on(event, eventData, callback);
+        if (event == C_CHANGE_EVENT) {
+          // CHANGE event should not be called after APEXREFRESH, so pause it until apexafterrefresh
           $this
-          .on(C_APEX_BEFORE_REFRESH, function(e){
-            $(this).off(C_BIND_EVENT);
-            apex.debug.log(`Event "${C_BIND_EVENT}" paused at ${item}`);
-          })
-          .on(C_APEX_AFTER_REFRESH, function(e){
-            $(this).on(C_BIND_EVENT, eventData, changeCallback);
-            apex.debug.log(`Event "${C_BIND_EVENT}" re-established at ${item}`);
-          });
+            .on(C_APEX_BEFORE_REFRESH, function (e) {
+              $(this).off(C_CHANGE_EVENT);
+              apex.debug.info(`Event "${C_CHANGE_EVENT}" paused at ${item}`);
+            })
+            .on(C_APEX_AFTER_REFRESH, function (e) {
+              $(this).on(C_CHANGE_EVENT, eventData, callback);
+              apex.debug.info(`Event "${C_CHANGE_EVENT}" re-established at ${item}`);
+            });
         };
       };
     };
   };
 
 
-  // Bindet an alle Seitenelemente aus SCT.BIND_ITEMS an den CHANGE-Event,
-  // um die Verarbeitung des Plugins auszulösen
-  // Alle relevanten Elemente werden in pageItems hinterlegt, um beim Auslösen Elementwerte
-  // an die Datenbank zu senden.
+  /**
+   * Binds all events that are requested by the plugin via sct.bindItems. 
+   * Upon initialization, all relevant page items are collected along with the required events.
+   * This method then binds all items with the respective event.
+   * As per default, changeCallback is bound as the callback method which in turn sends a request to the database ruleset
+   */
   function bindEvents() {
-    $.each(sct.bindItems, function(){
-      bindEvent(this.id, this.event);
-      if(this.event == C_BIND_EVENT){
+    $.each(sct.bindItems, function () {
+      bindEvent(this.id, this.event, this.action);
+      if (this.event == C_CHANGE_EVENT) {
         addPageItem(this.id);
       }
     });
   };
 
 
-  // Hilfsfunktion ermittelt die Liste von Elementen, deren aktuelle Werte bei jedem Event
-  // in den SessionState kopiert werden. Es kann eine (Liste von) CSS-Klassen oder Element-IDs
-  // übergeben werden
-  function bindObserverElements(selector){
+  /**
+   * Method identifies all elements whose values shall be sent to the database with any request.
+   * Two possible ways exist to add an item to this observer list: 
+   * <ul><li>Initialization code of the plugin that automatically detects items that have a value and are referenced by page rules</li>
+   * <li>Explicit observation as requested by a SCT rule action</li></ul>
+   * The second option calls this method
+   * @param {string} selector jQuery selector to identify the item(s) that shall be observed explicitly
+   * @private
+   */
+  function bindObserverElements(selector) {
     var selectorList;
     if (selector) {
       selectorList = selector.split(',');
-      $.each(selectorList, function(idx, element){
-        if(this.substring(0,1) == '.'){
-          $(element).each(function(idx, element){
+      $.each(selectorList, function (idx, element) {
+        if (this.substring(0, 1) == '.') {
+          $(element).each(function (idx, element) {
             addPageItem($(element).attr('id'));
           });
         }
-        else{
-          if($.inArray(element, sct.pageItems) === -1){
+        else {
+          if ($.inArray(element, sct.pageItems) === -1) {
             sct.pageItems.push(element);
           };
         };
@@ -176,91 +225,126 @@ de.condes.plugin.sct = {};
   }
 
 
-  // Methode findet ein konkretes Element in einem JSON-Array und liefert dessen Wert zurück
-  // Struktur des JSON-Arrary: [{"id":"<ID>","value":"<Wert>"}, {"id":"<ID>","value":"<Wert>"}]
-  // Die Methode nimmt an, dass "id" eindeutig ist.
-  function findItemValue(item){
-    // Finde ID in lastItemValues
-    var result = $.grep(sct.lastItemValues, function(e){
+  /**
+   * Method to persist the value of a page item
+   * When a call to refres a page item is issued, the value of this item is reset to NULL by APEX.
+   * This method allows to store the value of the item before refreshing it and to reset it to this value after refresh.
+   * @param {string} item ID of the page item. Perceived to be unique
+   * @private
+   */
+  function findItemValue(item) {
+    var result = $.grep(sct.lastItemValues, function (e) {
       return e.id == item;
     });
 
-    // Liefere VALUE
-    if(result.length > 0){
+    if (result.length > 0) {
       return result[0].value;
     }
   };
 
 
-  // Methode zur Konvertierung einer hexadezimalen Darstellung in einen Text
-  // Wird verwendet, um beliebige Text per JSON übermitteln zu können, ohne aufwändiges Escaping
-  // durchzuführen. In der Datenbank wird der Text mittels utl_raw.cast_to_raw(<TEXT>) erzeugt.
+  /**
+   * Method to cast a hex-string representation created with UTL_RAW.CAST_TO_RAW back to String
+   * @param {hexString} rawString 
+   * @returns Converted String
+   * @private
+   */
+
   function hexToChar(rawString) {
     var code = '';
     var hexString;
-    if (rawString){}
-      hexString = rawString.toString();
-      for (var i = 0; i < hexString.length; i += 2){
-        code += String.fromCharCode(parseInt(hexString.substr(i, 2), 16));
-      };
+    if (rawString) { }
+    hexString = rawString.toString();
+    for (var i = 0; i < hexString.length; i += 2) {
+      code += String.fromCharCode(parseInt(hexString.substr(i, 2), 16));
+    };
     return code;
   }
 
+  /**
+   * Method to describe the event and calling item after an event has occured
+   * @param {event} e 
+   * @private
+   */
+  function getTriggeringElement(e) {
 
-  // Methode zur Ermittlung der ID des auslösenden Elements.
-  function getTriggeringElement(e){
-    // Falls PageLoad, wird "document" verwendet
+    // Copy event data to a local variable to allow for tayloring
     triggeringElement.id = C_NO_TRIGGERING_ITEM;
-    triggeringElement.isClick = e.type == C_CLICK_EVENT;
+    triggeringElement.event = e.type;
+    triggeringElement.data = e.data;
 
-    if (typeof e.target != 'undefined'){
-		//TODO: Ursache dafür finden, dass target.id für Buttons manchmal leer ist. WA: currentTarget.id nutzten
-      triggeringElement.id = e.target.id != '' ? e.target.id : e.currentTarget.id;
-      if (triggeringElement.id == '') {
-        // Einige Browser senden accessKey-span anstatt Schaltfläche als triggerndes Element
-        // In diesen Fällen parent-Element ansprechen und ID von dort lesen
-        triggeringElement.id = e.target.parentElement.id;
+    if (typeof e.target != 'undefined') {
+      switch (triggeringElement.event) {
+        case C_CLICK_EVENT:
+          // Flag is used to clear the event queue to prevent multiple clicks
+          triggeringElement.isClick = true;
+          //TODO: Ursache dafür finden, dass target.id für Buttons manchmal leer ist. WA: currentTarget.id nutzten
+          triggeringElement.id = e.target.id != '' ? e.target.id : e.currentTarget.id;
+
+          if (triggeringElement.id == '') {
+            // Some browsers send accessKey-span instead of triggering element in response to a click
+            // Get the parent elemnt in these cases
+            triggeringElement.id = e.target.parentElement.id;
+          };
+          $button = $(`#${triggeringElement.id}`);
+          // Depending on how a click event was raised (mouse or code), a different item is addressed
+          if (!$button.hasClass(C_APEX_BUTTON)) {
+            $button = $(`#${triggeringElement.id}`).parent(C_BUTTON);
+          };
+          break;
+        case C_APEX_AFTER_CLOSE_DIALOG:
+          // CloseDialog is bound to currentTarget to allow for delegate events.
+          triggeringElement.id = e.currentTarget.id;
+          break;
+        case C_KEYPRESS_EVENT:
+          triggeringElement.id = e.target.id;
+          // If the ENTER-key was pressed, the event type is change to "enter" to allow for easy detection within SCT
+          switch (e.keyCode) {
+            case 13:
+              triggeringElement.event = C_ENTER_EVENT;
+            // add other key codes here if necessary
+          }
+        case C_CHANGE_EVENT:
+          triggeringElement.id = e.target.id;
+
+          $element = $(`#${triggeringElement.id}`);
+          if ($element.attr('type') == 'radio' || $element.attr('type') == 'checkbox') {
+            // In case of a radio group or a checkbox, the id has to be taken from the parent fieldset
+            triggeringElement.id = $element.parents('fieldset').attr('id');
+          }
+        default:
+          triggeringElement.id = e.target.id;
       };
-      triggeringElement.$element = $(`#${triggeringElement.id}`);
-
-      if(triggeringElement.$element.attr('type') == 'radio' || triggeringElement.$element.attr('type') == 'checkbox'){
-        // Radio-Buttons haben ihre ID im parent-Fieldset
-        triggeringElement.id = triggeringElement.$element.parents('fieldset').attr('id');
-        triggeringElement.$element = $(`#${triggeringElement.id}`);
-      }
-       apex.debug.log(`Event "${e.type}" raised at Triggering element "${triggeringElement.id}"`);
+      apex.debug.info(`Event "${triggeringElement.event}" raised at Triggering element "${triggeringElement.id}"`);
     }
-    
-    if(triggeringElement.isClick){
-      triggeringElement.$button = $(`#${triggeringElement.id}`);
-      // Je nach Art der Auslösung des CLICK-Events (mit Maus oder durch Code)
-      // wird ein unterschiedliches Objekt angesprochen. Dies wird hier behandelt.
-      if (!triggeringElement.$button.hasClass(C_APEX_BUTTON)){
-        triggeringElement.$button = $(`#${triggeringElement.id}`).parent(C_BUTTON);
-      };
-    };
   };
 
-
-  // Methode zum Ausführen des übergebenen Codes und anschließendem Entfernen
-  // Nimmt den Code entgegen und fügt es als Dokument-Fragment ein.
-  // Dies führt den enthaltenen JavaSrcipt-Code direkt aus, so dass das eingefügte
-  // Element anschließend direkt wieder gelöscht werden kann
-  function executeCode(code){
+  /**
+   * Method to execute all JavaScript code passed in with the response of SCT
+   * The code is added to the document using $.append which immediately executes any JavaScript.
+   * After appending, the response can be deleted because it does not make any sense to store it on the page any further
+   * After deleting, the execute method raises the next event on the queue (if any)
+   * @param {string} code JavaScript code to execute
+   * @private
+   */
+  function executeCode(code) {
     if (code) {
       console.log('Response received: \n' + $(code).text());
-      $('body').append(code);
+      $(C_BODY).append(code);
       $('#' + $(code).attr('id')).remove();
     };
-    $('body').dequeue();
+    $(C_BODY).dequeue();
   };
 
 
-  // Hilfsmethode zur Ausführung des Callbacks auf
-  // - dem identifizierten Element
-  // - dem jQuery-Selektor
-  function forEach(item, callback){
-    if(!($.isArray(item) || item.search(/[\.# :\[\]]+/) >= 0)){
+  /**
+   * Helper to identify page items to apply callback to
+   * @param {string} item jQuery selector to identify page items
+   * @param {function} callback Action to execute on the found page items
+   * @private
+   */
+  function forEach(item, callback) {
+    if (!($.isArray(item) || item.search(/[\.# :\[\]]+/) >= 0)) {
       // übergebenes ITEM ist Elementname, um # erweitern
       item = `#${item}`;
     }
@@ -268,77 +352,105 @@ de.condes.plugin.sct = {};
   };
 
 
-  /*
-    Implementierung der Plugin-Funktionalität
+  /**
+   * 
    */
-
-
   // Funktionen, die durch Script aus Response aufgerufen werden.
-  sct.setRuleName = function(ruleName){
-    apex.debug.log(`Rule used: ${ruleName}`);
+  sct.setRuleName = function (ruleName) {
+    apex.debug.info(`Rule used: ${ruleName}`);
     // TODO: Verwendete Regel auf Seitenelement kopieren? Eventuell zusätzlicher Parameter für diesen Zweck
   };
 
 
-  // setItemValues synchronisiert geänderte Elementwerte aus dem Session State auf der Seite.
-  sct.setItemValues = function(pageItems){
-    // Elemente und ihre Werte zwischenspeichern für Referenz aus asynchronen Aufrufen
+  /**
+   * Takes an object with page items and their actual value as stored in the session state and harmonizes them with the page
+   * @param {Object} pageItems Array of objects of the form {"id":"ID of the page item","value":"session state value"}
+   */
+  sct.setItemValues = function (pageItems) {
+    // Store the object for later reference by asynchronous calls
     sct.lastItemValues = pageItems;
-    // Entnehme die neuen Elementwerte und setze sie auf der Seite
-    $.each(pageItems, function(){
-      if ((this.value || 'FOO') != ($v(this.id) || 'FOO')){
-        // Elementwert wird gesetzt. Letzter Parameter unterdrückt change-Event
+    // harmonize the session state with the page items
+    $.each(pageItems, function () {
+      if ((this.value || 'FOO') != ($v(this.id) || 'FOO')) {
+        // third attribute surpresses the change event if set to true
         apex.item(this.id).setValue(this.value, this.value, true);
-        apex.debug.log(`Item "${this.id}" set to "${this.value}"`);
+        apex.debug.info(`Item "${this.id}" set to "${this.value}"`);
       };
     });
   };
 
-
-  sct.setItemValue = function(item, value){
-    forEach(item, function(){
-        var itemId = $(this).attr('id');
-        apex.item(itemId).setValue(value, value, true);
-      });
+  /**
+   * Wrapper around apex.item().setValue() that allows to set the same value to many items using a jQuery selector
+   * @param {string} item jQuery selector to identify the page items to set the value
+   * @param {string} value Value of the page item
+   */
+  sct.setItemValue = function (item, value) {
+    forEach(item, function () {
+      var itemId = $(this).attr('id');
+      apex.item(itemId).setValue(value, value, true);
+    });
   };
 
-
-  // Wrapper um sct.ApexJS
-  sct.setErrors = function(errorList) {
-    if(errorList.errors.length > 0){
-      // Werden Fehler gemeldet, sollen alle eventuell weiteren Events unterdrueckt werden
-      $('body').clearQueue();
+  /**
+   * Shows an error message on the screen. Delegates implementation to sct.ApexJS
+   * An error does not necessarily indicate a misbehaviour of SCT but is a normal response fi. when a validation fails
+   * @param {Array} errorList List of error objects that occurred during processing
+   * @public
+   */
+  sct.setErrors = function (errorList) {
+    if (errorList.errors.length > 0) {
+      // If errors have occured, no further events shall be processed.
+      $(C_BODY).clearQueue();
     };
     sct.ApexJS.maintainErrors(errorList);
   };
-  
-  
-  // Bindet einen Confirmation-Handler an eine Schaltfläche
-  sct.bindConfirmation = function(item, message, title){
+
+
+  /**
+   * Bind a confirmation dialog to a button to prevent unwanted event execution
+   * @param {string} item ID of the button to bind the event to
+   * @param {string} message Confirmation message
+   * @param {string} title Title of the confirmation dialog box
+   * @public
+   */
+  sct.bindConfirmation = function (item, message, title) {
     var $this = $(`#${item}`);
 
-    if ($this.length > 0){
+    if ($this.length > 0) {
       // Element ist auf Seite auch vorhanden (könnte durch Condition fehlen)
       var eventList = $._data($this.get(0), 'events');
-      if (eventList[C_CLICK_EVENT]){
+      if (typeof eventList != 'undefined' && eventList[C_CLICK_EVENT]) {
         $this.off(C_CLICK_EVENT);
       };
       // Click-Event mit Confirmation-Handler binden
-      $this.on(C_CLICK_EVENT, {'ajaxIdentifier':sct.ajaxIdentifier,'pageItems':sct.pageItems,'message':message,'title':title}, confirmCallback);
+      $this.on(C_CLICK_EVENT, { 'ajaxIdentifier': sct.ajaxIdentifier, 'pageItems': sct.pageItems, 'message': message, 'title': title }, confirmCallback);
     };
   };
 
-
-  sct.submit = function(request, message){
+  /**
+   * Submits the page. Delegates implementation to sct.ApexJS
+   * If the page still contains unsolved errors, the page will not be submitted, but a dialog is shown to the user.
+   * @param {string} request REQUEST that is passed to the server
+   * @param {string} message Message that is shown to the user if the page still contains unsolved errors.
+   */
+  sct.submit = function (request, message) {
     sct.ApexJS.submitPage(request, message);
   };
 
 
-  sct.setMandatory = function(item, mandatory){
-    forEach(item, function(){
-      var itemId = $(this).attr('id').replace('_CONTAINER','');
-      if (mandatory){
-        bindEvent(itemId, C_BIND_EVENT);
+  /**
+   * Renders a field as mandatory or optional, based on parameter mandatory. Delegates implementation to sct.ApexJS
+   * Setting an item mandatory is a two step process. First, SCT has registered this item to be mandatory, secondly, the page representation must
+   * be change to represent the status. This is done using this method.
+   * @param {string} item jQuery selector of the items that shall be set to mandatory
+   * @param {boolean} mandatory Flag to indicate whether the items are mandatory (TRUE) or  not (FALSE)
+   * @public
+   */
+  sct.setMandatory = function (item, mandatory) {
+    forEach(item, function () {
+      var itemId = $(this).attr('id').replace('_CONTAINER', '');
+      if (mandatory) {
+        bindEvent(itemId, C_CHANGE_EVENT);
         sct.pageItems.push(itemId);
       }
       sct.ApexJS.setFieldMandatory(itemId, mandatory);
@@ -346,55 +458,90 @@ de.condes.plugin.sct = {};
   };
 
 
-  sct.notify = function(message){
+  /**
+   * Method to show a notification to the user. Delegates implementation to sct.ApexJS.
+   * A notification is a message that is shown as a success message to the user.
+   * @param {string} message Message that is shown to the user. Replaces any existing messages.
+   * @public
+   */
+  sct.notify = function (message) {
     sct.ApexJS.setNotification(message);
   };
 
 
-  sct.refresh = function(item){
+  /**
+   * Refreshes an item (region, page item etc.). Triggers apesrefresh event and enables the page item.
+   * @param {string} item ID of the page item to refresh
+   * @public
+   */
+  sct.refresh = function (item) {
     $this = $(`#${item}`);
     $this.trigger(C_APEX_REFRESH);
     sct.enable(item);
   };
 
 
-  // Lokale ActionType-Methoden
-  sct.refreshAndSetValue = function(item){
-    var itemValue = arguments[1] || findItemValue(item);
+  /**
+   * Refreshes an item (region, page item etc.) and sets the item value afterwards.
+   * The following flow of actions are taken:<ul>
+   * <li>Gets the actual value of the page item persists it</li>
+   * <li>Binds a one time apexafterrefresh handler to set the page item value to the persisted value after refresh</li>
+   * <li>Triggers apexrefresh event</li>
+   * <li>enables the page item.</li></ul>
+   * @param {string} item ID of the page item to refresh and set the value
+   * @public
+   */
+  sct.refreshAndSetValue = function (item) {
+    var itemValue = arguments[1] || findItemValue(item) || apex.item(item).getValue();
     $(`#${item}`)
-    .one(C_APEX_AFTER_REFRESH, function(e){
-          $(this).off(C_BIND_EVENT);
-          $s(item, itemValue);
-          $(this).on(C_BIND_EVENT, eventData, changeCallback);
-        })
-    .trigger(C_APEX_REFRESH);
+      .one(C_APEX_AFTER_REFRESH, function (e) {
+        $(this).off(C_CHANGE_EVENT);
+        $s(item, itemValue);
+        $(this).on(C_CHANGE_EVENT, eventData, changeCallback);
+      })
+      .trigger(C_APEX_REFRESH);
     sct.enable(item);
   };
 
 
-  sct.disable = function(item){
-    forEach(item, function(){
+  /**
+   * Disables page items. Delegates implementation to sct.ApexJS.
+   * Normal flow is to disable any item that is found using the item jQuery selector.
+   * A special case occurs if an input item had focus and a button was clicked. In this case, two events occur: change and click.
+   * If the change event results in a disable action, the queue has to be cleaned to precent the click event from occuring.
+   * Because of this, this method will clear the event queue anyway.
+   * @param {string} item jQuery selector of the items that shall be disabled
+   * @public
+   */
+  sct.disable = function (item) {
+    forEach(item, function () {
       var itemId = $(this).attr('id');
       sct.ApexJS.disableElement(itemId);
-      // Sonderfall: click-Event, waehrend der Cursor in Eingabefeld stand:
-      // Eventfolge change - click. Hat change-Event ein disable zur Folge, 
-      // muss der click-Event aus der Queue entfernt werden, damit er nicht
-      // ausgefuehrt wird.
-      $('body').clearQueue();
+      $(C_BODY).clearQueue();
     });
   };
 
 
-  sct.enable = function(item){
-    forEach(item, function (){
+  /**
+   * Disables page items. Delegates implementation to sct.ApexJS.
+   * @param {string} item jQuery selector of the items that shall be enabled
+   * @public
+   */
+  sct.enable = function (item) {
+    forEach(item, function () {
       var itemId = $(this).attr('id');
       sct.ApexJS.enableElement(itemId);
     });
   };
 
 
-  sct.show = function(item){
-    forEach(item, function(){
+  /**
+   * Shows page items.
+   * @param {string} item jQuery selector of the items that shall be shown
+   * @public
+   */
+  sct.show = function (item) {
+    forEach(item, function () {
       var $this = $(this);
       var itemId = $this.attr('id');
       apex.item(itemId).show();
@@ -402,8 +549,13 @@ de.condes.plugin.sct = {};
   };
 
 
-  sct.hide = function(item){
-    forEach(item, function(){
+  /**
+   * Hides page items.
+   * @param {string} item jQuery selector of the items that shall be hidden
+   * @public
+   */
+  sct.hide = function (item) {
+    forEach(item, function () {
       var $this = $(this);
       var itemId = $this.attr('id');
       apex.item(itemId).hide();
@@ -411,65 +563,75 @@ de.condes.plugin.sct = {};
   };
 
 
-  // Plugin-Funktionalität
-  sct.execute = function(e){
-    
-    // Falls click-Event, zugehoerige Schatlflaeche sperren
+  /**
+   * Central event handler, calls SCT asynchronously and handles SCT response
+   * @public
+   */
+  sct.execute = function () {
+
     lockButton();
-    console.log('Behandle Event ' + e.type);
+    apex.debug.info(`SCT handles event ${triggeringElement.event}`);
+    apex.debug.info(`SCT sends PageItems ${sct.pageItems.join()}`);
     server.plugin(
       sct.ajaxIdentifier,
       {
-        'x01':triggeringElement.id,
-        // Kopiere alle relevanten Seitenelemente in den SessionState
-        'pageItems':sct.pageItems
+        'x01': triggeringElement.id,
+        'x02': triggeringElement.event,
+        'x03': JSON.stringify(triggeringElement.data),
+        'pageItems': sct.pageItems
       },
       {
-        'dataType':'html',
-        'success':function(data){
-          if(triggeringElement.isClick){
+        'dataType': 'html',
+        'success': function (code) {
+          if (triggeringElement.isClick) {
             apex.item(triggeringElement.id).enable();
           }
-          executeCode(data);
+          executeCode(code);
         }
       }
     );
   };
 
 
-  sct.init = function(me){
-    // me.action enthält folgende Parameter:
-    // me.action.attribute_01: JSON-Liste aller Elemente, die einen Eventhandler benötigen, sowie den zu bindenden Event;
-    // me.action.attribute_02: Liste der Elemente, deren Elementwert sich durch SCT im SessionState geändert hat mit den aktuellen Werten
-    // me.action.attribute_03: Namensraumobjekt der JavaScript-Datei, die für die Darstellung von SCT auf der Seite verantwortlich ist (SCT_APEX_...)
-    // me.action.attribute_04: JavaScript-Instanz, mit Aktionen, die auf der Seite ausgeführt werden sollen
-    // me.action.attribute_05: Liste mit Elementnamen oder CSS-Klassenselektoren, deren Elementwerte bei jedem Ereignis in den SessionState kopiert werden sollen
-    // Binde auslösende Events an Elemente, die über Attribut 01 übergeben werden
+  /**
+   * Initialization method
+   * @param {Object} me Json object passed in during initialization
+   * me.action contains the following parameters:<ul>
+   * <li>me.action.attribute_01: JSON object containing all page items and their events which are bound by the plugin</li>
+   * <li>me.action.attribute_02: JSON obejct of elements that have changed during SCT processing along with their actual values</li>
+   * <li>me.action.attribute_03: Namespace of the sct.ApexJS object used to render the visual effects of SCT</li>
+   * <li>me.action.attribute_04: JavaScript code to be executed on the page</li>
+   * <li>me.action.attribute_05: jQuery selector or Array of objects that shall be observed additionally to the required and bound page items</li>
+   * @public
+   */
+  sct.init = function (me) {
+    // bind all page items deemed to be reuired by SCT
     sct.bindItems = $.parseJSON(me.action.attribute01.replace(/~/g, '"'));
     sct.pageItems = [];
     if (me.action.attribute02) {
+      apex.debug.info('Required PageItems: ' + me.action.attribute02);
       sct.pageItems = me.action.attribute02.split(',');
     };
 
     bindObserverElements(me.action.attribute05);
 
-    // Registriere APEX-JavaScript Objekt
+    // register sct.ApexJS namespace object and Ajax identifier
     sct.ApexJS = eval(me.action.attribute03);
     sct.ajaxIdentifier = me.action.ajaxIdentifier;
 
-    // Bereite Einsatz des Plugins vor
+    // Prepare page for SCT usage
     bindEvents();
-    apex.debug.log('SCT initialized');
+    apex.debug.info('SCT initialized');
 
-    // Initialisierungscode ausführen
+    // exceute initial JavaScript code passed in from the server
     executeCode(hexToChar(me.action.attribute04));
   }
 
 })(de.condes.plugin.sct, apex.jQuery, apex.server);
 
 
-// Schnittstelle zum APEX-Plugin-Mechanismus, die aus einem mir nicht bekannten Grund
-// Schwierigkeiten mit der Verwendung eines Namensraumobjekts haben
-function de_condes_plugin_sct(){
+// Interface to APEX plugin mechanism. 
+// For some reason I don't really understand, it is impossible to tell APEX to directly use a namespace object here.
+function de_condes_plugin_sct() {
   de.condes.plugin.sct.init(this);
 }

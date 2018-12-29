@@ -24,6 +24,15 @@ begin
     p_pms_pml_name => 'AMERICAN',
     p_error_number => -20000
   );
+  
+  pit_admin.merge_message(
+    p_pms_name => 'SCT_TARGET_EQUALS_SOURCE',
+    p_pms_pmg_name => 'SCT',
+    p_pms_text => q'~Rule group #1# is already installed at application #2#, page #3#. It can't be installed over itself.~',
+    p_pms_pse_id => 30,
+    p_pms_pml_name => 'GERMAN',
+    p_error_number => -20000
+  );
 
   pit_admin.merge_message(
     p_pms_name => 'SCT_EXPECTED_FORMAT',

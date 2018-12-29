@@ -2,7 +2,8 @@ define base_dir=apex/
 define view_dir=&base_dir.views/
 define pkg_dir=&base_dir.packages/
 define msg_dir=&base_dir.messages/&DEFAULT_LANGUAGE./
-define apex_dir=&base_dir.apex/
+define apex_dir=&base_dir.&APEX_PATH./anwendung/
+define apex_script_dir=&base_dir.&APEX_PATH./scripts/
 define script_dir=&base_dir.scripts/
 
 prompt &h2.Remove existing installation
@@ -11,23 +12,38 @@ prompt &h2.Remove existing installation
 prompt &h2.Create database objects
 prompt &h3.CREATE VIEWS
 
-prompt &s1.Create view SCT_UI_ACTION_TYPE
-@&view_dir.sct_ui_action_type.vw
+prompt &s1.Create view APEX_UI_LIST_MENU
+@&view_dir.apex_ui_list_menu.vw
 
-prompt &s1.Create view SCT_UI_EDIT_GROUP
-@&view_dir.sct_ui_edit_group.vw
+prompt &s1.Create view SCT_BL_PAGE_ITEMS
+@&view_dir.sct_bl_page_items.vw
 
-prompt &s1.Create view SCT_UI_EDIT_GROUP_APEX_ACTION
-@&view_dir.sct_ui_edit_group_apex_action.vw
+prompt &s1.Create view SCT_UI_ADMIN_SAT
+@&view_dir.sct_ui_admin_sat.vw
 
-prompt &s1.Create view SCT_UI_EDIT_RULE
-@&view_dir.sct_ui_edit_rule.vw
+prompt &s1.Create view SCT_UI_ADMIN_SGR_MAIN
+@&view_dir.sct_ui_admin_sgr_main.vw
 
-prompt &s1.Create view SCT_UI_EDIT_APEX_ACTION
-@&view_dir.sct_ui_edit_apex_action.vw
+prompt &s1.Create view SCT_UI_ADMIN_SGR_RULES
+@&view_dir.sct_ui_admin_sgr_rules.vw
 
-prompt &s1.Create view SCT_UI_EDIT_RULE_ACTION
-@&view_dir.sct_ui_edit_rule_action.vw
+prompt &s1.Create view SCT_UI_EDIT_SAA
+@&view_dir.sct_ui_edit_saa.vw
+
+prompt &s1.Create view SCT_UI_EDIT_SGR
+@&view_dir.sct_ui_edit_sgr.vw
+
+prompt &s1.Create view SCT_UI_EDIT_SGR_APEX_ACTION
+@&view_dir.sct_ui_edit_sgr_apex_action.vw
+
+prompt &s1.Create view SCT_UI_EDIT_SRA
+@&view_dir.sct_ui_edit_sra.vw
+
+prompt &s1.Create view SCT_UI_EDIT_SRU
+@&view_dir.sct_ui_edit_sru.vw
+
+prompt &s1.Create view SCT_UI_EDIT_SRU_ACTION
+@&view_dir.sct_ui_edit_SRU_action.vw
 
 prompt &s1.Create view SCT_UI_LIST_ACTION_TYPE
 @&view_dir.sct_ui_list_action_type.vw
@@ -38,11 +54,17 @@ prompt &s1.Create view SCT_UI_LIST_PAGE_ITEMS
 prompt &s1.Create view SCT_UI_LOV_APEX_ACTION_TYPE
 @&view_dir.sct_ui_lov_apex_action_type.vw
 
+prompt &s1.Create view SCT_UI_LOV_APEX_ACTION_ITEMS
+@&view_dir.sct_ui_lov_apex_action_items.vw
+
 prompt &s1.Create view SCT_UI_LOV_APP_PAGES
 @&view_dir.sct_ui_lov_app_pages.vw
 
 prompt &s1.Create view SCT_UI_LOV_APPLICATIONS
 @&view_dir.sct_ui_lov_applications.vw
+
+prompt &s1.Create view SCT_UI_LOV_EXPORT_TYPES
+@&view_dir.sct_ui_lov_export_types.vw
 
 prompt &s1.Create view SCT_UI_LOV_PAGE_ITEMS
 @&view_dir.sct_ui_lov_page_items.vw
@@ -56,14 +78,8 @@ prompt &s1.Create view SCT_UI_LOV_SGR_APPLICATIONS
 prompt &s1.Create view SCT_UI_LOV_SGR_PAGE_ITEMS
 @&view_dir.sct_ui_lov_sgr_page_items.vw
 
-prompt &s1.Create view SCT_UI_MAIN_GROUPS
-@&view_dir.sct_ui_main_groups.vw
-
-prompt &s1.Create view SCT_UI_MAIN_RULES
-@&view_dir.sct_ui_main_rules.vw
-
-prompt &s1.Create view SCT_UI_EDIT_SAA
-@&view_dir.sct_ui_edit_saa.vw
+prompt &s1.Create view SCT_UI_LOV_YES_NO
+@&view_dir.sct_ui_lov_yes_no.vw
 
 prompt &h2.Merge default data
 prompt &h3.Create MESSAGES
@@ -76,19 +92,33 @@ prompt &s1.Create package SCT_UI_PKG
 @&pkg_dir.sct_ui_pkg.pks
 show errors
 
+prompt &s1.Create package PLUGIN_GROUP_SELECT_LIST
+@&pkg_dir.plugin_group_select_list.pks
+show errors
+
 prompt &h3.Create package bodies
 prompt &s1.Create package Body SCT_UI_PKG
 @&pkg_dir.sct_ui_pkg.pkb
+show errors
+
+prompt &s1.Create package Body PLUGIN_GROUP_SELECT_LIST
+@&pkg_dir.plugin_group_select_list.pkb
 show errors
 
 
 set serveroutput on
 prompt &h2.Install APEX application
 prompt &h3.Prepare APEX import
-@&base_dir.prepare_apex_import.sql
+@&base_dir.prepare_app_import.sql
 
 prompt &h3.Install application
 @&apex_dir.sct.sql
+
+prompt &h3.Prepare Manual import
+--@&base_dir.prepare_manual_import.sql
+
+prompt &h3.Install application manual
+--@&apex_dir.sct_manual.sql
 
 -- After APEX installation, reset output settings
 set define on
@@ -107,9 +137,23 @@ alter package sct_admin compile package;
 call dbms_session.reset_package();
 
 prompt &h2.Create SCT rules
-prompt &s1.Import SCT_ADMIN_EXPORT rule
-@&script_dir.merge_rule_sct_admin_export_rule.sql
-prompt &s1.Import SCT_ADMIN_MAIN rule
-@&script_dir.merge_rule_sct_admin_main.sql
-prompt &s1.Import SCT_COPY_RULE rule
-@&script_dir.merge_rule_sct_copy_rulegroup.sql
+prompt &s1.Import SCT_ADMIN_SGR rule
+@&apex_script_dir.merge_rule_group_sct_admin_sgr.sql
+
+prompt &s1.Import SCT_COPY_SGR rule
+@&apex_script_dir.merge_rule_group_sct_copy_sgr.sql
+
+prompt &s1.Import SCT_EDIT_SAA rule
+@&apex_script_dir.merge_rule_group_sct_edit_saa.sql
+
+prompt &s1.Import SCT_EDIT_SGR rule
+@&apex_script_dir.merge_rule_group_sct_edit_sgr.sql
+
+prompt &s1.Import SCT_EDIT_SRA rule
+@&apex_script_dir.merge_rule_group_sct_edit_sra.sql
+
+prompt &s1.Import SCT_EDIT_SRU rule
+@&apex_script_dir.merge_rule_group_sct_edit_sru.sql
+
+prompt &s1.Import SCT_EXPORT_SGR rule
+@&apex_script_dir.merge_rule_group_sct_export_sgr.sql

@@ -12,6 +12,7 @@ col sys_user new_val SYS_USER format a30
 col install_user new_val INSTALL_USER format a30
 col apex_ws new_val APEX_WS format a30
 col apex_alias new_val APEX_ALIAS format a30
+col apex_path new_val APEX_PATH format a20
 col app_id new_val APP_ID format a30
 col default_language new_val DEFAULT_LANGUAGE format a30
 
@@ -25,6 +26,14 @@ select user sys_user,
  where parameter = 'LANGUAGE'
    and value = upper('&5.');
 
+-- Apex Pfad anhand von installiertem APEX-Benutzer ermitteln
+select case 
+       when max(username) >= 'APEX_180200' then 'apex_1802'
+       else 'apex_0500' end apex_path
+  from all_users
+ where username like 'APEX_______';
+ 
+   
 col ora_name_type new_val ORA_NAME_TYPE format a30
 select 'varchar2(' || data_length || ' byte)' ora_name_type
   from all_tab_columns

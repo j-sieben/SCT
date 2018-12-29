@@ -20,8 +20,12 @@ prompt &s1.Create package PLUGIN_SCT
 @&plugin_dir.packages/plugin_sct.pks
 show errors
 
-prompt &s1.Create package BL_SCT
-@&plugin_dir.packages/bl_sct.pks
+prompt &s1.Create package SCT_INTERNAL
+@&plugin_dir.packages/sct_internal.pks
+show errors
+
+prompt &s1.Create package UTL_APEX_ACTION
+@&plugin_dir.packages/utl_apex_action.pks
 show errors
 
 prompt &h3.Create package bodies
@@ -29,6 +33,10 @@ prompt &s1.Create package Body PLUGIN_SCT
 @&plugin_dir.packages/plugin_sct.pkb
 show errors
 
-prompt &s1.Create package Body BL_SCT
-@&plugin_dir.packages/bl_sct.pkb
+prompt &s1.Create package Body SCT_INTERNAL
+@&plugin_dir.packages/sct_internal.pkb
+show errors
+
+prompt &s1.Create package Body UTL_APEX_ACTION
+@&plugin_dir.packages/utl_apex_action.pkb
 show errors

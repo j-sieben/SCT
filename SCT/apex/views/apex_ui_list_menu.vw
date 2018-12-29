@@ -1,5 +1,10 @@
 create or replace view apex_ui_list_menu as
-select level level_value,
+   with params as (
+         select v('APP_ID') application_id,
+                utl_apex.get_true is_true
+           from dual)
+ select /*+ no_merge (p) */
+        level level_value,
         list_name,
         display_sequence,
         parent_entry_text,
@@ -23,8 +28,9 @@ select level level_value,
    left join apex_application_build_options o
      on l.application_id = o.application_id
     and l.build_option = o.build_option_name
-  where l.application_id = (select v('APP_ID') from dual)
-    and coalesce(o.build_option_status, 'Include') = 'Include'
-    and utl_apex.user_is_authorized(l.authorization_scheme) = 1
+   join params p
+     on l.application_id = p.application_id
+    and utl_apex.user_is_authorized(l.authorization_scheme) = p.is_true
+  where coalesce(o.build_option_status, 'Include') = 'Include'
   start with list_entry_parent_id is null
 connect by prior list_entry_id = list_entry_parent_id;
