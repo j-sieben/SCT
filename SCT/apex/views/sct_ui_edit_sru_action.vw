@@ -22,7 +22,7 @@ select /*+ no_merge(p) */
        case sra_active when p.c_true then flg_yes else flg_no end sra_active,
        sra_has_error
   from sct_ui_edit_sra
-  join sct_action_type
+  join sct_action_type_v
     on sra_sat_id = sat_id
   join sct_rule_group
     on sra_sgr_id = sgr_id

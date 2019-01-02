@@ -21,8 +21,8 @@ begin
     p_sgr_description => q'|Hauptseite der SCT-Administration|',
     p_sgr_app_id => l_app_id,
     p_sgr_page_id => 1,
-    p_sgr_with_recursion => 'Y',
-    p_sgr_active => 'Y');
+    p_sgr_with_recursion => sct_util.C_TRUE,
+    p_sgr_active => sct_util.C_TRUE);
   
   sct_admin.merge_rule(
     p_sru_id => sct_admin.map_id(4),
@@ -30,8 +30,8 @@ begin
     p_sru_name => 'Regelgruppe bekannt',
     p_sru_condition => q'|P1_SGR_ID is not null|',
     p_sru_sort_seq => 30,
-    p_sru_fire_on_page_load => 'N',
-    p_sru_active => 'Y');
+    p_sru_fire_on_page_load => sct_util.C_FALSE,
+    p_sru_active => sct_util.C_TRUE);
   
   sct_admin.merge_rule_action(
     p_sra_id => sct_admin.map_id(6),
@@ -42,9 +42,9 @@ begin
     p_sra_param_1 => q'||',
     p_sra_param_2 => q'||',
     p_sra_sort_seq => 10,
-    p_sra_on_error => 'N',
-    p_sra_raise_recursive => 'Y',
-    p_sra_active => 'Y');
+    p_sra_on_error => sct_util.C_FALSE,
+    p_sra_raise_recursive => sct_util.C_TRUE,
+    p_sra_active => sct_util.C_TRUE);
 
   sct_admin.merge_rule_action(
     p_sra_id => sct_admin.map_id(8),
@@ -55,9 +55,9 @@ begin
     p_sra_param_1 => q'|sct_ui_pkg.set_action_admin_sgr;|',
     p_sra_param_2 => q'||',
     p_sra_sort_seq => 20,
-    p_sra_on_error => 'N',
-    p_sra_raise_recursive => 'Y',
-    p_sra_active => 'Y');
+    p_sra_on_error => sct_util.C_FALSE,
+    p_sra_raise_recursive => sct_util.C_TRUE,
+    p_sra_active => sct_util.C_TRUE);
 
   sct_admin.merge_rule(
     p_sru_id => sct_admin.map_id(10),
@@ -65,8 +65,8 @@ begin
     p_sru_name => 'Anwendungsfilter ist nicht leer',
     p_sru_condition => q'|P1_SGR_APP_ID is not null|',
     p_sru_sort_seq => 50,
-    p_sru_fire_on_page_load => 'N',
-    p_sru_active => 'Y');
+    p_sru_fire_on_page_load => sct_util.C_FALSE,
+    p_sru_active => sct_util.C_TRUE);
   
   sct_admin.merge_rule_action(
     p_sra_id => sct_admin.map_id(12),
@@ -77,9 +77,9 @@ begin
     p_sra_param_1 => q'||',
     p_sra_param_2 => q'||',
     p_sra_sort_seq => 10,
-    p_sra_on_error => 'N',
-    p_sra_raise_recursive => 'Y',
-    p_sra_active => 'Y');
+    p_sra_on_error => sct_util.C_FALSE,
+    p_sra_raise_recursive => sct_util.C_TRUE,
+    p_sra_active => sct_util.C_TRUE);
 
   sct_admin.merge_rule_action(
     p_sra_id => sct_admin.map_id(14),
@@ -90,9 +90,9 @@ begin
     p_sra_param_1 => q'||',
     p_sra_param_2 => q'||',
     p_sra_sort_seq => 20,
-    p_sra_on_error => 'N',
-    p_sra_raise_recursive => 'Y',
-    p_sra_active => 'Y');
+    p_sra_on_error => sct_util.C_FALSE,
+    p_sra_raise_recursive => sct_util.C_TRUE,
+    p_sra_active => sct_util.C_TRUE);
 
   sct_admin.merge_rule_action(
     p_sra_id => sct_admin.map_id(16),
@@ -103,9 +103,9 @@ begin
     p_sra_param_1 => q'||',
     p_sra_param_2 => q'||',
     p_sra_sort_seq => 30,
-    p_sra_on_error => 'N',
-    p_sra_raise_recursive => 'Y',
-    p_sra_active => 'Y');
+    p_sra_on_error => sct_util.C_FALSE,
+    p_sra_raise_recursive => sct_util.C_TRUE,
+    p_sra_active => sct_util.C_TRUE);
 
   sct_admin.merge_rule(
     p_sru_id => sct_admin.map_id(18),
@@ -113,8 +113,8 @@ begin
     p_sru_name => 'Anwendungsfilter ist leer',
     p_sru_condition => q'|P1_SGR_APP_ID is null|',
     p_sru_sort_seq => 40,
-    p_sru_fire_on_page_load => 'N',
-    p_sru_active => 'Y');
+    p_sru_fire_on_page_load => sct_util.C_FALSE,
+    p_sru_active => sct_util.C_TRUE);
   
   sct_admin.merge_rule_action(
     p_sra_id => sct_admin.map_id(20),
@@ -125,9 +125,9 @@ begin
     p_sra_param_1 => q'||',
     p_sra_param_2 => q'||',
     p_sra_sort_seq => 10,
-    p_sra_on_error => 'N',
-    p_sra_raise_recursive => 'Y',
-    p_sra_active => 'Y');
+    p_sra_on_error => sct_util.C_FALSE,
+    p_sra_raise_recursive => sct_util.C_TRUE,
+    p_sra_active => sct_util.C_TRUE);
 
   sct_admin.merge_rule_action(
     p_sra_id => sct_admin.map_id(22),
@@ -138,9 +138,9 @@ begin
     p_sra_param_1 => q'||',
     p_sra_param_2 => q'||',
     p_sra_sort_seq => 30,
-    p_sra_on_error => 'N',
-    p_sra_raise_recursive => 'Y',
-    p_sra_active => 'Y');
+    p_sra_on_error => sct_util.C_FALSE,
+    p_sra_raise_recursive => sct_util.C_TRUE,
+    p_sra_active => sct_util.C_TRUE);
 
   sct_admin.merge_rule_action(
     p_sra_id => sct_admin.map_id(24),
@@ -151,9 +151,9 @@ begin
     p_sra_param_1 => q'||',
     p_sra_param_2 => q'||',
     p_sra_sort_seq => 20,
-    p_sra_on_error => 'N',
-    p_sra_raise_recursive => 'Y',
-    p_sra_active => 'Y');
+    p_sra_on_error => sct_util.C_FALSE,
+    p_sra_raise_recursive => sct_util.C_TRUE,
+    p_sra_active => sct_util.C_TRUE);
 
   sct_admin.merge_rule_action(
     p_sra_id => sct_admin.map_id(26),
@@ -164,9 +164,9 @@ begin
     p_sra_param_1 => q'||',
     p_sra_param_2 => q'||',
     p_sra_sort_seq => 40,
-    p_sra_on_error => 'N',
-    p_sra_raise_recursive => 'Y',
-    p_sra_active => 'Y');
+    p_sra_on_error => sct_util.C_FALSE,
+    p_sra_raise_recursive => sct_util.C_TRUE,
+    p_sra_active => sct_util.C_TRUE);
 
   sct_admin.merge_rule(
     p_sru_id => sct_admin.map_id(28),
@@ -174,11 +174,11 @@ begin
     p_sru_name => 'Initialisierung',
     p_sru_condition => q'|initializing = 1|',
     p_sru_sort_seq => 10,
-    p_sru_fire_on_page_load => 'N',
-    p_sru_active => 'Y');
+    p_sru_fire_on_page_load => sct_util.C_FALSE,
+    p_sru_active => sct_util.C_TRUE);
   
   sct_admin.merge_rule_action(
-    p_sra_id => sct_admin.map_id(659),
+    p_sra_id => sct_admin.map_id(30),
     p_sra_sru_id => sct_admin.map_id(28),
     p_sra_sgr_id => sct_admin.map_id(2),
     p_sra_spi_id => 'P1_SGR_APP_ID',
@@ -186,9 +186,9 @@ begin
     p_sra_param_1 => q'||',
     p_sra_param_2 => q'||',
     p_sra_sort_seq => 10,
-    p_sra_on_error => 'N',
-    p_sra_raise_recursive => 'Y',
-    p_sra_active => 'Y');
+    p_sra_on_error => sct_util.C_FALSE,
+    p_sra_raise_recursive => sct_util.C_TRUE,
+    p_sra_active => sct_util.C_TRUE);
 
   sct_admin.merge_rule_action(
     p_sra_id => sct_admin.map_id(32),
@@ -199,9 +199,9 @@ begin
     p_sra_param_1 => q'||',
     p_sra_param_2 => q'||',
     p_sra_sort_seq => 20,
-    p_sra_on_error => 'N',
-    p_sra_raise_recursive => 'Y',
-    p_sra_active => 'Y');
+    p_sra_on_error => sct_util.C_FALSE,
+    p_sra_raise_recursive => sct_util.C_TRUE,
+    p_sra_active => sct_util.C_TRUE);
 
   sct_admin.merge_rule_action(
     p_sra_id => sct_admin.map_id(34),
@@ -212,9 +212,9 @@ begin
     p_sra_param_1 => q'||',
     p_sra_param_2 => q'||',
     p_sra_sort_seq => 30,
-    p_sra_on_error => 'N',
-    p_sra_raise_recursive => 'Y',
-    p_sra_active => 'Y');
+    p_sra_on_error => sct_util.C_FALSE,
+    p_sra_raise_recursive => sct_util.C_TRUE,
+    p_sra_active => sct_util.C_TRUE);
 
   sct_admin.merge_rule(
     p_sru_id => sct_admin.map_id(36),
@@ -222,8 +222,8 @@ begin
     p_sru_name => 'Regelgruppe unbekannt',
     p_sru_condition => q'|P1_SGR_ID is null|',
     p_sru_sort_seq => 20,
-    p_sru_fire_on_page_load => 'N',
-    p_sru_active => 'Y');
+    p_sru_fire_on_page_load => sct_util.C_FALSE,
+    p_sru_active => sct_util.C_TRUE);
   
   sct_admin.merge_rule_action(
     p_sra_id => sct_admin.map_id(38),
@@ -234,9 +234,9 @@ begin
     p_sra_param_1 => q'||',
     p_sra_param_2 => q'||',
     p_sra_sort_seq => 10,
-    p_sra_on_error => 'N',
-    p_sra_raise_recursive => 'Y',
-    p_sra_active => 'Y');
+    p_sra_on_error => sct_util.C_FALSE,
+    p_sra_raise_recursive => sct_util.C_TRUE,
+    p_sra_active => sct_util.C_TRUE);
 
   sct_admin.merge_rule_action(
     p_sra_id => sct_admin.map_id(40),
@@ -247,9 +247,9 @@ begin
     p_sra_param_1 => q'|sct_ui_pkg.set_action_admin_sgr;|',
     p_sra_param_2 => q'||',
     p_sra_sort_seq => 20,
-    p_sra_on_error => 'N',
-    p_sra_raise_recursive => 'Y',
-    p_sra_active => 'Y');
+    p_sra_on_error => sct_util.C_FALSE,
+    p_sra_raise_recursive => sct_util.C_TRUE,
+    p_sra_active => sct_util.C_TRUE);
 
   sct_admin.merge_rule(
     p_sru_id => sct_admin.map_id(42),
@@ -257,8 +257,8 @@ begin
     p_sru_name => 'Seitenfilter ist nicht leer',
     p_sru_condition => q'|P1_SGR_PAGE_ID is not null|',
     p_sru_sort_seq => 70,
-    p_sru_fire_on_page_load => 'N',
-    p_sru_active => 'Y');
+    p_sru_fire_on_page_load => sct_util.C_FALSE,
+    p_sru_active => sct_util.C_TRUE);
   
   sct_admin.merge_rule_action(
     p_sra_id => sct_admin.map_id(44),
@@ -269,9 +269,9 @@ begin
     p_sra_param_1 => q'||',
     p_sra_param_2 => q'||',
     p_sra_sort_seq => 10,
-    p_sra_on_error => 'N',
-    p_sra_raise_recursive => 'Y',
-    p_sra_active => 'Y');
+    p_sra_on_error => sct_util.C_FALSE,
+    p_sra_raise_recursive => sct_util.C_TRUE,
+    p_sra_active => sct_util.C_TRUE);
 
   sct_admin.merge_rule_action(
     p_sra_id => sct_admin.map_id(46),
@@ -282,9 +282,9 @@ begin
     p_sra_param_1 => q'||',
     p_sra_param_2 => q'||',
     p_sra_sort_seq => 20,
-    p_sra_on_error => 'N',
-    p_sra_raise_recursive => 'Y',
-    p_sra_active => 'Y');
+    p_sra_on_error => sct_util.C_FALSE,
+    p_sra_raise_recursive => sct_util.C_TRUE,
+    p_sra_active => sct_util.C_TRUE);
 
   sct_admin.merge_rule(
     p_sru_id => sct_admin.map_id(48),
@@ -292,8 +292,8 @@ begin
     p_sru_name => 'Seitenfilter ist leer',
     p_sru_condition => q'|P1_SGR_PAGE_ID is null|',
     p_sru_sort_seq => 60,
-    p_sru_fire_on_page_load => 'N',
-    p_sru_active => 'Y');
+    p_sru_fire_on_page_load => sct_util.C_FALSE,
+    p_sru_active => sct_util.C_TRUE);
   
   sct_admin.merge_rule_action(
     p_sra_id => sct_admin.map_id(50),
@@ -304,9 +304,9 @@ begin
     p_sra_param_1 => q'||',
     p_sra_param_2 => q'||',
     p_sra_sort_seq => 20,
-    p_sra_on_error => 'N',
-    p_sra_raise_recursive => 'Y',
-    p_sra_active => 'Y');
+    p_sra_on_error => sct_util.C_FALSE,
+    p_sra_raise_recursive => sct_util.C_TRUE,
+    p_sra_active => sct_util.C_TRUE);
 
   sct_admin.merge_rule_action(
     p_sra_id => sct_admin.map_id(52),
@@ -317,9 +317,9 @@ begin
     p_sra_param_1 => q'||',
     p_sra_param_2 => q'||',
     p_sra_sort_seq => 10,
-    p_sra_on_error => 'N',
-    p_sra_raise_recursive => 'Y',
-    p_sra_active => 'Y');
+    p_sra_on_error => sct_util.C_FALSE,
+    p_sra_raise_recursive => sct_util.C_TRUE,
+    p_sra_active => sct_util.C_TRUE);
 
   sct_admin.merge_rule(
     p_sru_id => sct_admin.map_id(54),
@@ -327,8 +327,8 @@ begin
     p_sru_name => 'Regeln aktualisiert',
     p_sru_condition => q'|dialog_closed ='R1_RULE_OVERVIEW'|',
     p_sru_sort_seq => 80,
-    p_sru_fire_on_page_load => 'N',
-    p_sru_active => 'Y');
+    p_sru_fire_on_page_load => sct_util.C_FALSE,
+    p_sru_active => sct_util.C_TRUE);
   
   sct_admin.merge_rule_action(
     p_sra_id => sct_admin.map_id(56),
@@ -339,9 +339,9 @@ begin
     p_sra_param_1 => q'||',
     p_sra_param_2 => q'||',
     p_sra_sort_seq => 10,
-    p_sra_on_error => 'N',
-    p_sra_raise_recursive => 'Y',
-    p_sra_active => 'Y');
+    p_sra_on_error => sct_util.C_FALSE,
+    p_sra_raise_recursive => sct_util.C_TRUE,
+    p_sra_active => sct_util.C_TRUE);
 
   sct_admin.merge_rule(
     p_sru_id => sct_admin.map_id(58),
@@ -349,8 +349,8 @@ begin
     p_sru_name => 'Regelgruppe aktualisiert',
     p_sru_condition => q'|dialog_closed = 'R1_RULE_GROUP'|',
     p_sru_sort_seq => 90,
-    p_sru_fire_on_page_load => 'N',
-    p_sru_active => 'Y');
+    p_sru_fire_on_page_load => sct_util.C_FALSE,
+    p_sru_active => sct_util.C_TRUE);
   
   sct_admin.merge_rule_action(
     p_sra_id => sct_admin.map_id(60),
@@ -361,9 +361,9 @@ begin
     p_sra_param_1 => q'||',
     p_sra_param_2 => q'||',
     p_sra_sort_seq => 10,
-    p_sra_on_error => 'N',
-    p_sra_raise_recursive => 'Y',
-    p_sra_active => 'Y');
+    p_sra_on_error => sct_util.C_FALSE,
+    p_sra_raise_recursive => sct_util.C_TRUE,
+    p_sra_active => sct_util.C_TRUE);
   
   sct_admin.merge_apex_action(    
     p_saa_id => sct_admin.map_id(62),
@@ -374,18 +374,18 @@ begin
     p_saa_context_label => '',
     p_saa_icon => '',
     p_saa_icon_type => 'fa',
-    p_saa_title => '',
+    p_saa_title => 'Dialogseite zum Kopieren einer Regelgruppe',
     p_saa_shortcut => 'Alt+C',
-    p_saa_initially_disabled => 'Y',
-    p_saa_initially_hidden => 'N',
-    p_saa_href => 'Foo',
+    p_saa_initially_disabled => sct_util.C_TRUE,
+    p_saa_initially_hidden => sct_util.C_FALSE,
+    p_saa_href => '',
     p_saa_action => '');
   
   sct_admin.merge_apex_action_item(
     p_sai_saa_id => sct_admin.map_id(62),
     p_sai_spi_sgr_id => sct_admin.map_id(2),
     p_sai_spi_id => 'B1_COPY_SGR',
-    p_sai_active => 'Y');
+    p_sai_active => sct_util.C_TRUE);
 
 
 
@@ -400,8 +400,8 @@ begin
     p_saa_icon_type => 'fa',
     p_saa_title => '',
     p_saa_shortcut => 'Alt+E',
-    p_saa_initially_disabled => 'N',
-    p_saa_initially_hidden => 'N',
+    p_saa_initially_disabled => sct_util.C_FALSE,
+    p_saa_initially_hidden => sct_util.C_FALSE,
     p_saa_href => '',
     p_saa_action => '');
   
@@ -409,7 +409,7 @@ begin
     p_sai_saa_id => sct_admin.map_id(64),
     p_sai_spi_sgr_id => sct_admin.map_id(2),
     p_sai_spi_id => 'B1_EXPORT_SGR',
-    p_sai_active => 'Y');
+    p_sai_active => sct_util.C_TRUE);
 
 
 
@@ -424,8 +424,8 @@ begin
     p_saa_icon_type => '',
     p_saa_title => '',
     p_saa_shortcut => 'Alt+R',
-    p_saa_initially_disabled => 'Y',
-    p_saa_initially_hidden => 'N',
+    p_saa_initially_disabled => sct_util.C_TRUE,
+    p_saa_initially_hidden => sct_util.C_FALSE,
     p_saa_href => 'foo',
     p_saa_action => '');
   
@@ -433,14 +433,14 @@ begin
     p_sai_saa_id => sct_admin.map_id(66),
     p_sai_spi_sgr_id => sct_admin.map_id(2),
     p_sai_spi_id => 'B1_CREATE_SRU',
-    p_sai_active => 'Y');
+    p_sai_active => sct_util.C_TRUE);
 
 
   sct_admin.merge_apex_action_item(
     p_sai_saa_id => sct_admin.map_id(66),
     p_sai_spi_sgr_id => sct_admin.map_id(2),
     p_sai_spi_id => 'B1_CREATE_SRU_1',
-    p_sai_active => 'Y');
+    p_sai_active => sct_util.C_TRUE);
 
 
   sct_admin.propagate_rule_change(sct_admin.map_id(2));

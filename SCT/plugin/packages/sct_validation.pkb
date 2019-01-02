@@ -33,7 +33,7 @@ select #VALUE#
   
   
   procedure parse_string(
-    p_value in varchar2)
+    p_value in out nocopy varchar2)
   as
     l_stmt varchar2(32767);
     l_cur binary_integer;
@@ -51,14 +51,15 @@ end;~';
   
   
   procedure parse_function(
-    p_value in varchar2,
+    p_value in out nocopy varchar2,
     p_target in varchar2)
   as
     c_stmt constant varchar2(200) := q'^declare l_foo varchar2(32767); begin l_foo := #STMT#; end;^';
     l_cur binary_integer;
     l_stmt varchar2(2000);
   begin
-    l_stmt := utl_text.bulk_replace(c_stmt, char_table('STMT', rtrim(p_value, ';')));
+    p_value := rtrim(p_value, ';');
+    l_stmt := replace(c_stmt, 'STMT', p_value);
     l_cur := dbms_sql.open_cursor(l_stmt);
     dbms_sql.parse(l_cur, l_stmt, dbms_sql.NATIVE);
     dbms_sql.close_cursor(l_cur);
@@ -71,7 +72,7 @@ end;~';
   
   /* Private validators */
   procedure validate_is_apex_action(
-    p_value in varchar2,
+    p_value in out nocopy varchar2,
     p_environment in sct_internal.environment_rec)
   as
     l_exists binary_integer;
@@ -91,11 +92,12 @@ end;~';
   
   
   procedure validate_is_string_or_function(
-    p_value in varchar2,
+    p_value in out nocopy varchar2,
     p_target in varchar2)
   as
   begin
-    if trim(p_value) like '''%' then
+    p_value := trim(p_value);
+    if p_value like '''%' then
       parse_string(p_value);
     else
       parse_function(p_value, p_target);
@@ -104,6 +106,28 @@ end;~';
     when others then
       plugin_sct.register_error(p_target, substr(sqlerrm, 12), '');
   end validate_is_string_or_function;
+  
+  
+  procedure validate_is_selector(
+    p_value in out nocopy varchar2,
+    p_target in varchar2,
+    p_environment in sct_internal.environment_rec)
+  as
+  begin
+    p_value := trim(p_value);
+    -- If selector starts with # or ., take it as is, otherwise try to find item and prefix it with #
+    if not substr(p_value, 1, 1) in ('#', '.') then
+      select '#' || spi_id
+        into p_value
+        from sct_page_item
+       where spi_sgr_id = p_environment.sgr_id
+         and spi_id = upper(p_value);
+    end if;
+  exception
+    when NO_DATA_FOUND then
+      -- TODO: refactor to MSG
+      plugin_sct.register_error(p_target, 'Invalid jQuery-Selektor', '');
+  end validate_is_selector;
   
   
   /* INTERFACE */
@@ -130,7 +154,7 @@ end;~';
   
   
   procedure validate_parameter(
-    p_value in sct_rule_action.sra_param_1%type,
+    p_value in out nocopy sct_rule_action.sra_param_1%type,
     p_spt_id in sct_action_param_type.spt_id%type,
     p_spi_id in sct_page_item.spi_id%type,
     p_environment in sct_internal.environment_rec)
@@ -146,7 +170,7 @@ end;~';
     when 'JAVA_SCRIPT_FUNCTION' then
       null;
     when 'JQUERY_SELECTOR' then
-      null;
+      validate_is_selector(p_value, p_spi_id, p_environment);
     when 'PAGE_ITEM' then
       null;
     when 'PIT_MESSAGE' then

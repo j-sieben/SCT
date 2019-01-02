@@ -2,33 +2,39 @@ create table sct_action_type(
   sat_id varchar2(50 char),
   sat_stg_id varchar2(50 char),
   sat_sif_id varchar2(50 char),
-	sat_name varchar2(50 char), 
-  sat_description clob,
+	sat_pti_id varchar2(50 char), 
+  sat_pmg_name varchar2(3 byte) default 'SCT',
 	sat_pl_sql varchar2(200 byte), 
 	sat_js varchar2(200 byte), 
-  sat_is_editable char(1) default 'Y', 
-	sat_raise_recursive char(1) default 'Y',
+  sat_is_editable &FLAG_TYPE. default &C_TRUE., 
+	sat_raise_recursive &FLAG_TYPE. default &C_TRUE.,
+	sat_active &FLAG_TYPE. default &C_TRUE.,
 	constraint p_sct_action_type primary key (sat_id),
   constraint fk_sat_stg_id foreign key(sat_stg_id)
     references sct_action_type_group(stg_id),
-  constraint fk_sat_stg_id foreign key(sat_stg_id)
-    references sct_action_type_group(stg_id),
-  constraint c_sat_is_editable check (sat_is_editable in ('Y', 'N')),
-  constraint c_sat_raise_recursive check(sat_raise_recursive in ('Y', 'N'))
+  constraint fk_sat_pti_id foreign key(sat_pti_id, sat_pmg_name)
+    references &PIT_OWNER..pit_translatable_item(pti_uid, pti_pmg_name) on delete cascade,
+  constraint nn_sat_pti_id check(sat_pti_id is not null),
+  constraint chk_sat_pmg_name check(sat_pmg_name = 'SCT'),
+  constraint c_sat_is_editable check (sat_is_editable in (&C_FALSE., &C_TRUE.)),
+  constraint c_sat_raise_recursive check(sat_raise_recursive in (&C_FALSE., &C_TRUE.)),
+  constraint c_sat_active check(sat_active in (&C_FALSE., &C_TRUE.))
 ) 
 organization index;
 
 create index idx_fk_sat_stg_id on sct_action_type(sat_stg_id);
 create index idx_fk_sat_sif_id on sct_action_type(sat_sif_id);
+create unique index idx_sat_pti_pmg_name on sct_action_type(sat_pti_id, sat_pmg_name);
 
 
 comment on table sct_action_type is 'Tabel to store different action types as template for actions';
 comment on column sct_action_type.sat_id is 'PK, alphanumeric key';
 comment on column sct_action_type.sat_stg_id is 'FK, Reference to SCT_ACTION_TYPE_GROUP, used to group action types on the UI';
 comment on column sct_action_type.sat_sif_id is 'FK, Reference to SCT_ACTION_ITEM_FOCUS, used to limit the kind of items the action may reference';
-comment on column sct_action_type.sat_name is 'Display name';
-comment on column sct_action_type.sat_description is 'Optional description, is shown as a help text';
+comment on column sct_action_type.sat_pti_id is 'Reference to PIT_TRANSLATABLE_ITEM, translatable NAME';
+comment on column sct_action_type.sat_pmg_name is 'Reference to PIT_TRANSLATABLE_ITEM, Fixed value SCT';
 comment on column sct_action_type.sat_pl_sql is 'PL/SQL pattern to implement the functionality in PL/SQL';
 comment on column sct_action_type.sat_js is 'JavaScript pattern to implement the functionality in JS';
 comment on column sct_action_type.sat_is_editable is 'Flag to indicate whether developer is allowed to change this action type (others are required by SCT';
 comment on column sct_action_type.sat_raise_recursive is 'Flag to indicate whether action is executed if recursive level is greater than 1';
+comment on column sct_action_type.sat_active is 'Flag to indicate whether data is actually in use';

@@ -1,5 +1,5 @@
 -- Parameters:
--- 1: Owner of SCT, package into which SCT will be installed
+-- 1: Owner of SCT, schema into which SCT will be installed
 -- 2: APEX workspace name, into which the APEX application will be installed. Needs access to Owner of SCT
 -- 3: ALIAS of the APEX-application. 
 -- 4: APP_ID of the APEX-application.

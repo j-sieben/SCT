@@ -89,7 +89,6 @@ as
   /* Hilfsprozedur zum Umkopieren der Attribute auf einen globalen Record
    * %param  p_firing_item           Ausloesendes Element
    * %param  p_event                 Ausloesendes Ereignis
-   * %param  p_with_comments         Flag, das die Menge der Ausgabekommentare steuert
    * %param  p_rule_group_name       Name der Regelgruppe
    * %param  p_error_dependent_items Liste der Elemente, die bei Fehlern deaktiviert werden
    * %usage  Wird vor dem Rendern und Refresh aufgerufen, um an zentraler Stelle
@@ -98,7 +97,6 @@ as
   procedure read_settings(
     p_firing_item in varchar2,
     p_event in varchar2,
-    p_with_comments in varchar2,
     p_rule_group_name in varchar2,
     p_error_dependent_items in varchar2);
     

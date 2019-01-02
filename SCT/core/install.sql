@@ -18,24 +18,41 @@ prompt &h3.Create sequences
 prompt &s1.Create sequence SCT_SEQ
 @&seq_dir.sct_seq.seq
 
+prompt &h2.Predefine package SCT_UTIL for reference from views
+prompt &s1.Create package SCT_UTIL
+@&pkg_dir.sct_util.pks
+show errors
+
 prompt &h3.Create tables
 prompt &s1.Create table SCT_RULE_GROUP
 @&table_dir.sct_rule_group.tbl
 
+prompt &s1.Create table SCT_ACTION_TYPE_GROUP
+@&table_dir.sct_action_type_group.tbl
+
 prompt &s1.Create table SCT_ACTION_TYPE
 @&table_dir.sct_action_type.tbl
+
+prompt &s1.Create table SCT_ACTION_PARAM_TYPE
+@&table_dir.sct_action_param_type.tbl
 
 prompt &s1.Create table SCT_APEX_ACTION_TYPE
 @&table_dir.sct_apex_action_type.tbl
 
-prompt &s1.Create table SCT_APEX_ACTION
-@&table_dir.sct_apex_action.tbl
-
 prompt &s1.Create table SCT_PAGE_ITEM_TYPE
 @&table_dir.sct_page_item_type.tbl
 
+prompt &s1.Create table SCT_ACTION_ITEM_FOCUS
+@&table_dir.sct_action_item_focus.tbl
+
+prompt &s1.Create table SCT_ACTION_PARAMETER
+@&table_dir.sct_action_parameter.tbl
+
 prompt &s1.Create table SCT_PAGE_ITEM
 @&table_dir.sct_page_item.tbl
+
+prompt &s1.Create table SCT_APEX_ACTION
+@&table_dir.sct_apex_action.tbl
 
 prompt &s1.Create table SCT_APEX_ACTION_ITEM
 @&table_dir.sct_apex_action_item.tbl
@@ -54,6 +71,27 @@ prompt &s1.Create view SCT_BL_RULES
 prompt &s1.Create view SCT_BL_PAGE_TARGETS
 @&view_dir.sct_bl_page_targets.vw
 
+prompt &s1.Create view SCT_BL_SAT_HELP
+@&view_dir.sct_bl_sat_help.vw
+
+prompt &s1.Create view SCT_ACTION_ITEM_FOCUS_V
+@&view_dir.sct_action_item_focus_v.vw
+
+prompt &s1.Create view SCT_ACTION_PARAM_TYPE_V
+@&view_dir.sct_action_param_type_v.vw
+
+prompt &s1.Create view SCT_ACTION_PARAMETER_V
+@&view_dir.sct_action_parameter_v.vw
+
+prompt &s1.Create view SCT_ACTION_TYPE_V
+@&view_dir.sct_action_type_v.vw
+
+prompt &s1.Create view SCT_ACTION_TYPE_GROUP_V
+@&view_dir.sct_action_type_group_v.vw
+
+prompt &s1.Create view SCT_APEX_ACTION_TYPE_V
+@&view_dir.sct_apex_action_type_v.vw
+
 
 prompt &h2.Merge default data
 prompt &h3.Create SCT messages
@@ -70,9 +108,12 @@ prompt &s1.Create package SCT_ADMIN
 @&pkg_dir.sct_admin.pks
 show errors
 
+prompt &s1.Create package Body SCT_UTIL
+@&pkg_dir.sct_util.pkb
+show errors
+
 prompt &s1.Create package Body SCT_ADMIN
 @&pkg_dir.sct_admin.pkb
-show errors
 show errors
 
 prompt &h2.Merge initial data

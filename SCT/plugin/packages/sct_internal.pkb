@@ -16,7 +16,7 @@ as
   C_NUMBER_ITEM constant sct_page_item_type.sit_id%type := 'NUMBER_ITEM';
   C_DATE_ITEM constant sct_page_item_type.sit_id%type := 'DATE_ITEM';
   C_REGISTER_OBSERVER constant sct_action_type.sat_id%type := 'REGISTER_OBSERVER';
-  C_DELIMITER constant sct_util.flag_type := ',';
+  C_DELIMITER constant varchar2(1 byte) := ',';
   C_EVENT_INITIALIZE constant sct_util.ora_name_type := 'initialize';
   
   C_BIND_JSON_TEMPLATE constant varchar2(100) := '[#JSON#]';
@@ -81,13 +81,13 @@ as
     js sct_action_type.sat_js%type,
     sra_param_1 sct_rule_action.sra_param_1%type,
     sra_param_2 sct_rule_action.sra_param_2%type,
+    sra_param_3 sct_rule_action.sra_param_3%type,
     sra_on_error sct_rule_action.sra_on_error%type,
     sru_on_error sct_rule_action.sra_on_error%type,
     is_first_row sct_util.flag_type
   );
 
   /* Privat global variables */
-  g_with_comments boolean;
   g_has_errors boolean;
   g_param param_rec;
   g_environment environment_rec;
@@ -168,7 +168,7 @@ as
     l_has_actions binary_integer;
   begin
     if g_param.firing_event != C_EVENT_INITIALIZE then
-      -- include APEX actions only when page is initializing
+      -- include APEX actions only if page is initializing
       return null;
     end if;
     
@@ -244,6 +244,7 @@ as
         from dual;
         
       -- comment out double JavaScript entries
+      -- TODO: Warum COUNT + 1?
       for i in 1 .. g_param.js_action_stack.count + 1 loop
         if g_param.js_action_stack.exists(i) then
           if g_param.js_action_stack(i).debug_level = C_JS_CODE and g_param.js_action_stack(i).hash = l_js.hash then
@@ -297,7 +298,7 @@ as
         end if;
       end loop;
       
-      -- collect all javascript chunkgs
+      -- collect all javascript chunks
       for i in 1 .. g_param.js_action_stack.count + 1 loop
         if g_param.js_action_stack.exists(i) then
           -- avoid buffer overflow and surpress comments if required
@@ -329,9 +330,7 @@ as
     p_msg_args msg_args default null)
   as
   begin
-    if g_with_comments then
-      add_java_script(pit.get_message_text(p_msg, p_msg_args), C_JS_COMMENT);
-    end if;
+    add_java_script(pit.get_message_text(p_msg, p_msg_args), C_JS_COMMENT);
   end add_comment;
   
 
@@ -443,6 +442,7 @@ as
       l_plsql_code := utl_text.bulk_replace(trim(';' from p_rule.pl_sql), char_table(
                         '#PARAM_1#', p_rule.sra_param_1,
                         '#PARAM_2#', p_rule.sra_param_2,
+                        '#PARAM_3#', p_rule.sra_param_3,
                         '#ALLOW_RECURSION#', check_recursion(p_rule),
                         '#ITEM_VALUE#', C_PLSQL_ITEM_VALUE_TEMPLATE,
                         '#ITEM#', p_rule.item,
@@ -701,15 +701,12 @@ as
   procedure read_settings(
     p_firing_item in varchar2,
     p_event in varchar2,
-    p_with_comments in varchar2,
     p_rule_group_name in varchar2,
     p_error_dependent_items in varchar2)
   as
     l_stmt varchar2(200 char);
     l_allow_recursion sct_util.flag_type;
   begin
-
-    g_with_comments := coalesce(p_with_comments = sct_util.C_TRUE, true);
     
     -- Daten zur Regelgruppe lesen
     select sgr_id, coalesce(sgr_with_recursion, sct_util.C_TRUE)
@@ -1364,7 +1361,6 @@ as
   procedure initialize
   as
   begin
-    g_with_comments := true;
     g_recursion_loop_is_error := param.get_boolean('RAISE_RECURSION_LOOP', C_PARAM_GROUP);
     g_recursion_limit := param.get_integer('RECURSION_LIMIT', C_PARAM_GROUP);
   end initialize;
@@ -1494,9 +1490,7 @@ as
   as
     c_comment constant varchar2(10) := sct_util.C_CR || '// ';
   begin
-    if g_with_comments then
-      utl_text.append(g_param.notification_stack, C_COMMENT || p_text);
-    end if;
+    utl_text.append(g_param.notification_stack, C_COMMENT || p_text);
   end register_notification;
   
   

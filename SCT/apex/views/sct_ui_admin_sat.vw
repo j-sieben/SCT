@@ -9,5 +9,5 @@ select /*+ NO_MERGE (p) */
        replace(a.sat_pl_sql, chr(13), '<br>') sat_pl_sql,
        replace(a.sat_js, chr(13), '<br>') sat_js,
        a.sat_description
-  from sct_action_type a
+  from sct_action_type_v a
  cross join params p;

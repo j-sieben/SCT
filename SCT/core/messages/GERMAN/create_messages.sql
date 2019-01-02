@@ -224,6 +224,15 @@ begin
   );
 
   pit_admin.merge_message(
+    p_pms_name => 'SCT_SGR_MUST_BE_UNIQUE',
+    p_pms_pmg_name => 'SCT',
+    p_pms_text => q'~Die Regelgruppe existiert bereits. Wählen Sie einen eindeutigen Namen.~',
+    p_pms_pse_id => 30,
+    p_pms_pml_name => 'GERMAN',
+    p_error_number => -20000
+  );
+
+  pit_admin.merge_message(
     p_pms_name => 'SCT_VIEW_CREATED',
     p_pms_pmg_name => 'SCT',
     p_pms_text => q'~Regelgruppenview "#1#" erfolgreich erstellt~',
@@ -364,5 +373,142 @@ begin
     
   commit;
   pit_admin.create_message_package;
+  
+  /* Translatable Items */
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SELECT_APP',
+    p_pti_pml_name => 'GERMAN',
+    p_pti_pmg_name => 'SCT',
+    p_pti_name => 'Anwendung wählen',
+    p_pti_display_name => null,
+    p_pti_description => null);
+    
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SELECT_SGR',
+    p_pti_pml_name => 'GERMAN',
+    p_pti_pmg_name => 'SCT',
+    p_pti_name => 'Regelgruppe wählen',
+    p_pti_display_name => null,
+    p_pti_description => null);
+    
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SAT_NOT_EDITABLE',
+    p_pti_pml_name => 'GERMAN',
+    p_pti_pmg_name => 'SCT',
+    p_pti_name => '(nicht eiditierbar)',
+    p_pti_display_name => null,
+    p_pti_description => null);
+    
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SGR_EXPORT_LABEL_ALL',
+    p_pti_pml_name => 'GERMAN',
+    p_pti_pmg_name => 'SCT',
+    p_pti_name => 'Alle Regelgruppen exportieren',
+    p_pti_display_name => null,
+    p_pti_description => null);
+    
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SGR_EXPORT_LABEL_APP',
+    p_pti_pml_name => 'GERMAN',
+    p_pti_pmg_name => 'SCT',
+    p_pti_name => 'Regelgruppen der Anwendung "#1#" exportieren',
+    p_pti_display_name => null,
+    p_pti_description => null);
+    
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SGR_EXPORT_LABEL_SGR',
+    p_pti_pml_name => 'GERMAN',
+    p_pti_pmg_name => 'SCT',
+    p_pti_name => 'Regelgruppe "#1#" exportieren',
+    p_pti_display_name => null,
+    p_pti_description => null);
+    
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SRA_NO_HELP',
+    p_pti_pml_name => 'GERMAN',
+    p_pti_pmg_name => 'SCT',
+    p_pti_name => 'Keine Hilfe vorhanden, bitte wählen Sie einen Aktionstypen.',
+    p_pti_display_name => null,
+    p_pti_description => null);
+    
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SGR_REGION_HEADING',
+    p_pti_pml_name => 'GERMAN',
+    p_pti_pmg_name => 'SCT',
+    p_pti_name => 'Regelübersicht »#1#« (#2#)',
+    p_pti_display_name => null,
+    p_pti_description => null);
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SIF_ALL',
+    p_pti_pmg_name => 'SCT',
+    p_pti_pml_name => 'GERMAN',
+    p_pti_name => 'Alle Seitenelemente',
+    p_pti_description => q'|Alle Seitenelemente der Anwendung|');
+    
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SIF_DOCUMENT',
+    p_pti_pmg_name => 'SCT',
+    p_pti_pml_name => 'GERMAN',
+    p_pti_name => 'Keine Seitenelemente',
+    p_pti_description => q'|Eine Zuordnung zu einem Seitenelement erfolgt nicht|');
+    
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SIF_ITEM_OR_JQUERY',
+    p_pti_pmg_name => 'SCT',
+    p_pti_pml_name => 'GERMAN',
+    p_pti_name => 'Seitenelement oder jQuery-Selektor',
+    p_pti_description => q'|Alle Seitenelemente oder ein jQuery-Selektor|');
+    
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SIF_PAGE',
+    p_pti_pmg_name => 'SCT',
+    p_pti_pml_name => 'GERMAN',
+    p_pti_name => 'Alle Seitenelemente der aktuellen Seite',
+    p_pti_description => q'|Alle Seitenelemente der aktuellen Anwendungsseite|');
+    
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SIF_PAGE_BUTTON',
+    p_pti_pmg_name => 'SCT',
+    p_pti_pml_name => 'GERMAN',
+    p_pti_name => 'Schaltfläcehn der aktuellen Seite',
+    p_pti_description => q'|Alle Schaltflächen der aktuellen Anwendungsseite|');
+    
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SIF_PAGE_ITEM',
+    p_pti_pmg_name => 'SCT',
+    p_pti_pml_name => 'GERMAN',
+    p_pti_name => 'Eingabefelder der aktuellen Seite',
+    p_pti_description => q'|Alle Eingabefelder der aktuellen Anwendungsseite|');
+    
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SIF_PAGE_ITEM_OR_DOCUMENT',
+    p_pti_pmg_name => 'SCT',
+    p_pti_pml_name => 'GERMAN',
+    p_pti_name => 'Eingabefeld oderDokument',
+    p_pti_description => q'|Alle Eingabefelder oder keine spezifische Angabe|');
+    
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SIF_PAGE_ITEM_OR_JQUERY',
+    p_pti_pmg_name => 'SCT',
+    p_pti_pml_name => 'GERMAN',
+    p_pti_name => 'Eingabefeld oder jQuery-Selektor',
+    p_pti_description => q'|Alle Eingabefelder oder ein jQuery-Selektor|');
+    
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SIF_PAGE_REGION',
+    p_pti_pmg_name => 'SCT',
+    p_pti_pml_name => 'GERMAN',
+    p_pti_name => 'Regionen der aktuellen Seite',
+    p_pti_description => q'|Alle Regionen der aktuellen Anwendungsseite|');
+    
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SIF_REFRESHABLE',
+    p_pti_pmg_name => 'SCT',
+    p_pti_pml_name => 'GERMAN',
+    p_pti_name => 'Seitenelemente, die aktualisiert werden können',
+    p_pti_description => q'|Alle Seitenelemente, die aktualisiert werden können|');
+    
+  commit;
 end;
 /

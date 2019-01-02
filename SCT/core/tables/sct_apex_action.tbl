@@ -9,8 +9,8 @@ create table sct_apex_action(
   saa_icon_type varchar2(50 char) default 'fa',
   saa_title varchar2(200 char),
   saa_shortcut varchar2(50 char),
-  saa_initially_disabled char(1) default 'N',
-  saa_initially_hidden char(1) default 'N',
+  saa_initially_disabled &FLAG_TYPE. default &C_FALSE.,
+  saa_initially_hidden &FLAG_TYPE. default &C_FALSE.,
   -- ACTION
   saa_href varchar2(200 char),
   saa_action varchar2(200 char),
@@ -31,8 +31,8 @@ create table sct_apex_action(
     references sct_rule_group(sgr_id),
   constraint fk_saa_sty_id foreign key(saa_sty_id)
     references sct_apex_action_type(sty_id),
-  constraint c_saa_initially_disabled check (saa_initially_disabled in ('Y', 'N')),
-  constraint c_saa_initially_hidden check (saa_initially_hidden in ('Y', 'N'))
+  constraint c_saa_initially_disabled check (saa_initially_disabled in (&C_TRUE., &C_FALSE.)),
+  constraint c_saa_initially_hidden check (saa_initially_hidden in (&C_TRUE., &C_FALSE.))
 );
 
 create unique index idx_saa_sgr_name on sct_apex_action(saa_sgr_id, saa_name);

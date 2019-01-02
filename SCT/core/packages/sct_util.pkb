@@ -28,6 +28,14 @@ as
       return sct_util.C_FALSE;
     end if;
   end get_boolean;
+  
+  function to_bool(
+    p_bool in flag_type)
+    return varchar2
+  as
+  begin
+    return case p_bool when C_TRUE then 'sct_util.C_TRUE' else 'sct_util.C_FALSE' end;
+  end to_bool;
 
 end sct_util;
 /

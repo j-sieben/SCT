@@ -1,14 +1,14 @@
 create table sct_page_item_type(
   sit_id varchar2(50 char),
   sit_name varchar2(50 char),
-  sit_has_value char(1) default 'Y',
-  sit_include_in_view char(1) default 'N',
+  sit_has_value &FLAG_TYPE. default &C_TRUE.,
+  sit_include_in_view &FLAG_TYPE. default &C_FALSE.,
   sit_event varchar2(30 byte),
   sit_col_template varchar2(100 char),
   sit_init_template varchar2(100 char),
   constraint p_sct_page_item_type primary key(sit_id),
-  constraint c_sit_has_value check(sit_has_value in ('Y', 'N')),
-  constraint c_sit_include_in_view check(sit_include_in_view in ('Y', 'N'))
+  constraint c_sit_has_value check(sit_has_value in (&C_TRUE., &C_FALSE.)),
+  constraint c_sit_include_in_view check(sit_include_in_view in (&C_TRUE., &C_FALSE.))
 ) organization index;
 
 comment on table sct_page_item_type is 'Table to store page item types which are supported by SCT.';

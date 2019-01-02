@@ -3,9 +3,127 @@ set sqlblanklines on
 
 begin
   
+  sct_admin.merge_action_param_type(
+    p_spt_id => 'APEX_ACTION',
+    p_spt_name => 'APEX-Aktion',
+    p_spt_description => q'{Existierende APEX-Aktion der Regelgruppe}',
+    p_spt_active => sct_util.C_TRUE);
+
+  sct_admin.merge_action_param_type(
+    p_spt_id => 'FUNCTION',
+    p_spt_name => 'PL/SQL-Funktion',
+    p_spt_description => q'{Eine bestehende PL/SQL-Funktion}',
+    p_spt_active => sct_util.C_TRUE);
+
+  sct_admin.merge_action_param_type(
+    p_spt_id => 'JAVA_SCRIPT',
+    p_spt_name => 'JavaScript-Ausdruck',
+    p_spt_description => q'{Ausführbarer JavaScript-Ausdruck}',
+    p_spt_active => sct_util.C_TRUE);
+
+  sct_admin.merge_action_param_type(
+    p_spt_id => 'JAVA_SCRIPT_FUNCTION',
+    p_spt_name => 'JavaScript-Funktion',
+    p_spt_description => q'{Name einer JavaScript-Funktion oder anonyme Funktionsdefinition}',
+    p_spt_active => sct_util.C_TRUE);
+
+  sct_admin.merge_action_param_type(
+    p_spt_id => 'JQUERY_SELECTOR',
+    p_spt_name => 'jQuery-Selektor',
+    p_spt_description => q'{jQuery-Selektor, Setzt voraus, dass als Anwendungselement DOCUMENTgewählt wurde.}',
+    p_spt_active => sct_util.C_TRUE);
+
+  sct_admin.merge_action_param_type(
+    p_spt_id => 'PAGE_ITEM',
+    p_spt_name => 'Seitenelement',
+    p_spt_description => q'{Seitenelement oder Region der aktuellen Seite}',
+    p_spt_active => sct_util.C_TRUE);
+
+  sct_admin.merge_action_param_type(
+    p_spt_id => 'PIT_MESSAGE',
+    p_spt_name => 'Name der Meldung',
+    p_spt_description => q'{Bezeichner einer PIT-Meldung in der Form msg.NAMEoder 'NAME', muss eine existierende Meldung sein.}',
+    p_spt_active => sct_util.C_TRUE);
+
+  sct_admin.merge_action_param_type(
+    p_spt_id => 'PROCEDURE',
+    p_spt_name => 'PL/SQL-Prozedur',
+    p_spt_description => q'{Eine bestehende PL/SQL-Prozedur}',
+    p_spt_active => sct_util.C_TRUE);
+
+  sct_admin.merge_action_param_type(
+    p_spt_id => 'SEQUENCE',
+    p_spt_name => 'Sequenz',
+    p_spt_description => q'{Name einer existierenden Sequenz}',
+    p_spt_active => sct_util.C_TRUE);
+
+  sct_admin.merge_action_param_type(
+    p_spt_id => 'SQL_STATEMENT',
+    p_spt_name => 'SQL-Anweisung',
+    p_spt_description => q'{Ausführbare SQL-Anweisung}',
+    p_spt_active => sct_util.C_TRUE);
+
+  sct_admin.merge_action_param_type(
+    p_spt_id => 'STRING',
+    p_spt_name => 'Zeichenkette',
+    p_spt_description => q'{Einfache Zeichenkette, wird mit Hochkommata umgeben, daher ist die Eingabe dieser Zeichen nicht erforderlich}',
+    p_spt_active => sct_util.C_TRUE);
+
+  sct_admin.merge_action_param_type(
+    p_spt_id => 'STRING_OR_FUNCTION',
+    p_spt_name => 'Zeichenkette oder PL/SQL-Funktion',
+    p_spt_description => q'{Falls nicht mit Hochkommata eingeschlossen, eine bestehende PL/SQL-Funktion}',
+    p_spt_active => sct_util.C_TRUE);
+
+  sct_admin.merge_action_param_type(
+    p_spt_id => 'STRING_OR_JAVASCRIPT',
+    p_spt_name => 'Zeichenkette oder JS-Ausdruck',
+    p_spt_description => q'{Falls nicht mit Hochkommata eingeschlossen, ein JavaScript-Ausdruck}',
+    p_spt_active => sct_util.C_TRUE);
+
+  sct_admin.merge_action_param_type(
+    p_spt_id => 'STRING_OR_PIT_MESSAGE',
+    p_spt_name => 'Zeichenkette oder Meldungsname',
+    p_spt_description => q'{Falls nicht mit Hochkommata eingeschlossen, wird der Name als PIT-Meldungsname interpretiert}',
+    p_spt_active => sct_util.C_TRUE);
+
+    sct_admin.merge_action_type_group(
+    p_stg_id => 'BUTTON',
+    p_stg_name => 'Schaltlfäche',
+    p_stg_description => q'{Aktionen für Schaltflächen}',
+    p_stg_active => sct_util.C_TRUE);
+
+  sct_admin.merge_action_type_group(
+    p_stg_id => 'ITEM',
+    p_stg_name => 'Seitenelemente',
+    p_stg_description => q'{Aktionen für Eingabefelder}',
+    p_stg_active => sct_util.C_TRUE);
+
+  sct_admin.merge_action_type_group(
+    p_stg_id => 'JAVA_SCRIPT',
+    p_stg_name => 'JavaScript',
+    p_stg_description => q'{JavaScript-Funkionen und Events}',
+    p_stg_active => sct_util.C_TRUE);
+
+  sct_admin.merge_action_type_group(
+    p_stg_id => 'PAGE_ITEM',
+    p_stg_name => 'Seitenelement',
+    p_stg_description => q'{Aktionen für allgemeine Seitenelemente}',
+    p_stg_active => sct_util.C_TRUE);
+
+  sct_admin.merge_action_type_group(
+    p_stg_id => 'PL_SQL',
+    p_stg_name => 'PL/SQL',
+    p_stg_description => q'{PL/SQ-Funktionen}',
+    p_stg_active => sct_util.C_TRUE);
+
+  sct_admin.merge_action_type_group(
+    p_stg_id => 'SCT',
+    p_stg_name => 'Framework',
+    p_stg_description => q'{Allgemeine Aktionen}',
+    p_stg_active => sct_util.C_TRUE);
   
-  
-    sct_admin.merge_action_type(
+  sct_admin.merge_action_type(
     p_sat_id => 'AFTER_REFRESH',
     p_sat_stg_id => 'JAVA_SCRIPT',
     p_sat_sif_id => 'REFRESHABLE',
@@ -37,7 +155,7 @@ begin
     p_sat_is_editable => sct_util.C_FALSE,
     p_sat_raise_recursive => sct_util.C_TRUE);
 
-    sct_admin.merge_action_parameter(
+  sct_admin.merge_action_parameter(
     p_sap_sat_id => 'CHECK_MANDATORY',
     p_sap_spt_id => 'STRING',
     p_sap_sort_seq => 2,

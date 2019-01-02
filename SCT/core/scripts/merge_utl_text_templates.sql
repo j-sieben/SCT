@@ -28,8 +28,8 @@ q'^    p_sgr_name => '#SGR_NAME#',\CR\^' ||
 q'^    p_sgr_description => q'|#SGR_DESCRIPTION#|',\CR\^' || 
 q'^    p_sgr_app_id => l_app_id,\CR\^' || 
 q'^    p_sgr_page_id => #SGR_PAGE_ID#,\CR\^' || 
-q'^    p_sgr_with_recursion => '#SGR_WITH_RECURSION#',\CR\^' || 
-q'^    p_sgr_active => '#SGR_ACTIVE#');\CR\^' || 
+q'^    p_sgr_with_recursion => #SGR_WITH_RECURSION#,\CR\^' || 
+q'^    p_sgr_active => #SGR_ACTIVE#);\CR\^' || 
 q'^  #RULES#\CR\^' || 
 q'^  #APEX_ACTIONS#\CR\^' || 
 q'^  sct_admin.propagate_rule_change(sct_admin.map_id(#SGR_ID#));\CR\^' || 
@@ -55,8 +55,8 @@ q'^    p_sru_sgr_id => sct_admin.map_id(#SRU_SGR_ID#),\CR\^' ||
 q'^    p_sru_name => '#SRU_NAME#',\CR\^' || 
 q'^    p_sru_condition => q'|#SRU_CONDITION#|',\CR\^' || 
 q'^    p_sru_sort_seq => #SRU_SORT_SEQ#,\CR\^' || 
-q'^    p_sru_fire_on_page_load => '#SRU_FIRE_ON_PAGE_LOAD#',\CR\^' || 
-q'^    p_sru_active => '#SRU_ACTIVE#');\CR\^' || 
+q'^    p_sru_fire_on_page_load => #SRU_FIRE_ON_PAGE_LOAD#,\CR\^' || 
+q'^    p_sru_active => #SRU_ACTIVE#);\CR\^' || 
 q'^  #RULE_ACTIONS#^',
     p_uttm_log_text => q'^^',
     p_uttm_log_severity => 70
@@ -75,10 +75,11 @@ q'^    p_sra_spi_id => '#SRA_SPI_ID#',\CR\^' ||
 q'^    p_sra_sat_id => '#SRA_SAT_ID#',\CR\^' || 
 q'^    p_sra_param_1 => q'|#SRA_PARAM_1#|',\CR\^' || 
 q'^    p_sra_param_2 => q'|#SRA_PARAM_2#|',\CR\^' || 
+q'^    p_sra_param_3 => q'|#SRA_PARAM_3#|',\CR\^' || 
 q'^    p_sra_sort_seq => #SRA_SORT_SEQ#,\CR\^' || 
-q'^    p_sra_on_error => '#SRA_ON_ERROR#',\CR\^' || 
-q'^    p_sra_raise_recursive => '#SRA_RAISE_RECURSIVE#',\CR\^' || 
-q'^    p_sra_active => '#SRA_ACTIVE#');^',
+q'^    p_sra_on_error => #SRA_ON_ERROR#,\CR\^' || 
+q'^    p_sra_raise_recursive => #SRA_RAISE_RECURSIVE#,\CR\^' || 
+q'^    p_sra_active => #SRA_ACTIVE#);^',
     p_uttm_log_text => q'^^',
     p_uttm_log_severity => 70
   );
@@ -99,8 +100,8 @@ q'^    p_saa_icon => '#SAA_ICON#',\CR\^' ||
 q'^    p_saa_icon_type => '#SAA_ICON_TYPE#',\CR\^' || 
 q'^    p_saa_title => '#SAA_TITLE#',\CR\^' || 
 q'^    p_saa_shortcut => '#SAA_SHORTCUT#',\CR\^' ||
-q'^    p_saa_initially_disabled => '#SAA_INITIALLY_DISABLED#',\CR\^' || 
-q'^    p_saa_initially_hidden => '#SAA_INITIALLY_HIDDEN#',\CR\^' || 
+q'^    p_saa_initially_disabled => #SAA_INITIALLY_DISABLED#,\CR\^' || 
+q'^    p_saa_initially_hidden => #SAA_INITIALLY_HIDDEN#,\CR\^' || 
 q'^    p_saa_href => '#SAA_HREF#',\CR\^' || 
 q'^    p_saa_action => '#SAA_ACTION#');\CR\^' || 
 q'^  #APEX_ACTION_ITEMS#\CR\^',
@@ -178,7 +179,7 @@ q'^  sct_admin.merge_apex_action_item(\CR\^' ||
 q'^    p_sai_saa_id => sct_admin.map_id(#SAI_SAA_ID#),\CR\^' || 
 q'^    p_sai_spi_sgr_id => sct_admin.map_id(#SAI_SPI_SGR_ID#),\CR\^' || 
 q'^    p_sai_spi_id => '#SAI_SPI_ID#',\CR\^' || 
-q'^    p_sai_active => '#SAI_ACTIVE#');\CR\^',
+q'^    p_sai_active => #SAI_ACTIVE#);\CR\^',
     p_uttm_log_text => q'^^',
     p_uttm_log_severity => 70
   );
@@ -191,13 +192,13 @@ q'^    p_sai_active => '#SAI_ACTIVE#');\CR\^',
     p_uttm_text => q'^create or replace force view #PREFIX##SGR_ID# as\CR\^' || 
 q'^  with session_state as(\CR\^' || 
 q'^       select #COLUMN_LIST#,\CR\^' || 
-q'^              utl_apex.get_true is_true,\CR\^' || 
-q'^              utl_apex.get_false is_false\CR\^' || 
+q'^              sct_util.get_true is_true,\CR\^' || 
+q'^              sct_util.get_false is_false\CR\^' || 
 q'^         from dual),\CR\^' || 
 q'^       data as (\CR\^' || 
 q'^       select /*+ NO_MERGE(s) */\CR\^' || 
 q'^              r.sru_id, r.sru_name, r.sru_firing_items, r.sru_fire_on_page_load,\CR\^' || 
-q'^              r.sra_spi_id, r.sra_sat_id, r.sra_param_1, r.sra_param_2, r.sra_on_error, r.sra_raise_recursive, r.sra_sort_seq,\CR\^' || 
+q'^              r.sra_spi_id, r.sra_sat_id, r.sra_param_1, r.sra_param_2, r.sra_param_3, r.sra_on_error, r.sra_raise_recursive, r.sra_sort_seq,\CR\^' || 
 q'^              rank() over (order by r.sru_sort_seq) rang, case s.initializing when 1 then s.is_true else s.is_false end initializing\CR\^' || 
 q'^         from sct_bl_rules r\CR\^' || 
 q'^         join session_state s\CR\^' || 
@@ -205,7 +206,7 @@ q'^           on instr(r.sru_firing_items, ',' || s.firing_item || ',') > 0\CR\^
 q'^           or sru_fire_on_page_load = s.is_true\CR\^' || 
 q'^        where r.sgr_id = #SGR_ID#\CR\^' || 
 q'^          and (#WHERE_CLAUSE#))\CR\^' || 
-q'^select sru_id, sru_name, sra_spi_id, sra_sat_id, sra_param_1, sra_param_2, sra_on_error, sra_raise_recursive, sra_sort_seq\CR\^' || 
+q'^select sru_id, sru_name, sra_spi_id, sra_sat_id, sra_param_1, sra_param_2, sra_param_3, sra_on_error, sra_raise_recursive, sra_sort_seq\CR\^' || 
 q'^  from data\CR\^' || 
 q'^ where rang = 1\CR\^' || 
 q'^    or sru_fire_on_page_load = initializing\CR\^' || 
@@ -397,8 +398,8 @@ q'^    p_sat_name => '#SAT_NAME#',\CR\^' ||
 q'^    p_sat_description => #SAT_DESCRIPTION#,\CR\^' || 
 q'^    p_sat_pl_sql => #SAT_PL_SQL#,\CR\^' || 
 q'^    p_sat_js => #SAT_JS#,\CR\^' || 
-q'^    p_sat_is_editable => '#SAT_IS_EDITABLE#',\CR\^' || 
-q'^    p_sat_raise_recursive => '#SAT_RAISE_RECURSIVE#');\CR\^' || 
+q'^    p_sat_is_editable => #SAT_IS_EDITABLE#,\CR\^' || 
+q'^    p_sat_raise_recursive => #SAT_RAISE_RECURSIVE#);\CR\^' || 
 q'^\CR\^' || 
 q'^  #RULE_ACTION_PARAMS#^',
     p_uttm_log_text => q'^^',
@@ -413,7 +414,7 @@ q'^  #RULE_ACTION_PARAMS#^',
 q'^    p_spt_id => '#SPT_ID#',\CR\^' || 
 q'^    p_spt_name => '#SPT_NAME#',\CR\^' || 
 q'^    p_spt_description => #SPT_DESCRIPTION#,\CR\^' || 
-q'^    p_spt_active => '#SPT_ACTIVE#');\CR\^' || 
+q'^    p_spt_active => #SPT_ACTIVE#);\CR\^' || 
 q'^^',
     p_uttm_log_text => q'^^',
     p_uttm_log_severity => 70
@@ -427,7 +428,7 @@ q'^^',
 q'^    p_sif_id => '#SIF_ID#',\CR\^' || 
 q'^    p_sif_name => '#SIF_NAME#',\CR\^' || 
 q'^    p_sif_description => #SIF_DESCRIPTION#,\CR\^' || 
-q'^    p_sif_active => '#SIF_ACTIVE#');\CR\^' || 
+q'^    p_sif_active => #SIF_ACTIVE#);\CR\^' || 
 q'^^',
     p_uttm_log_text => q'^^',
     p_uttm_log_severity => 70
@@ -443,8 +444,9 @@ q'^    p_sap_spt_id => '#SAP_SPT_ID#',\CR\^' ||
 q'^    p_sap_sort_seq => #SAP_SORT_SEQ#,\CR\^' || 
 q'^    p_sap_default => #SAP_DEFAULT#,\CR\^' || 
 q'^    p_sap_description => #SAP_DESCRIPTION#,\CR\^' || 
-q'^    p_sap_mandatory => '#SAP_MANDATORY#',\CR\^' || 
-q'^    p_sap_active => '#SAP_ACTIVE#');\CR\^' || 
+q'^    p_sap_display_name => '#SAP_DISPLAY_NAME#',\CR\^' || 
+q'^    p_sap_mandatory => #SAP_MANDATORY#,\CR\^' || 
+q'^    p_sap_active => #SAP_ACTIVE#);\CR\^' || 
 q'^^',
     p_uttm_log_text => q'^^',
     p_uttm_log_severity => 70
@@ -458,7 +460,7 @@ q'^^',
 q'^    p_stg_id => '#STG_ID#',\CR\^' || 
 q'^    p_stg_name => '#STG_NAME#',\CR\^' || 
 q'^    p_stg_description => #STG_DESCRIPTION#,\CR\^' || 
-q'^    p_stg_active => '#STG_ACTIVE#');\CR\^' || 
+q'^    p_stg_active => #STG_ACTIVE#);\CR\^' || 
 q'^^',
     p_uttm_log_text => q'^^',
     p_uttm_log_severity => 70
@@ -660,17 +662,22 @@ q'^}^',
     p_uttm_name => 'RULE_STMT',
     p_uttm_type => 'SCT',
     p_uttm_mode => 'DEFAULT',
-    p_uttm_text => q'^select sru.sru_id, sru.sru_sort_seq, sru.sru_name, sru.sru_firing_items, sru_fire_on_page_load,\CR\^' || 
-q'^       sra_spi_id item, sat_pl_sql pl_sql, sat_js js, sra_param_1 param_1, sra_param_2 param_2, sra_on_error,\CR\^' || 
+    p_uttm_text => q'^  with params as (\CR\^' || 
+q'^       select sct_util.get_true is_true,
+                 sct_util.get_false is_false
+            from dual)\CR\^' || 
+q'^select /*+ no_merge(p) */sru.sru_id, sru.sru_sort_seq, sru.sru_name, sru.sru_firing_items, sru_fire_on_page_load,\CR\^' || 
+q'^       sra_spi_id item, sat_pl_sql pl_sql, sat_js js, sra_param_1 param_1, sra_param_2 param_2, sra_param_3 param_3, sra_on_error,\CR\^' || 
 q'^       max(sra_on_error) over (partition by sru_sort_seq) sru_on_error,\CR\^' || 
-q'^       case row_number() over (partition by sru_sort_seq, sra_on_error order by srg.sra_sort_seq) when 1 then 'Y' else 'N' end is_first_row\CR\^' || 
+q'^       case row_number() over (partition by sru_sort_seq, sra_on_error order by srg.sra_sort_seq) when 1 then is_true else is_false end is_first_row\CR\^' || 
 q'^  from #RULE_VIEW# srg\CR\^' || 
 q'^  join sct_rule sru\CR\^' || 
 q'^    on srg.sru_id = sru.sru_id\CR\^' || 
 q'^  join sct_action_type sat\CR\^' || 
 q'^    on srg.sra_sat_id = sat.sat_id\CR\^' || 
-q'^ where sat.sat_raise_recursive in ('Y', '#IS_RECURSIVE#')\CR\^' || 
-q'^   and srg.sra_raise_recursive in ('Y', '#IS_RECURSIVE#')\CR\^' || 
+q'^ cross join params p\CR\^' || 
+q'^ where sat.sat_raise_recursive in (is_true, '#IS_RECURSIVE#')\CR\^' || 
+q'^   and srg.sra_raise_recursive in (is_true, '#IS_RECURSIVE#')\CR\^' || 
 q'^ order by sru.sru_sort_seq desc, srg.sra_sort_seq^',
     p_uttm_log_text => q'^^',
     p_uttm_log_severity => 70

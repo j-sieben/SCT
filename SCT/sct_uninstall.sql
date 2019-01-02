@@ -5,7 +5,7 @@
 
 @init_uninstall.sql &1. &2. &3.
 
---alter session set current_schema=&INSTALL_USER.;
+alter session set current_schema=&INSTALL_USER.;
 
 prompt &h1.State Chart Toolkit (SCT)) Deinstallation
 

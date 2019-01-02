@@ -4,14 +4,14 @@ create table sct_rule_group (
 	sgr_description varchar2(200 char), 
 	sgr_app_id number, 
 	sgr_page_id number, 
-  sgr_active char(1) default 'Y',
+  sgr_active &FLAG_TYPE. default &C_TRUE.,
   sgr_initialization_code clob,
-  sgr_with_recursion char(1) default 'Y',
+  sgr_with_recursion &FLAG_TYPE. default &C_TRUE.,
 	constraint p_sct_rule_group primary key (sgr_id),
   constraint u_sgr_name unique (sgr_name, sgr_app_id),
   constraint c_sgr_name check (sgr_name is not null),
-  constraint c_sgr_active check (sgr_active in ('Y', 'N')),
-  constraint c_sgr_with_recursion check (sgr_with_recursion in ('Y', 'N'))
+  constraint c_sgr_active check (sgr_active in (&C_TRUE., &C_FALSE.)),
+  constraint c_sgr_with_recursion check (sgr_with_recursion in (&C_TRUE., &C_FALSE.))
 ) 
 organization index;
 

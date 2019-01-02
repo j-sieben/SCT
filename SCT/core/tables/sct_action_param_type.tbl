@@ -1,39 +1,24 @@
 create table sct_action_param_type(
   spt_id varchar2(50 char),
-  spt_name varchar2(50 char),
-  spt_description varchar2(200 char),
-  spt_active char(1 byte) default 'Y',
+  spt_pti_id varchar2(50 char),
+  spt_pmg_name varchar2(3 byte) default 'SCT',
+  spt_item_type varchar2(50 char),
+  spt_active &FLAG_TYPE. default &C_TRUE.,
   constraint pk_sct_action_param_type primary key(spt_id),
-  constraint nn_spt_name check(spt_name is not null),
-  constraint chk_spt_active check(spt_active in ('Y', 'N'))
+  constraint fk_pti_id foreign key(spt_pti_id, spt_pmg_name)
+    references &PIT_OWNER..pit_translatable_item(pti_uid, pti_pmg_name) on delete cascade,
+  constraint nn_spt_pti_id check(spt_pti_id is not null),
+  constraint chk_spt_pmg_name check(spt_pmg_name = 'SCT'),
+  constraint chk_spt_active check(spt_active in (&C_TRUE., &C_FALSE.))
 ) 
 organization index;
 
-create unique index idx_spt_name on sct_action_param_type(spt_name);
+create unique index idx_spt_pti_pmg_name on sct_action_param_type(spt_pti_id, spt_pmg_name);
 
 comment on table sct_action_param_type is 'Table to store SCT Action Parameter types';
 comment on column sct_action_param_type.spt_id is 'PK, technical key';
-comment on column sct_action_param_type.spt_name is 'NOT NULL, Unique name';
-comment on column sct_action_param_type.spt_description is 'Optional description';
+comment on column sct_action_param_type.spt_pti_id is 'Reference to PIT_TRANSLATABLE_ITEM, translatable NAME';
+comment on column sct_action_param_type.spt_pmg_name is 'Reference to PIT_TRANSLATABLE_ITEM, Fixed value SCT';
+comment on column sct_action_param_type.spt_item_type is 'TODO: Klären, wozu das gebraucht wird';
 comment on column sct_action_param_type.spt_active is 'Flag to indicate whether parameter type is in use';
 
-merge into sct_action_param_type t
-using (select 'APEX_ACTION' spt_id,
-              'APEX-Aktion' spt_name,
-              'Existierende APEX-Aktion der Regelgruppe' spt_description,
-              'Y' spt_active
-         from dual
-        union all
-       select 'STRING_OR_FUNCTION', 'Zeichenkette oder PL/SQL-Funktion', 
-              'Falls nicht mit Hochkommata eingeschlossen, eine bestehende PL/SQL-Funktion', 'Y' from dual union all
-       select 'FUNCTION', 'PL/SQL-Funktion', 'Eine bestehende PL/SQL-Funktion', 'Y' from dual union all
-       select 'PROCEDURE', 'PL/SQL-Prozedur', 'Eine bestehende PL/SQL-Prozedur', 'Y' from dual) s
-   on (t.spt_id = s.spt_id)
- when matched then update set
-      t.spt_name = s.spt_name,
-      t.spt_description = s.spt_description,
-      t.spt_active = s.spt_active
- when not matched then insert(spt_id, spt_name, spt_description, spt_active)
-      values(s.spt_id, s.spt_name, s.spt_description, s.spt_active);
-      
-commit;

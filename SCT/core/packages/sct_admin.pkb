@@ -2,13 +2,13 @@ create or replace package body sct_admin
 as
 
   C_PKG constant sct_util.ora_name_type := $$PLSQL_UNIT;
-  C_UTTM_TYPE constant utl_text_templates.uttm_type%type := 'SCT';
+  C_SCT constant utl_text_templates.uttm_type%type := 'SCT';
   C_FRAME constant sct_util.ora_name_type := 'FRAME';
   C_DEFAULT constant sct_util.ora_name_type := 'DEFAULT';
   
   C_REGEX_ITEM constant varchar2(50 byte) := q'~(^|[ '\(])#ITEM#([ ',=<^>\)]|$)~';
   C_REGEX_CSS constant varchar2(50 byte) := q'~'.+'~';
-
+  
   /* Globale Variablen */
   g_offset binary_integer;
   
@@ -42,7 +42,7 @@ as
               and app.page_id = sgr.sgr_page_id
             cross join utl_text_templates uttm
             where app.process_type_code = 'DML_FETCH_ROW'
-              and uttm_type = C_UTTM_TYPE
+              and uttm_type = C_SCT
               and uttm_name like 'INITIALIZE%'
               and sgr.sgr_id = p_sgr_id)
     select utl_text.generate_text(cursor(
@@ -100,6 +100,7 @@ as
     p_new_condition in sct_rule.sru_condition%type default null)
   as
     l_initialization_code sct_rule_group.sgr_initialization_code%type;
+    l_is_true utl_text.flag_type := utl_text.C_TRUE;
   begin
     pit.enter_optional(p_params => msg_params(msg_param('p_sgr_id', to_char(p_sgr_id))));
     
@@ -188,7 +189,7 @@ as
       using (select distinct sru.sru_id
                from sct_page_item spi
                join sct_rule sru
-                 on utl_text.contains(sru_firing_items, spi_id) = sct_util.C_TRUE
+                 on utl_text.contains(sru_firing_items, spi_id) = l_is_true
               where spi_sgr_id = p_sgr_id
                 and spi_has_error = sct_util.C_TRUE) s
          on (t.sru_id = s.sru_id)
@@ -225,7 +226,7 @@ as
     pit.leave_optional;
   exception
     when others then
-      pit.stop(msg.SCT_INITIALZE_SGR_FAILED, msg_args(to_char(p_sgr_id)));
+      pit.stop(msg.SCT_INITIALZE_SGR_FAILED, msg_args(to_char(p_sgr_id), sqlerrm));
   end harmonize_sct_page_item;
   
 
@@ -302,7 +303,7 @@ as
            select uttm_text template, uttm_log_text log_template,
                   uttm_name, uttm_mode, p_sgr_id sgr_id
              from utl_text_templates
-            where uttm_type = C_UTTM_TYPE
+            where uttm_type = C_SCT
               and uttm_name = C_UTTM_NAME)
     select utl_text.generate_text(cursor(
              select template, log_template, C_VIEW_NAME_PREFIX prefix,
@@ -465,7 +466,7 @@ as
     merge into sct_rule_group t
     using (select l_sgr_id sgr_id,
                   upper(p_sgr_name) sgr_name,
-                  p_sgr_description sgr_description,
+                  utl_text.unwrap_string(p_sgr_description) sgr_description,
                   p_sgr_app_id + g_offset sgr_app_id,
                   p_sgr_page_id sgr_page_id,
                   sct_util.get_boolean(p_sgr_with_recursion) sgr_with_recursion,
@@ -562,7 +563,7 @@ as
              from sct_rule_group
             cross join utl_text_templates
             where sgr_id = p_sgr_id
-              and uttm_type = C_UTTM_TYPE
+              and uttm_type = C_SCT
               and uttm_name = C_UTTM_NAME
               and exists(
                   select null
@@ -690,10 +691,11 @@ as
                     sgr.sgr_id, sgr.sgr_name, sgr.sgr_description,
                     coalesce(p_sgr_app_id_map_to, sgr_app_id) sgr_app_id,
                     coalesce(p_sgr_page_id_map_to, sgr_page_id) sgr_page_id,
-                    sgr_active, sgr_with_recursion
+                    sct_util.to_bool(sgr_active) sgr_active, 
+                    sct_util.to_bool(sgr_with_recursion) sgr_with_recursion
                from utl_text_templates
               cross join sct_rule_group sgr
-              where uttm_type = C_UTTM_TYPE
+              where uttm_type = C_SCT
                 and uttm_name = C_UTTM_NAME
                 and sgr_id = p_sgr_id)
       select utl_text.generate_text(cursor(
@@ -701,15 +703,21 @@ as
                       sgr_app_id, sgr_page_id, sgr_active, sgr_with_recursion,
                       -- apex_actions
                       utl_text.generate_text(cursor(
-                        select p.template, saa.*,
-                                -- apex_action_items
-                                utl_text.generate_text(cursor(
-                                  select p.template, sai.*
-                                    from sct_apex_action_item sai
-                                    join params p
-                                      on p.uttm_mode = 'APEX_ACTION_ITEM'
-                                   where sai_saa_id = saa.saa_id
-                                )) apex_action_items
+                        select p.template, saa_id, saa_sgr_id, saa_sty_id, saa_name, saa_label, saa_context_label,
+                               saa_icon, saa_icon_type, saa_title, saa_shortcut, 
+                               sct_util.to_bool(saa_initially_disabled) saa_initially_disabled,
+                               sct_util.to_bool(saa_initially_hidden) saa_initially_hidden,
+                               saa_href, saa_action, saa_on_label, saa_off_label, saa_get, saa_set, saa_choices,
+                               saa_label_classes, saa_label_start_classes, saa_label_end_classes, saa_item_wrap_class,
+                               -- apex_action_items
+                               utl_text.generate_text(cursor(
+                                 select p.template, sai_saa_id, sai_spi_sgr_id, sai_spi_id,
+                                        sct_util.to_bool(sai_active) sai_active
+                                   from sct_apex_action_item sai
+                                   join params p
+                                     on p.uttm_mode = 'APEX_ACTION_ITEM'
+                                  where sai_saa_id = saa.saa_id
+                               )) apex_action_items
                           from sct_apex_action saa
                           join params p
                             on p.uttm_mode = 'APEX_ACTION_' || saa.saa_sty_id
@@ -717,10 +725,16 @@ as
                       )) apex_actions,
                       -- rules
                       utl_text.generate_text(cursor(
-                        select p.template, r.*,
+                        select p.template, sru_id, sru_sgr_id, sru_name, sru_condition, sru_sort_seq,
+                               sru_firing_items, sct_util.to_bool(sru_active) sru_active,
+                               sct_util.to_bool(sru_fire_on_page_load) sru_fire_on_page_load,
                                -- rule actions
                                utl_text.generate_text(cursor(
-                                 select p.template, a.*
+                                 select p.template, sra_id, sra_sgr_id, sra_sru_id, sra_spi_id, sra_sat_id,
+                                        sct_util.to_bool(sra_on_error) sra_on_error,
+                                        sra_param_1, sra_param_2, sra_param_3, sra_comment, sra_sort_seq, 
+                                        sct_util.to_bool(sra_raise_recursive) sra_raise_recursive,
+                                        sct_util.to_bool(sra_active) sra_active
                                    from sct_rule_action a
                                   cross join params p
                                   where uttm_mode = 'RULE_ACTION'
@@ -794,37 +808,48 @@ as
   
     
   procedure merge_apex_action_type(
-    p_sty_id           in sct_apex_action_type.sty_id%type,
-    p_sty_display_name in sct_apex_action_type.sty_display_name%type,
-    p_sty_description  in sct_apex_action_type.sty_description%type) 
+    p_sty_id in sct_apex_action_type.sty_id%type,
+    p_sty_name in pit_translatable_item.pti_name%type,
+    p_sty_description in pit_translatable_item.pti_description%type,
+    p_sty_active in sct_apex_action_type.sty_active%type) 
   as
-    l_row sct_apex_action_type%rowtype;
+    l_pti_id pit_translatable_item.pti_id%type;
   begin
-    l_row.sty_id := p_sty_id;
-    l_row.sty_display_name := p_sty_display_name;
-    l_row.sty_description := p_sty_description;
+    pit.enter_mandatory;
     
-    merge_apex_action_type(l_row);
+    -- maintain translatable item
+    l_pti_id := 'STY_' || p_sty_id;
+    pit_admin.merge_translatable_item(
+      p_pti_id => l_pti_id,
+      p_pti_pml_name => null,
+      p_pti_pmg_name => C_SCT,
+      p_pti_name => p_sty_name,
+      p_pti_description => utl_text.unwrap_string(p_sty_description));
+      
+    -- store local data
+    merge into sct_apex_action_type t
+    using (select p_sty_id sty_id,
+                  l_pti_id sty_pti_id,
+                  C_SCT sty_pmg_name,
+                  sct_util.get_boolean(p_sty_active) sty_active
+             from dual) s
+       on (t.sty_id = s.sty_id)
+     when matched then update set
+            t.sty_active = s.sty_active
+     when not matched then insert(t.sty_id, t.sty_pti_id, t.sty_pmg_name, t.sty_active)
+          values(s.sty_id, s.sty_pti_id, s.sty_pmg_name, s.sty_active);
   end merge_apex_action_type;
   
     
   procedure merge_apex_action_type(
-    p_row in out nocopy sct_apex_action_type%rowtype)
+    p_row in out nocopy sct_apex_action_type_v%rowtype)
   as
   begin
-    merge into sct_apex_action_type t
-    using (select p_row.sty_id sty_id,
-                  p_row.sty_display_name sty_display_name,
-                  p_row.sty_description sty_description
-             from dual) s
-       on (t.sty_id = s.sty_id)
-     when matched then update set
-            t.sty_display_name = s.sty_display_name,
-            t.sty_description = s.sty_description
-     when not matched then insert(
-            t.sty_id, t.sty_display_name, t.sty_description)
-          values(
-            s.sty_id, s.sty_display_name, s.sty_description);
+    merge_apex_action_type(
+      p_sty_id => p_row.sty_id,
+      p_sty_name => p_row.sty_name,
+      p_sty_description => p_row.sty_description,
+      p_sty_active => p_row.sty_active);
   end merge_apex_action_type;
   
   
@@ -838,7 +863,7 @@ as
   
   
   procedure delete_apex_action_type(
-    p_row in out nocopy sct_apex_action_type%rowtype)
+    p_row in out nocopy sct_apex_action_type_v%rowtype)
   as
   begin
     delete_apex_action_type(p_row.sty_id);
@@ -1005,26 +1030,12 @@ as
     p_sai_spi_id     in sct_apex_action_item.sai_spi_id%type,
     p_sai_active     in sct_apex_action_item.sai_active%type)
   as
-    l_row sct_apex_action_item%rowtype;
-  begin
-    l_row.sai_saa_id := p_sai_saa_id;
-    l_row.sai_spi_sgr_id := p_sai_spi_sgr_id;
-    l_row.sai_spi_id := p_sai_spi_id;
-    l_row.sai_active := p_sai_active; 
-
-    merge_apex_action_item(l_row);
-  end merge_apex_action_item;
-
-
-  procedure merge_apex_action_item(
-    p_row sct_apex_action_item%rowtype)
-  as
   begin
     merge into sct_apex_action_item t
-    using (select p_row.sai_saa_id sai_saa_id,
-                  p_row.sai_spi_sgr_id sai_spi_sgr_id,
-                  p_row.sai_spi_id sai_spi_id,
-                  sct_util.get_boolean(p_row.sai_active) sai_active
+    using (select p_sai_saa_id sai_saa_id,
+                  p_sai_spi_sgr_id sai_spi_sgr_id,
+                  p_sai_spi_id sai_spi_id,
+                  sct_util.get_boolean(p_sai_active) sai_active
              from dual) s
        on (t.sai_saa_id = s.sai_saa_id
        and t.sai_spi_sgr_id = s.sai_spi_sgr_id
@@ -1035,6 +1046,18 @@ as
             t.sai_saa_id, t.sai_spi_sgr_id, t.sai_spi_id, t.sai_active)
           values(
             s.sai_saa_id, s.sai_spi_sgr_id, s.sai_spi_id, s.sai_active);
+  end merge_apex_action_item;
+
+
+  procedure merge_apex_action_item(
+    p_row sct_apex_action_item%rowtype)
+  as
+  begin
+    merge_apex_action_item(
+      p_sai_saa_id => p_row.sai_saa_id,
+      p_sai_spi_sgr_id => p_row.sai_spi_sgr_id,
+      p_sai_spi_id => p_row.sai_spi_id,
+      p_sai_active => p_row.sai_active);
   end merge_apex_action_item;
   
   
@@ -1150,7 +1173,7 @@ as
                   p_sgr_id sgr_id, 
                   p_sru_condition condition
              from utl_text_templates
-            where uttm_type = C_UTTM_TYPE
+            where uttm_type = C_SCT
               and uttm_name = C_UTTM_NAME
               and uttm_mode = 'DEFAULT')
     select utl_text.generate_text(cursor(
@@ -1212,29 +1235,42 @@ as
   
   procedure merge_action_type_group(
     p_stg_id in sct_action_type_group.stg_id%type,
-    p_stg_name in sct_action_type_group.stg_name%type,
-    p_stg_description in sct_action_type_group.stg_description%type,
-    p_stg_active in sct_action_type_group.stg_active%type)
+    p_stg_name in pit_translatable_item.pti_name%type,
+    p_stg_description in pit_translatable_item.pti_description%type,
+    p_stg_active in sct_action_type_group.stg_active%type default sct_util.C_TRUE)
   as
+    l_pti_id pit_translatable_item.pti_id%type;
   begin
+    pit.enter_mandatory;
+    
+    -- maintain translatable item
+    l_pti_id := 'STG_' || p_stg_id;
+    pit_admin.merge_translatable_item(
+      p_pti_id => l_pti_id,
+      p_pti_pml_name => null,
+      p_pti_pmg_name => C_SCT,
+      p_pti_name => p_stg_name,
+      p_pti_description => utl_text.unwrap_string(p_stg_description));
+      
+    -- store local data
     merge into sct_action_type_group t
     using (select p_stg_id stg_id,
-                  p_stg_name stg_name,
-                  p_stg_description stg_description,
-                  p_stg_active stg_active
+                  l_pti_id stg_pti_id,
+                  C_SCT stg_pmg_name,
+                  sct_util.get_boolean(p_stg_active) stg_active
              from dual) s
        on (t.stg_id = s.stg_id)
      when matched then update set
-          t.stg_name = s.stg_name,
-          t.stg_description = s.stg_description,
           t.stg_active = s.stg_active
-     when not matched then insert(stg_id, stg_name, stg_description, stg_active)
-          values(s.stg_id, s.stg_name, s.stg_description, s.stg_active);
+     when not matched then insert(stg_id, stg_pti_id, stg_pmg_name, stg_active)
+          values(s.stg_id, s.stg_pti_id, s.stg_pmg_name, s.stg_active);
+        
+    pit.leave_mandatory;
   end merge_action_type_group;  
   
     
   procedure merge_action_type_group(
-    p_row in out nocopy sct_action_type_group%rowtype)
+    p_row in out nocopy sct_action_type_group_v%rowtype)
   as
   begin
     merge_action_type_group(
@@ -1255,7 +1291,7 @@ as
   
   
   procedure delete_action_type_group(
-    p_row in out nocopy sct_action_type_group%rowtype)
+    p_row in out nocopy sct_action_type_group_v%rowtype)
   as
   begin
     delete_action_type_group(p_row.stg_id);
@@ -1264,29 +1300,38 @@ as
   
   procedure merge_action_param_type(
     p_spt_id in sct_action_param_type.spt_id%type,
-    p_spt_name in sct_action_param_type.spt_name%type,
-    p_spt_description in sct_action_param_type.spt_description%type,
-    p_spt_active in sct_action_param_type.spt_active%type)
+    p_spt_name in pit_translatable_item.pti_name%type,
+    p_spt_description in pit_translatable_item.pti_description%type,
+    p_spt_active in sct_action_param_type.spt_active%type default SCT_UTIL.C_TRUE)
   as
+    l_pti_id pit_translatable_item.pti_id%type;
   begin
+    -- maintain translatable item
+    l_pti_id := 'SPT_' || p_spt_id;
+    pit_admin.merge_translatable_item(
+      p_pti_id => l_pti_id,
+      p_pti_pml_name => null,
+      p_pti_pmg_name => C_SCT,
+      p_pti_name => p_spt_name,
+      p_pti_description => utl_text.unwrap_string(p_spt_description));
+      
+    -- store local data
     merge into sct_action_param_type t
     using (select p_spt_id spt_id,
-                  p_spt_name spt_name,
-                  p_spt_description spt_description,
-                  p_spt_active spt_active
+                  l_pti_id spt_pti_id,
+                  C_SCT spt_pmg_name,
+                  sct_util.get_boolean(p_spt_active) spt_active
              from dual) s
        on (t.spt_id = s.spt_id)
      when matched then update set
-          t.spt_name = s.spt_name,
-          t.spt_description = s.spt_description,
           t.spt_active = s.spt_active
-     when not matched then insert(spt_id, spt_name, spt_description, spt_active)
-          values(s.spt_id, s.spt_name, s.spt_description, s.spt_active);
+     when not matched then insert(spt_id, spt_pti_id, spt_pmg_name, spt_active)
+          values(s.spt_id, s.spt_pti_id, s.spt_pmg_name, s.spt_active);
   end merge_action_param_type;
   
     
   procedure merge_action_param_type(
-    p_row in out nocopy sct_action_param_type%rowtype)
+    p_row in out nocopy sct_action_param_type_v%rowtype)
   as
   begin
     merge_action_param_type(
@@ -1298,39 +1343,56 @@ as
   
     
   procedure delete_action_param_type(
-    p_row in sct_action_param_type%rowtype)
+    p_spt_id in sct_action_param_type.spt_id%type)
   as
   begin
     delete from sct_action_param_type
-     where spt_id = p_row.spt_id;
+     where spt_id = p_spt_id;
+  end delete_action_param_type;
+  
+    
+  procedure delete_action_param_type(
+    p_row in sct_action_param_type_v%rowtype)
+  as
+  begin
+    delete_action_param_type(p_row.spt_id);
   end delete_action_param_type;
   
   
   procedure merge_action_item_focus(
     p_sif_id in sct_action_item_focus.sif_id%type,
-    p_sif_name in sct_action_item_focus.sif_name%type,
-    p_sif_description in sct_action_item_focus.sif_description%type,
-    p_sif_active in sct_action_item_focus.sif_active%type)
+    p_sif_name in pit_translatable_item.pti_name%type,
+    p_sif_description in pit_translatable_item.pti_description%type,
+    p_sif_active in sct_action_item_focus.sif_active%type default sct_util.C_TRUE)
   as
+    l_pti_id pit_translatable_item.pti_id%type;
   begin
+    -- maintain translatable item
+    l_pti_id := 'SIF_' || p_sif_id;
+    pit_admin.merge_translatable_item(
+      p_pti_id => l_pti_id,
+      p_pti_pml_name => null,
+      p_pti_pmg_name => C_SCT,
+      p_pti_name => p_sif_name,
+      p_pti_description => utl_text.unwrap_string(p_sif_description));
+      
+    -- store local data
     merge into sct_action_item_focus t
     using (select p_sif_id sif_id,
-                  p_sif_name sif_name,
-                  p_sif_description sif_description,
-                  p_sif_active sif_active
+                  l_pti_id sif_pti_id,
+                  C_SCT sif_pmg_name,
+                  sct_util.get_boolean(p_sif_active) sif_active
              from dual) s
        on (t.sif_id = s.sif_id)
      when matched then update set
-          t.sif_name = s.sif_name,
-          t.sif_description = s.sif_description,
           t.sif_active = s.sif_active
-     when not matched then insert(sif_id, sif_name, sif_description, sif_active)
-          values(s.sif_id, s.sif_name, s.sif_description, s.sif_active);
+     when not matched then insert(sif_id, sif_pti_id, sif_pmg_name, sif_active)
+          values(s.sif_id, s.sif_pti_id, s.sif_pmg_name, s.sif_active);
   end merge_action_item_focus;
     
     
   procedure merge_action_item_focus(
-    p_row in out nocopy sct_action_item_focus%rowtype)
+    p_row in out nocopy sct_action_item_focus_v%rowtype)
   as
   begin
     merge_action_item_focus(
@@ -1351,7 +1413,7 @@ as
   
   
   procedure delete_action_item_focus(
-    p_row in out nocopy sct_action_item_focus%rowtype)
+    p_row in out nocopy sct_action_item_focus_v%rowtype)
   as
   begin
     delete_action_item_focus(p_row.sif_id);
@@ -1361,40 +1423,52 @@ as
   procedure merge_action_type(
     p_sat_id in sct_action_type.sat_id%type,
     p_sat_stg_id in sct_action_type_group.stg_id%type,
-    p_sat_name in sct_action_type.sat_name%type,
-    p_sat_description in sct_action_type.sat_description%type default null,
+    p_sat_sif_id in sct_action_item_focus.sif_id%type,
+    p_sat_name in pit_translatable_item.pti_name%type,
+    p_sat_description in pit_translatable_item.pti_description%type default null,
     p_sat_pl_sql in sct_action_type.sat_pl_sql%type,
     p_sat_js in sct_action_type.sat_js%type,
     p_sat_is_editable in sct_action_type.sat_is_editable%type default sct_util.C_TRUE,
     p_sat_raise_recursive in sct_action_type.sat_raise_recursive%type default sct_util.C_TRUE)
   as
+    l_pti_id pit_translatable_item.pti_id%type;
   begin
     pit.enter_mandatory;
     
+    -- maintain translatable item
+    l_pti_id := 'SAT_' || p_sat_id;
+    pit_admin.merge_translatable_item(
+      p_pti_id => l_pti_id,
+      p_pti_pml_name => null,
+      p_pti_pmg_name => C_SCT,
+      p_pti_name => p_sat_name,
+      p_pti_description => utl_text.unwrap_string(p_sat_description));
+      
+    -- store local data
     merge into sct_action_type t
     using (select p_sat_id sat_id,
                   p_sat_stg_id sat_stg_id,
-                  p_sat_name sat_name,
-                  p_sat_description sat_description,
-                  p_sat_pl_sql sat_pl_sql,
-                  p_sat_js sat_js,
+                  p_sat_sif_id sat_sif_id,
+                  l_pti_id sat_pti_id,
+                  C_SCT sat_pmg_name,
+                  utl_text.unwrap_string(p_sat_pl_sql) sat_pl_sql,
+                  utl_text.unwrap_string(p_sat_js) sat_js,
                   sct_util.get_boolean(p_sat_is_editable) sat_is_editable,
                   sct_util.get_boolean(p_sat_raise_recursive) sat_raise_recursive
              from dual) s
        on (t.sat_id = s.sat_id)
      when matched then update set
           t.sat_stg_id = s.sat_stg_id,
-          t.sat_name = s.sat_name,
-          t.sat_description = s.sat_description,
+          t.sat_sif_id = s.sat_sif_id,
           t.sat_pl_sql = s.sat_pl_sql,
           t.sat_js = s.sat_js,
           t.sat_is_editable = s.sat_is_editable,
           t.sat_raise_recursive = s.sat_raise_recursive
      when not matched then insert(
-            sat_id, sat_stg_id, sat_name, sat_description, sat_pl_sql, sat_js, 
+            sat_id, sat_stg_id, sat_sif_id, sat_pti_id, sat_pmg_name, sat_pl_sql, sat_js, 
             sat_is_editable, sat_raise_recursive)
           values (
-            s.sat_id, s.sat_stg_id, s.sat_name, s.sat_description, s.sat_pl_sql, s.sat_js, 
+            s.sat_id, s.sat_stg_id, s.sat_sif_id, s.sat_pti_id, s.sat_pmg_name, s.sat_pl_sql, s.sat_js, 
             s.sat_is_editable, s.sat_raise_recursive);
             
     pit.leave_mandatory;
@@ -1402,12 +1476,13 @@ as
   
     
   procedure merge_action_type(
-    p_row in sct_action_type%rowtype)
+    p_row in sct_action_type_v%rowtype)
   as
   begin
     merge_action_type(
       p_sat_id => p_row.sat_id,
       p_sat_stg_id => p_row.sat_stg_id,
+      p_sat_sif_id => p_row.sat_sif_id,
       p_sat_name => p_row.sat_name,
       p_sat_description => p_row.sat_description,
       p_sat_pl_sql => p_row.sat_pl_sql,
@@ -1427,7 +1502,7 @@ as
     
     
   procedure delete_action_type(
-    p_row in sct_action_type%rowtype)
+    p_row in sct_action_type_v%rowtype)
   as
   begin
     delete_action_type(p_row.sat_id);
@@ -1452,18 +1527,22 @@ as
               utl_text.wrap_string(sat.sat_description, 'q''{', '}''') sat_description,
               utl_text.wrap_string(sat.sat_pl_sql, 'q''{', '}''') sat_pl_sql,
               utl_text.wrap_string(sat.sat_js, 'q''{', '}''') sat_js,
-              sat.sat_is_editable, sat.sat_raise_recursive,
+              sct_util.to_bool(sat.sat_is_editable) sat_is_editable, 
+              sct_util.to_bool(sat.sat_raise_recursive) sat_raise_recursive,
               -- rule action_params
               utl_text.generate_text(cursor(
-                select p.template, ap.sap_sat_id, ap.sap_spt_id, ap.sap_sort_seq, ap.sap_mandatory, ap.sap_active,
+                select p.template, ap.sap_sat_id, ap.sap_spt_id, ap.sap_sort_seq, 
+                       sct_util.to_bool(ap.sap_mandatory) sap_mandatory, 
+                       sct_util.to_bool(ap.sap_active) sap_active,
                        utl_text.wrap_string(ap.sap_default, 'q''{', '}''') sap_default,
-                       utl_text.wrap_string(ap.sap_description, 'q''{', '}''') sap_description
-                  from sct_action_parameter ap
+                       utl_text.wrap_string(ap.sap_description, 'q''{', '}''') sap_description,
+                       sap_display_name
+                  from sct_action_parameter_v ap
                  cross join params p
                  where uttm_mode = 'ACTION_PARAMS'
                    and ap.sap_sat_id = sat.sat_id
               )) rule_action_params
-         from sct_action_type sat
+         from sct_action_type_v sat
         cross join params p
         where (sat.sat_is_editable = p.sat_is_editable
            or p.sat_is_editable is null)
@@ -1480,41 +1559,40 @@ as
     
     select utl_text.generate_text(cursor(
             select p.uttm_text template, 
-                   spt.spt_id, spt.spt_name, spt.spt_active, 
+                   spt.spt_id, spt.spt_name, sct_util.to_bool(spt.spt_active) spt_active, 
                    utl_text.wrap_string(spt.spt_description, C_WRAP_START, C_WRAP_END) spt_description
-              from sct_action_param_type spt
+              from sct_action_param_type_v spt
              where decode(p_sat_is_editable, 'N', 1, null, 1, 0) = 1
           ))
       into l_action_param_types
       from utl_text_templates p
-     where uttm_type = C_UTTM_TYPE
+     where uttm_type = C_SCT
        and uttm_name = C_UTTM_NAME
        and uttm_mode = 'PARAM_TYPE';
     
     select utl_text.generate_text(cursor(
             select p.uttm_text template, 
-                   sif.sif_id, sif.sif_name, sif.sif_active, 
+                   sif.sif_id, sif.sif_name, sct_util.to_bool(sif.sif_active) sif_active, 
                    utl_text.wrap_string(sif.sif_description, C_WRAP_START, C_WRAP_END) sif_description
-              from sct_action_item_focus sif
+              from sct_action_item_focus_v sif
              where decode(p_sat_is_editable, 'N', 1, null, 1, 0) = 1
           ))
       into l_action_item_focus
       from utl_text_templates p
-     where uttm_type = C_UTTM_TYPE
+     where uttm_type = C_SCT
        and uttm_name = C_UTTM_NAME
        and uttm_mode = 'ITEM_FOCUS';
-       
     
     select utl_text.generate_text(cursor(
             select p.uttm_text template, 
-                   stg.stg_id, stg.stg_name, stg.stg_active, 
+                   stg.stg_id, stg.stg_name, sct_util.to_bool(stg.stg_active) stg_active, 
                    utl_text.wrap_string(stg.stg_description, C_WRAP_START, C_WRAP_END) stg_description
-              from sct_action_type_group stg
+              from sct_action_type_group_v stg
              where decode(p_sat_is_editable, 'N', 1, null, 1, 0) = 1
           ))
       into l_action_type_groups
       from utl_text_templates p
-     where uttm_type = C_UTTM_TYPE
+     where uttm_type = C_SCT
        and uttm_name = C_UTTM_NAME
        and uttm_mode = 'ACTION_TYPE_GROUP';
        
@@ -1538,7 +1616,7 @@ as
            )) resultat
       into l_stmt
       from utl_text_templates
-     where uttm_type = C_UTTM_TYPE
+     where uttm_type = C_SCT
        and uttm_name = C_UTTM_NAME
        and uttm_mode = C_FRAME;
     
@@ -1552,35 +1630,51 @@ as
     p_sap_spt_id in sct_action_parameter.sap_spt_id%type,
     p_sap_sort_seq in sct_action_parameter.sap_sort_seq%type,
     p_sap_default in sct_action_parameter.sap_default%type,
-    p_sap_description in sct_action_parameter.sap_description%type,
+    p_sap_description in pit_translatable_item.pti_description%type,
+    p_sap_display_name in pit_translatable_item.pti_name%type,
     p_sap_mandatory in sct_action_parameter.sap_mandatory%type,
-    p_sap_active in sct_action_parameter.sap_active%type)
+    p_sap_active in sct_action_parameter.sap_active%type default sct_util.C_TRUE)
   as
+    l_pti_id pit_translatable_item.pti_id%type;
   begin
+    -- maintain translatable item
+    select 'SAP_' || standard_hash(p_sap_sat_id || p_sap_spt_id || p_sap_sort_seq, 'MD5')
+      into l_pti_id
+      from dual;
+      
+    pit_admin.merge_translatable_item(
+      p_pti_id => l_pti_id,
+      p_pti_pml_name => null,
+      p_pti_pmg_name => C_SCT,
+      p_pti_name => p_sap_display_name,
+      p_pti_description => utl_text.unwrap_string(p_sap_description));
+      
+    -- store local data
     merge into sct_action_parameter t
     using (select p_sap_sat_id sap_sat_id,
                   p_sap_spt_id sap_spt_id,
                   p_sap_sort_seq sap_sort_seq,
                   p_sap_default sap_default,
-                  p_sap_description sap_description,
+                  l_pti_id sap_pti_id,
+                  C_SCT sap_pmg_name,
                   p_sap_mandatory sap_mandatory,
-                  p_sap_active sap_active
+                  sct_util.get_boolean(p_sap_active) sap_active
              from dual) s
        on (t.sap_sat_id = s.sap_sat_id
       and t.sap_spt_id = s.sap_spt_id
       and t.sap_sort_seq = s.sap_sort_seq)
      when matched then update set
+          t.sap_pti_id = s.sap_pti_id,
           t.sap_default = s.sap_default,
-          t.sap_description = s.sap_description,
           t.sap_mandatory = s.sap_mandatory,
           t.sap_active = s.sap_active
-     when not matched then insert(sap_sat_id, sap_spt_id, sap_sort_seq, sap_default, sap_description, sap_mandatory, sap_active)
-          values(s.sap_sat_id, s.sap_spt_id, s.sap_sort_seq, s.sap_default, s.sap_description, s.sap_mandatory, s.sap_active);
+     when not matched then insert(sap_sat_id, sap_spt_id, sap_sort_seq, sap_default, sap_pti_id, sap_pmg_name, sap_mandatory, sap_active)
+          values(s.sap_sat_id, s.sap_spt_id, s.sap_sort_seq, s.sap_default, s.sap_pti_id, s.sap_pmg_name, s.sap_mandatory, s.sap_active);
   end merge_action_parameter;
     
     
   procedure merge_action_parameter(
-    p_row in out nocopy sct_action_parameter%rowtype)
+    p_row in out nocopy sct_action_parameter_v%rowtype)
   as
   begin
     merge_action_parameter(
@@ -1589,13 +1683,14 @@ as
       p_sap_sort_seq => p_row.sap_sort_seq,
       p_sap_default => p_row.sap_default,
       p_sap_description => p_row.sap_description,
+      p_sap_display_name => p_row.sap_display_name,
       p_sap_mandatory => p_row.sap_mandatory,
       p_sap_active => p_row.sap_active);      
   end merge_action_parameter;
   
   
   procedure delete_action_parameter(
-    p_row in sct_action_parameter%rowtype)
+    p_row in sct_action_parameter_v%rowtype)
   as
   begin
     delete from sct_action_parameter
@@ -1611,8 +1706,9 @@ as
     p_sra_sgr_id in sct_rule_group.sgr_id%type,
     p_sra_spi_id in sct_page_item.spi_id%type,
     p_sra_sat_id in sct_action_type.sat_id%type,
-    p_sra_param_1 in sct_rule_action.sra_param_1%type,
-    p_sra_param_2 in sct_rule_action.sra_param_2%type,
+    p_sra_param_1 in sct_rule_action.sra_param_1%type default null,
+    p_sra_param_2 in sct_rule_action.sra_param_2%type default null,
+    p_sra_param_3 in sct_rule_action.sra_param_3%type default null,
     p_sra_sort_seq in sct_rule_action.sra_sort_seq%type,
     p_sra_on_error in sct_rule_action.sra_on_error%type default sct_util.C_FALSE,
     p_sra_raise_recursive in sct_rule_action.sra_raise_recursive%type default sct_util.C_TRUE,
@@ -1630,6 +1726,7 @@ as
                   p_sra_sat_id sra_sat_id,
                   p_sra_param_1 sra_param_1,
                   p_sra_param_2 sra_param_2,
+                  p_sra_param_3 sra_param_3,
                   p_sra_sort_seq sra_sort_seq,
                   sct_util.get_boolean(p_sra_on_error) sra_on_error,
                   sct_util.get_boolean(p_sra_raise_recursive) sra_raise_recursive,
@@ -1646,8 +1743,12 @@ as
           t.sra_raise_recursive = s.sra_raise_recursive,
           t.sra_active = s.sra_active,
           t.sra_comment = s.sra_comment
-     when not matched then insert (sra_id, sra_sru_id, sra_sgr_id, sra_spi_id, sra_sat_id, sra_param_1, sra_param_2, sra_sort_seq, sra_on_error, sra_raise_recursive, sra_active, sra_comment)
-          values(s.sra_id, s.sra_sru_id, s.sra_sgr_id, s.sra_spi_id, s.sra_sat_id, s.sra_param_1, s.sra_param_2, s.sra_sort_seq, s.sra_on_error, s.sra_raise_recursive, s.sra_active, s.sra_comment);
+     when not matched then insert (
+            sra_id, sra_sru_id, sra_sgr_id, sra_spi_id, sra_sat_id, sra_param_1, sra_param_2, sra_param_3, 
+            sra_sort_seq, sra_on_error, sra_raise_recursive, sra_active, sra_comment)
+          values(
+            s.sra_id, s.sra_sru_id, s.sra_sgr_id, s.sra_spi_id, s.sra_sat_id, s.sra_param_1, s.sra_param_2, s.sra_param_3, 
+            s.sra_sort_seq, s.sra_on_error, s.sra_raise_recursive, s.sra_active, s.sra_comment);
     
     pit.leave_mandatory;
   exception
@@ -1670,6 +1771,7 @@ as
       p_sra_sat_id => p_row.sra_sat_id,
       p_sra_param_1 => p_row.sra_param_1,
       p_sra_param_2 => p_row.sra_param_2,
+      p_sra_param_3 => p_row.sra_param_3,
       p_sra_sort_seq => p_row.sra_sort_seq,
       p_sra_on_error => p_row.sra_on_error,
       p_sra_raise_recursive => p_row.sra_raise_recursive,
@@ -1700,6 +1802,25 @@ as
     delete_rule_action(
       p_sra_id => p_row.sra_id);
   end delete_rule_action;
+  
+  
+  procedure add_translation(
+    p_table_shortcut in varchar2,
+    p_item_id in varchar2,
+    p_pml_name pit_message_language.pml_name%type,
+    p_name in pit_translatable_item.pti_name%type,
+    p_display_name in pit_translatable_item.pti_display_name%type,
+    p_description in pit_translatable_item.pti_description%type)
+  as
+  begin
+    pit_admin.merge_translatable_item(
+      p_pti_id => p_table_shortcut || '_' || p_item_id,
+      p_pti_pml_name => p_pml_name,
+      p_pti_pmg_name => C_SCT,
+      p_pti_name => p_name,
+      p_pti_display_name => p_display_name,
+      p_pti_description => p_description);
+  end add_translation;
 
 begin
   initialize;

@@ -14,14 +14,15 @@ as
     return varchar2;
   
   /* Method to check an action type parameter
-   * %param  p_value        Parameter value to check
+   * %param  p_value        Parameter value to check and format
    * %param  p_spt_id       Parameter Type
    * %param  p_spi_id       UI element to attach the error to
    * %param  p_environment  Record with environmental data such as SGR_ID
-   * %usage  Method is used to check an entered parameter value against meta data
+   * %usage  Method is used to check an entered parameter value against meta data and format it in order to directly
+   *         use it in rule actions
    */
   procedure validate_parameter(
-    p_value in sct_rule_action.sra_param_1%type,
+    p_value in out nocopy sct_rule_action.sra_param_1%type,
     p_spt_id in sct_action_param_type.spt_id%type,
     p_spi_id in sct_page_item.spi_id%type,
     p_environment in sct_internal.environment_rec);

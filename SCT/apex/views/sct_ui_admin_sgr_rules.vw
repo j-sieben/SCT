@@ -12,8 +12,8 @@ create or replace force view sct_ui_admin_sgr_rules as
               'fa-check' fa_check,
               'fa-times' fa_uncheck,
               '<br/>' br,
-              utl_apex.get_true c_true,
-              utl_apex.get_false c_false
+              sct_util.get_true c_true,
+              sct_util.get_false c_false
          from sct_rule_group),
        actions as(
        select /*+ no_merge (p) */ sru.sru_id, p.sgr_id, sra.sra_id,
@@ -61,7 +61,7 @@ create or replace force view sct_ui_admin_sgr_rules as
                   on sra.sra_sgr_id = spi.spi_sgr_id
                  and sra.sra_spi_id = spi.spi_id) sra
            on sru_id = sra_sru_id
-         left join sct_action_type sat
+         left join sct_action_type_v sat
            on sra_sat_id = sat_id)
 select app.application_id,
        app.application_name || ' (' || app.application_id || ')' application_name,

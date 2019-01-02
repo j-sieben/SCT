@@ -127,6 +127,12 @@ as
     p_workspace in varchar2,
     p_app_id in sct_rule_group.sgr_app_id%type);
     
+  /* Another overload */
+  procedure prepare_rule_group_import(
+    p_sgr_app_id in sct_rule_group.sgr_app_id%type,
+    p_sgr_page_id in sct_rule_group.sgr_page_id%type,
+    p_sgr_name in sct_rule_group.sgr_name%type);
+    
     
   /* Administration of APEX ACTION TYPES
    * %param  p_sty_id            Technical ID
@@ -135,17 +141,18 @@ as
    */
   procedure merge_apex_action_type(
     p_sty_id in sct_apex_action_type.sty_id%type,
-    p_sty_display_name in sct_apex_action_type.sty_display_name%type,
-    p_sty_description in sct_apex_action_type.sty_description%type);
+    p_sty_name in pit_translatable_item.pti_name%type,
+    p_sty_description in pit_translatable_item.pti_description%type,
+    p_sty_active in sct_apex_action_type.sty_active%type);
     
   procedure merge_apex_action_type(
-    p_row in out nocopy sct_apex_action_type%rowtype);
+    p_row in out nocopy sct_apex_action_type_v%rowtype);
     
   procedure delete_apex_action_type(
     p_sty_id in sct_apex_action_type.sty_id%type);
     
   procedure delete_apex_action_type(
-    p_row in out nocopy sct_apex_action_type%rowtype);
+    p_row in out nocopy sct_apex_action_type_v%rowtype);
     
 
   /* Administration of APEX ACTIONS
@@ -288,19 +295,19 @@ as
    */
   procedure merge_action_type_group(
     p_stg_id in sct_action_type_group.stg_id%type,
-    p_stg_name in sct_action_type_group.stg_name%type,
-    p_stg_description in sct_action_type_group.stg_description%type,
+    p_stg_name in pit_translatable_item.pti_name%type,
+    p_stg_description in pit_translatable_item.pti_description%type,
     p_stg_active in sct_action_type_group.stg_active%type default sct_util.C_TRUE);
     
   procedure merge_action_type_group(
-    p_row in out nocopy sct_action_type_group%rowtype);
+    p_row in out nocopy sct_action_type_group_v%rowtype);
     
     
   procedure delete_action_type_group(
     p_stg_id in sct_action_type_group.stg_id%type);
     
   procedure delete_action_type_group(
-    p_row in out nocopy sct_action_type_group%rowtype);
+    p_row in out nocopy sct_action_type_group_v%rowtype);
 
  
   /* Administration of ACTION PARAMETER TYPES
@@ -311,16 +318,19 @@ as
    */
   procedure merge_action_param_type(
     p_spt_id in sct_action_param_type.spt_id%type,
-    p_spt_name in sct_action_param_type.spt_name%type,
-    p_spt_description in sct_action_param_type.spt_description%type,
+    p_spt_name in pit_translatable_item.pti_name%type,
+    p_spt_description in pit_translatable_item.pti_description%type,
     p_spt_active in sct_action_param_type.spt_active%type default SCT_UTIL.C_TRUE);
 
   procedure merge_action_param_type(
-    p_row in out nocopy sct_action_param_type%rowtype);
+    p_row in out nocopy sct_action_param_type_v%rowtype);
     
+
+  procedure delete_action_param_type(
+    p_spt_id in sct_action_param_type.spt_id%type);
     
   procedure delete_action_param_type(
-    p_row in sct_action_param_type%rowtype);
+    p_row in sct_action_param_type_v%rowtype);
     
  
   /* Administration of ACTION ITEM FOCUS */    
@@ -333,23 +343,25 @@ as
    */
   procedure merge_action_item_focus(
     p_sif_id in sct_action_item_focus.sif_id%type,
-    p_sif_name in sct_action_item_focus.sif_name%type,
-    p_sif_description in sct_action_item_focus.sif_description%type,
+    p_sif_name in pit_translatable_item.pti_name%type,
+    p_sif_description in pit_translatable_item.pti_description%type,
     p_sif_active in sct_action_item_focus.sif_active%type default sct_util.C_TRUE);
     
   procedure merge_action_item_focus(
-    p_row in out nocopy sct_action_item_focus%rowtype);
+    p_row in out nocopy sct_action_item_focus_v%rowtype);
     
     
   procedure delete_action_item_focus(
     p_sif_id in sct_action_item_focus.sif_id%type);    
     
   procedure delete_action_item_focus(
-    p_row in out nocopy sct_action_item_focus%rowtype);
+    p_row in out nocopy sct_action_item_focus_v%rowtype);
            
     
   /* Administration of ACTION TYPES
    * %param  p_sat_id               ID of the action type
+   * %param  p_sat_stg_id           Reference to SCT_ACTION_TYPE_GROUP
+   * %param  p_sat_sif_id           Reference to SCT_ACTION_ITEM_FOCUS
    * %param  p_sat_name             Name of the action type
    * %param  p_sat_description      Optional description
    * %param  p_sat_pl_sql           PL/SQL code that is to be executed
@@ -360,21 +372,22 @@ as
   procedure merge_action_type(
     p_sat_id in sct_action_type.sat_id%type,
     p_sat_stg_id in sct_action_type_group.stg_id%type,
-    p_sat_name in sct_action_type.sat_name%type,
-    p_sat_description in sct_action_type.sat_description%type default null,
+    p_sat_sif_id in sct_action_item_focus.sif_id%type,
+    p_sat_name in pit_translatable_item.pti_name%type,
+    p_sat_description in pit_translatable_item.pti_description%type default null,
     p_sat_pl_sql in sct_action_type.sat_pl_sql%type,
     p_sat_js in sct_action_type.sat_js%type,
     p_sat_is_editable in sct_action_type.sat_is_editable%type default sct_util.C_TRUE,
     p_sat_raise_recursive in sct_action_type.sat_raise_recursive%type default sct_util.C_TRUE);
     
   procedure merge_action_type(
-    p_row in sct_action_type%rowtype);
+    p_row in sct_action_type_v%rowtype);
     
   procedure delete_action_type(
     p_sat_id in sct_action_type.sat_id%type);
     
   procedure delete_action_type(
-    p_row in sct_action_type%rowtype);
+    p_row in sct_action_type_v%rowtype);
 
   
   /* Method to export an action type
@@ -403,16 +416,17 @@ as
     p_sap_spt_id in sct_action_parameter.sap_spt_id%type,
     p_sap_sort_seq in sct_action_parameter.sap_sort_seq%type,
     p_sap_default in sct_action_parameter.sap_default%type,
-    p_sap_description in sct_action_parameter.sap_description%type,
+    p_sap_description in pit_translatable_item.pti_description%type,
+    p_sap_display_name in pit_translatable_item.pti_name%type,
     p_sap_mandatory in sct_action_parameter.sap_mandatory%type,
     p_sap_active in sct_action_parameter.sap_active%type default sct_util.C_TRUE);
     
   procedure merge_action_parameter(
-    p_row in out nocopy sct_action_parameter%rowtype);
+    p_row in out nocopy sct_action_parameter_v%rowtype);
     
     
   procedure delete_action_parameter(
-    p_row in sct_action_parameter%rowtype);
+    p_row in sct_action_parameter_v%rowtype);
     
     
   /* Administration of RULE ACTIONS 
@@ -438,8 +452,9 @@ as
     p_sra_sgr_id in sct_rule_group.sgr_id%type,
     p_sra_spi_id in sct_page_item.spi_id%type,
     p_sra_sat_id in sct_action_type.sat_id%type,
-    p_sra_param_1 in sct_rule_action.sra_param_1%type,
-    p_sra_param_2 in sct_rule_action.sra_param_2%type,
+    p_sra_param_1 in sct_rule_action.sra_param_1%type default null,
+    p_sra_param_2 in sct_rule_action.sra_param_2%type default null,
+    p_sra_param_3 in sct_rule_action.sra_param_3%type default null,
     p_sra_sort_seq in sct_rule_action.sra_sort_seq%type,
     p_sra_on_error in sct_rule_action.sra_on_error%type default sct_util.C_FALSE,
     p_sra_raise_recursive in sct_rule_action.sra_raise_recursive%type default sct_util.C_TRUE,
@@ -456,6 +471,23 @@ as
   procedure delete_rule_action(
     p_row in out nocopy sct_rule_action%rowtype);
     
+    
+  /* Method to add translated data 
+   * %param  p_table_shortcut  Prefix that is used in the respective table. Will prefix the translated PTI_ID
+   * %param  p_item_id         Name of the item for which a translation needs to be added
+   * %param  p_pmg_name        Name of the language. One of the Oracle supported language names
+   * %param  p_name            Translation for names
+   * %param  p_display_name    Translation for display names
+   * %param  p_description     Translation for descriptions and help texts
+   * %usage  Is used to add translated names and descriptions for existing entries in the tables of SCT
+   */
+  procedure add_translation(
+    p_table_shortcut in varchar2,
+    p_item_id in varchar2,
+    p_pml_name pit_message_language.pml_name%type,
+    p_name in pit_translatable_item.pti_name%type,
+    p_display_name in pit_translatable_item.pti_display_name%type,
+    p_description in pit_translatable_item.pti_description%type);
     
 end sct_admin;
 /

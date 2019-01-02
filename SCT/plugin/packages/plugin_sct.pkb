@@ -472,7 +472,6 @@ as
     sct_internal.read_settings(
       p_firing_item => apex_application.g_x01,
       p_event => apex_application.g_x02,
-      p_with_comments => p_plugin.attribute_02,
       p_rule_group_name => p_dynamic_action.attribute_01,
       p_error_dependent_items => p_dynamic_action.attribute_02);
     
@@ -515,7 +514,6 @@ as
     sct_internal.read_settings(
       p_firing_item => apex_application.g_x01,
       p_event => apex_application.g_x02,
-      p_with_comments => p_plugin.attribute_02,
       p_rule_group_name => p_dynamic_action.attribute_01,
       p_error_dependent_items => p_dynamic_action.attribute_02);
     

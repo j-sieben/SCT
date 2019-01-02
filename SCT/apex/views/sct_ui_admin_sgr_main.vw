@@ -3,7 +3,8 @@ with params as (
        select v('APP_ID') app_id,
               v('P1_SGR_APP_ID') sgr_app_id,
               v('P1_SGR_PAGE_ID') sgr_page_id,
-              case when instr(apex_util.get_groups_user_belongs_to(v('APP_USER')), 'SCT_ADMIN') > 0 then 'Y' else 'N' end is_sct_admin
+              sct_util.get_true is_true,
+              case when instr(apex_util.get_groups_user_belongs_to(v('APP_USER')), 'SCT_ADMIN') > 0 then sct_util.get_true else sct_util.get_false end is_sct_admin
          from dual
        ),
        rule_details as (
@@ -20,7 +21,7 @@ select /*+ NO_MERGE (p) */
        app.application_name || ' (' || app.application_id || ')' application_name,
        pag.page_name || ' (Seite ' || pag.page_id || ')' page_name,
        coalesce(sru.sru_amount, 0) sru_amount, coalesce(saa.saa_amount, 0) saa_amount,
-       case sgr_active when 'Y' then 'fa-check' else 'fa-times' end sgr_active
+       case sgr_active when is_true then 'fa-check' else 'fa-times' end sgr_active
   from sct_rule_group sgr
   left join rule_details sru
     on sgr.sgr_id = sru.sru_sgr_id
@@ -35,4 +36,4 @@ select /*+ NO_MERGE (p) */
     on (sgr.sgr_app_id = p.sgr_app_id or p.sgr_app_id is null)
    and (sgr.sgr_page_id = p.sgr_page_id or p.sgr_page_id is null)
  where sgr.sgr_app_id != app_id
-    or p.is_sct_admin = 'Y';
+    or p.is_sct_admin = is_true;

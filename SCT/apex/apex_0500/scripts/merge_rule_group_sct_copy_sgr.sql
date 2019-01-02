@@ -21,8 +21,8 @@ begin
     p_sgr_description => q'|Regeln zur Dialogseite "Regelgruppe kopieren"|',
     p_sgr_app_id => l_app_id,
     p_sgr_page_id => 4,
-    p_sgr_with_recursion => 'Y',
-    p_sgr_active => 'Y');
+    p_sgr_with_recursion => sct_util.C_TRUE,
+    p_sgr_active => sct_util.C_TRUE);
   
   
   sct_admin.propagate_rule_change(sct_admin.map_id(68));

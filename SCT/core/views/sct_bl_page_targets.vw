@@ -44,5 +44,3 @@ create or replace force view sct_bl_page_targets as
         union all
        select sgr_id, 'ALL', 'ALL', null, null, null, null, null
          from sct_rule_group);
-
-show errors;
