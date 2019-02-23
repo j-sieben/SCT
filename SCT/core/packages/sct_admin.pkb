@@ -17,10 +17,10 @@ as
   g_id_map id_map_t;
   
   
-  /* Method to generate initialization code that copies initial page item values to the session state
-   * %param  p_sgr_id  Rule group ID
-   * %return Anonymous PL/SQL block that copies the actual session state values into the session state
-   * %usage  Is used to copy initial values into the session state during page rendering. This is required to assure that
+  /** Method to generate initialization code that copies initial page item values to the session state
+   * @param  p_sgr_id  Rule group ID
+   * @return Anonymous PL/SQL block that copies the actual session state values into the session state
+   * @usage  Is used to copy initial values into the session state during page rendering. This is required to assure that
    *         any rule that is based on certain session state values is processed at initialization time
    */
   function create_initialization_code(
@@ -84,10 +84,10 @@ as
   end create_initialization_code;
   
   
-  /* Method to harmonize table SCT_PAGE_ITEM against APEX Data Dictionary
-   * %param  p_sgr_id         Rule group ID
-   * %param [p_new_condition] If a new rule is created, the new rule condition must be obeyed as well
-   * %usage  If a rule group changes, all rules and page elements are checked against each other.
+  /** Method to harmonize table SCT_PAGE_ITEM against APEX Data Dictionary
+   * @param  p_sgr_id         Rule group ID
+   * @param [p_new_condition] If a new rule is created, the new rule condition must be obeyed as well
+   * @usage  If a rule group changes, all rules and page elements are checked against each other.
    *         The resulting values are used as the basis for a single rule.
    *         Additionally, this method is called if a new rule is created to check whether the condition
    *         is syntactically plausible. Therefore, the new condition (which is not stored in the tables yet)
@@ -230,9 +230,9 @@ as
   end harmonize_sct_page_item;
   
 
-  /* Helper to harmonize page items which are referenced by a rule at table SCT_RULE
-   * %param  p_sgr_id  Rule group ID
-   * %usage  Method extracts page item names from a rule condition using regex C_REGEX_ITEM
+  /** Helper to harmonize page items which are referenced by a rule at table SCT_RULE
+   * @param  p_sgr_id  Rule group ID
+   * @usage  Method extracts page item names from a rule condition using regex C_REGEX_ITEM
    *         Used to validate a rule condition and further application logic
    */
   procedure harmonize_firing_items(
@@ -260,8 +260,8 @@ as
   end harmonize_firing_items;
 
 
-  /* Helper to remove rule group views which remain at the database after removing a rule group
-   * %usage Is called upon rule group changes to perform sct rule group view housekeeping
+  /** Helper to remove rule group views which remain at the database after removing a rule group
+   * @usage Is called upon rule group changes to perform sct rule group view housekeeping
    */
   procedure delete_pending_rule_views
   as
@@ -284,9 +284,9 @@ as
   end delete_pending_rule_views;
 
 
-  /* Method to generate a rule group view
-   * %param  p_sgr_id  Rule group ID
-   * %usage  Creates a rule group view
+  /** Method to generate a rule group view
+   * @param  p_sgr_id  Rule group ID
+   * @usage  Creates a rule group view
    */
   procedure create_rule_view(
     p_sgr_id in sct_rule_group.sgr_id%type)
@@ -349,9 +349,9 @@ as
   end create_rule_view;
   
   
-  /* Helper to resequence rules and rule actions
-   * %param  p_sgr_id  Rule group ID
-   * %usage  Is called automatically upon change of a rule group to resequence all entries in steps of 10
+  /** Helper to resequence rules and rule actions
+   * @param  p_sgr_id  Rule group ID
+   * @usage  Is called automatically upon change of a rule group to resequence all entries in steps of 10
    */
   procedure resequence_rule_group(
     p_sgr_id in sct_rule_group.sgr_id%type)
@@ -1175,7 +1175,7 @@ as
              from utl_text_templates
             where uttm_type = C_SCT
               and uttm_name = C_UTTM_NAME
-              and uttm_mode = 'DEFAULT')
+              and uttm_mode = C_DEFAULT)
     select utl_text.generate_text(cursor(
              select p.template, p.condition,
                     utl_text.generate_text(cursor(
@@ -1302,6 +1302,7 @@ as
     p_spt_id in sct_action_param_type.spt_id%type,
     p_spt_name in pit_translatable_item.pti_name%type,
     p_spt_description in pit_translatable_item.pti_description%type,
+    p_spt_item_type in sct_action_param_type.spt_item_type%type,
     p_spt_active in sct_action_param_type.spt_active%type default SCT_UTIL.C_TRUE)
   as
     l_pti_id pit_translatable_item.pti_id%type;
@@ -1320,13 +1321,15 @@ as
     using (select p_spt_id spt_id,
                   l_pti_id spt_pti_id,
                   C_SCT spt_pmg_name,
+                  p_spt_item_type spt_item_type,
                   sct_util.get_boolean(p_spt_active) spt_active
              from dual) s
        on (t.spt_id = s.spt_id)
      when matched then update set
+          t.spt_item_type = s.spt_item_type,
           t.spt_active = s.spt_active
-     when not matched then insert(spt_id, spt_pti_id, spt_pmg_name, spt_active)
-          values(s.spt_id, s.spt_pti_id, s.spt_pmg_name, s.spt_active);
+     when not matched then insert(spt_id, spt_pti_id, spt_pmg_name, spt_item_type, spt_active)
+          values(s.spt_id, s.spt_pti_id, s.spt_pmg_name, s.spt_item_type, s.spt_active);
   end merge_action_param_type;
   
     
@@ -1338,6 +1341,7 @@ as
       p_spt_id => p_row.spt_id,
       p_spt_name => p_row.spt_name,
       p_spt_description => p_row.spt_description,
+      p_spt_item_type => p_row.spt_item_type,
       p_spt_active => p_row.spt_active);      
   end merge_action_param_type;
   
@@ -1363,6 +1367,8 @@ as
     p_sif_id in sct_action_item_focus.sif_id%type,
     p_sif_name in pit_translatable_item.pti_name%type,
     p_sif_description in pit_translatable_item.pti_description%type,
+    p_sif_actual_page_only in sct_action_item_focus.sif_actual_page_only%type default sct_util.C_TRUE,
+    p_sif_item_types in sct_action_item_focus.sif_item_types%type,
     p_sif_active in sct_action_item_focus.sif_active%type default sct_util.C_TRUE)
   as
     l_pti_id pit_translatable_item.pti_id%type;
@@ -1381,13 +1387,17 @@ as
     using (select p_sif_id sif_id,
                   l_pti_id sif_pti_id,
                   C_SCT sif_pmg_name,
+                  sct_util.get_boolean(p_sif_actual_page_only) sif_actual_page_only,
+                  p_sif_item_types sif_item_types,
                   sct_util.get_boolean(p_sif_active) sif_active
              from dual) s
        on (t.sif_id = s.sif_id)
      when matched then update set
+          t.sif_actual_page_only = s.sif_actual_page_only,
+          t.sif_item_types = s.sif_item_types,
           t.sif_active = s.sif_active
-     when not matched then insert(sif_id, sif_pti_id, sif_pmg_name, sif_active)
-          values(s.sif_id, s.sif_pti_id, s.sif_pmg_name, s.sif_active);
+     when not matched then insert(sif_id, sif_pti_id, sif_pmg_name, sif_actual_page_only, sif_item_types, sif_active)
+          values(s.sif_id, s.sif_pti_id, s.sif_pmg_name, s.sif_actual_page_only, s.sif_item_types, s.sif_active);
   end merge_action_item_focus;
     
     
@@ -1399,6 +1409,8 @@ as
       p_sif_id => p_row.sif_id,
       p_sif_name => p_row.sif_name,
       p_sif_description => p_row.sif_description,
+      p_sif_actual_page_only => p_row.sif_actual_page_only,
+      p_sif_item_types => p_row.sif_item_types,
       p_sif_active => p_row.sif_active);      
   end merge_action_item_focus;
   
@@ -1562,7 +1574,7 @@ as
                    spt.spt_id, spt.spt_name, sct_util.to_bool(spt.spt_active) spt_active, 
                    utl_text.wrap_string(spt.spt_description, C_WRAP_START, C_WRAP_END) spt_description
               from sct_action_param_type_v spt
-             where decode(p_sat_is_editable, 'N', 1, null, 1, 0) = 1
+             where decode(p_sat_is_editable, sct_util.C_FALSE, 1, null, 1, 0) = 1
           ))
       into l_action_param_types
       from utl_text_templates p
@@ -1575,7 +1587,7 @@ as
                    sif.sif_id, sif.sif_name, sct_util.to_bool(sif.sif_active) sif_active, 
                    utl_text.wrap_string(sif.sif_description, C_WRAP_START, C_WRAP_END) sif_description
               from sct_action_item_focus_v sif
-             where decode(p_sat_is_editable, 'N', 1, null, 1, 0) = 1
+             where decode(p_sat_is_editable, sct_util.C_FALSE, 1, null, 1, 0) = 1
           ))
       into l_action_item_focus
       from utl_text_templates p
@@ -1588,7 +1600,7 @@ as
                    stg.stg_id, stg.stg_name, sct_util.to_bool(stg.stg_active) stg_active, 
                    utl_text.wrap_string(stg.stg_description, C_WRAP_START, C_WRAP_END) stg_description
               from sct_action_type_group_v stg
-             where decode(p_sat_is_editable, 'N', 1, null, 1, 0) = 1
+             where decode(p_sat_is_editable, sct_util.C_FALSE, 1, null, 1, 0) = 1
           ))
       into l_action_type_groups
       from utl_text_templates p

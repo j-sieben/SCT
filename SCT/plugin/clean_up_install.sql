@@ -12,7 +12,7 @@ declare
             from all_objects
            where object_name in (
                  '', -- Typen
-                 'PLUGIN_SCT', -- Packages
+                 'PLUGIN_SCT', 'SCT_INTERNAL', 'SCT_VALIDATION', 'UTL_APEX_ACTION', -- Packages
                  '', -- Views
                  '',   -- Tabellen
                  '',  -- Synonyme

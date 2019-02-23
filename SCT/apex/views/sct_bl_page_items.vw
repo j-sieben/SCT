@@ -1,19 +1,32 @@
 create or replace view sct_bl_page_items as
-select 'Element ' || item_name item_name, item_name item_id,
-       application_id app_id
-       , page_id
+  with pti as(
+       select pti_id, pti_name, replace(pti_id, 'ITEM_TYPE_') item_type
+         from pit_translatable_item
+        where pti_pmg_name = 'SCT'
+          and pti_id like 'ITEM_TYPE%')
+select pti_name || ' ' || item_name item_name, item_name item_id,
+       application_id app_id, page_id, item_type
   from apex_application_page_items
+  join pti on item_type = 'ELEMENT'
 union all
-select 'Seitenelement ' || item_name, item_name,
-       application_id, 0
+select pti_name || ' ' || item_name, item_name,
+       application_id, 0, item_type
   from apex_application_items
+  join pti on item_type = 'PAGE_ELEMENT'
 union all
-select 'Schaltfläche ' || button_static_id, button_static_id,
-       application_id, page_id
+select pti_name || ' ' || button_static_id, button_static_id,
+       application_id, page_id, item_type
   from apex_application_page_buttons
+  join pti on item_type = 'BUTTON'
  where button_static_id is not null
 union all
-select 'Region ' || static_id, static_id,
-       application_id, page_id
+select pti_name || ' ' || static_id, static_id,
+       application_id, page_id, item_type
   from apex_application_page_regions
- where static_id is not null;
+  join pti on item_type = 'REGION'
+ where static_id is not null
+union all
+select ' ' || pti_name, item_type,
+       application_id, page_id, item_type
+  from apex_application_pages
+  join pti on item_type = 'DOCUMENT';

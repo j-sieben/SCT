@@ -18,6 +18,21 @@ prompt &s1.Create view APEX_UI_LIST_MENU
 prompt &s1.Create view SCT_BL_PAGE_ITEMS
 @&view_dir.sct_bl_page_items.vw
 
+prompt &s1.Create view SCT_BL_SAT_HELP
+@&view_dir.sct_bl_sat_help.vw
+
+prompt &s1.Create view SCT_PARAM_LOV_APEX_ACTION
+@&view_dir.sct_param_lov_apex_action.vw
+
+prompt &s1.Create view SCT_PARAM_LOV_PAGE_ITEM
+@&view_dir.sct_param_lov_page_item.vw
+
+prompt &s1.Create view SCT_PARAM_LOV_PIT_MESSAGE
+@&view_dir.sct_param_lov_pit_message.vw
+
+prompt &s1.Create view SCT_PARAM_LOV_SEQUENCE
+@&view_dir.sct_param_lov_sequence.vw
+
 prompt &s1.Create view SCT_UI_ADMIN_SAT
 @&view_dir.sct_ui_admin_sat.vw
 
@@ -84,6 +99,9 @@ prompt &s1.Create view SCT_UI_LOV_YES_NO
 prompt &h2.Merge default data
 prompt &h3.Create MESSAGES
 @&msg_dir.create_messages.sql
+
+prompt &h3.Create TRANSLATABLE ITEMS
+@&msg_dir.create_translatable_items.sql
 
 
 prompt &h2.Create PL/SQL objects

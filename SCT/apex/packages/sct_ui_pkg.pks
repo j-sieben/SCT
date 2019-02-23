@@ -2,31 +2,35 @@ create or replace package sct_ui_pkg
   authid definer
 as
 
-  /* Maintain SCT rules via an APEX frontend
-   * %author Juergen Sieben, ConDeS GmbH
-   * %usage  This package implements the methods required to maintain SCT rule groups via an APEX application
+  /** Maintain SCT rules via an APEX frontend
+   * @author Juergen Sieben, ConDeS GmbH
+   * @headcom
+   * @usage  This package implements the methods required to maintain SCT rule groups via an APEX application
    */
    
   /* Getter/Setter */
   
-  /* Methode zur Aktualisierung der Regionsueberschrift von Regelgruppen */
+  /** Method to adjust rule group region headers
+   * @return String that is set as the new region header
+   */
   function set_rule_overview_heading
     return varchar2;
 
 
-  /* Kopiert eine Regelgruppe auf eine andere Anwendung/Anwendungsseite
-   * %usage Soll eine Anwendung kopiert werden, koennen mit dieser Funktion
-   *        die definierten Regelgruppen in die neue Anwendung uebernommen werden.
+  /** Method to copy a rule group to a different application or application page
+   * @usage  Is used after an APEX application has been copiued to a different ID within the same workspace
+   *         to copy all rule groups to the newly created application
    */
   procedure copy_sgr;
     
   
-  /* Prozedur veranlasst den Export einer oder mehrerer Regelgruppen. Die Regelgruppen
-   * werden als Datei auf den Client-rechner geladen
+  /** Method to export one or many rule groups as a zip or clob file to the application page as download
    */
   procedure process_export_sgr;
   
-  /* Methode ermittelt auf Basis des SessionState die initiale Art des Regelgruppenexports */
+  /** Method to calculate the initial export state based on session state settings
+   * @return One of the states ALL|APP|SGR
+   */
   function get_export_type
     return varchar2;
   
@@ -36,97 +40,116 @@ as
   function validate_edit_sgr
     return boolean;
     
-  /* Methode zur Verarbeiten der Seite EDIT_GROUP
+  /** Method to process user data from page EDIT_SGR
    */
   procedure process_edit_sgr;
   
   
-  /* Methode zum Fuellen einer APEX-Collection der Regelaktionen
-   * %usage  Wird beim Initialisieren der Seite EDIT_SRU aufgerufen, um bestehende Aktionen in die Collection zu kopieren-
-   *         Erforderlich, um per modalen Dialog neue Aktionen aufnehmen zu koennen, ohne diese direkt in die DB speichern
-   *         zu muessen
+  /** Method toi initialize an APEX collection for SRA (SCT Rule Actions)
+   * @usage  Is called upon initialization of page EDIT_SRU to copy existing rule actions to an APEX collection.
+   *         Required to capture new rule actions without  saving them to the target table directly
    */
   procedure initialize_sra_collection;
   
   
-  /* Methode zum Fuellen einer APEX-Collection der APEX-Aktionen
-   * %usage  Wird beim Initialisieren der Seite EDIT_SAA aufgerufen, um bestehende Aktionen in die Collection zu kopieren-
-   *         Erforderlich, um per modalen Dialog neue Aktionen aufnehmen zu koennen, ohne diese direkt in die DB speichern
-   *         zu muessen
+  /** Method to initialize an APEX collection for SAA (SCT APEX Action)
+   * @usage  Is called upon initialization of page EDIT_SGR to copy existing rule actions to an APEX collection.
+   *         Required to capture new rule actions without  saving them to the target table directly
    */
   procedure initialize_saa_collection;
   
   
-  /* Methode zur Validierung einer Regelbedingung
-   * %usage  Wird aufgerufen, um eine Regelbedingung zu testen.
-   *         Registriert eventuelle Fehler im APEX Error Stack
+  /** Method to validate a rule condition
+   * @usage  Is called to validate a rule condition.
+   *         Register any error with the SCT error stack.
    */
   procedure validate_rule;
   
   
-  /* Methode zum Validieren der Seite EDIT_RULE
+  /** Method to validate page EDIT_SRU
+   * @usage  Is called to validate user data if the page is submitted
    */
   function validate_edit_sru
     return boolean;
     
-  /* Methode zur Verarbeiten der Seite EDIT_RULE
+  /** Method to process page EDIT_SRU
+   * @usage  Is called to process user data if the page is submitted
    */
   procedure process_edit_sru;
   
   
-  /* Method to prepare or update page EDIT_SRA based on Action Type selection
+  /** Method to prepare or update page EDIT_SRA based on Action Type selection
+   * @usage  Is called if relevant changes are reported to SCT
    */
   procedure configure_edit_sra;
   
   
-  /* Methode zum Validieren der Seite EDIT_RULE, Interactive Grid RULE_ACTION
+  /** Method to validate page EDIT_SRA
+   * @usage  Is called to validate user data if the page is submitted
    */
   function validate_edit_sra
     return boolean;
     
-  /* Methode zur Verarbeiten der Seite EDIT_RULE, Interactive Grid RULE_ACTION
+  /** Method to process page EDIT_SRA
+   * @usage  Is called to process user data if the page is submitted
    */
   procedure process_edit_sra;
   
   
-  /* Methode zum Validieren der Seite EDIT_SAA
+  /** Method to validate page EDIT_SAA
+   * @usage  Is called to validate user data if the page is submitted
    */
   function validate_edit_saa
     return boolean;
     
-  /* Methode zur Verarbeiten der Seite EDIT_SAA
+  /** Method to process page EDIT_SAA
+   * @usage  Is called to process user data if the page is submitted
    */
   procedure process_edit_saa;
     
 
-  /* Hilfsfunktion zur Ermittlung der naechsten Sequenznummer fuer Regeln
-   * %return Naechste Sequenznummer
-   * %usage Wird von der Anwendung genutzt, um eine neue Sequenznummer vorzublenden
+  /** Helper to calculate the next sort sequence number for a Rule
+   * %return Next sort sequence value
+   * @usage  Is used to preset the sort sequence if a new rule is added.
+   *         Calculated in steps of 10
    */
   function get_sru_sort_seq
     return number;
     
 
-  /* Hilfsfunktion zur Ermittlung der naechsten Sequenznummer fuer Regelaktionen
-   * %return Naechste Sequenznummer
-   * %usage Wird von der Anwendung genutzt, um eine neue Sequenznummer vorzublenden
+  /** Helper to calculate the next sort sequence number for a Rule Action
+   * %return Next sort sequence value
+   * @usage  Is used to preset the sort sequence if a new rule action is added.
+   *         Calculated in steps of 10
    */
   function get_sra_sort_seq
     return number;
     
-  /* Hilfsfunktionen fuer Aktionstypen
-   * %usage Liefert einen Hilfstext fuer Aktionstypen
+    
+  /** Method to calculate a help text for an Action Type
+   * @usage  Prints a help text based on action type metadata via the http stream.
    */
   procedure get_action_type_help;
     
     
-  /* Methoden zur Kontrolle von APEX-Aktionen */
+  /** Method to maintain APEX actions for page ADMIN_SGR
+   * @usage  Is called if relevant changes are reported to SCT
+   */
   procedure set_action_admin_sgr;
   
+  /** Method to maintain APEX actions for page EDIT_SGR
+   * @usage  Is called if relevant changes are reported to SCT
+   */
   procedure set_action_edit_sgr;
   
+  /** Method to maintain APEX actions for page EXPORT_SGR
+   * @usage  Is called if relevant changes are reported to SCT
+   */
   procedure set_action_export_sgr;
   
+  /** Method to maintain APEX actions for page EDIT_SRU
+   * @usage  Is called if relevant changes are reported to SCT
+   */
   procedure set_action_edit_sru;
 
 end sct_ui_pkg;

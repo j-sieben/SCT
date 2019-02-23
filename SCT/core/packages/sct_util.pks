@@ -33,6 +33,23 @@ as
   function get_boolean(
     p_bool in varchar2)
     return sct_util.flag_type;
+    
+  
+  function bool_to_flag(
+    p_bool in boolean)
+    return sct_util.flag_type;
+    
+  
+  /* Wrapper around TO_NUMBER that extracts a GROUP selector from the conversion map
+   * @param  p_number      Number string to convert
+   * @param  p_conversion  Conversion mask, possibly containing a group selector
+   * @return Converted number
+   * @usage  Is used to extract a group selector from the conversion mask to avoid errors
+   */
+  function to_number(
+    p_number in varchar2,
+    p_conversion in varchar2)
+    return number;
   
   /* Helper to create a string sct_util.C_TRUE/FALSE based upon parameter value.
    * %param  p_bool  Flag to indicate which string is required

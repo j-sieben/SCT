@@ -1,279 +1,292 @@
 create or replace package sct_internal
   authid definer
-  accessible by (package plugin_sct, package sct_ui, package sct_validation, package sct_ui)
-as 
-  
-  type environment_rec is record(
-    sgr_id sct_rule_group.sgr_id%type,               -- ID der Regelgruppe
-    sru_id sct_rule.sru_id%type,                     -- ID der Regel
-    firing_item sct_page_item.spi_id%type,           -- Element das die Bearbeitung ausloest (oder DOCUMENT)
-    firing_event sct_page_item_type.sit_event%type   -- Ereignis das die Bearbeitung ausloest
-  );
-  
-  C_PAGE_ITEMS constant number := 1;
-  C_FIRING_ITEMS constant number := 2;
-  
-  /* getter-Funktionen fuer das PLUGIN_SCT und UI_SCT_PKG */
-  /* Funktion liefert den Namen des ausloesenden APEX-Elements. Falls kein Element
-   * ausgeloest hat, wird DOCUMENT geliefert.
+  --accessible by (package plugin_sct, package sct_ui, package sct_validation)
+as
+
+  /** Package SCT_INTERNAL to maintain State Charts as a dynamic action plugin
+   * @author Juergen Sieben, ConDeS GmbH
+   * @usage  Used to implement the internal logic of SCT.
+   * @headcom
    */
-  function get_firing_item
+   
+  /* Record with environmental information about the actually executed rule
+   * @usage  Is used in sct_validation for checks against the meta data of SCT
+   */
+  type environment_rec is record(
+    sgr_id sct_rule_group.sgr_id%type,
+    app_id sct_rule_group.sgr_app_id%type,
+    page_id sct_rule_group.sgr_page_id%type);
+
+  /* Internal methods to support the plugin functionality */
+
+  /** Getter to retriece all elements that needs to be bound to an event handler as JSON
+   * @return JSON instance containing name and event of all relevant page items
+   * @usage  Is called during plugin initialization.
+   *         The instance contains all relevant elements SCT needs to observe, along with the event it watches. For these items
+   *         SCT will instantiate an event handler that calls SCT.
+   */
+  function get_bind_items_as_json
+    return clob;
+    
+    
+  /** Method to retrieve the value of a page item as char
+   * @param  p_spi_id  ID of the page item
+   * @return Value of the requested page item
+   * @usage  Is used to get the value of a page item.
+   *         As an extension to V(P_SPI_ID) this method retrieves a default value as defined within the APEX data dictionary
+   *         if the actual value of the page item is NULL
+   */
+  function get_char(
+    p_spi_id in sct_page_item.spi_id%type)
     return varchar2;
     
+    
+  /** Method to retrieve the value of a page item as char
+   * @param  p_spi_id       ID of the page item
+   * @param  p_format_mask  Format mask that is used to convert the string representation within the session state
+   * @param [p_throw_error] Flag to indicate whether a non successful conversion is treated as an error. Defaults to C_TRUE.
+   *                        - C_TRUE: an error is registered and thrown
+   *                        - C_FALSE: an error is registered but not thrown
+   * @return DATE value
+   * @usage  Is used to convert a session state string value into date
+   *         Depending on parameter P_THROW_ERROR an error is not only register upon unsuccessful conversion but thrown as well.
+   *         This is useful if a rule cannot be processed any further if the conversion is not successful.
+   *         If the element is mandatory and NULL, a default value is returned as defined in the APEX metadata
+   */
+  function get_date(
+    p_spi_id in sct_page_item.spi_id%type,
+    p_format_mask in varchar2,
+    p_throw_error in sct_util.flag_type default sct_util.C_TRUE)
+    return date;
+
+
+  /* Getter to read the error status
+   * @return TRUE if the execution of the SCT rule encountered an error, FALSE if not
+   */
+  function get_error_flag
+    return boolean;
+
+
+  /** Getter to get the event that was raised.
+   * @return Name of the event
+   */
   function get_event
     return varchar2;
     
-  /* Funktion liefert eine Liste von Elementen, die durch den uebergebenen
-   * jQuery-Ausdruck identifiziert werden konnten.
-   * %param p_spi_id ITEM-ID, muss DOCUMENT sein, ansonsten wird von einem Element ausgegangen
-   * %param p_param_2 jQuery-Ausdruck, der zu Elementen evaluiert wird
-   * %return Instanz von CHAR_TABLE mit den Namen der Elemente
-   * %usage Analysiert den uebergebenen jQuery-Ausdruck und ermittelt die angesprochenen Elemente.
-   *        Moegliche Auspraegungen:
-   *        - CSS-Klasse oder CSS-Klassen, durch Kommata getrennt
-   *          Elemente muessen die entsprechende Klasse als Element-CSS enthalten
-   *        - Komma-separierte Liste von IDs
-   *          Die IDs muessen inklusive vorangestelltem #-Zeichen angegeben werden
+
+  /** Getter to get the name of the firing item. If NULL, DOCUMENT is returned
+   * @return Name of the firing item or DOCUMENT if NULL
    */
-  function get_firing_items(
+  function get_firing_item
+    return varchar2;
+  
+  
+  /** Method to retrieve the value of a page item as number
+   * @param  p_spi_id       ID of the page item
+   * @param  p_format_mask  Format mask that is used to convert the string representation within the session state
+   * @param [p_throw_error] Flag to indicate whether a non successful conversion is treated as an error. Defaults to C_FALSE.
+   *                        - C_TRUE: an error is registered and thrown
+   *                        - C_FALSE: an error is registered but not thrown
+   * @return DATE value
+   * @usage  Is used to convert a session state string value into date
+   *         Depending on parameter P_THROW_ERROR an error is not only register upon unsuccessful conversion but thrown as well.
+   *         This is useful if a rule cannot be processed any further if the conversion is not successful.
+   *         If the element is mandatory and NULL, a default value is returned as defined in the APEX metadata
+   */
+  function get_number(
     p_spi_id in sct_page_item.spi_id%type,
-    p_param_2 in sct_rule_action.sra_param_2%type)
-    return char_table;
+    p_format_mask in varchar2,
+    p_throw_error in sct_util.flag_type default sct_util.c_false)
+    return number;
     
-  
-  /* Stack maintenance */
-  /* Stackverwaltung, legt ein Seitenelement auf den Elementestack
-   * %param p_item_name Name des Seitenelements, das auf den Stack gelegt werden soll
-   * %usage Wird verwendet, um Elementlisten fuer Seitenelemente zu pflegen
+
+  /** Getter to retrieve a list of elements that potentially have changed during execution of SCT
+   * @return C_DELIMITER delimited list of page items that potentially have changed
+   * @usage  Is used to put together a C_DELIMITER delimited list of page items.
    */
-  procedure push_page_item(
-    p_item_name in sct_page_item.spi_id%type);
+  function get_page_items
+    return varchar2;
     
-    
-  /* Stackverwaltung, legt ein zu bindendes Element auf den Elementestack
-   * %param p_item_name Name des Seitenelements, das auf den Stack gelegt werden soll
-   * %usage Wird verwendet, um Elementlisten fuer relevante Seitenelemente zu pflegen
+
+  /** Method executes any initialization code of the rule group
+   * @usage Is called during initialization of SCT for the page. SCT requires the initial values of the page items and
+   *        needs to compute them, as APEX does not store them during initialization in an accessible manner.
+   *        To allow for this, SCT re-executes any page computation and row fetch process as far as possible
    */
-  procedure push_bind_item(
-    p_item_name in sct_page_item.spi_id%type);
-    
-    
-  /* Stackverwaltung, legt ein feuerndes Element auf den Elementestack
-   * %param p_item_name Name des Seitenelements, das auf den Stack gelegt werden soll
-   * %usage Wird verwendet, um Elementlisten fuer aufrufende Elemente zu pflegen
+  procedure process_initialization_code;
+
+
+  /** Method to process a SCT request
+   * @return JavaScript code in response to the request
+   * @usage  Is used to calculate the new status of the page based on the session state values and the underlying SCT rules.
    */
-  procedure push_firing_item(
-    p_item_name in varchar2);
-  
-    
-  /* Stackverwaltung, legt einen Fehler auf den Fehlerstack
-   * %param  p_error  APEX-Fehler, der auf den Fehlerstack gelegt werden soll
-   * %usage  Wird verwendet, um eine Liste der aufgelaufenden Fehler zu pflegen
+  function process_request
+    return clob;
+
+
+  /** Method pushes a page item onto the error stack.
+   * @param  p_error  APEX error of type APEX_ERROR.T_ERROR to push onto the stack
+   * @usage  Is called during execution of a rule, if an error is registered or if the page is to be
+   *         submitted. The stack collects any items that were "touched" by the rule(s) executed during
+   *         this processing step.
    */
   procedure push_error(
     p_error in apex_error.t_error);
     
-    
-  /* Hilfsprozedur zum Zusammenfuehren einer Liste von Werten des Item-Stacks in eine
-   * Liste, getrennt durch C_DELIMITER
-   * %param p_list Eine der Konnstanten C_PAGE_ITEMS|C_FIRING_ITEMS
-   * %return Zeichenkette mit den zusammengefuehrten Elementen
-   * %usage Wird verwendet, um eine Liste von Werten zur Uebergabe an die JSON-Antwort
-   *        zu generieren.
+
+  /** Method pushes a page item onto the firing item stack.
+   * @param  p_spi_id  ID of the page item to push onto the stack
+   * @usage  SCT maintains a list of all items that fired events.
    */
-  function join_list(
-    p_list in number)
-    return varchar2;
-  
+  procedure push_firing_item(
+    p_spi_id in varchar2);
     
-  /* Hilfsprozedur zum Umkopieren der Attribute auf einen globalen Record
-   * %param  p_firing_item           Ausloesendes Element
-   * %param  p_event                 Ausloesendes Ereignis
-   * %param  p_rule_group_name       Name der Regelgruppe
-   * %param  p_error_dependent_items Liste der Elemente, die bei Fehlern deaktiviert werden
-   * %usage  Wird vor dem Rendern und Refresh aufgerufen, um an zentraler Stelle
-   *         die APEX-Parameter auf lokale Variablen zu kopieren
+    
+  /** Helper to copy plugin settings to an internal record G_PARAM
+   * @param  p_firing_item           Firing item
+   * @param  p_event                 Firing event
+   * @param  p_rule_group_name       Name of the rule group
+   * @param  p_error_dependent_items List of page items that have to be deactivated if an error is on the page
+   * @usage  Is called before the actual rule action takes place (at the beginning of render and AJAX methods)
+   *         to copy the status to a package record.
    */
   procedure read_settings(
     p_firing_item in varchar2,
     p_event in varchar2,
     p_rule_group_name in varchar2,
     p_error_dependent_items in varchar2);
-    
-    
-  procedure notify(
-    p_message in varchar2);
-  
-  
-  procedure execute_javascript(
-    p_plsql in varchar2);
-      
-      
+
+
+  /* Methods to implement the SCT specific functionality */
+  /* @see plugin_sct.add_javascript */
   procedure add_javascript(
     p_javascript in varchar2);
-    
-  /* Hilfsfunktion zur Erzeugung eines JSON-Objekts fuer die relevanten Elemente
-   * der Regelgruppe
-   * %return JSON-Instanz mit ID und Event fuer alle relevanten Seitenelemente
-   * %usage Wird aufgerufen, wenn das Plugin initialisiert wird.
-   *        Ermittelt alle relevanten Elemente der Regelgruppe, die einen Event
-   *        binden sollen und erstellt aus der Liste eine JSON-Instanz, die durch
-   *        das Pugin zur Initialisierung ausgefuehrt wird.
-   */
-  function get_json_from_bind_items
-    return clob;
-  
-  
-  procedure set_session_state(
-    p_item in sct_page_item.spi_id%type,
-    p_value in varchar2,
-    p_allow_recursion in sct_util.flag_type default sct_util.C_TRUE,
-    p_param_2 in sct_rule_action.sra_param_2%type default null);
-    
-    
-  /* MANDATORY MAINTENANCE */
+
+
+  /* @see plugin_sct.check_date */
+  procedure check_date(
+    p_spi_id in sct_page_item.spi_id%type);
+
+
+  /* @see plugin_sct.execute_action */
+  procedure check_mandatory(
+    p_spi_id in sct_page_item.spi_id%type,
+    p_push_item out nocopy sct_page_item.spi_id%type);
+
+
+  /* @see plugin_sct.execute_action */
+  procedure check_number(
+    p_spi_id in sct_page_item.spi_id%type);
+
+
+  /* @see plugin_sct.execute_action */
+  procedure execute_action(
+    p_sat_id in sct_action_type.sat_id%type,
+    p_spi_id in sct_page_item.spi_id%type,
+    p_param_1 in sct_rule_action.sra_param_1%type,
+    p_param_2 in sct_rule_action.sra_param_2%type,
+    p_param_3 in sct_rule_action.sra_param_3%type);
+
+
+  /* @see plugin_sct.execute_javascript */
+  procedure execute_javascript(
+    p_plsql in varchar2);
+
+
+  /* @see plugin_sct.exclusive_or */
+  procedure exclusive_or(
+    p_spi_id in sct_page_item.spi_id%type,
+    p_value_list in varchar2,
+    p_message in varchar2,
+    p_error_on_null in boolean default false);
+
+
+  /* @see plugin_sct.exclusive_or */
+  function exclusive_or(
+    p_value_list in varchar2)
+    return number;
+
+
+  /* @see plugin_sct.notify */
+  procedure notify(
+    p_message in varchar2);
+
+
+  /* @see plugin_sct.not_null */
+  procedure not_null(
+    p_spi_id in sct_page_item.spi_id%type,
+    p_value_list in varchar2,
+    p_message in varchar2);
+
+
+  /* @see plugin_sct.not_null */
+  function not_null(
+    p_value_list in varchar2)
+    return number;
+
+
+  /* @see plugin_sct.register_error */
+  procedure register_error(
+    p_spi_id in varchar2,
+    p_error_msg in varchar2,
+    p_internal_error in varchar2);
+
+
+  /* @see plugin_sct.register_error */
+  procedure register_error(
+    p_spi_id in varchar2,
+    p_message_name in varchar2,
+    p_arg_list in msg_args default null);
+
+
+  /* @see plugin_sct.register_mandatory */
   procedure register_mandatory(
     p_spi_id in sct_page_item.spi_id%type,
     p_spi_mandatory_message in varchar2,
     p_is_mandatory in boolean,
     p_param_2 in sct_rule_action.sra_param_2%type default null);
-    
-    
-  procedure check_mandatory(
-    p_firing_item in sct_page_item.spi_id%type,
-    p_push_item out nocopy sct_page_item.spi_id%type);
-    
-    
-  /* CONVERSION FUNCTIONS */
-  function get_char(
-    p_spi_id in sct_page_item.spi_id%type)
-    return varchar2;
-  
-  
-  function get_number(
-    p_spi_id in sct_page_item.spi_id%type,
-    p_format_mask in varchar2,
-    p_throw_error in boolean default false)
-    return number;
-    
-  
-  procedure check_number(
-    p_spi_id in sct_page_item.spi_id%type);
-    
-    
-  function get_date(
-    p_spi_id in sct_page_item.spi_id%type,
-    p_format_mask in varchar2,
-    p_throw_error in boolean default false)
-    return date;
-    
-  
-  procedure check_date(
-    p_spi_id in sct_page_item.spi_id%type);
-    
-  
-  /* Setzt Flag, ob ein Fehler aufgetreten ist
-   * %usage Wird durch PLUGIN_SCT aufgerufen, falls ein Fehler aufgetreten ist
-   *        Das Flag wird mit jedem Rekursionslauf zurueckgesetzt, um zu ermoeglichen,
-   *        das Fehlerhandling in der Rekursion ausgefuehrt wird
-   */
-  procedure set_error_flag;
-  
-  function get_error_flag
-    return boolean;  
-    
-    
-  procedure register_item(
-    p_item in varchar2,
-    p_allow_recursion in sct_util.flag_type default sct_util.C_TRUE);
-    
-    
-  /* Methode analysiert, welche Seitenelemente durch die Aktion C_REGISTER_OBSERVER bei jedem
-   * Ereignis in den Session State kopiert werden muessen.
-   * %usage Wird waehrend der Initialisierung aufgerufen, um alle Elemente zu ermitteln,
-   *        deren Werte auf der Oberflaeche beim Ausloesen eines Events in den Session State
-   *        kopiert werden sollen. Dies ist erforderlich, wenn Elementwerte benoetigt werden,
-   *        auf den Elementen selbst aber keine Regeln aufgebaut werden sollen
-   */
-  function register_observer
-    return varchar2;
-    
-    
-  procedure register_error(
-    p_spi_id in varchar2,
-    p_error_msg in varchar2,
-    p_internal_error in varchar2);
-    
-  
-  procedure register_error(
-    p_spi_id in varchar2,
-    p_message_name in varchar2,
-    p_arg_list in msg_args default null);
-    
-    
+
+
+  /* @see plugin_sct.register_notification */
   procedure register_notification(
     p_text in varchar2);
-  
-  
+
+
+  /* @see plugin_sct.register_notification */
   procedure register_notification(
     p_message_name in varchar2,
     p_arg_list in msg_args);
     
-    
-  procedure submit_page;
-    
   
-  procedure stop_rule;
-      
-  
-  /* Hilfsmethode zur Ausgabe von Seitenelementwerten, basierend auf einem Filter
-   * %param  p_filter  Instanz von CHAR_TABLE mit einer Kombination aus CSS-Klassen oder Elementnamen
-   * %return Werte der gewählten Instanzen, ohne Verweis auf die Herkunft, nur die Werte
-   * %usage  Wird verwendet, um fuer eine Liste von Selektoren die Elementwerte auszugeben
-   *         Nur zur internen Verwendung, nicht ausserhalb des Packages verwenden.
-   */
-  function pipe_page_values(
-    p_filter in varchar2)
-    return char_table pipelined;
-    
-    
-  procedure xor(
-    p_item in varchar2,
-    p_value_list in varchar2,
-    p_message in varchar2,
-    p_error_on_null in boolean default false);
-    
-  
-  function xor(
-    p_value_list in varchar2)
-    return number;
-    
-    
-  procedure not_null(
-    p_item in varchar2,
-    p_value_list in varchar2,
-    p_message in varchar2);
-    
-    
-  function not_null(
-    p_value_list in varchar2)
-    return number;
-      
-  /* Methode fuehrt Initialisierungscode aus falls in Regelgruppe vorhanden
-   * %usage Wird aufgerufen, um die Standardwerte der Seitenelemente zu berechnen,
-   *        soweit moeglich. Dies ist Voraussetzung dafuer, dass SCT die Initialisierungsregeln
-   *        ohne Roundtrip zur Anwendungsseite berechnen kann.
-   */
-  procedure process_initialization_code;
+  /* @see plugin_sct.register_observer */
+  function register_observer
+    return varchar2;
 
-  
-  /* Methode zur Verarbeitung einer Anfrage des SCT ueber die Oberflaeche
-   * %return Antwort auf die Anfrage
-   * %usage Wird verwendet, um den aktuellen Sessionstatus gegen das hinterlegte
-   *        Regelwerk auszufuehren und eine passende Antwort fuer die aktuelle
-   *        Situation zu formulieren
-   */
-  function process_request
-    return clob;
+
+  /* @see plugin_sct.set_list_from_stmt */
+  procedure set_list_from_stmt(
+    p_spi_id in sct_page_item.spi_id%type,
+    p_stmt in varchar2);
+
+
+  /* @see plugin_sct.set_session_state */
+  procedure set_session_state(
+    p_spi_id in sct_page_item.spi_id%type,
+    p_value in varchar2,
+    p_allow_recursion in sct_util.flag_type default sct_util.C_TRUE,
+    p_param_2 in sct_rule_action.sra_param_2%type default null);
+
+
+  /* @see plugin_sct.set_value_from_stmt */
+  procedure set_value_from_stmt(
+    p_spi_id in sct_page_item.spi_id%type,
+    p_stmt in varchar2);
+
+
+  /* @see plugin_sct.stop_rule */
+  procedure stop_rule;
+
+
+  /* @see plugin_sct.submit_page */
+  procedure submit_page;
 end sct_internal;
-/

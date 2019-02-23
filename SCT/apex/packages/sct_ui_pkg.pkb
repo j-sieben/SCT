@@ -2,7 +2,7 @@ create or replace package body sct_ui_pkg
 as
 
   c_pkg constant sct_util.ora_name_type := $$PLSQL_UNIT;
-  
+
   C_SRA_COLLECTION constant sct_util.ora_name_type := 'SCT_UI_EDIT_SRA';
   C_SAA_COLLECTION constant sct_util.ora_name_type := 'SCT_UI_EDIT_SAA';
 
@@ -11,7 +11,7 @@ as
   g_edit_sru_row sct_rule%rowtype;
   g_edit_sra_row sct_ui_edit_sra%rowtype;
   g_edit_saa_row sct_ui_edit_saa%rowtype;
-  
+
 
   function clean_sct_name(
     p_name in varchar2)
@@ -25,8 +25,8 @@ as
   end clean_sct_name;
 
 
-  /* Helper to copy APEX session state values into type safe record structures
-   * %usage  Is called to copy the actual session state values entered into a type safe record structure.
+  /** Helper to copy APEX session state values into type safe record structures
+   * @usage  Is called to copy the actual session state values entered into a type safe record structure.
    *         Type casting is auto detected if APEX has knowledge of the type, fi by using a format mask.
    *         If this does not exist, it will try to find the type based on a fetch row process and a database column reference.
    */
@@ -119,7 +119,7 @@ as
   end copy_edit_saa;
 
 
-  /* INTERFACE */    
+  /* INTERFACE */
   function set_rule_overview_heading
     return varchar2
   as
@@ -128,15 +128,15 @@ as
     l_sgr_id sct_rule_group.sgr_id%type;
   begin
     l_sgr_id := to_number(v('P1_SGR_ID'));
-    select replace(c_script, '#HEADING#', 
+    select replace(c_script, '#HEADING#',
              pit.get_trans_item_name('SCT', 'SGR_REGION_HEADING', msg_args(
                apex_escape.html(sgr_description), to_char(sgr_id))))
       into l_script
       from sct_rule_group
      where sgr_id = l_sgr_id;
-     
+
     return l_script;
-  
+
   end set_rule_overview_heading;
 
 
@@ -154,7 +154,7 @@ as
 
 
   procedure process_export_sgr
-  as        
+  as
     cursor sgr_cur(p_sgr_app_id in sct_rule_group.sgr_app_id%type) is
       select sgr_id, lower(sgr_name) sgr_name
         from sct_rule_group
@@ -167,7 +167,7 @@ as
     l_clob clob;
     l_blob blob;
     l_zip_file blob;
-    
+
     C_FILE_NAME constant varchar2(100 byte) := 'merge_rule_group_#SGR_NAME#.sql';
     C_ZIP_APP_RULES_NAME constant sct_util.ora_name_type := 'application_#APP_ID#_rule_groups.zip';
     C_ZIP_ALL_RULES_NAME constant sct_util.ora_name_type := 'all_rule_groups.zip';
@@ -186,7 +186,7 @@ as
           from sct_rule_group
          where sgr_id = l_sgr_id;
         l_clob := sct_admin.export_rule_group(l_sgr_id);
-        
+
         l_blob := utl_text.clob_to_blob(l_clob);
         utl_apex.download_blob(l_blob, replace(C_FILE_NAME, '#SGR_NAME#', l_sgr_name));
       end if;
@@ -199,18 +199,18 @@ as
           p_file_name => replace(C_FILE_NAME, '#SGR_NAME#', sgr.sgr_name),
           p_content => l_blob);
       end loop;
-      
+
       apex_zip.finish(l_zip_file);
       utl_apex.download_blob(l_zip_file, replace(C_ZIP_APP_RULES_NAME, '#APP_ID#', l_sgr_app_id));
-    else  
-    
+    else
+
       -- export all rule groups, including action types
       l_blob := utl_text.clob_to_blob(sct_admin.export_action_types);
       apex_zip.add_file(
         p_zipped_blob => l_zip_file,
         p_file_name => 'merge_action_types.sql',
         p_content => l_blob);
-  
+
       for sgr in sgr_cur(null) loop
         l_blob := utl_text.clob_to_blob(sct_admin.export_rule_group(p_sgr_id => sgr.sgr_id));
         apex_zip.add_file(
@@ -218,36 +218,36 @@ as
           p_file_name => replace(C_FILE_NAME, '#SGR_NAME#', sgr.sgr_name),
           p_content => l_blob);
       end loop;
-  
+
       apex_zip.finish(l_zip_file);
-  
+
       utl_apex.download_blob(l_zip_file, C_ZIP_ALL_RULES_NAME);
     end case;
 
     pit.leave_mandatory;
   end process_export_sgr;
-  
-  
+
+
   function get_export_type
     return varchar2
   as
     l_export_type varchar2(20 byte);
   begin
     pit.enter_detailed;
-    
-    case when v('P8_SGR_ID') is not null then 
+
+    case when v('P8_SGR_ID') is not null then
       l_export_type := 'SGR';
     when v('P8_SGR_APP_ID') is not null then
       l_export_type := 'APP';
     else
       l_export_type := 'ALL_SGR';
     end case;
-    
+
     pit.leave_detailed;
     return l_export_type;
   end get_export_type;
-  
-  
+
+
   procedure initialize_sra_collection
   as
     cursor sra_cur(p_sru_id in sct_rule.sru_id%type) is
@@ -258,7 +258,7 @@ as
   begin
     pit.enter_optional;
     l_sru_id := to_number(v('P5_SRU_ID'));
-    
+
     apex_collection.create_or_truncate_collection(C_SRA_COLLECTION);
     for sra in sra_cur(l_sru_id) loop
       apex_collection.add_member(
@@ -278,11 +278,11 @@ as
         p_c009 => sra.sra_active,
         p_generate_md5 => sct_util.C_FALSE);
     END LOOP;
-    
+
     pit.leave_optional;
   end initialize_sra_collection;
-  
-  
+
+
   procedure initialize_saa_collection
   as
     cursor saa_cur(p_sgr_id in sct_rule_group.sgr_id%type) is
@@ -298,7 +298,7 @@ as
   begin
     pit.enter_optional;
     l_sgr_id := to_number(v('P6_SGR_ID'));
-    
+
     apex_collection.create_or_truncate_collection(C_SAA_COLLECTION);
     for saa in saa_cur(l_sgr_id) loop
       apex_collection.add_member(
@@ -329,7 +329,7 @@ as
         p_c022 => saa.saa_sai_list,
         p_generate_md5 => sct_util.C_FALSE);
     END LOOP;
-    
+
     pit.leave_optional;
   end initialize_saa_collection;
 
@@ -391,7 +391,7 @@ as
     else
       pit.error(msg.APEX_UNHANDLED_REQUEST, msg_args(v('REQUEST')));
     end case;
-    
+
     if utl_apex.updating then
       begin
         -- Copy data from Collection and merge into SCT_APEX_ACTION
@@ -401,7 +401,7 @@ as
            and saa_id not in(
                select saa_id
                  from sct_ui_edit_saa);
-         
+
         merge into sct_apex_action t
         using sct_ui_edit_saa s
            on (t.saa_id = s.saa_id)
@@ -427,20 +427,20 @@ as
                 t.saa_label_end_classes = s.saa_label_end_classes,
                 t.saa_item_wrap_class = s.saa_item_wrap_class
          when not matched then insert(
-                saa_id, saa_sgr_id, saa_sty_id, saa_name, saa_label, saa_context_label, saa_icon, saa_icon_type, saa_title, 
-                saa_shortcut, saa_initially_disabled, saa_initially_hidden, saa_href, saa_action, saa_on_label, saa_off_label, 
+                saa_id, saa_sgr_id, saa_sty_id, saa_name, saa_label, saa_context_label, saa_icon, saa_icon_type, saa_title,
+                saa_shortcut, saa_initially_disabled, saa_initially_hidden, saa_href, saa_action, saa_on_label, saa_off_label,
                 saa_get, saa_set, saa_choices, saa_label_classes, saa_label_start_classes, saa_label_end_classes, saa_item_wrap_class)
               values (
-                s.saa_id, s.saa_sgr_id, s.saa_sty_id, s.saa_name, s.saa_label, s.saa_context_label, s.saa_icon, s.saa_icon_type, s.saa_title, 
-                s.saa_shortcut, s.saa_initially_disabled, s.saa_initially_hidden, s.saa_href, s.saa_action, s.saa_on_label, s.saa_off_label, 
+                s.saa_id, s.saa_sgr_id, s.saa_sty_id, s.saa_name, s.saa_label, s.saa_context_label, s.saa_icon, s.saa_icon_type, s.saa_title,
+                s.saa_shortcut, s.saa_initially_disabled, s.saa_initially_hidden, s.saa_href, s.saa_action, s.saa_on_label, s.saa_off_label,
                 s.saa_get, s.saa_set, s.saa_choices, s.saa_label_classes, s.saa_label_start_classes, s.saa_label_end_classes, s.saa_item_wrap_class);
-            
+
         -- Copy data from Collection and merge into SCT_APEX_ACTION_ITEM
         delete from sct_apex_action_item
-         where sai_saa_id in 
+         where sai_saa_id in
                (select saa_id
                   from sct_ui_edit_saa);
-         
+
         insert into sct_apex_action_item(sai_saa_id, sai_spi_sgr_id, sai_spi_id)
         select saa_id, saa_sgr_id, column_value
           from sct_ui_edit_saa saa
@@ -453,26 +453,26 @@ as
 
     pit.leave_mandatory;
   end process_edit_sgr;
-  
-  
+
+
   procedure validate_rule
   as
     l_error varchar2(4000);
   begin
     pit.enter_mandatory;
-    
+
     sct_admin.validate_rule(
       p_sgr_id => v('P5_SRU_SGR_ID'),
       p_sru_condition => v('P5_SRU_CONDITION'),
       p_error => l_error);
-      
+
     if l_error is not null then
       plugin_sct.register_error(
         p_spi_id => 'P5_SRU_CONDITION',
         p_error_msg => l_error,
         p_internal_error => null);
     end if;
-      
+
     pit.leave_mandatory;
   end validate_rule;
 
@@ -483,7 +483,7 @@ as
   begin
     pit.enter_mandatory;
     --copy_edit_sru;
-    
+
     pit.leave_mandatory;
     return true;
   end validate_edit_sru;
@@ -503,14 +503,14 @@ as
         p_sru_fire_on_page_load => g_edit_sru_row.sru_fire_on_page_load,
         p_sru_sort_seq => g_edit_sru_row.sru_sort_seq,
         p_sru_active => g_edit_sru_row.sru_active);
-        
+
       -- Copy data from Collection and merge into SCT_RULE_ACTION
       delete from sct_rule_action
        where sra_sru_id = g_edit_sru_row.sru_id
          and sra_id not in(
              select sra_id
                from sct_ui_edit_sra);
-      
+
       begin
         merge into sct_rule_action t
         using sct_ui_edit_sra s
@@ -527,15 +527,15 @@ as
                 t.sra_active = s.sra_active,
                 t.sra_has_error = s.sra_has_error
          when not matched then insert (
-                sra_id, sra_sgr_id, sra_sru_id, sra_spi_id, sra_sat_id, sra_param_1, sra_param_2, 
+                sra_id, sra_sgr_id, sra_sru_id, sra_spi_id, sra_sat_id, sra_param_1, sra_param_2,
                 sra_comment, sra_on_error, sra_raise_recursive, sra_sort_seq, sra_active, sra_has_error)
               values(
-                s.sra_id, s.sra_sgr_id, g_edit_sru_row.sru_id, s.sra_spi_id, s.sra_sat_id, s.sra_param_1, s.sra_param_2, 
+                s.sra_id, s.sra_sgr_id, g_edit_sru_row.sru_id, s.sra_spi_id, s.sra_sat_id, s.sra_param_1, s.sra_param_2,
                 s.sra_comment, s.sra_on_error, s.sra_raise_recursive, s.sra_sort_seq, s.sra_active, s.sra_has_error);
       exception
         when NO_DATA_FOUND then
           null; -- No rule action added, ignore
-      end;        
+      end;
     when utl_apex.deleting then
       sct_admin.delete_rule(g_edit_sru_row.sru_id);
     else
@@ -543,8 +543,8 @@ as
     end case;
     sct_admin.propagate_rule_change(g_edit_sru_row.sru_sgr_id);
   end process_edit_sru;
-  
-  
+
+
   procedure configure_edit_sra
   as
     cursor action_type_cur(p_sat_id in sct_action_type.sat_id%type) is
@@ -552,7 +552,7 @@ as
              select sct_util.get_true is_active,
                     p_sat_id sat_id
                from dual)
-      select /*+ no_merge (p) */ 
+      select /*+ no_merge (p) */
              sat.sat_id, sat_sif_id, sap_sort_seq, spt_id, spt_item_type,
              coalesce(sap_display_name, spt_name) spt_name
         from sct_action_type_v sat
@@ -578,13 +578,14 @@ as
     l_sat_id sct_action_type.sat_id%type;
   begin
     l_sat_id := v('P11_SRA_SAT_ID');
-    
+    plugin_sct.execute_action(C_HIDE_ITEM, '.sct-hide');
+
     -- Adjust Parameter settings to show only required parameters in the correct format
     for param in action_type_cur(l_sat_id) loop
       l_region_id := 'R11_PARAMETER_' || param.sap_sort_seq;
       -- Show region
       plugin_sct.execute_action(C_SHOW_ITEM, l_region_id);
-      
+
       -- UI visibility and label
       case param.spt_item_type
       when 'SELECT_LIST' then
@@ -597,19 +598,19 @@ as
       else
         l_item_id := 'P11_SRA_PARAM_' || param.sap_sort_seq;
       end case;
-      
+
       plugin_sct.execute_action(C_SHOW_ITEM, l_item_id);
       plugin_sct.add_javascript(utl_text.bulk_replace(C_SET_LABEL, char_table('ITEM_ID', l_item_id, 'SPT_NAME', param.spt_name)));
-      
+
     end loop;
-    
+
     -- Generate Help text for action type
     select apex_escape.json(help_text)
       into l_help_text
       from sct_bl_sat_help
      where sat_id = l_sat_id;
     plugin_sct.add_javascript(utl_text.bulk_replace(C_SET_SAT_HELP, char_table('HELP_TEXT', l_help_text)));
-    
+
   exception
     when NO_DATA_FOUND then
       plugin_sct.add_javascript(utl_text.bulk_replace(C_SET_SAT_HELP, char_table('HELP_TEXT', pit.get_trans_item_name('SCT', 'SRA_NO_HELP'))));
@@ -628,7 +629,7 @@ as
     utl_apex.assert_not_null(g_edit_sra_row.sra_sgr_id, msg.APEX_REQUIRED_VAL_MISSING, 'SRA_SGR_ID');
     utl_apex.assert_not_null(g_edit_sra_row.sra_spi_id, msg.APEX_REQUIRED_VAL_MISSING, 'SRA_SPI_ID');
     utl_apex.assert_not_null(g_edit_sra_row.sra_sat_id, msg.APEX_REQUIRED_VAL_MISSING, 'SRA_SAT_ID');
-    
+
     pit.leave_mandatory;
     return true;
   end validate_edit_sra;
@@ -691,7 +692,7 @@ as
   as
   begin
     -- copy_edit_saa;
-    
+
     return true;
   end validate_edit_saa;
 
@@ -776,10 +777,10 @@ as
   begin
     pit.enter_mandatory;
     l_sgr_id := to_number(v('P5_SRU_SGR_ID'));
-    
+
     select coalesce(max(trunc(sru_sort_seq, -1)) + 10, 10)
       into l_sru_sort_seq
-      from sct_rule 
+      from sct_rule
      where sru_sgr_id = l_sgr_id;
 
     pit.leave_mandatory;
@@ -795,7 +796,7 @@ as
   begin
     pit.enter_mandatory;
     l_sru_id := to_number(v('P11_SRA_SRU_ID'));
-           
+
     select coalesce(max(trunc(sra_sort_seq, -1)) + 10, 10)
       into l_sra_sort_seq
       from sct_ui_edit_sra
@@ -838,8 +839,8 @@ as
 
     pit.leave_mandatory;
   end get_action_type_help;
-  
-  
+
+
   /* APEX-Aktionen */
   procedure set_action_admin_sgr
   as
@@ -850,9 +851,12 @@ as
     l_has_target_application number(1, 0);
   begin
     pit.enter_optional;
-    
+
     l_sgr_id := to_number(v('P1_SGR_ID'));
-    if v('P1_SGR_ID') is not null then
+    
+    -- Action CREATE_RULE
+    utl_apex_action.action_init('create-rule');
+    if l_sgr_id is not null then
       -- persist APP_ID and PAGE_ID in case exporting this rule is called
       select sgr_app_id, sgr_page_id
         into l_sgr_app_id, l_sgr_page_id
@@ -860,19 +864,7 @@ as
        where sgr_id = l_sgr_id;
       apex_util.set_session_state('P1_SGR_APP_ID', l_sgr_app_id);
       apex_util.set_session_state('P1_SGR_PAGE_ID', l_sgr_page_id);
-      
-      -- Check whether a target application to copy the rule to exists
-      select count(*)
-        into l_has_target_application
-        from dual
-       where exists(
-             select null
-               from apex_applications
-              where application_id not in (apex_application.g_flow_id, l_sgr_app_id));
-    end if;
-    
-    utl_apex_action.action_init('create-rule');
-    if l_sgr_id is not null then
+
       l_javascript := utl_apex.get_page_url(
                         p_param_items => 'P5_SRU_SGR_ID:P5_SRU_ID',
                         p_value_items => 'P1_SGR_ID',
@@ -885,21 +877,33 @@ as
       utl_apex_action.set_disabled(true);
     end if;
     plugin_sct.add_javascript(utl_apex_action.get_action_script);
-    
+
+    -- Action COPY_RULEGROUP
     utl_apex_action.action_init('copy-rulegroup');
-    if l_sgr_id is not null and l_has_target_application = 1 then
-      l_javascript := utl_apex.get_page_url(
-                        p_param_items => 'P4_SGR_ID',
-                        p_value_items => 'P1_SGR_ID',
-                        p_url_template => 'SCT:COPY_SGR',
-                        p_triggering_element => 'B1_COPY_SGR');
-      utl_apex_action.set_action(l_javascript);
-      utl_apex_action.set_disabled(false);
+    if l_sgr_id is not null then
+      -- Check whether a target application to copy the rule to exists
+      select count(*)
+        into l_has_target_application
+        from dual
+       where exists(
+             select null
+               from apex_applications
+              where application_id not in (apex_application.g_flow_id, l_sgr_app_id));
+      if l_has_target_application = 1 then
+        l_javascript := utl_apex.get_page_url(
+                          p_param_items => 'P4_SGR_ID',
+                          p_value_items => 'P1_SGR_ID',
+                          p_url_template => 'SCT:COPY_SGR',
+                          p_triggering_element => 'B1_COPY_SGR');
+        utl_apex_action.set_action(l_javascript);
+        utl_apex_action.set_disabled(false);
+      end if;
     else
       utl_apex_action.set_disabled(true);
     end if;
     plugin_sct.add_javascript(utl_apex_action.get_action_script);
-    
+
+    -- Action EXPORT_RULEGROUP
     utl_apex_action.action_init('export-rulegroup');
     l_javascript := utl_apex.get_page_url(
                       p_param_items => 'P8_SGR_ID:P8_SGR_APP_ID:P8_SGR_PAGE_ID',
@@ -908,39 +912,38 @@ as
                       p_triggering_element => 'B1_EXPORT_SGR');
     utl_apex_action.set_action(l_javascript);
     plugin_sct.add_javascript(utl_apex_action.get_action_script);
-    
+
     pit.leave_optional;
   end set_action_admin_sgr;
-  
-  
+
+
   procedure set_action_edit_sgr
   as
     l_javascript varchar2(32767);
   begin
     pit.enter_optional;
-    
+
     pit.leave_optional;
   end set_action_edit_sgr;
-  
-  
+
+
   procedure set_action_export_sgr
   as
     l_export_type varchar2(10);
     l_app_id sct_rule_group.sgr_app_id%type;
-    l_page_id sct_rule_group.sgr_page_id%type;
     l_sgr_id sct_rule_group.sgr_id%type;
     l_sgr_name sct_rule_group.sgr_name%type;
     C_SUCCESS_COMMAND constant varchar2(100) := q'^apex.submit('EXPORT_#TYPE#');^';
   begin
     pit.enter_optional;
-    
+
     -- Initialzation
     l_export_type := v('P8_EXPORT_TYPE');
     l_app_id := v('P8_SGR_APP_ID');
     l_sgr_id := v('P8_SGR_ID');
-    
+
     utl_apex_action.action_init('export-rulegroup');
-    
+
     -- decision tree
     case
     when l_export_type = 'SGR' and l_sgr_id is not null then
@@ -968,20 +971,20 @@ as
       utl_apex_action.set_disabled(true);
     end case;
     plugin_sct.add_javascript(utl_apex_action.get_action_script);
-    
+
     pit.leave_optional;
   exception
     when others then
       plugin_sct.register_error('DOCUMENT', sqlerrm, pit_util.get_call_stack);
   end set_action_export_sgr;
-  
-  
+
+
   procedure set_action_edit_sru
   as
     l_javascript varchar2(32767);
   begin
     pit.enter_optional;
-    
+
     pit.leave_optional;
   end set_action_edit_sru;
 

@@ -24,6 +24,10 @@ prompt &s1.Create package SCT_INTERNAL
 @&plugin_dir.packages/sct_internal.pks
 show errors
 
+prompt &s1.Create package SCT_VALIDATION
+@&plugin_dir.packages/sct_validation.pks
+show errors
+
 prompt &s1.Create package UTL_APEX_ACTION
 @&plugin_dir.packages/utl_apex_action.pks
 show errors
@@ -35,6 +39,10 @@ show errors
 
 prompt &s1.Create package Body SCT_INTERNAL
 @&plugin_dir.packages/sct_internal.pkb
+show errors
+
+prompt &s1.Create package Body SCT_VALIDATION
+@&plugin_dir.packages/sct_validation.pkb
 show errors
 
 prompt &s1.Create package Body UTL_APEX_ACTION

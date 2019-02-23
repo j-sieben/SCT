@@ -21,10 +21,28 @@ begin
     p_pms_pmg_name => 'SCT',
     p_error_number => -20000
   );
+
+  pit_admin.merge_message(
+    p_pms_name => 'SCT_INTERNAL_ERROR',
+    p_pms_pmg_name => 'SCT',
+    p_pms_text => q'~Ein Fehler ist auf der Seite aufgetreten: #SQLERRM#.~',
+    p_pms_pse_id => 30,
+    p_pms_pml_name => 'GERMAN',
+    p_error_number => -20000
+  );
   
   pit_admin.merge_message(
     p_pms_name => 'SCT_APP_DOES_NOT_EXIST',
     p_pms_text => q'~APEX-Anwendung #1# existiert nicht.~',
+    p_pms_pse_id => 30,
+    p_pms_pml_name => 'GERMAN',
+    p_pms_pmg_name => 'SCT',
+    p_error_number => -20000
+  );
+  
+  pit_admin.merge_message(
+    p_pms_name => 'SCT_ACTION_DOES_NOT_EXIST',
+    p_pms_text => q'~SCT-Aktion #1# existiert nicht.~',
     p_pms_pse_id => 30,
     p_pms_pml_name => 'GERMAN',
     p_pms_pmg_name => 'SCT',
@@ -62,6 +80,15 @@ begin
     p_pms_name => 'SCT_OUTPUT_CLIPPED',
     p_pms_text => q'~'// Weitere JavaScript-Aktion unterdrueckt, weil zu lang~',
     p_pms_pse_id => 70,
+    p_pms_pml_name => 'GERMAN',
+    p_pms_pmg_name => 'SCT',
+    p_error_number => null
+  );
+
+  pit_admin.merge_message(
+    p_pms_name => 'SCT_INVALID_NUMBER_REMOVED',
+    p_pms_text => q'~Ungültige Zahl entfernt: #1#~',
+    p_pms_pse_id => 30,
     p_pms_pml_name => 'GERMAN',
     p_pms_pmg_name => 'SCT',
     p_error_number => null

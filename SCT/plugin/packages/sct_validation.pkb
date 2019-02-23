@@ -2,9 +2,6 @@ create or replace package body sct_validation
 as
 
   /* Private constants*/
-  C_FUNCTION_TEST constant varchar2(1000) := q'^
-select #VALUE#
-  from dual;^';
 
   /* Private types */
 
@@ -14,9 +11,9 @@ select #VALUE#
   as
     l_stmt varchar2(32767);
     l_cur binary_integer;
-    c_stmt_tmpl constant varchar2(200) := 'select * from (#STMT#)';
+    C_STMT_TMPL constant varchar2(200) := 'select * from (#STMT#)';
   begin
-    l_stmt := utl_text.bulk_replace(c_stmt_tmpl, char_table(
+    l_stmt := utl_text.bulk_replace(C_STMT_TMPL, char_table(
                 'STMT', p_stmt,
                 'ITEM', null,
                 'PARAM_1', null,
@@ -37,7 +34,7 @@ select #VALUE#
   as
     l_stmt varchar2(32767);
     l_cur binary_integer;
-    c_stmt_tmpl constant varchar2(200) := q'~declare 
+    C_STMT_TMPL constant varchar2(200) := q'~declare 
   l_string varchar2(32767);
 begin
   select #VALUE#
@@ -45,28 +42,34 @@ begin
     from dual;
 end;~';
   begin
-    l_stmt := replace(c_stmt_tmpl, '#VALUE#', p_value);
+    l_stmt := replace(C_STMT_TMPL, '#VALUE#', p_value);
     execute immediate l_stmt;
   end parse_string;
   
   
   procedure parse_function(
     p_value in out nocopy varchar2,
-    p_target in varchar2)
+    p_function in boolean default true)
   as
-    c_stmt constant varchar2(200) := q'^declare l_foo varchar2(32767); begin l_foo := #STMT#; end;^';
+    C_FUNCTION_STMT constant varchar2(200) := q'^declare l_foo varchar2(32767); begin l_foo := #STMT#; end;^';
+    C_PROCEDURE_STMT constant varchar2(200) := q'^declare l_foo varchar2(32767); begin #STMT#; end;^';
     l_cur binary_integer;
     l_stmt varchar2(2000);
   begin
     p_value := rtrim(p_value, ';');
-    l_stmt := replace(c_stmt, 'STMT', p_value);
+    if p_function then
+      l_stmt := C_FUNCTION_STMT;
+    else
+      l_stmt := C_PROCEDURE_STMT;
+    end if;
+    l_stmt := replace(l_stmt, 'STMT', p_value);
     l_cur := dbms_sql.open_cursor(l_stmt);
     dbms_sql.parse(l_cur, l_stmt, dbms_sql.NATIVE);
     dbms_sql.close_cursor(l_cur);
   exception
     when others then
       dbms_sql.close_cursor(l_cur);
-      plugin_sct.register_error(p_target, substr(sqlerrm, 12), '');
+      raise;
   end parse_function;
   
   
@@ -86,9 +89,82 @@ end;~';
             where saa_sgr_id = p_environment.sgr_id
               and saa_name = p_value);
     if l_exists = 0 then
-      plugin_sct.register_error(p_value, substr(sqlerrm, 12), '');
+      sct_internal.register_error(
+        p_spi_id => p_value, 
+        p_error_msg => substr(sqlerrm, 12), 
+        p_internal_error => '');
     end if;
+  exception
+    when others then
+      sct_internal.register_error(
+        p_spi_id => p_value, 
+        p_error_msg => substr(sqlerrm, 12), 
+        p_internal_error => '');
   end validate_is_apex_action;
+  
+  
+  procedure validate_is_string(
+    p_value in out nocopy varchar2,
+    p_target in varchar2)
+  as
+  begin
+    parse_string(p_value);
+  exception
+    when others then
+      sct_internal.register_error(
+        p_spi_id => p_target, 
+        p_error_msg => substr(sqlerrm, 12),
+        p_internal_error => null);
+  end validate_is_string;
+  
+  
+  procedure validate_is_function(
+    p_value in out nocopy varchar2,
+    p_target in varchar2)
+  as
+  begin
+    parse_function(p_value);
+  exception
+    when others then
+      sct_internal.register_error(
+        p_spi_id => p_target, 
+        p_error_msg => substr(sqlerrm, 12),
+        p_internal_error => null);
+  end validate_is_function;
+  
+  
+  procedure validate_is_procedure(
+    p_value in out nocopy varchar2,
+    p_target in varchar2)
+  as
+  begin
+    parse_function(p_value, false);
+  exception
+    when others then
+      sct_internal.register_error(
+        p_spi_id => p_target, 
+        p_error_msg => substr(sqlerrm, 12),
+        p_internal_error => null);
+  end validate_is_procedure;
+  
+  
+  procedure validate_is_pit_message(
+    p_value in out nocopy varchar2,
+    p_target in varchar2)
+  as
+  begin
+    select pms_name
+      into p_value
+      from pit_message
+     where pms_name = upper(p_value);
+  exception
+    when NO_DATA_FOUND then
+      -- TODO: refactor to MSG
+      sct_internal.register_error(
+        p_spi_id => p_target, 
+        p_error_msg => 'Invalid PIT message name', 
+        p_internal_error => '');
+  end validate_is_pit_message;
   
   
   procedure validate_is_string_or_function(
@@ -97,15 +173,58 @@ end;~';
   as
   begin
     p_value := trim(p_value);
-    if p_value like '''%' then
+    if substr(trim(p_value), 1, 1) =  '''' then
       parse_string(p_value);
     else
-      parse_function(p_value, p_target);
+      parse_function(p_value);
     end if;
   exception
     when others then
-      plugin_sct.register_error(p_target, substr(sqlerrm, 12), '');
+      sct_internal.register_error(
+        p_spi_id => p_target, 
+        p_error_msg => substr(sqlerrm, 12),
+        p_internal_error => null);
   end validate_is_string_or_function;
+  
+  
+  procedure validate_is_string_or_message(
+    p_value in out nocopy varchar2,
+    p_target in varchar2)
+  as
+  begin
+    p_value := trim(p_value);
+    if substr(trim(p_value), 1, 1) =  '''' then
+      parse_string(p_value);
+    else
+      validate_is_pit_message(p_value, p_target);
+    end if;
+  exception
+    when others then
+      sct_internal.register_error(
+        p_spi_id => p_target, 
+        p_error_msg => substr(sqlerrm, 12),
+        p_internal_error => null);
+  end validate_is_string_or_message;
+  
+  
+  procedure validate_is_sql_statement(
+    p_value in out nocopy varchar2,
+    p_target in varchar2)
+  as
+    C_STMT constant varchar2(100) := 'select * from (#STMT#)';
+    l_stmt varchar2(32767);
+    l_cur binary_integer;
+  begin
+    l_stmt := replace(C_STMT, '#STMT#', p_value);
+    l_cur := dbms_sql.open_cursor;
+    dbms_sql.parse(l_cur, l_stmt, dbms_sql.NATIVE);
+  exception
+    when others then
+      sct_internal.register_error(
+        p_spi_id => p_target, 
+        p_error_msg => substr(sqlerrm, 12),
+        p_internal_error => null);
+  end validate_is_sql_statement;
   
   
   procedure validate_is_selector(
@@ -126,8 +245,52 @@ end;~';
   exception
     when NO_DATA_FOUND then
       -- TODO: refactor to MSG
-      plugin_sct.register_error(p_target, 'Invalid jQuery-Selektor', '');
+      sct_internal.register_error(
+        p_spi_id => p_target, 
+        p_error_msg => 'Invalid jQuery-Selektor', 
+        p_internal_error => null);
   end validate_is_selector;
+  
+  
+  procedure validate_is_page_item(
+    p_value in out nocopy varchar2,
+    p_target in varchar2,
+    p_environment in sct_internal.environment_rec)
+  as
+  begin
+    select spi_id
+      into p_value
+      from sct_page_item
+     where spi_sgr_id = p_environment.sgr_id
+       and spi_id = upper(p_value);
+  exception
+    when NO_DATA_FOUND then
+      -- TODO: refactor to MSG
+      sct_internal.register_error(
+        p_spi_id => p_target, 
+        p_error_msg => 'Invalid Page Item name', 
+        p_internal_error => null);
+  end validate_is_page_item;
+  
+  
+  procedure validate_is_sequence(
+    p_value in out nocopy varchar2,
+    p_target in varchar2)
+  as
+  begin
+    select sequence_name
+      into p_value
+      from user_sequences
+     where sequence_name = upper(p_value);
+    
+  exception
+    when NO_DATA_FOUND then
+      -- TODO: refactor to MSG
+      sct_internal.register_error(
+        p_spi_id => p_target, 
+        p_error_msg => 'Invalid Sequence name', 
+        p_internal_error => '');
+  end validate_is_sequence;
   
   
   /* INTERFACE */
@@ -136,14 +299,14 @@ end;~';
     p_sgr_id in sct_rule_group.sgr_id%type)
     return varchar2
   as
-    c_stmt constant varchar2(200) := q'^select d, r
+    C_STMT constant varchar2(200) := q'^select d, r
   from sct_param_lov_#SPT_ID#
  where sgr_id = #SGR_ID#
     or sgr_id is null^';
     l_stmt varchar2(1000);
   begin
     if p_spt_id is not null then
-      l_stmt := utl_text.bulk_replace(c_stmt, char_table(
+      l_stmt := utl_text.bulk_replace(C_STMT, char_table(
                'SPT_ID', lower(p_spt_id),
                'SGR_ID', p_sgr_id));
     else
@@ -164,7 +327,7 @@ end;~';
     when 'APEX_ACTION' then
       validate_is_apex_action(p_value, p_environment);
     when 'FUNCTION' then
-      parse_function(p_value, p_spi_id);
+      validate_is_function(p_value, p_spi_id);
     when 'JAVA_SCRIPT' then
       null;
     when 'JAVA_SCRIPT_FUNCTION' then
@@ -172,23 +335,23 @@ end;~';
     when 'JQUERY_SELECTOR' then
       validate_is_selector(p_value, p_spi_id, p_environment);
     when 'PAGE_ITEM' then
-      null;
+      validate_is_page_item(p_value, p_spi_id, p_environment);
     when 'PIT_MESSAGE' then
-      null;
+      validate_is_pit_message(p_value, p_spi_id);
     when 'PROCEDURE' then
-      parse_function(p_value, p_spi_id);
+      validate_is_procedure(p_value, p_spi_id);
     when 'SEQUENCE' then
-      null;
+      validate_is_sequence(p_value, p_spi_id);
     when 'SQL_STATEMENT' then
-      null;
+      validate_is_sql_statement(p_value, p_spi_id);
     when 'STRING' then
-      null;
+      validate_is_string(p_value, p_spi_id);
     when 'STRING_OR_FUNCTION' then
       validate_is_string_or_function(p_value, p_spi_id);
     when 'STRING_OR_JAVASCRIPT' then
       null;
     when 'STRING_OR_PIT_MESSAGE' then
-      null;
+      validate_is_string_or_message(p_value, p_spi_id);
     else
       null;
     end case;

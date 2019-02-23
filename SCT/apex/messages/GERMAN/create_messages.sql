@@ -36,15 +36,6 @@ begin
   );
 
   pit_admin.merge_message(
-    p_pms_name => 'SCT_INTERNAL_ERROR',
-    p_pms_pmg_name => 'APEX',
-    p_pms_text => q'~Ein Fehler ist auf der Seite aufgetreten: #SQLERRM#.~',
-    p_pms_pse_id => 30,
-    p_pms_pml_name => 'GERMAN',
-    p_error_number => -20000
-  );
-
-  pit_admin.merge_message(
     p_pms_name => 'APEX_LOG_MESSAGE',
     p_pms_pmg_name => 'APEX',
     p_pms_text => q'~#1#~',

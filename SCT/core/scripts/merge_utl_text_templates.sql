@@ -687,7 +687,7 @@ q'^ order by sru.sru_sort_seq desc, srg.sra_sort_seq^',
     p_uttm_name => 'ACTION_TYPE_HELP',
     p_uttm_type => 'SCT',
     p_uttm_mode => 'FRAME',
-    p_uttm_text => q'^<h2>Hilfe zu Aktionstypen</h2><dl>#HELP_LIST#</dl>^',
+    p_uttm_text => q'^'<h2>#SAT_NAME#</h2><div>#SAT_DESCRIPTION#</div>#PARAMETERS|<h3>Parameter:</h3><div><dl>|</dl></div>#'^',
     p_uttm_log_text => q'^^',
     p_uttm_log_severity => 70
   );
@@ -695,8 +695,8 @@ q'^ order by sru.sru_sort_seq desc, srg.sra_sort_seq^',
   utl_text.merge_template(
     p_uttm_name => 'ACTION_TYPE_HELP',
     p_uttm_type => 'SCT',
-    p_uttm_mode => 'HELP',
-    p_uttm_text => q'^<dt class="sct-dt">#SAT_NAME# #SAT_IS_EDITABLE#</dt><dd>#SAT_DESCRIPTION#</dd>^',
+    p_uttm_mode => 'PARAMETERS',
+    p_uttm_text => q'^<dt>#SPT_NAME#</dt><dd>#SAP_DESCRIPTION##SPT_DESCRIPTION#</dd>^',
     p_uttm_log_text => q'^^',
     p_uttm_log_severity => 70
   );

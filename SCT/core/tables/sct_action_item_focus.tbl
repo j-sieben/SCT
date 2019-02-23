@@ -2,12 +2,15 @@ create table sct_action_item_focus(
   sif_id varchar2(50 char),
   sif_pti_id varchar2(50 char),
   sif_pmg_name varchar2(3 byte) default 'SCT',
+  sif_actual_page_only &FLAG_TYPE. default &C_TRUE.,
+  sif_item_types varchar2(100 byte), 
   sif_active &FLAG_TYPE. default &C_TRUE.,
   constraint pk_sct_action_item_focus primary key(sif_id),
   constraint fk_sif_pti_id foreign key(sif_pti_id, sif_pmg_name)
     references &PIT_OWNER..pit_translatable_item(pti_uid, pti_pmg_name) on delete cascade,
   constraint nn_sif_pti_id check(sif_pti_id is not null),
   constraint chk_sif_pmg_name check(sif_pmg_name = 'SCT'),
+  constraint chk_sif_actual_page_only check(sif_actual_page_only in (&C_TRUE., &C_FALSE.)),
   constraint chk_sif_active check(sif_active in (&C_TRUE., &C_FALSE.))
 ) 
 organization index;
@@ -18,4 +21,6 @@ comment on table sct_action_item_focus is 'Table to store SCT Action Item focus,
 comment on column sct_action_item_focus.sif_id is 'PK, technical key';
 comment on column sct_action_item_focus.sif_pti_id is 'Reference to PIT_TRANSLATABLE_ITEM, translatable NAME';
 comment on column sct_action_item_focus.sif_pmg_name is 'Reference to PIT_TRANSLATABLE_ITEM, Fixed value SCT';
+comment on column sct_action_item_focus.sif_actual_page_only is 'Flag to indicate whether only items of the actual page should be shown';
+comment on column sct_action_item_focus.sif_item_types is 'Colon separated list of item types to show';
 comment on column sct_action_item_focus.sif_active is 'Flag to indicate whether rule group is in use';

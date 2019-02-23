@@ -71,9 +71,6 @@ prompt &s1.Create view SCT_BL_RULES
 prompt &s1.Create view SCT_BL_PAGE_TARGETS
 @&view_dir.sct_bl_page_targets.vw
 
-prompt &s1.Create view SCT_BL_SAT_HELP
-@&view_dir.sct_bl_sat_help.vw
-
 prompt &s1.Create view SCT_ACTION_ITEM_FOCUS_V
 @&view_dir.sct_action_item_focus_v.vw
 
@@ -126,8 +123,14 @@ prompt &s1.Create SCT page item types
 prompt &s1.Create internal SCT page item 
 @&script_dir.merge_sct_page_item.sql
 
+prompt &s1.Create Action Parameter types 
+@&script_dir.merge_sct_action_param_type.sql
+
 prompt &s1.Create SCT action types
 @&script_dir.merge_sct_action_type.sql
+
+prompt &s1.Create Action Item Focus
+@&script_dir.merge_sct_action_item_focus.sql
 
 prompt &s1.Create APEX action types
 @&script_dir.merge_sct_apex_action_type.sql

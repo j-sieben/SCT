@@ -2,383 +2,346 @@ create or replace package plugin_sct
   authid definer
 as 
 
-  /* Package PLUGIN_SCT zur Verwaltung von State Charts
-   * %author Juergen Sieben, ConDeS GmbH
-   * %usage Das Package implementiert die datenbankseitige Logik des SCT-APEX-Plugins
+  /** Package PLUGIN_SCT to maintain State Charts as a dynamic action plugin
+   * @author Juergen Sieben, ConDeS GmbH
+   * @usage  Used to implement the plugin logic of SCT.
+   * @headcom
    */
    
-  procedure stop_rule;
-  
-  
-  /* Methode zur Registrierung eines Elements im Rekursionsstack
-   * %param p_item Name des Elements
-   * %param p_allow_recursion Flag, das anzeigt, ob Rekursion erlaubt ist oder nicht
-   * %usage Wird normalerweise nicht explizit benoetigt.
+  /* SCT specific functionality in alphabetical orde */
+    
+    
+  /** Method to register JavaScript code
+   * @param  p_javascript  JavaScript to execute on page
+   * @usage  Is used to register JavaScript for execution. Is used if PL/SQL code that is part of the application logic needs
+   *         to register JavaScript for execution. In that case, EXECUTE_JAVASCRIPT may not be as elegant to use.
    */
-  procedure register_item(
-    p_item in varchar2,
-    p_allow_recursion in number default utl_apex.C_TRUE);
+  procedure add_javascript(
+    p_javascript in varchar2);
+    
+    
+  /** Methode prueft, ob ein Eingabefeld ein gueltiges Datum enthaelt.
+   * @param  p_spi_id Name des Eingabefeldes
+   * @usage  Wird verwendet, um zu pruefen, ob ein Eingabefeld ein gueltiges Datum
+   *         enthaelt. Hierzu schlaegt die Methode die Formatmaske des Eingabefeldes
+   *         nach und versucht eine entsprechende Konvertierung. Gelingt diese nicht,
+   *         wird ein entsprechender Fehler registriert.
+   */
+  procedure check_date(
+    p_spi_id in sct_page_item.spi_id%type);
+    
+    
+  /** Method to check a mandatory item
+   * @param  p_spi_id  ID of the item to check
+   * @usage  Is used to explicitly check a mandatory item.
+   */
+  procedure check_mandatory(
+    p_spi_id in sct_page_item.spi_id%type);
     
   
-  /* Prozedur zum Registrieren von Fehlern
-   * %param p_spi_id Name des Feldes, das den Fehler enthaelt
-   * %param p_error_msg Fehlermeldung, die registriert werden soll
-   * %param p_internal_error Optionale zweite, technische Fehlermeldung
-   * %usage Wird automatisiert aufgerufen, wenn eine Aktivitaet ausgefuehrt wird.
-   *        Existiert eine technische Fehlermeldung und wird eine anwendungsseitige
-   *        Fehlermeldung produziert kann die technische Fehlermeldung als
-   *        Parameter P_INTERNAL_ERROR uebergeben werden. In jedem Fall muss
-   *        P_ERROR_MSG einen Wert enthalten.
+  /** Methode prueft, ob ein Eingabefeld einen gueltigen Zahlwert enthaelt.
+   * @param  p_spi_id Name des Eingabefeldes
+   * @usage  Wird verwendet, um zu pruefen, ob ein Eingabefeld einen numerischen Wert
+   *         enthaelt. Hierzu schlaegt die Methode die Formatmaske des Eingabefeldes
+   *         nach und versucht eine entsprechende Konvertierung. Gelingt diese nicht,
+   *         wird ein entsprechender Fehler registriert.
    */
-  procedure register_error(
-    p_spi_id in varchar2,
-    p_error_msg in varchar2,
-    p_internal_error in varchar2 default null);
+  procedure check_number(
+    p_spi_id in sct_page_item.spi_id%type);
+    
+    
+  /** Method to assure that exactly one or at most one page item of a selection of page items contains a value
+   * @param  p_spi_id         Page item ID that is selected to show the error message
+   * @param  p_value_list     List of page item IDs to check
+   * @param [p_message]       Optional PIT message name to show if the method throws an error
+   * @param [p_error_on_null] Flag to indicate whether an error has to be thrown if all page items are NULL
+   * %raises MSG.ASSERTION_FAILED_ERR or <P_MESSAGE>_ERR if
+   *         - more than one page item is NOT NULL
+   *         - all page items are NULL and P_ERROR_ON_NULL is set to true
+   * @usage  Is used to assert that at least one page item of a list of items contains a value. If an error is raised, this
+   *         can be used to proceed with an exception handler within the SCT rule.
+   */
+  procedure exclusive_or(
+    p_spi_id in sct_page_item.spi_id%type,
+    p_value_list in varchar2,
+    p_message in varchar2 default msg.ASSERTION_FAILED,
+    p_error_on_null in boolean default false);
+    
   
+  /** Function overload
+   * @param  p_value_list  List of page item IDs to check
+   * @return - 1 if rule is satisfied
+   *         - 0 if rule is not satisfied
+   *         - NULL if all page item values are null
+   * @usage  Is used to be able to utilize EXCLUSIVE_OR within an SCT rule condition (used in SQL)
+   */
+  function exclusive_or(
+    p_value_list in varchar2)
+    return number;
+    
+    
+  /** Method to directly execute a SCT action from PL/SQL
+   * @param  p_sat_id   Reference to SCT_ACTION_TYPE, action to execute
+   * @param  p_spi_id   Page item or DOCUMENT, references the page item the action shall work with
+   * @param [p_param_1] Optional first parameter
+   * @param [p_param_2] Optional second parameter
+   * @param [p_param_3] Optional third parameter
+   * @usage  Is used to directly execute an SCT action in case logic needs to perfrom a wider variety of
+   *         steps, fi when configuring a page. Executing the SCT actions directly helps reduce the need 
+   *         to create many rules with rather similar conditions
+   */
+  procedure execute_action(
+    p_sat_id in sct_action_type.sat_id%type,
+    p_spi_id in sct_page_item.spi_id%type,
+    p_param_1 in sct_rule_action.sra_param_1%type default null,
+    p_param_2 in sct_rule_action.sra_param_2%type default null,
+    p_param_3 in sct_rule_action.sra_param_3%type default null);
+    
+    
+  /** Method to execute a PL/SQL block that returns JavaScript. This script will be part of the SCT answer and will get
+   *  executed when SCT returns.
+   * @param  p_plsql  PL/SQL block to calculate the JavaScript
+   * @usage  Is used to let SCT calculate a JavaScript chunk (such as a call to open a modal dialog) and return it to SCT.
+   *         SCT will then incorporate this script into the answer and execute it.
+   */
+  procedure execute_javascript(
+    p_plsql in varchar2);
+    
+  
+  /** Method to execute a PL/SQL block
+   * @param  p_plsql  PL/SQL block to execute
+   * @usage  Is used to execute dynamic PL/SQL blocks
+   */
+  procedure execute_plsql(
+    p_plsql in varchar2);
+    
+    
+  /** Method to retrieve the name of the event that has caused SCT to execute
+   * @return Name of the event
+   * @usage  Is used to retrieve the SCT event name of the event that has fired.
+   *         SCT events differ from normal web browser or APEX events in that they can replace browser events with their own
+   *         events, fi by replacing the keypress-event for keycode 13 with an enter event.
+   */
+  function get_event
+    return varchar2;
+    
+  
+  /** Method to get the page item id of the item that has fired SCT processing
+   * @return ID of the firing item
+   * @usage  Is used to get access to the ID of the page item that has fired the event
+   */
+  function get_firing_item
+    return varchar2;
+    
+  
+  /** Method to learn whether the actual rule flow has receieved errors
+   * @return FALSE if no error has occured, TRUE otherwise
+   * @usage  Is called from PL/SQL code to react if errors have occurred.
+   */
   function has_errors
     return boolean;
     
+  
+  /** Method to learn whether the actual rule flow has receieved errors
+   * @return TRUE if no error has occured, FALSE otherwise
+   * @usage  Is called from PL/SQL code to assure that no errors have occurred so far.
+   */
   function has_no_errors
     return boolean;
+    
+    
+  /** Method to assure that at least on page item of a list of page items contains a value
+   * @param  p_spi_id      Page item ID that is selected to show the error message
+   * @param  p_value_list  List of page item IDs to check
+   * @param [p_message]    Optional PIT message name to show if the method throws an error
+   * @usage  Is used to make sure that at least one page item of a list of page items contains a value.
+   * %raises MSG.ASSERTION_FAILED_ERR or <P_MESSAGE>_ERR if all page item values are NULL
+   */
+  procedure not_null(
+    p_spi_id in sct_page_item.spi_id%type,
+    p_value_list in varchar2,
+    p_message in varchar2 default msg.ASSERTION_FAILED);
+    
   
+  /** Overload as function
+   * @param  p_value_list  List of page item IDs to check
+   * @return - 1 if rule is satisfied
+   *         - 0 if rule is not satisfied
+   *         - NULL if all page item values are null
+   * @usage  Is used to be able to utilize NOT_NULL within an SCT rule condition (used in SQL)
+   */
+  function not_null(
+    p_value_list in varchar2)
+    return number;
+    
+    
+  /** Method shows a message on the browser screen
+   * @param  p_message  Message text or PL/SQL block that returns a message
+   * @usage  Is used to show a message on the browser window
+   *         Two operation modes:
+   *         - Pass in a string, including the ' signs. The message will be shown on screen
+   *         - Pass in a PL/SQL-Funktion that returns a message. This message will be shown
+   */
+  procedure notify(
+    p_message in varchar2);
+    
   
-  /* Ueberladung als Schnittstelle zu PIT
-   * %param p_spi_id Name des Feldes, das den Fehler enthaelt
-   * %param p_message_name Fehlermeldung, Referenz auf PIT-Nachricht
-   * %param p_arg_list Liste von PIT-Meldungsparametern
-   * %usage Wird automatisiert aufgerufen, wenn eine Aktivitaet ausgefuehrt wird.
-   *        Es wird eine, in PIT definierte Meldung aufgerufen und optional
-   *        die erforderlichen Parameter uebergeben.
-   *        Die Ausgabe wird in den Error-Stack des Plugins integriert.
+  /** Method to register an error
+   * @param  p_spi_id          ID of the page item that is referenced by the error (or DOCUMENT)
+   * @param  p_error_msg       Error message to register
+   * @param [p_internal_error] Optional additional information, visible for developers
+   * @usage  Is called to register an error onto the error stack. May be called from PL/SQL directly or implicitly as the
+   *         consequence of an internal error.
    */
   procedure register_error(
-    p_spi_id in varchar2,
+    p_spi_id in sct_page_item.spi_id%type,
+    p_error_msg in varchar2,
+    p_internal_error in varchar2 default null);
+  
+  
+  /** Overload to allow for PIT messages to be used.
+   * @param  p_spi_id        ID of the page item that is referenced by the error (or DOCUMENT)
+   * @param  p_message_name  PIT message name to register
+   * @param [p_arg_list]     Optional message arguments as defined by PIT
+   * @usage  Is called to register an error onto the error stack. May be called from PL/SQL directly or implicitly as the
+   *         consequence of an internal error.
+   */
+  procedure register_error(
+    p_spi_id in sct_page_item.spi_id%type,
     p_message_name in varchar2,
     p_arg_list in msg_args default null);
     
+    
+  /** Method to se a page item mandatory or optional
+   * @param  p_spi_id                 Page item ID for which the status has to be changed
+   * @param  p_spi_mandatory_message  Optional message to show if a mandatory item is set to null or if the page has to be
+   *                                  submitted but this page item is NULL
+   * @param  p_is_mandatory           Flag to indicate whether P_SPI_ID is mandatory (TRUE) or not (FALSE)
+   * @param  p_param_2                Optional parameter to pass in a jQuery selector to select multiple elements. In this case,
+   *                                  P_SPI_ID has to be DOCUMENT
+   * @usage  Is called to register a page item as mandatory or optional. This does not only change the page items UI settings
+   *         but assures that the page can't be submitted if one of the mandatory page items are NULL. If a page item contained
+   *         a value and is set to NULL, an error is raised.
+   *         The message to show may be defined explicitly. If the message is NULL, a default message is shown.
+   */
+  procedure register_mandatory(
+    p_spi_id in sct_page_item.spi_id%type,
+    p_spi_mandatory_message in sct_page_item.spi_mandatory_message%type,
+    p_is_mandatory in boolean,
+    p_param_2 in sct_rule_action.sra_param_2%type default null);
+    
   
-  /* Prozedur zum Registrieren von Meldungen
-   * %param p_text Meldungstext
-   * %usage Wird aufgerufen, wenn waehrend der Verarbeitung innerhalb der Datenbank
-   *        eine Information an die Antwort uebermittelt werden soll, die aktuell
-   *        bearbeitet wird. Die Meldungen werden zu den entsprechenden Prozessen
-   *        als Kommentare der Antwort vor dem JavaScript-Code ausgegeben
+  /** Method to register notifications
+   * @param  p_text  Notification text
+   * @usage  Is called to allow for notifications to be passed to the UI during the execution of SCT rules.
+   *         These messages are logged to the browser console as part of the response
    */
   procedure register_notification(
     p_text in varchar2);
     
-    
-  /* Ueberladung als Schnittstelle zu PIT
-   * %param p_message_name Fehlermeldung, Rferenz auf PIT-Nachricht
-   * %param p_arg_list Liste von PIT-Meldungsparmetern
-   * %usage Wird aufgerufen, wenn waehrend der Verarbeitung innerhalb der Datenbank
-   *        eine Informaiton an die Antwort uebermittelt werden soll.
-   *        Es wird eine, in PIT definierte Meldung uafgerufen und optional
-   *        die erforderlichen Parameter uebergeben.
+
+  /** Overload to allow for PIT messages to be used.
+   * @param  p_spi_id        ID of the page item that is referenced by the error (or DOCUMENT)
+   * @param  p_message_name  PIT message name to register
+   * @param [p_arg_list]     Optional message arguments as defined by PIT
+   * @usage  Is called to allow for notifications to be passed to the UI during the execution of SCT rules.
+   *         These messages are logged to the browser console as part of the response
    */
   procedure register_notification(
     p_message_name in varchar2,
     p_arg_list in msg_args);
     
     
-  /* Prozedur zur (De-)Registrierung von Pflichtelementen auf der Seite
-   * %param p_spi_id Name des Pflichelements
-   * %param p_spi_mandatory_message Optionale Benachrichtigung beim Regelverstoss
-   * %param p_is_mandatory Flag, das anzeigt, ob das Element ein Pflichtelement
-   *        ist oder nicht.
-   * %param p_param_2 Optionales Argument, das genutzt wird, wenn mehrere Elemente
-   *        ueber einen jQuery-Ausdruck angesprochen werden.
-   * %usage Wird aufgerufen, um Pflichtelemente im Plugin zu registrieren.
-   *        Pflichtelemente werden vor dem Absenden der Seite durch das Plugin
-   *        gegen den SessionState geprueft, um sicherzustellen, dass ein Wert
-   *        enthalten ist.
-   *        Bei einem Verstoss wird die SUBMIT-Anweisung nicht gesendet.
+  /** Method to set a page item based on a query that returns a list of rows
+   * @param  p_spi_id ID of the page item
+   * @param  p_stmt   SELECT statement to retrieve the new page item value or values
+   * @usage  Is used to define new session state values for page items capable of working with a list of values, such as
+   *         shuttle controls or option lists.
    */
-  procedure register_mandatory(
+  procedure set_list_from_stmt(
     p_spi_id in sct_page_item.spi_id%type,
-    p_spi_mandatory_message in varchar2,
-    p_is_mandatory in boolean,
+    p_stmt in varchar2);
+  
+  
+  /** Method to set a page item value in session state.
+   *  This method is a wrapper around APEX_UTIL.set_session_state with the extension, that SCT is aware of the change and
+   *  will report the change to the page when returning the result. This will harmonize the page item on the page with the
+   *  session state.
+   * @param  p_spi_id      ID of the item whose value is set
+   * @param  p_value       Page item value
+   * @param [p_allow_recursion] Flag to indicate whether changing this items session value causes SCT rules to fire
+   * @param [p_param_2]         Optional flag containing a jQuery selector to indicate more page items to set the value
+   * @usage  Is used to set the session state of one or more items within the database. This method will harmonize the newly
+   *         set values with the application page.
+   *         If P_SPI_ID is set to a page item name, only this item will be set to the value passed in.
+   *         If P_SPI_ID is set to SCT_UTIL.C_NO_FIRING_ITEM then it is expected that a jQuery selector is passed in as P_PARAM_2
+   *         In this case, all items that are identified by the jQuery selector are set to P_VALUE.
+   *         If set (which is the default), P_ALLOW_RECURSION enables SCT to fire change events on any page item that is 
+   *         affected by this method. This allows for any SCT rule based on these elements to fire recursively.
+   */
+  procedure set_session_state(
+    p_spi_id in sct_page_item.spi_id%type,
+    p_value in varchar2,
+    p_allow_recursion in sct_util.flag_type default sct_util.C_TRUE,
     p_param_2 in sct_rule_action.sra_param_2%type default null);
     
     
-  /* Hilfsmethode, prueft, ob ein Pflichtfeld NULL ist und registriert entsprechenden Fehler
-   * %param p_firing_item Name des Elements, das sich geaendert hat
-   * %usage Wird verwendet, wenn SCT Pflichtfelder verwaltet.
+  /** Method to set the value of a page item or raise an error.
+   * @param  p_spi_id           ID of the item whose value is set
+   * @param  p_value            Page item value
+   * @param  p_error            Error message. If NULL, P_VALUE is set in session state, an error is thrown otherwise.
+   * @param [p_allow_recursion] Flag to indicate whether changing this items session value causes SCT rules to fire
+   * @usage  Is used to offer a possibility for external logic to set a page item value or raise an error if a conversion 
+   *         was not succesful or similar.
    */
-  procedure check_mandatory(
-    p_firing_item in sct_page_item.spi_id%type);
+  procedure set_session_state_or_error(
+    p_spi_id in sct_page_item.spi_id%type,
+    p_value in varchar2,
+    p_error in varchar2,
+    p_allow_recursion in sct_util.flag_type default sct_util.C_TRUE);
     
-  
-  /* Getter Methods
+    
+  /** Prozedur zum Setzen des Session Status, basierend auf einer SQL-Anweisung
+   * @param  p_spi_id ID of the page item
+   * @param  p_stmt   SELECT statement to retrieve the new page item value or values
+   * @usage  Is used to set one or more item values based on a SQL query.
+   *         Two operation modes:
+   *         - P_SPI_ID is set to a page item ID
+   *           In this case the SQL query must return a scalar value
+   *         - P_SPI_ID ist DOCUMENT oder NULL
+   *           In this mode the query is allowed to return more than one column but one row only.
+   *           The column names must match page item IDs. If a match is found, the respective element is set to the column value
    */
-  function get_firing_item
-    return varchar2;
-    
-  function get_event
-    return varchar2;
+  procedure set_value_from_stmt(
+    p_spi_id in sct_page_item.spi_id%type,
+    p_stmt in varchar2);
     
     
-  /* Hilfsmethode, ermittelt den Zeichenkettenwert eines Anwendungselements.
-   * %param  p_spi_id       Names des Elements, dessen Wert ermittelt werden soll
-   * %return Sessionstatuswert
-   * %usage  Wird verwendet, um den aktuellen Sessionstatus fuer ein Element zu ermitteln.
-   *         In Erweiterung zu V(P_SPI_ID) wird ein eventueller Defaultwert zurueckgegeben, wenn
-   *         das Element ein Pflichtfeld ist und ansonsten NULL waere.
-   *         Der Standardwert wird aus den APEX-Metadaten zum Feld ermittelt
+  /** Method to stop further execution of the active rule
+   * @usage  Is used to stop the execution of an SCT rule if an error occured.
    */
-  function get_char(
-    p_spi_id in varchar2)
-    return varchar2;
+  procedure stop_rule;
     
     
-  /* Hilfsmethode, prueft, ob sich ein Element aus dem Sessionstatus in eine Zahl ueberfuehren laesst.
-   * %param  p_spi_id       Names des Elements, dessen Wert umgeformt werden soll
-   * %param  p_format_mask  Formatmaske, die den Wert umformen soll
-   * %param [p_throw_error] TRUE: bei nicht erfolgreicher Umformung wird ein Fehler registriert und zusaetzlich geworfen
-   *                        FALSE: bei nicht erfolgreicher Umformung wird ein Fehler nur registriert
-   *                        Default: TRUE
-   * %return Zahlwert nach der Umwandlung
-   * %usage  Wird verwendet, um eine Umwandlung in eine Zahl durchzufuehren.
-   *         Gelingt die Umformung nicht, wird ein Fehler registriert und ein weiterer Fehler geworfen,
-   *         falls dies von P_THROW_ERROR angefordert wird. Hierdurch wird die weitere Verarbeitung
-   *         der Regel abgebrochen
-   *         Ist das Element ein Pflichtfeld, wird ein eventueller Defaultwert zurueckgegeben, wenn
-   *         das Element ansonsten NULL waere
-   */
-  function get_number(
-    p_spi_id in varchar2,
-    p_format_mask in varchar2,
-    p_throw_error in boolean default false)
-    return number;
-    
-  
-  /* Methode prueft, ob ein Eingabefeld einen gueltigen Zahlwert enthaelt.
-   * %param  p_spi_id Name des Eingabefeldes
-   * %usage  Wird verwendet, um zu pruefen, ob ein Eingabefeld einen numerischen Wert
-   *         enthaelt. Hierzu schlaegt die Methode die Formatmaske des Eingabefeldes
-   *         nach und versucht eine entsprechende Konvertierung. Gelingt diese nicht,
-   *         wird ein entsprechender Fehler registriert.
-   */
-  procedure check_number(
-    p_spi_id in varchar2);
-    
-    
-  /* Hilfsmethode, prueft, ob sich ein Element aus dem Sessionstatus in ein Datum ueberfuehren laesst.
-   * %param  p_spi_id       Names des Elements, dessen Wert umgeformt werden soll
-   * %param  p_format_mask  Formatmaske, die den Wert umformen soll
-   * %param [p_throw_error] TRUE: bei nicht erfolgreicher Umformung wird ein Fehler registriert und zusaetzlich geworfen
-   *                        FALSE: bei nicht erfolgreicher Umformung wird ein Fehler nur registriert
-   *                        Default: TRUE
-   * %return Datumswert nach der Umwandlung
-   * %usage  Wird verwendet, um eine Umwandlung in eine Zahl durchzufuehren.
-   *         Gelingt die Umformung nicht, wird ein Fehler registriert und ein weiterer Fehler geworfen,
-   *         falls dies von P_THROW_ERROR angefordert wird. Hierdurch wird die weitere Verarbeitung
-   *         der Regel abgebrochen
-   *         Ist das Element ein Pflichtfeld, wird ein eventueller Defaultwert zurueckgegeben, wenn
-   *         das Element ansonsten NULL waere
-   */
-  function get_date(
-    p_spi_id in varchar2,
-    p_format_mask in varchar2,
-    p_throw_error in boolean default false)
-    return date;
-    
-  
-  /* Methode prueft, ob ein Eingabefeld ein gueltiges Datum enthaelt.
-   * %param  p_spi_id Name des Eingabefeldes
-   * %usage  Wird verwendet, um zu pruefen, ob ein Eingabefeld ein gueltiges Datum
-   *         enthaelt. Hierzu schlaegt die Methode die Formatmaske des Eingabefeldes
-   *         nach und versucht eine entsprechende Konvertierung. Gelingt diese nicht,
-   *         wird ein entsprechender Fehler registriert.
-   */
-  procedure check_date(
-    p_spi_id in varchar2);
-    
-  
-  /* Prozedur zum Ausfuehren eines PL/SQL-Blocks
-   * %param  p_cmd  Anweisung, die ausgefuehrt werden soll.
-   * %usage  Wird verwendet, um dynamische PL/SQL-Aufrufe auszufuehren
-   */
-  procedure do_cmd(
-    p_cmd in varchar2);
-    
-    
-  /* Prozedur zur Vorbereitung des Speicherns der Seite
-   * %usage Diese Prozedur sollte nur verwendet werden, wenn SCT eine Seite
+  /** Prozedur zur Vorbereitung des Speicherns der Seite
+   * @usage Diese Prozedur sollte nur verwendet werden, wenn SCT eine Seite
    *        vollstaendig verwaltet. Die Prozedur prueft alle Seitenelemente,
    *        die durch SCT auf MANDATORY gesetzt wurden, gegen den Session-State.
    *        Ist ein Pflichtfeld NULL wird ein Fehler registriert und das Absenden
    *        der Seite dadurch verhindert.
    */
   procedure submit_page;
-  
-  
-  /* Prozedur zum Setzen des Session Status
-   * %param p_item Name des Feldes, das gesetzt werden soll
-   * %param p_value Wert, der gesetzt werden soll
-   * %usage Wird verwendet, um den Session Status eines Elementes zu aendern.
-   *        Die Prozedur ist ein Wrapper um APEX_UTIL.SET_SESSION_STATE,
-   *        die aber nicht verwendet werden sollte, weil PLUGIN_SCT.SET_SESSION_STATE
-   *        alle Aenderungen am Session State registriert und an die Oberflaeche zurueckliefert
-   */
-  procedure set_session_state(
-    p_item in sct_page_item.spi_id%type,
-    p_value in varchar2,
-    p_allow_recursion in utl_apex.flag_type default utl_apex.C_TRUE,
-    p_param_2 in sct_rule_action.sra_param_2%type default null);
-    
-    
-  /* Prozedur zum Setzen des Session Status, falls kein Fehler vorliegt.
-   * %param p_item Name des Feldes, das gesetzt werden soll
-   * %param p_value Wert, der gesetzt werden soll
-   * %param p_error Fehlermeldung. Falls NULL, wird Session State gesetzt, sonst Fehler
-   * %usage Wird verwendet, um als Ergebnis einer externen Validierung mit Fehlertext
-   *        eine Hilfsfunktion anzubieten, die selbststaendig zwischen Fehlermeldung und
-   *        Session State entscheidet.
-   */
-  procedure set_session_state_or_error(
-    p_item in sct_page_item.spi_id%type,
-    p_value in varchar2,
-    p_error in varchar2,
-    p_allow_recursion in utl_apex.flag_type default utl_apex.C_TRUE);
-    
-    
-  /* Prozedur zum Setzen des Session Status, basierend auf einer SQL-Anweisung
-   * %param  p_item Name des Feldes, das gesetzt werden soll
-   * %param  p_stmt select-Anweisung, die eine einzelne Zeile liefert
-   * %usage  Wird verwendet, um den Wert eines oder mehrerer Elemente im Sessionstatus zu setzen
-   *         Zwei Anwendungsmodi:
-   *         - P_ITEM ist auf Elementnamen gesetzt (Ersetzungsanker #ITEM#, entspricht SEITENELEMENT in Aktion)
-   *           In diesem Modus darf die Anweisung nur eine Spalte zurueckliefern, der Wert wird in 
-   *           das uebergebene Element gesetzt
-   *         - P_ITEM ist DOCUMENT oder NULL
-   *           In diesem Modus darf die Anweisung mehrere Spalten liefern. Die Spaltenbezeichner 
-   *           muessen Elementnamen entsprechen, die Abfrageergebnisse werden in den zugehoerigen
-   *           Seitenelementen gesetzt
-   */
-  procedure set_value_from_stmt(
-    p_item in sct_page_item.spi_id%type,
-    p_stmt in varchar2);
-    
-    
-  /* Prozedur zum Setzen des Session Status, basierend auf einer SQL-Anweisung, die eine
-   * Liste von Werten zurueckliefert
-   * %param p_item Name des Feldes, das gesetzt werden soll
-   * %param p_stmt select-Anweisung, die eine Liste von Werten liefert
-   */
-  procedure set_list_from_stmt(
-    p_item in sct_page_item.spi_id%type,
-    p_stmt in varchar2);
-    
-    
-  /* Methode gibt eine Meldung auf der Oberflaeche aus.
-   * %param  p_message  Meldung oder PL/SQL-Aufruf, der eine Meldung erzeugt
-   * %usage  Wird verwendet, um eine Meldung auf der APEX-Oberflaeche auszugeben.
-   *         Zwei Benutzungsvarianten:
-   *         - Uebergabe einer Zeichenkette, die als konstante Meldung ausgegeben wird
-   *         - Uebergabe einer PL/SQL-Funktion, die eine Zeichenkette mit der Meldung liefert
-   */
-  procedure notify(
-    p_message in varchar2);
-    
-    
-  /* Method to directly execute a SCT action from PL/SQL
-   * %param  p_sat_id   Reference to SCT_ACTION_TYPE, action to execute
-   * %param  p_item     Page item or DOCUMENT, references the page item the action shall work with
-   * %param [p_param_1] Optional first parameter
-   * %param [p_param_2] Optional second parameter
-   * %param [p_param_3] Optional third parameter
-   * %usage  Is used to directly execute an SCT action in case logic needs to perfrom a wider variety of
-   *         steps, fi when configuring a page. Executing the SCT actions directly helps reduce the need 
-   *         to create many rules with rather similar conditions
-   */
-  procedure execute_action(
-    p_sat_id in varchar2,
-    p_item in varchar2,
-    p_param_1 in varchar2 default null,
-    p_param_2 in varchar2 default null,
-    p_param_3 in varchar2 default null);
-    
-    
-  /* Prozedur zum dynamischen Ausfuehren eines berechneten JavaScript-Blocks
-   * %param p_plsql PL/SQL-Anweisung, die das JavaScript berechnet, das ausgefuehrt werden soll
-   * %usage Wird verwendet, um in PL/SQL einen JavaScript-Block berechnen zu lassen,
-   *        der anschliessend auf der Seite ausgefuehrt wird.
-   */
-  procedure execute_javascript(
-    p_plsql in varchar2);
-    
-    
-  /* Prozedur fuegt berechnetes JavaScript der Antwort hinzu
-   * %param  p_javascript  JavaScript-Code der ausgefuehrt werden soll
-   * %usage  Wird verwendet, um andernorts berechnetes JavaScript in die Antwort zu integrieren.
-   *         Funktional eine Ueberladung der Prozedur EXECUTE_JAVSCRIPT, nur das hier extern der
-   *         auszufuehrende Script berechnet wird.
-   */
-  procedure add_javascript(
-    p_javascript in varchar2);
-    
-  /* XOR-Methoden
-   * %param  p_value_list     Liste von Element-NAMEN, die geprueft werden sollen
-   * %param [p_error_on_null] Flag, das anzeigt, ob ein Fehler geworfen werden soll,
-   *                          wenn alle Elemente NULL-Werte sind
-   * %raises MSG.ASSERTION_FAILED_ERR, wenn 
-   *         - Mehr als ein Elementwert NOT NULL ist
-   *         - Alle Elementwerte NULL sind und P_ERROR_ON_NULL gesetzt ist
-   * %usage  Wird verwendet, um innerhalb einer SCT-Aktion sicherzustellen, dass
-   *         Genau ein Wert ausgewaehlt wurde. Falls ein Verstoss vorliegt, kann im 
-   *         Exception-Teil auf diesen Fehler reagiert werden
-   */
-  procedure xor(
-    p_item in varchar2,
-    p_value_list in varchar2,
-    p_message in varchar2 default msg.ASSERTION_FAILED,
-    p_error_on_null in boolean default false);
-    
-  
-  /* Ueberladung als Funktion
-   * %param  p_value_list  Liste von Element-WERTEN (Spaltenwerten), die geprueft werden sollen
-   * %return - 1, falls Bedindung erfuellt
-   *         - 0, falls Bedingung nicht erfuellt
-   *         - NULL, falls alle Elemente NULL sind
-   * %usage  Wird verwendet, um in einer Regelpruefung auf XOR zu testen
-   */
-  function xor(
-    p_value_list in varchar2)
-    return number;
-    
-    
-  /* Methode zur Pruefung, dass mindestens ein Wert gesetzt ist
-   * %param  p_value_list  Liste von Element-NAMEN, die geprueft werden sollen
-   * %usage  Wird verwendet, um innerhalb einer SCT-Aktion sicherzustellen, dass
-   *         mindestens ein Wert gesetzt wurde. Falls ein Verstoss vorliegt, kann im 
-   *         Exception-Teil auf diesen Fehler reagiert werden
-   * %raises MSG.ASSERTION_FAILED_ERR, falls alle Elementwerte NULL waren
-   */
-  procedure not_null(
-    p_item in varchar2,
-    p_value_list in varchar2,
-    p_message in varchar2 default msg.ASSERTION_FAILED);
-    
-  
-  /* Ueberladung als Funktion
-   * %param  p_value_list  Liste von Element-WERTEN (Spaltenwerten), die geprueft werden sollen
-   * %return - 1, falls Bedindung erfuellt
-   *         - 0, falls Bedingung nicht erfuellt
-   * %usage  Wird verwendet, um in einer Regelpruefung auf NOT NULL zu testen
-   */
-  function not_null(
-    p_value_list in varchar2)
-    return number;
     
 
-  /* RENDER-Funktion des Plugins gem. APEX-Vorgaben */
+  /* Standard PLUGIN interface */
+  /** Render method */
   function render(
     p_dynamic_action in apex_plugin.t_dynamic_action,
     p_plugin in apex_plugin.t_plugin)
     return apex_plugin.t_dynamic_action_render_result;
     
-  /* AJAX-Funktion des Plugins gem. APEX-Vorgaben */
+    
+  /** AJAX method */
   function ajax(
     p_dynamic_action in apex_plugin.t_dynamic_action,
     p_plugin in apex_plugin.t_plugin)

@@ -12,8 +12,8 @@ declare
             from all_objects
            where (object_name in (
                  '', -- Typen
-                 'SCT_ADMIN', 'SCT_INTERNAL', 'SCT_UTIL', 'SCT_VALIDATION', 'UTL_APEX_ACTION', -- Packages
-                 'SCT_BL_RULES', 'SCT_BL_PAGE_ITEMS', 'SCT_BL_PAGE_TARGETS', 'SCT_BL_SAT_HELP', 'SCT_PARAM_LOV_APEX_ACTION', 
+                 'SCT_ADMIN', 'SCT_UTIL', -- Packages
+                 'SCT_BL_RULES', 'SCT_BL_PAGE_ITEMS', 'SCT_PARAM_LOV_APEX_ACTION', 
                  'SCT_PARAM_LOV_PAGE_ITEM', 'SCT_PARAM_LOV_PIT_MESSAGE', 'SCT_PARAM_LOV_SEQUENCE', -- Views
                  'SCT_ACTION_ITEM_FOCUS_V', 'SCT_ACTION_PARAM_TYPE_V', 'SCT_ACTION_PARAMETER_V', 'SCT_ACTION_TYPE_GROUP_V', 'SCT_ACTION_TYPE_V',
                  'SCT_APEX_ACTION_TYPE_V', -- DL-Views

@@ -6,115 +6,115 @@ begin
     p_spt_id => 'APEX_ACTION',
     p_spt_name => 'APEX-Aktion',
     p_spt_description => q'{Existierende APEX-Aktion der Regelgruppe}',
-    p_spt_active => 'Y');
+    p_spt_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_param_type(
     p_spt_id => 'FUNCTION',
     p_spt_name => 'PL/SQL-Funktion',
     p_spt_description => q'{Eine bestehende PL/SQL-Funktion}',
-    p_spt_active => 'Y');
+    p_spt_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_param_type(
     p_spt_id => 'JAVA_SCRIPT',
     p_spt_name => 'JavaScript-Ausdruck',
     p_spt_description => q'{Ausführbarer JavaScript-Ausdruck}',
-    p_spt_active => 'Y');
+    p_spt_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_param_type(
     p_spt_id => 'JAVA_SCRIPT_FUNCTION',
     p_spt_name => 'JavaScript-Funktion',
     p_spt_description => q'{Name einer JavaScript-Funktion oder anonyme Funktionsdefinition}',
-    p_spt_active => 'Y');
+    p_spt_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_param_type(
     p_spt_id => 'JQUERY_SELECTOR',
     p_spt_name => 'jQuery-Selektor',
     p_spt_description => q'{jQuery-Selektor, Setzt voraus, dass als Anwendungselement DOCUMENTgewählt wurde.}',
-    p_spt_active => 'Y');
+    p_spt_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_param_type(
     p_spt_id => 'PAGE_ITEM',
     p_spt_name => 'Seitenelement',
     p_spt_description => q'{Seitenelement oder Region der aktuellen Seite}',
-    p_spt_active => 'Y');
+    p_spt_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_param_type(
     p_spt_id => 'PIT_MESSAGE',
     p_spt_name => 'Name der Meldung',
     p_spt_description => q'{Bezeichner einer PIT-Meldung in der Form msg.NAMEoder 'NAME', muss eine existierende Meldung sein.}',
-    p_spt_active => 'Y');
+    p_spt_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_param_type(
     p_spt_id => 'PROCEDURE',
     p_spt_name => 'PL/SQL-Prozedur',
     p_spt_description => q'{Eine bestehende PL/SQL-Prozedur}',
-    p_spt_active => 'Y');
+    p_spt_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_param_type(
     p_spt_id => 'SEQUENCE',
     p_spt_name => 'Sequenz',
     p_spt_description => q'{Name einer existierenden Sequenz}',
-    p_spt_active => 'Y');
+    p_spt_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_param_type(
     p_spt_id => 'SQL_STATEMENT',
     p_spt_name => 'SQL-Anweisung',
     p_spt_description => q'{Ausführbare SQL-Anweisung}',
-    p_spt_active => 'Y');
+    p_spt_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_param_type(
     p_spt_id => 'STRING',
     p_spt_name => 'Zeichenkette',
     p_spt_description => q'{Einfache Zeichenkette, wird mit Hochkommata umgeben, daher ist die Eingabe dieser Zeichen nicht erforderlich}',
-    p_spt_active => 'Y');
+    p_spt_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_param_type(
     p_spt_id => 'STRING_OR_FUNCTION',
     p_spt_name => 'Zeichenkette oder PL/SQL-Funktion',
     p_spt_description => q'{Falls nicht mit Hochkommata eingeschlossen, eine bestehende PL/SQL-Funktion}',
-    p_spt_active => 'Y');
+    p_spt_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_param_type(
     p_spt_id => 'STRING_OR_JAVASCRIPT',
     p_spt_name => 'Zeichenkette oder JS-Ausdruck',
     p_spt_description => q'{Falls nicht mit Hochkommata eingeschlossen, ein JavaScript-Ausdruck}',
-    p_spt_active => 'Y');
+    p_spt_active => sct_rule.C_TRUE);
 
     sct_admin.merge_action_type_group(
     p_stg_id => 'BUTTON',
     p_stg_name => 'Schaltlfäche',
     p_stg_description => q'{Aktionen für Schaltflächen}',
-    p_stg_active => 'Y');
+    p_stg_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_type_group(
     p_stg_id => 'ITEM',
     p_stg_name => 'Seitenelemente',
     p_stg_description => q'{Aktionen für Eingabefelder}',
-    p_stg_active => 'Y');
+    p_stg_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_type_group(
     p_stg_id => 'JAVA_SCRIPT',
     p_stg_name => 'JavaScript',
     p_stg_description => q'{JavaScript-Funkionen und Events}',
-    p_stg_active => 'Y');
+    p_stg_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_type_group(
     p_stg_id => 'PAGE_ITEM',
     p_stg_name => 'Seitenelement',
     p_stg_description => q'{Aktionen für allgemeine Seitenelemente}',
-    p_stg_active => 'Y');
+    p_stg_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_type_group(
     p_stg_id => 'PL_SQL',
     p_stg_name => 'PL/SQL',
     p_stg_description => q'{PL/SQ-Funktionen}',
-    p_stg_active => 'Y');
+    p_stg_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_type_group(
     p_stg_id => 'SCT',
     p_stg_name => 'Framework',
     p_stg_description => q'{Allgemeine Aktionen}',
-    p_stg_active => 'Y');
+    p_stg_active => sct_rule.C_TRUE);
 
     sct_admin.merge_action_type(
     p_sat_id => 'SET_CONSOLE',
@@ -127,7 +127,7 @@ q'{}',
     p_sat_pl_sql => q'{}',
     p_sat_js => q'{console.log(#PARAM_1#);}',
     p_sat_is_editable => 'N',
-    p_sat_raise_recursive => 'Y');
+    p_sat_raise_recursive => sct_rule.C_TRUE);
 
     sct_admin.merge_action_parameter(
     p_sap_sat_id => 'SET_CONSOLE',
@@ -135,8 +135,8 @@ q'{}',
     p_sap_sort_seq => 1,
     p_sap_default => q'{}',
     p_sap_description => q'{}',
-    p_sap_mandatory => 'Y',
-    p_sap_active => 'Y');
+    p_sap_mandatory => sct_rule.C_TRUE,
+    p_sap_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_type(
     p_sat_id => 'SET_ELEMENT_FROM_STMT',
@@ -161,7 +161,7 @@ q'{erforderlich.</p>}',
     p_sat_pl_sql => q'{plugin_sct.set_value_from_stmt('#ITEM#',q'##PARAM_1##');}',
     p_sat_js => q'{}',
     p_sat_is_editable => 'N',
-    p_sat_raise_recursive => 'Y');
+    p_sat_raise_recursive => sct_rule.C_TRUE);
 
     sct_admin.merge_action_parameter(
     p_sap_sat_id => 'SET_ELEMENT_FROM_STMT',
@@ -169,8 +169,8 @@ q'{erforderlich.</p>}',
     p_sap_sort_seq => 1,
     p_sap_default => q'{}',
     p_sap_description => q'{}',
-    p_sap_mandatory => 'Y',
-    p_sap_active => 'Y');
+    p_sap_mandatory => sct_rule.C_TRUE,
+    p_sap_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_type(
     p_sat_id => 'SET_FOCUS',
@@ -183,7 +183,7 @@ q'{}',
     p_sat_pl_sql => q'{}',
     p_sat_js => q'{$('##SELECTOR#').focus();}',
     p_sat_is_editable => 'N',
-    p_sat_raise_recursive => 'Y');
+    p_sat_raise_recursive => sct_rule.C_TRUE);
 
   
   sct_admin.merge_action_type(
@@ -198,7 +198,7 @@ q'{}',
     p_sat_pl_sql => q'{plugin_sct.set_session_state('#ITEM#', #PARAM_1#, '#ALLOW_RECURSION#', '#PARAM_2');}',
     p_sat_js => q'{}',
     p_sat_is_editable => 'N',
-    p_sat_raise_recursive => 'Y');
+    p_sat_raise_recursive => sct_rule.C_TRUE);
 
     sct_admin.merge_action_parameter(
     p_sap_sat_id => 'SET_ITEM',
@@ -207,7 +207,7 @@ q'{}',
     p_sap_default => q'{}',
     p_sap_description => q'{}',
     p_sap_mandatory => 'N',
-    p_sap_active => 'Y');
+    p_sap_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_parameter(
     p_sap_sat_id => 'SET_ITEM',
@@ -215,8 +215,8 @@ q'{}',
     p_sap_sort_seq => 1,
     p_sap_default => q'{}',
     p_sap_description => q'{}',
-    p_sap_mandatory => 'Y',
-    p_sap_active => 'Y');
+    p_sap_mandatory => sct_rule.C_TRUE,
+    p_sap_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_type(
     p_sat_id => 'SET_LIST_FROM_STMT',
@@ -230,7 +230,7 @@ q'{}',
     p_sat_pl_sql => q'{plugin_sct.set_list_from_stmt('#ITEM#','#PARAM_1#');}',
     p_sat_js => q'{}',
     p_sat_is_editable => 'N',
-    p_sat_raise_recursive => 'Y');
+    p_sat_raise_recursive => sct_rule.C_TRUE);
 
     sct_admin.merge_action_parameter(
     p_sap_sat_id => 'SET_LIST_FROM_STMT',
@@ -238,8 +238,8 @@ q'{}',
     p_sap_sort_seq => 1,
     p_sap_default => q'{}',
     p_sap_description => q'{}',
-    p_sap_mandatory => 'Y',
-    p_sap_active => 'Y');
+    p_sap_mandatory => sct_rule.C_TRUE,
+    p_sap_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_type(
     p_sat_id => 'SET_NULL_DISABLE',
@@ -255,7 +255,7 @@ q'{}',
     p_sat_pl_sql => q'{plugin_sct.set_session_state('#ITEM#', '', '#ALLOW_RECURSION#', '#PARAM_2');}',
     p_sat_js => q'{de.condes.plugin.sct.disable('#SELECTOR#');}',
     p_sat_is_editable => 'N',
-    p_sat_raise_recursive => 'Y');
+    p_sat_raise_recursive => sct_rule.C_TRUE);
 
     sct_admin.merge_action_parameter(
     p_sap_sat_id => 'SET_NULL_DISABLE',
@@ -264,7 +264,7 @@ q'{}',
     p_sap_default => q'{}',
     p_sap_description => q'{}',
     p_sap_mandatory => 'N',
-    p_sap_active => 'Y');
+    p_sap_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_type(
     p_sat_id => 'SET_NULL_HIDE',
@@ -280,7 +280,7 @@ q'{}',
     p_sat_pl_sql => q'{plugin_sct.set_session_state('#ITEM#', '', '#ALLOW_RECURSION#', '#PARAM_2');}',
     p_sat_js => q'{de.condes.plugin.sct.hide('#SELECTOR#');de.condes.plugin.sct.setMandatory('#SELECTOR#', false);}',
     p_sat_is_editable => 'N',
-    p_sat_raise_recursive => 'Y');
+    p_sat_raise_recursive => sct_rule.C_TRUE);
 
     sct_admin.merge_action_parameter(
     p_sap_sat_id => 'SET_NULL_HIDE',
@@ -289,7 +289,7 @@ q'{}',
     p_sap_default => q'{}',
     p_sap_description => q'{}',
     p_sap_mandatory => 'N',
-    p_sap_active => 'Y');
+    p_sap_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_type(
     p_sat_id => 'SET_SESSION_STATE',
@@ -302,8 +302,8 @@ q'{ui,helvetica,arial,sans-serif; font-size:15.36px">: Wert, der gesetzt werden 
 q'{}',
     p_sat_pl_sql => q'{}',
     p_sat_js => q'{apex.server.process( "SAVE_HIDDEN_VALUE_IN_SESSION_STATE", { x01: "set_session_state",pageItems: '#' + '#ITEM#'}, {dataType: 'text'});}',
-    p_sat_is_editable => 'Y',
-    p_sat_raise_recursive => 'Y');
+    p_sat_is_editable => sct_rule.C_TRUE,
+    p_sat_raise_recursive => sct_rule.C_TRUE);
 
     sct_admin.merge_action_parameter(
     p_sap_sat_id => 'SET_SESSION_STATE',
@@ -311,8 +311,8 @@ q'{}',
     p_sap_sort_seq => 1,
     p_sap_default => q'{}',
     p_sap_description => q'{}',
-    p_sap_mandatory => 'Y',
-    p_sap_active => 'Y');
+    p_sap_mandatory => sct_rule.C_TRUE,
+    p_sap_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_type(
     p_sat_id => 'SET_VALUE_ONLY',
@@ -325,7 +325,7 @@ q'{}',
     p_sat_pl_sql => q'{plugin_sct.set_session_state('#ITEM#','#PARAM_1#', 0, '#PARAM_2');}',
     p_sat_js => q'{}',
     p_sat_is_editable => 'N',
-    p_sat_raise_recursive => 'Y');
+    p_sat_raise_recursive => sct_rule.C_TRUE);
 
     sct_admin.merge_action_parameter(
     p_sap_sat_id => 'SET_VALUE_ONLY',
@@ -334,7 +334,7 @@ q'{}',
     p_sap_default => q'{}',
     p_sap_description => q'{}',
     p_sap_mandatory => 'N',
-    p_sap_active => 'Y');
+    p_sap_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_parameter(
     p_sap_sat_id => 'SET_VALUE_ONLY',
@@ -342,8 +342,8 @@ q'{}',
     p_sap_sort_seq => 1,
     p_sap_default => q'{}',
     p_sap_description => q'{}',
-    p_sap_mandatory => 'Y',
-    p_sap_active => 'Y');
+    p_sap_mandatory => sct_rule.C_TRUE,
+    p_sap_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_type(
     p_sat_id => 'SHOW_ERROR',
@@ -356,7 +356,7 @@ q'{}',
     p_sat_pl_sql => q'{plugin_sct.register_error('#ITEM#', '#PARAM_1#','');}',
     p_sat_js => q'{}',
     p_sat_is_editable => 'N',
-    p_sat_raise_recursive => 'Y');
+    p_sat_raise_recursive => sct_rule.C_TRUE);
 
     sct_admin.merge_action_parameter(
     p_sap_sat_id => 'SHOW_ERROR',
@@ -364,8 +364,8 @@ q'{}',
     p_sap_sort_seq => 1,
     p_sap_default => q'{}',
     p_sap_description => q'{}',
-    p_sap_mandatory => 'Y',
-    p_sap_active => 'Y');
+    p_sap_mandatory => sct_rule.C_TRUE,
+    p_sap_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_type(
     p_sat_id => 'SHOW_ITEM',
@@ -380,7 +380,7 @@ q'{}',
     p_sat_pl_sql => q'{}',
     p_sat_js => q'{de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sat_is_editable => 'N',
-    p_sat_raise_recursive => 'Y');
+    p_sat_raise_recursive => sct_rule.C_TRUE);
 
     sct_admin.merge_action_parameter(
     p_sap_sat_id => 'SHOW_ITEM',
@@ -389,7 +389,7 @@ q'{}',
     p_sap_default => q'{}',
     p_sap_description => q'{}',
     p_sap_mandatory => 'N',
-    p_sap_active => 'Y');
+    p_sap_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_type(
     p_sat_id => 'SHOW_TIP',
@@ -401,8 +401,8 @@ q'{<p><em>Parameter:</em> Hinweistext</p>\CR\}' ||
 q'{}',
     p_sat_pl_sql => q'{}',
     p_sat_js => q'{drv.ek.sct.setNotification('#PARAM_1#');}',
-    p_sat_is_editable => 'Y',
-    p_sat_raise_recursive => 'Y');
+    p_sat_is_editable => sct_rule.C_TRUE,
+    p_sat_raise_recursive => sct_rule.C_TRUE);
 
     sct_admin.merge_action_parameter(
     p_sap_sat_id => 'SHOW_TIP',
@@ -411,7 +411,7 @@ q'{}',
     p_sap_default => q'{}',
     p_sap_description => q'{}',
     p_sap_mandatory => 'N',
-    p_sap_active => 'Y');
+    p_sap_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_type(
     p_sat_id => 'STOP_RULE',
@@ -424,7 +424,7 @@ q'{}',
     p_sat_pl_sql => q'{plugin_sct.stop_rule;}',
     p_sat_js => q'{}',
     p_sat_is_editable => 'N',
-    p_sat_raise_recursive => 'Y');
+    p_sat_raise_recursive => sct_rule.C_TRUE);
 
   
   sct_admin.merge_action_type(
@@ -445,7 +445,7 @@ q'{</ul>}',
     p_sat_pl_sql => q'{plugin_sct.submit_page;}',
     p_sat_js => q'{de.condes.plugin.sct.submit('#PARAM_1#','#PARAM_2#');}',
     p_sat_is_editable => 'N',
-    p_sat_raise_recursive => 'Y');
+    p_sat_raise_recursive => sct_rule.C_TRUE);
 
     sct_admin.merge_action_parameter(
     p_sap_sat_id => 'SUBMIT',
@@ -454,7 +454,7 @@ q'{</ul>}',
     p_sap_default => q'{}',
     p_sap_description => q'{}',
     p_sap_mandatory => 'N',
-    p_sap_active => 'Y');
+    p_sap_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_parameter(
     p_sap_sat_id => 'SUBMIT',
@@ -463,7 +463,7 @@ q'{</ul>}',
     p_sap_default => q'{}',
     p_sap_description => q'{}',
     p_sap_mandatory => 'N',
-    p_sap_active => 'Y');
+    p_sap_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_type(
     p_sat_id => 'SUBMIT_WO_VALIDATION',
@@ -483,7 +483,7 @@ q'{</ul>}',
     p_sat_pl_sql => q'{plugin_sct.submit_page(false);}',
     p_sat_js => q'{de.condes.plugin.sct.submit('#PARAM_1#','#PARAM_2#');}',
     p_sat_is_editable => 'N',
-    p_sat_raise_recursive => 'Y');
+    p_sat_raise_recursive => sct_rule.C_TRUE);
 
     sct_admin.merge_action_parameter(
     p_sap_sat_id => 'SUBMIT_WO_VALIDATION',
@@ -492,7 +492,7 @@ q'{</ul>}',
     p_sap_default => q'{}',
     p_sap_description => q'{}',
     p_sap_mandatory => 'N',
-    p_sap_active => 'Y');
+    p_sap_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_parameter(
     p_sap_sat_id => 'SUBMIT_WO_VALIDATION',
@@ -501,7 +501,7 @@ q'{</ul>}',
     p_sap_default => q'{}',
     p_sap_description => q'{}',
     p_sap_mandatory => 'N',
-    p_sap_active => 'Y');
+    p_sap_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_type(
     p_sat_id => 'TOGGLE_ITEMS',
@@ -514,8 +514,8 @@ q'{}',
     p_sat_pl_sql => q'{}',
     p_sat_js => q'{de.condes.plugin.sct.hide('#PARAM_2#');\CR\}' || 
 q'{de.condes.plugin.sct.show('#PARAM_1#');}',
-    p_sat_is_editable => 'Y',
-    p_sat_raise_recursive => 'Y');
+    p_sat_is_editable => sct_rule.C_TRUE,
+    p_sat_raise_recursive => sct_rule.C_TRUE);
 
     sct_admin.merge_action_parameter(
     p_sap_sat_id => 'TOGGLE_ITEMS',
@@ -523,8 +523,8 @@ q'{de.condes.plugin.sct.show('#PARAM_1#');}',
     p_sap_sort_seq => 1,
     p_sap_default => q'{}',
     p_sap_description => q'{}',
-    p_sap_mandatory => 'Y',
-    p_sap_active => 'Y');
+    p_sap_mandatory => sct_rule.C_TRUE,
+    p_sap_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_parameter(
     p_sap_sat_id => 'TOGGLE_ITEMS',
@@ -532,8 +532,8 @@ q'{de.condes.plugin.sct.show('#PARAM_1#');}',
     p_sap_sort_seq => 2,
     p_sap_default => q'{}',
     p_sap_description => q'{}',
-    p_sap_mandatory => 'Y',
-    p_sap_active => 'Y');
+    p_sap_mandatory => sct_rule.C_TRUE,
+    p_sap_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_type(
     p_sat_id => 'VALIDATE',
@@ -546,7 +546,7 @@ q'{}',
     p_sat_pl_sql => q'{plugin_sct.submit_page;}',
     p_sat_js => q'{}',
     p_sat_is_editable => 'N',
-    p_sat_raise_recursive => 'Y');
+    p_sat_raise_recursive => sct_rule.C_TRUE);
 
   
   sct_admin.merge_action_type(
@@ -561,8 +561,8 @@ q'{</p><dl><dt>Parameter</dt><dd>Keine</dd></dl>\CR\}' ||
 q'{}',
     p_sat_pl_sql => q'{}',
     p_sat_js => q'{drv.ek.waitUntilRefresh('#ITEM#');}',
-    p_sat_is_editable => 'Y',
-    p_sat_raise_recursive => 'Y');
+    p_sat_is_editable => sct_rule.C_TRUE,
+    p_sat_raise_recursive => sct_rule.C_TRUE);
 
     sct_admin.merge_action_parameter(
     p_sap_sat_id => 'WAIT_FOR_REFRESH',
@@ -570,8 +570,8 @@ q'{}',
     p_sap_sort_seq => 1,
     p_sap_default => q'{}',
     p_sap_description => q'{}',
-    p_sap_mandatory => 'Y',
-    p_sap_active => 'Y');
+    p_sap_mandatory => sct_rule.C_TRUE,
+    p_sap_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_type(
     p_sat_id => 'XOR',
@@ -591,7 +591,7 @@ q'{}',
     p_sat_pl_sql => q'{plugin_sct.xor('#ITEM#', '#PARAM_1#',#PARAM_2, false);}',
     p_sat_js => q'{}',
     p_sat_is_editable => 'N',
-    p_sat_raise_recursive => 'Y');
+    p_sat_raise_recursive => sct_rule.C_TRUE);
 
     sct_admin.merge_action_parameter(
     p_sap_sat_id => 'XOR',
@@ -599,8 +599,8 @@ q'{}',
     p_sap_sort_seq => 2,
     p_sap_default => q'{}',
     p_sap_description => q'{}',
-    p_sap_mandatory => 'Y',
-    p_sap_active => 'Y');
+    p_sap_mandatory => sct_rule.C_TRUE,
+    p_sap_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_type(
     p_sat_id => 'XOR_NN',
@@ -620,7 +620,7 @@ q'{}',
     p_sat_pl_sql => q'{plugin_sct.xor('#ITEM#', '#PARAM_1#',#PARAM_2, true);}',
     p_sat_js => q'{}',
     p_sat_is_editable => 'N',
-    p_sat_raise_recursive => 'Y');
+    p_sat_raise_recursive => sct_rule.C_TRUE);
 
     sct_admin.merge_action_parameter(
     p_sap_sat_id => 'XOR_NN',
@@ -628,8 +628,8 @@ q'{}',
     p_sap_sort_seq => 2,
     p_sap_default => q'{}',
     p_sap_description => q'{}',
-    p_sap_mandatory => 'Y',
-    p_sap_active => 'Y');
+    p_sap_mandatory => sct_rule.C_TRUE,
+    p_sap_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_type(
     p_sat_id => 'AFTER_REFRESH',
@@ -652,7 +652,7 @@ q'{}',
     p_sat_pl_sql => q'{}',
     p_sat_js => q'{}',
     p_sat_is_editable => 'N',
-    p_sat_raise_recursive => 'Y');
+    p_sat_raise_recursive => sct_rule.C_TRUE);
 
     sct_admin.merge_action_parameter(
     p_sap_sat_id => 'AFTER_REFRESH',
@@ -660,8 +660,8 @@ q'{}',
     p_sap_sort_seq => 1,
     p_sap_default => q'{}',
     p_sap_description => q'{}',
-    p_sap_mandatory => 'Y',
-    p_sap_active => 'Y');
+    p_sap_mandatory => sct_rule.C_TRUE,
+    p_sap_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_type(
     p_sat_id => 'CHECK_MANDATORY',
@@ -674,7 +674,7 @@ q'{}',
     p_sat_pl_sql => q'{plugin_sct.check_mandatory('#ITEM#');}',
     p_sat_js => q'{}',
     p_sat_is_editable => 'N',
-    p_sat_raise_recursive => 'Y');
+    p_sat_raise_recursive => sct_rule.C_TRUE);
 
   
   sct_admin.merge_action_type(
@@ -689,8 +689,8 @@ q'{angezeigt wird</dd><dt>Parameter 2</dt><dd>Titel des Dialogfelds</dd></dl>\CR
 q'{}',
     p_sat_pl_sql => q'{}',
     p_sat_js => q'{de.condes.plugin.sct.bindConfirmation('#ITEM#','#PARAM_1#', '#PARAM_2#');}',
-    p_sat_is_editable => 'Y',
-    p_sat_raise_recursive => 'Y');
+    p_sat_is_editable => sct_rule.C_TRUE,
+    p_sat_raise_recursive => sct_rule.C_TRUE);
 
   
   sct_admin.merge_action_type(
@@ -714,7 +714,7 @@ q'{}',
     p_sat_pl_sql => q'{}',
     p_sat_js => q'{}',
     p_sat_is_editable => 'N',
-    p_sat_raise_recursive => 'Y');
+    p_sat_raise_recursive => sct_rule.C_TRUE);
 
     sct_admin.merge_action_parameter(
     p_sap_sat_id => 'DIALOG_CLOSED',
@@ -722,8 +722,8 @@ q'{}',
     p_sap_sort_seq => 1,
     p_sap_default => q'{}',
     p_sap_description => q'{}',
-    p_sap_mandatory => 'Y',
-    p_sap_active => 'Y');
+    p_sap_mandatory => sct_rule.C_TRUE,
+    p_sap_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_type(
     p_sat_id => 'DISABLE_BUTTON',
@@ -738,7 +738,7 @@ q'{}',
     p_sat_pl_sql => q'{}',
     p_sat_js => q'{apex.item('#ITEM#').disable();$('##ITEM#').removeClass('in_progress');}',
     p_sat_is_editable => 'N',
-    p_sat_raise_recursive => 'Y');
+    p_sat_raise_recursive => sct_rule.C_TRUE);
 
   
   sct_admin.merge_action_type(
@@ -754,7 +754,7 @@ q'{}',
     p_sat_pl_sql => q'{}',
     p_sat_js => q'{de.condes.plugin.sct.disable('#SELECTOR#');}',
     p_sat_is_editable => 'N',
-    p_sat_raise_recursive => 'Y');
+    p_sat_raise_recursive => sct_rule.C_TRUE);
 
     sct_admin.merge_action_parameter(
     p_sap_sat_id => 'DISABLE_ITEM',
@@ -763,7 +763,7 @@ q'{}',
     p_sap_default => q'{}',
     p_sap_description => q'{}',
     p_sap_mandatory => 'N',
-    p_sap_active => 'Y');
+    p_sap_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_type(
     p_sat_id => 'DOUBLE_CLICK',
@@ -785,7 +785,7 @@ q'{}',
     p_sat_pl_sql => q'{}',
     p_sat_js => q'{}',
     p_sat_is_editable => 'N',
-    p_sat_raise_recursive => 'Y');
+    p_sat_raise_recursive => sct_rule.C_TRUE);
 
     sct_admin.merge_action_parameter(
     p_sap_sat_id => 'DOUBLE_CLICK',
@@ -793,8 +793,8 @@ q'{}',
     p_sap_sort_seq => 1,
     p_sap_default => q'{}',
     p_sap_description => q'{}',
-    p_sap_mandatory => 'Y',
-    p_sap_active => 'Y');
+    p_sap_mandatory => sct_rule.C_TRUE,
+    p_sap_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_type(
     p_sat_id => 'DYNAMIC_JAVASCRIPT',
@@ -811,7 +811,7 @@ q'{nicht.</p>}',
     p_sat_pl_sql => q'{plugin_sct.execute_javascript(q'##PARAM_1##');}',
     p_sat_js => q'{}',
     p_sat_is_editable => 'N',
-    p_sat_raise_recursive => 'Y');
+    p_sat_raise_recursive => sct_rule.C_TRUE);
 
     sct_admin.merge_action_parameter(
     p_sap_sat_id => 'DYNAMIC_JAVASCRIPT',
@@ -819,8 +819,8 @@ q'{nicht.</p>}',
     p_sap_sort_seq => 1,
     p_sap_default => q'{}',
     p_sap_description => q'{}',
-    p_sap_mandatory => 'Y',
-    p_sap_active => 'Y');
+    p_sap_mandatory => sct_rule.C_TRUE,
+    p_sap_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_type(
     p_sat_id => 'EMPTY_FIELD',
@@ -833,7 +833,7 @@ q'{}',
     p_sat_pl_sql => q'{plugin_sct.set_session_state('#ITEM#', '', '#ALLOW_RECURSION#', '#PARAM_2');}',
     p_sat_js => q'{}',
     p_sat_is_editable => 'N',
-    p_sat_raise_recursive => 'Y');
+    p_sat_raise_recursive => sct_rule.C_TRUE);
 
     sct_admin.merge_action_parameter(
     p_sap_sat_id => 'EMPTY_FIELD',
@@ -842,7 +842,7 @@ q'{}',
     p_sap_default => q'{}',
     p_sap_description => q'{}',
     p_sap_mandatory => 'N',
-    p_sap_active => 'Y');
+    p_sap_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_type(
     p_sat_id => 'ENABLE_BUTTON',
@@ -856,7 +856,7 @@ q'{}',
     p_sat_pl_sql => q'{}',
     p_sat_js => q'{apex.item('#ITEM#').enable();}',
     p_sat_is_editable => 'N',
-    p_sat_raise_recursive => 'Y');
+    p_sat_raise_recursive => sct_rule.C_TRUE);
 
   
   sct_admin.merge_action_type(
@@ -872,7 +872,7 @@ q'{}',
     p_sat_pl_sql => q'{}',
     p_sat_js => q'{de.condes.plugin.sct.enable('#SELECTOR#');}',
     p_sat_is_editable => 'N',
-    p_sat_raise_recursive => 'Y');
+    p_sat_raise_recursive => sct_rule.C_TRUE);
 
     sct_admin.merge_action_parameter(
     p_sap_sat_id => 'ENABLE_ITEM',
@@ -881,7 +881,7 @@ q'{}',
     p_sap_default => q'{}',
     p_sap_description => q'{}',
     p_sap_mandatory => 'N',
-    p_sap_active => 'Y');
+    p_sap_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_type(
     p_sat_id => 'ENTER_KEY',
@@ -903,7 +903,7 @@ q'{}',
     p_sat_pl_sql => q'{}',
     p_sat_js => q'{}',
     p_sat_is_editable => 'N',
-    p_sat_raise_recursive => 'Y');
+    p_sat_raise_recursive => sct_rule.C_TRUE);
 
     sct_admin.merge_action_parameter(
     p_sap_sat_id => 'ENTER_KEY',
@@ -911,8 +911,8 @@ q'{}',
     p_sap_sort_seq => 1,
     p_sap_default => q'{}',
     p_sap_description => q'{}',
-    p_sap_mandatory => 'Y',
-    p_sap_active => 'Y');
+    p_sap_mandatory => sct_rule.C_TRUE,
+    p_sap_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_type(
     p_sat_id => 'EXECUTE_APEX_ACTION',
@@ -926,7 +926,7 @@ q'{}',
     p_sat_pl_sql => q'{plugin_sct.execute_apex_action('#PARAM_1#');}',
     p_sat_js => q'{}',
     p_sat_is_editable => 'N',
-    p_sat_raise_recursive => 'Y');
+    p_sat_raise_recursive => sct_rule.C_TRUE);
 
     sct_admin.merge_action_parameter(
     p_sap_sat_id => 'EXECUTE_APEX_ACTION',
@@ -934,8 +934,8 @@ q'{}',
     p_sap_sort_seq => 1,
     p_sap_default => q'{}',
     p_sap_description => q'{}',
-    p_sap_mandatory => 'Y',
-    p_sap_active => 'Y');
+    p_sap_mandatory => sct_rule.C_TRUE,
+    p_sap_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_type(
     p_sat_id => 'GET_SEQ_VAL',
@@ -948,7 +948,7 @@ q'{}',
     p_sat_pl_sql => q'{plugin_sct.set_session_state('#ITEM#',#PARAM_1#.nextval, '#ALLOW_RECURSION#', '#PARAM_2');}',
     p_sat_js => q'{}',
     p_sat_is_editable => 'N',
-    p_sat_raise_recursive => 'Y');
+    p_sat_raise_recursive => sct_rule.C_TRUE);
 
     sct_admin.merge_action_parameter(
     p_sap_sat_id => 'GET_SEQ_VAL',
@@ -956,8 +956,8 @@ q'{}',
     p_sap_sort_seq => 1,
     p_sap_default => q'{}',
     p_sap_description => q'{}',
-    p_sap_mandatory => 'Y',
-    p_sap_active => 'Y');
+    p_sap_mandatory => sct_rule.C_TRUE,
+    p_sap_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_type(
     p_sat_id => 'HIDE_ITEM',
@@ -972,7 +972,7 @@ q'{}',
     p_sat_pl_sql => q'{}',
     p_sat_js => q'{de.condes.plugin.sct.hide('#SELECTOR#');}',
     p_sat_is_editable => 'N',
-    p_sat_raise_recursive => 'Y');
+    p_sat_raise_recursive => sct_rule.C_TRUE);
 
     sct_admin.merge_action_parameter(
     p_sap_sat_id => 'HIDE_ITEM',
@@ -981,7 +981,7 @@ q'{}',
     p_sap_default => q'{}',
     p_sap_description => q'{}',
     p_sap_mandatory => 'N',
-    p_sap_active => 'Y');
+    p_sap_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_type(
     p_sat_id => 'IS_DATE',
@@ -995,7 +995,7 @@ q'{}',
     p_sat_pl_sql => q'{plugin_sct.check_date('#ITEM#');}',
     p_sat_js => q'{}',
     p_sat_is_editable => 'N',
-    p_sat_raise_recursive => 'Y');
+    p_sat_raise_recursive => sct_rule.C_TRUE);
 
   
   sct_admin.merge_action_type(
@@ -1014,7 +1014,7 @@ q'{}',
     p_sat_js => q'{de.condes.plugin.sct.setMandatory('#SELECTOR#', true);\CR\}' || 
 q'{de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sat_is_editable => 'N',
-    p_sat_raise_recursive => 'Y');
+    p_sat_raise_recursive => sct_rule.C_TRUE);
 
     sct_admin.merge_action_parameter(
     p_sap_sat_id => 'IS_MANDATORY',
@@ -1023,7 +1023,7 @@ q'{de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sap_default => q'{}',
     p_sap_description => q'{}',
     p_sap_mandatory => 'N',
-    p_sap_active => 'Y');
+    p_sap_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_type(
     p_sat_id => 'IS_NUMERIC',
@@ -1037,7 +1037,7 @@ q'{}',
     p_sat_pl_sql => q'{plugin_sct.check_number('#ITEM#');}',
     p_sat_js => q'{}',
     p_sat_is_editable => 'N',
-    p_sat_raise_recursive => 'Y');
+    p_sat_raise_recursive => sct_rule.C_TRUE);
 
   
   sct_admin.merge_action_type(
@@ -1053,7 +1053,7 @@ q'{}',
     p_sat_pl_sql => q'{plugin_sct.register_mandatory('#ITEM#', null, false,'#PARAM_2');}',
     p_sat_js => q'{de.condes.plugin.sct.setMandatory('#SELECTOR#',false);}',
     p_sat_is_editable => 'N',
-    p_sat_raise_recursive => 'Y');
+    p_sat_raise_recursive => sct_rule.C_TRUE);
 
     sct_admin.merge_action_parameter(
     p_sap_sat_id => 'IS_OPTIONAL',
@@ -1062,7 +1062,7 @@ q'{}',
     p_sap_default => q'{}',
     p_sap_description => q'{}',
     p_sap_mandatory => 'N',
-    p_sap_active => 'Y');
+    p_sap_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_type(
     p_sat_id => 'ITEM_NULL_SHOW',
@@ -1077,7 +1077,7 @@ q'{}',
     p_sat_pl_sql => q'{plugin_sct.set_session_state('#ITEM#', '', '#ALLOW_RECURSION#', '#PARAM_2');}',
     p_sat_js => q'{de.condes.plugin.sct.enable('#SELECTOR#');}',
     p_sat_is_editable => 'N',
-    p_sat_raise_recursive => 'Y');
+    p_sat_raise_recursive => sct_rule.C_TRUE);
 
     sct_admin.merge_action_parameter(
     p_sap_sat_id => 'ITEM_NULL_SHOW',
@@ -1086,7 +1086,7 @@ q'{}',
     p_sap_default => q'{}',
     p_sap_description => q'{}',
     p_sap_mandatory => 'N',
-    p_sap_active => 'Y');
+    p_sap_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_type(
     p_sat_id => 'JAVA_SCRIPT_CODE',
@@ -1100,7 +1100,7 @@ q'{}',
     p_sat_pl_sql => q'{}',
     p_sat_js => q'{#PARAM_1#;}',
     p_sat_is_editable => 'N',
-    p_sat_raise_recursive => 'Y');
+    p_sat_raise_recursive => sct_rule.C_TRUE);
 
     sct_admin.merge_action_parameter(
     p_sap_sat_id => 'JAVA_SCRIPT_CODE',
@@ -1108,8 +1108,8 @@ q'{}',
     p_sap_sort_seq => 1,
     p_sap_default => q'{}',
     p_sap_description => q'{}',
-    p_sap_mandatory => 'Y',
-    p_sap_active => 'Y');
+    p_sap_mandatory => sct_rule.C_TRUE,
+    p_sap_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_type(
     p_sat_id => 'NOTIFY',
@@ -1126,7 +1126,7 @@ q'{}',
     p_sat_pl_sql => q'{plugin_sct.notify(#PARAM_1#);}',
     p_sat_js => q'{}',
     p_sat_is_editable => 'N',
-    p_sat_raise_recursive => 'Y');
+    p_sat_raise_recursive => sct_rule.C_TRUE);
 
     sct_admin.merge_action_parameter(
     p_sap_sat_id => 'NOTIFY',
@@ -1134,8 +1134,8 @@ q'{}',
     p_sap_sort_seq => 1,
     p_sap_default => q'{}',
     p_sap_description => q'{}',
-    p_sap_mandatory => 'Y',
-    p_sap_active => 'Y');
+    p_sap_mandatory => sct_rule.C_TRUE,
+    p_sap_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_type(
     p_sat_id => 'NOT_NULL',
@@ -1154,7 +1154,7 @@ q'{}',
     p_sat_pl_sql => q'{plugin_sct.not_null('#ITEM#', '#PARAM_1#',#PARAM_2);}',
     p_sat_js => q'{}',
     p_sat_is_editable => 'N',
-    p_sat_raise_recursive => 'Y');
+    p_sat_raise_recursive => sct_rule.C_TRUE);
 
     sct_admin.merge_action_parameter(
     p_sap_sat_id => 'NOT_NULL',
@@ -1162,8 +1162,8 @@ q'{}',
     p_sap_sort_seq => 1,
     p_sap_default => q'{}',
     p_sap_description => q'{}',
-    p_sap_mandatory => 'Y',
-    p_sap_active => 'Y');
+    p_sap_mandatory => sct_rule.C_TRUE,
+    p_sap_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_parameter(
     p_sap_sat_id => 'NOT_NULL',
@@ -1171,8 +1171,8 @@ q'{}',
     p_sap_sort_seq => 2,
     p_sap_default => q'{}',
     p_sap_description => q'{}',
-    p_sap_mandatory => 'Y',
-    p_sap_active => 'Y');
+    p_sap_mandatory => sct_rule.C_TRUE,
+    p_sap_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_type(
     p_sat_id => 'PLSQL_CODE',
@@ -1185,7 +1185,7 @@ q'{}',
     p_sat_pl_sql => q'{plugin_sct.do_cmd('#PARAM_1#');}',
     p_sat_js => q'{}',
     p_sat_is_editable => 'N',
-    p_sat_raise_recursive => 'Y');
+    p_sat_raise_recursive => sct_rule.C_TRUE);
 
     sct_admin.merge_action_parameter(
     p_sap_sat_id => 'PLSQL_CODE',
@@ -1193,8 +1193,8 @@ q'{}',
     p_sap_sort_seq => 1,
     p_sap_default => q'{}',
     p_sap_description => q'{}',
-    p_sap_mandatory => 'Y',
-    p_sap_active => 'Y');
+    p_sap_mandatory => sct_rule.C_TRUE,
+    p_sap_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_type(
     p_sat_id => 'REFRESH_AND_SET_VALUE',
@@ -1213,7 +1213,7 @@ q'{}',
     p_sat_pl_sql => q'{}',
     p_sat_js => q'{de.condes.plugin.sct.refreshAndSetValue('#ITEM#', #PARAM_1#);}',
     p_sat_is_editable => 'N',
-    p_sat_raise_recursive => 'Y');
+    p_sat_raise_recursive => sct_rule.C_TRUE);
 
     sct_admin.merge_action_parameter(
     p_sap_sat_id => 'REFRESH_AND_SET_VALUE',
@@ -1221,8 +1221,8 @@ q'{}',
     p_sap_sort_seq => 1,
     p_sap_default => q'{''}',
     p_sap_description => q'{}',
-    p_sap_mandatory => 'Y',
-    p_sap_active => 'Y');
+    p_sap_mandatory => sct_rule.C_TRUE,
+    p_sap_active => sct_rule.C_TRUE);
 
   sct_admin.merge_action_type(
     p_sat_id => 'REFRESH_ITEM',
@@ -1235,7 +1235,7 @@ q'{}',
     p_sat_pl_sql => q'{}',
     p_sat_js => q'{de.condes.plugin.sct.refresh('#SELECTOR#');}',
     p_sat_is_editable => 'N',
-    p_sat_raise_recursive => 'Y');
+    p_sat_raise_recursive => sct_rule.C_TRUE);
 
   
   sct_admin.merge_action_type(
@@ -1246,7 +1246,7 @@ q'{}',
     p_sat_pl_sql => q'{plugin_sct.register_item('#ITEM#', '#ALLOW_RECURSION#');}',
     p_sat_js => q'{}',
     p_sat_is_editable => 'N',
-    p_sat_raise_recursive => 'Y');
+    p_sat_raise_recursive => sct_rule.C_TRUE);
 
   
   sct_admin.merge_action_type(
@@ -1263,7 +1263,7 @@ q'{}',
     p_sat_pl_sql => q'{}',
     p_sat_js => q'{}',
     p_sat_is_editable => 'N',
-    p_sat_raise_recursive => 'Y');
+    p_sat_raise_recursive => sct_rule.C_TRUE);
 
     sct_admin.merge_action_parameter(
     p_sap_sat_id => 'REGISTER_OBSERVER',
@@ -1272,7 +1272,7 @@ q'{}',
     p_sap_default => q'{}',
     p_sap_description => q'{}',
     p_sap_mandatory => 'N',
-    p_sap_active => 'Y');
+    p_sap_active => sct_rule.C_TRUE);
 
   commit;
 end;
