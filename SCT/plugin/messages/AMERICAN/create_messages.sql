@@ -356,6 +356,15 @@ begin
     p_error_number => -20000
   );
 
+  pit_admin.merge_message(
+    p_pms_name => 'SCT_UNKNOWN_SPT',
+    p_pms_text => q'~Unknown parameter type: #1#~',
+    p_pms_pse_id => 30,
+    p_pms_pml_name => 'AMERICAN',
+    p_pms_pmg_name => 'SCT',
+    p_error_number => -20000
+  );
+
   commit;
   pit_admin.create_message_package;
 end;

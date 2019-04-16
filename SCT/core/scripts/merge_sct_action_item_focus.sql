@@ -9,6 +9,14 @@ begin
     p_sif_active => sct_util.c_true);
 
   sct_admin.merge_action_item_focus(
+    p_sif_id => 'NONE',
+    p_sif_name => 'Keine Seitenelemente',
+    p_sif_description => q'{Keine Seitenelemente}',
+    p_sif_actual_page_only => sct_util.C_FALSE,
+    p_sif_item_types => '',
+    p_sif_active => sct_util.c_true);
+
+  sct_admin.merge_action_item_focus(
     p_sif_id => 'DOCUMENT',
     p_sif_name => 'Keine Seitenelemente',
     p_sif_description => q'{Die Aktion is keinem konkreten Seitenelement zugeordnet}',

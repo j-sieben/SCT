@@ -41,7 +41,6 @@ begin
     p_sra_sat_id => 'SET_ITEM',
     p_sra_param_1 => q'|sct_ui_pkg.get_sra_sort_seq|',
     p_sra_param_2 => q'||',
-    p_sra_param_3 => q'||',
     p_sra_sort_seq => 30,
     p_sra_on_error => sct_util.C_FALSE,
     p_sra_raise_recursive => sct_util.C_TRUE,
@@ -55,7 +54,6 @@ begin
     p_sra_sat_id => 'SET_ITEM',
     p_sra_param_1 => q'|'Y'|',
     p_sra_param_2 => q'||',
-    p_sra_param_3 => q'||',
     p_sra_sort_seq => 10,
     p_sra_on_error => sct_util.C_FALSE,
     p_sra_raise_recursive => sct_util.C_TRUE,
@@ -69,28 +67,26 @@ begin
     p_sra_sat_id => 'SET_ITEM',
     p_sra_param_1 => q'|'Y'|',
     p_sra_param_2 => q'||',
-    p_sra_param_3 => q'||',
     p_sra_sort_seq => 20,
     p_sra_on_error => sct_util.C_FALSE,
     p_sra_raise_recursive => sct_util.C_TRUE,
     p_sra_active => sct_util.C_TRUE);
 
   sct_admin.merge_rule_action(
-    p_sra_id => sct_admin.map_id(122),
+    p_sra_id => sct_admin.map_id(247),
     p_sra_sru_id => sct_admin.map_id(114),
     p_sra_sgr_id => sct_admin.map_id(112),
     p_sra_spi_id => 'P11_SRA_SAT_ID',
     p_sra_sat_id => 'PLSQL_CODE',
     p_sra_param_1 => q'|sct_ui_pkg.configure_edit_sra;|',
     p_sra_param_2 => q'||',
-    p_sra_param_3 => q'||',
     p_sra_sort_seq => 40,
     p_sra_on_error => sct_util.C_FALSE,
     p_sra_raise_recursive => sct_util.C_TRUE,
     p_sra_active => sct_util.C_TRUE);
 
   sct_admin.merge_rule(
-    p_sru_id => sct_admin.map_id(124),
+    p_sru_id => sct_admin.map_id(298),
     p_sru_sgr_id => sct_admin.map_id(112),
     p_sru_name => 'Aktionstyp geändert',
     p_sru_condition => q'|P11_SRA_SAT_ID is not null|',
@@ -99,29 +95,14 @@ begin
     p_sru_active => sct_util.C_TRUE);
   
   sct_admin.merge_rule_action(
-    p_sra_id => sct_admin.map_id(126),
-    p_sra_sru_id => sct_admin.map_id(124),
+    p_sra_id => sct_admin.map_id(297),
+    p_sra_sru_id => sct_admin.map_id(298),
     p_sra_sgr_id => sct_admin.map_id(112),
     p_sra_spi_id => 'DOCUMENT',
     p_sra_sat_id => 'PLSQL_CODE',
     p_sra_param_1 => q'|sct_ui_pkg.configure_edit_sra;|',
     p_sra_param_2 => q'||',
-    p_sra_param_3 => q'||',
     p_sra_sort_seq => 10,
-    p_sra_on_error => sct_util.C_FALSE,
-    p_sra_raise_recursive => sct_util.C_TRUE,
-    p_sra_active => sct_util.C_TRUE);
-
-  sct_admin.merge_rule_action(
-    p_sra_id => sct_admin.map_id(128),
-    p_sra_sru_id => sct_admin.map_id(124),
-    p_sra_sgr_id => sct_admin.map_id(112),
-    p_sra_spi_id => 'R11_SAT_HELP',
-    p_sra_sat_id => 'REFRESH_ITEM',
-    p_sra_param_1 => q'||',
-    p_sra_param_2 => q'||',
-    p_sra_param_3 => q'||',
-    p_sra_sort_seq => 20,
     p_sra_on_error => sct_util.C_FALSE,
     p_sra_raise_recursive => sct_util.C_TRUE,
     p_sra_active => sct_util.C_TRUE);

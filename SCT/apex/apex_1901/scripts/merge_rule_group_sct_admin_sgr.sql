@@ -41,7 +41,6 @@ begin
     p_sra_sat_id => 'REFRESH_ITEM',
     p_sra_param_1 => q'||',
     p_sra_param_2 => q'||',
-    p_sra_param_3 => q'||',
     p_sra_sort_seq => 10,
     p_sra_on_error => sct_util.C_FALSE,
     p_sra_raise_recursive => sct_util.C_TRUE,
@@ -55,7 +54,6 @@ begin
     p_sra_sat_id => 'PLSQL_CODE',
     p_sra_param_1 => q'|sct_ui_pkg.set_action_admin_sgr;|',
     p_sra_param_2 => q'||',
-    p_sra_param_3 => q'||',
     p_sra_sort_seq => 20,
     p_sra_on_error => sct_util.C_FALSE,
     p_sra_raise_recursive => sct_util.C_TRUE,
@@ -78,7 +76,6 @@ begin
     p_sra_sat_id => 'EMPTY_FIELD',
     p_sra_param_1 => q'||',
     p_sra_param_2 => q'||',
-    p_sra_param_3 => q'||',
     p_sra_sort_seq => 10,
     p_sra_on_error => sct_util.C_FALSE,
     p_sra_raise_recursive => sct_util.C_TRUE,
@@ -92,7 +89,6 @@ begin
     p_sra_sat_id => 'REFRESH_ITEM',
     p_sra_param_1 => q'||',
     p_sra_param_2 => q'||',
-    p_sra_param_3 => q'||',
     p_sra_sort_seq => 20,
     p_sra_on_error => sct_util.C_FALSE,
     p_sra_raise_recursive => sct_util.C_TRUE,
@@ -106,7 +102,6 @@ begin
     p_sra_sat_id => 'REFRESH_ITEM',
     p_sra_param_1 => q'||',
     p_sra_param_2 => q'||',
-    p_sra_param_3 => q'||',
     p_sra_sort_seq => 30,
     p_sra_on_error => sct_util.C_FALSE,
     p_sra_raise_recursive => sct_util.C_TRUE,
@@ -129,7 +124,6 @@ begin
     p_sra_sat_id => 'EMPTY_FIELD',
     p_sra_param_1 => q'||',
     p_sra_param_2 => q'||',
-    p_sra_param_3 => q'||',
     p_sra_sort_seq => 10,
     p_sra_on_error => sct_util.C_FALSE,
     p_sra_raise_recursive => sct_util.C_TRUE,
@@ -143,7 +137,6 @@ begin
     p_sra_sat_id => 'REFRESH_ITEM',
     p_sra_param_1 => q'||',
     p_sra_param_2 => q'||',
-    p_sra_param_3 => q'||',
     p_sra_sort_seq => 30,
     p_sra_on_error => sct_util.C_FALSE,
     p_sra_raise_recursive => sct_util.C_TRUE,
@@ -157,7 +150,6 @@ begin
     p_sra_sat_id => 'REFRESH_ITEM',
     p_sra_param_1 => q'||',
     p_sra_param_2 => q'||',
-    p_sra_param_3 => q'||',
     p_sra_sort_seq => 20,
     p_sra_on_error => sct_util.C_FALSE,
     p_sra_raise_recursive => sct_util.C_TRUE,
@@ -171,7 +163,6 @@ begin
     p_sra_sat_id => 'DISABLE_ITEM',
     p_sra_param_1 => q'||',
     p_sra_param_2 => q'||',
-    p_sra_param_3 => q'||',
     p_sra_sort_seq => 40,
     p_sra_on_error => sct_util.C_FALSE,
     p_sra_raise_recursive => sct_util.C_TRUE,
@@ -187,34 +178,6 @@ begin
     p_sru_active => sct_util.C_TRUE);
   
   sct_admin.merge_rule_action(
-    p_sra_id => sct_admin.map_id(239),
-    p_sra_sru_id => sct_admin.map_id(28),
-    p_sra_sgr_id => sct_admin.map_id(2),
-    p_sra_spi_id => 'R1_RULE_OVERVIEW',
-    p_sra_sat_id => 'AFTER_REFRESH',
-    p_sra_param_1 => q'|de.condes.ui.HideIRControlPanel('R1_RULE_OVERVIEW');|',
-    p_sra_param_2 => q'||',
-    p_sra_param_3 => q'||',
-    p_sra_sort_seq => 40,
-    p_sra_on_error => sct_util.C_FALSE,
-    p_sra_raise_recursive => sct_util.C_TRUE,
-    p_sra_active => sct_util.C_TRUE);
-
-  sct_admin.merge_rule_action(
-    p_sra_id => sct_admin.map_id(245),
-    p_sra_sru_id => sct_admin.map_id(28),
-    p_sra_sgr_id => sct_admin.map_id(2),
-    p_sra_spi_id => 'R1_RULE_GROUP',
-    p_sra_sat_id => 'AFTER_REFRESH',
-    p_sra_param_1 => q'|de.condes.ui.HideIRControlPanel('R1_RULE_GROUP');|',
-    p_sra_param_2 => q'||',
-    p_sra_param_3 => q'||',
-    p_sra_sort_seq => 50,
-    p_sra_on_error => sct_util.C_FALSE,
-    p_sra_raise_recursive => sct_util.C_TRUE,
-    p_sra_active => sct_util.C_TRUE);
-
-  sct_admin.merge_rule_action(
     p_sra_id => sct_admin.map_id(30),
     p_sra_sru_id => sct_admin.map_id(28),
     p_sra_sgr_id => sct_admin.map_id(2),
@@ -222,7 +185,6 @@ begin
     p_sra_sat_id => 'EMPTY_FIELD',
     p_sra_param_1 => q'||',
     p_sra_param_2 => q'||',
-    p_sra_param_3 => q'||',
     p_sra_sort_seq => 10,
     p_sra_on_error => sct_util.C_FALSE,
     p_sra_raise_recursive => sct_util.C_TRUE,
@@ -236,7 +198,6 @@ begin
     p_sra_sat_id => 'DIALOG_CLOSED',
     p_sra_param_1 => q'||',
     p_sra_param_2 => q'||',
-    p_sra_param_3 => q'||',
     p_sra_sort_seq => 20,
     p_sra_on_error => sct_util.C_FALSE,
     p_sra_raise_recursive => sct_util.C_TRUE,
@@ -250,7 +211,6 @@ begin
     p_sra_sat_id => 'DIALOG_CLOSED',
     p_sra_param_1 => q'||',
     p_sra_param_2 => q'||',
-    p_sra_param_3 => q'||',
     p_sra_sort_seq => 30,
     p_sra_on_error => sct_util.C_FALSE,
     p_sra_raise_recursive => sct_util.C_TRUE,
@@ -273,7 +233,6 @@ begin
     p_sra_sat_id => 'REFRESH_ITEM',
     p_sra_param_1 => q'||',
     p_sra_param_2 => q'||',
-    p_sra_param_3 => q'||',
     p_sra_sort_seq => 10,
     p_sra_on_error => sct_util.C_FALSE,
     p_sra_raise_recursive => sct_util.C_TRUE,
@@ -287,7 +246,6 @@ begin
     p_sra_sat_id => 'PLSQL_CODE',
     p_sra_param_1 => q'|sct_ui_pkg.set_action_admin_sgr;|',
     p_sra_param_2 => q'||',
-    p_sra_param_3 => q'||',
     p_sra_sort_seq => 20,
     p_sra_on_error => sct_util.C_FALSE,
     p_sra_raise_recursive => sct_util.C_TRUE,
@@ -310,7 +268,6 @@ begin
     p_sra_sat_id => 'EMPTY_FIELD',
     p_sra_param_1 => q'||',
     p_sra_param_2 => q'||',
-    p_sra_param_3 => q'||',
     p_sra_sort_seq => 10,
     p_sra_on_error => sct_util.C_FALSE,
     p_sra_raise_recursive => sct_util.C_TRUE,
@@ -324,7 +281,6 @@ begin
     p_sra_sat_id => 'REFRESH_ITEM',
     p_sra_param_1 => q'||',
     p_sra_param_2 => q'||',
-    p_sra_param_3 => q'||',
     p_sra_sort_seq => 20,
     p_sra_on_error => sct_util.C_FALSE,
     p_sra_raise_recursive => sct_util.C_TRUE,
@@ -347,7 +303,6 @@ begin
     p_sra_sat_id => 'REFRESH_ITEM',
     p_sra_param_1 => q'||',
     p_sra_param_2 => q'||',
-    p_sra_param_3 => q'||',
     p_sra_sort_seq => 20,
     p_sra_on_error => sct_util.C_FALSE,
     p_sra_raise_recursive => sct_util.C_TRUE,
@@ -361,7 +316,6 @@ begin
     p_sra_sat_id => 'EMPTY_FIELD',
     p_sra_param_1 => q'||',
     p_sra_param_2 => q'||',
-    p_sra_param_3 => q'||',
     p_sra_sort_seq => 10,
     p_sra_on_error => sct_util.C_FALSE,
     p_sra_raise_recursive => sct_util.C_TRUE,
@@ -384,7 +338,6 @@ begin
     p_sra_sat_id => 'REFRESH_ITEM',
     p_sra_param_1 => q'||',
     p_sra_param_2 => q'||',
-    p_sra_param_3 => q'||',
     p_sra_sort_seq => 10,
     p_sra_on_error => sct_util.C_FALSE,
     p_sra_raise_recursive => sct_util.C_TRUE,
@@ -407,7 +360,6 @@ begin
     p_sra_sat_id => 'REFRESH_ITEM',
     p_sra_param_1 => q'||',
     p_sra_param_2 => q'||',
-    p_sra_param_3 => q'||',
     p_sra_sort_seq => 10,
     p_sra_on_error => sct_util.C_FALSE,
     p_sra_raise_recursive => sct_util.C_TRUE,
@@ -435,8 +387,6 @@ begin
     p_sai_spi_id => 'B1_COPY_SGR',
     p_sai_active => sct_util.C_TRUE);
 
-
-
   sct_admin.merge_apex_action(    
     p_saa_id => sct_admin.map_id(64),
     p_saa_sgr_id => sct_admin.map_id(2),
@@ -459,8 +409,6 @@ begin
     p_sai_spi_id => 'B1_EXPORT_SGR',
     p_sai_active => sct_util.C_TRUE);
 
-
-
   sct_admin.merge_apex_action(    
     p_saa_id => sct_admin.map_id(66),
     p_saa_sgr_id => sct_admin.map_id(2),
@@ -481,13 +429,6 @@ begin
     p_sai_saa_id => sct_admin.map_id(66),
     p_sai_spi_sgr_id => sct_admin.map_id(2),
     p_sai_spi_id => 'B1_CREATE_SRU',
-    p_sai_active => sct_util.C_TRUE);
-
-
-  sct_admin.merge_apex_action_item(
-    p_sai_saa_id => sct_admin.map_id(66),
-    p_sai_spi_sgr_id => sct_admin.map_id(2),
-    p_sai_spi_id => 'B1_CREATE_SRU_1',
     p_sai_active => sct_util.C_TRUE);
 
 

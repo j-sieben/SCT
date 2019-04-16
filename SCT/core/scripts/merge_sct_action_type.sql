@@ -191,7 +191,7 @@ begin
   sct_admin.merge_action_type(
     p_sat_id => 'CONFIRM_CLICK',
     p_sat_stg_id => 'JAVA_SCRIPT',
-    p_sat_sif_id => 'BUTTON',
+    p_sat_sif_id => 'PAGE_BUTTON',
     p_sat_name => 'Schaltfläche an Bestätigungsfrage binden',
     p_sat_description => q'{<p>Sorgt dafür, dass bei einem Klick auf eine Schaltfläche eine Bestätigungsmeldung gezeigt wird.<br>Nur, wenn diese Nachfrage best&auml;tigt wird, wird das Ereignis an SCT gemeldet.</p>}',
     p_sat_pl_sql => q'{}',
@@ -224,7 +224,7 @@ begin
   sct_admin.merge_action_type(
     p_sat_id => 'DISABLE_BUTTON',
     p_sat_stg_id => 'BUTTON',
-    p_sat_sif_id => 'BUTTON',
+    p_sat_sif_id => 'PAGE_BUTTON',
     p_sat_name => 'Schaltfläche deaktivieren',
     p_sat_description => q'{<p>Deaktiviert eine Schaltfl&auml;che. <br>Zum Deaktivieren eines Seitenelements verwenden Sie bitte <span style="font-family:courier new,courier,monospace">Feld deaktivieren</span>.</p>}',
     p_sat_pl_sql => q'{}',
@@ -320,7 +320,7 @@ begin
   sct_admin.merge_action_type(
     p_sat_id => 'ENABLE_BUTTON',
     p_sat_stg_id => 'BUTTON',
-    p_sat_sif_id => 'BUTTON',
+    p_sat_sif_id => 'PAGE_BUTTON',
     p_sat_name => 'Schaltfläche aktivieren',
     p_sat_description => q'{<p>Aktiviert eine Schaltfl&auml;che. Zum Aktivieren eines Seitenelements verwenden Sie bitte <span style="font-family:courier new,courier,monospace">Feld anzeigen</span>.</p>}',
     p_sat_pl_sql => q'{}',

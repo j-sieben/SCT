@@ -17,6 +17,21 @@ as
   g_id_map id_map_t;
   
   
+  /** Method tzo limit the size of a parameter to 4000 byte max to allow for storage in VARCHAR2(4000 BYTE) variables
+   * @param  p_param  Parameter value to shrink to 4000 byte
+   * @return Parameter value, limited to 4000 byte max
+   * @usage  Tracing parameters are limited to 4000 byte length. This method assures that not more bytes are passed in
+   *         to the constructor functions of MSG_PARAM calls
+   */
+  function limit_param_size(
+    p_param in clob)
+    return varchar2
+  as
+  begin
+    return substrb(to_char(dbms_lob.substr(p_param, 4000, 1)), 1, 4000);
+  end limit_param_size;
+  
+  
   /** Method to generate initialization code that copies initial page item values to the session state
    * @param  p_sgr_id  Rule group ID
    * @return Anonymous PL/SQL block that copies the actual session state values into the session state
@@ -751,7 +766,7 @@ as
        where uttm_mode = C_DEFAULT;    
     end if;
     
-    pit.leave_mandatory(p_params => msg_params(msg_param('Return', substr(l_stmt, 1, 4000))));
+    pit.leave_mandatory(p_params => msg_params(msg_param('Return', limit_param_size(l_stmt))));
     return l_stmt;
   end export_rule_group;
 
@@ -1301,7 +1316,8 @@ as
   procedure merge_action_param_type(
     p_spt_id in sct_action_param_type.spt_id%type,
     p_spt_name in pit_translatable_item.pti_name%type,
-    p_spt_description in pit_translatable_item.pti_description%type,
+    p_spt_display_name in pit_translatable_item.pti_display_name%type default null,
+    p_spt_description in pit_translatable_item.pti_description%type default null,
     p_spt_item_type in sct_action_param_type.spt_item_type%type,
     p_spt_active in sct_action_param_type.spt_active%type default SCT_UTIL.C_TRUE)
   as
@@ -1314,6 +1330,7 @@ as
       p_pti_pml_name => null,
       p_pti_pmg_name => C_SCT,
       p_pti_name => p_spt_name,
+      p_pti_display_name => p_spt_display_name,
       p_pti_description => utl_text.unwrap_string(p_spt_description));
       
     -- store local data
@@ -1340,6 +1357,7 @@ as
     merge_action_param_type(
       p_spt_id => p_row.spt_id,
       p_spt_name => p_row.spt_name,
+      p_spt_display_name => p_row.spt_display_name,
       p_spt_description => p_row.spt_description,
       p_spt_item_type => p_row.spt_item_type,
       p_spt_active => p_row.spt_active);      
@@ -1632,7 +1650,7 @@ as
        and uttm_name = C_UTTM_NAME
        and uttm_mode = C_FRAME;
     
-    pit.leave_mandatory(p_params => msg_params(msg_param('Return', substr(l_stmt, 1, 4000))));
+    pit.leave_mandatory(p_params => msg_params(msg_param('Return', limit_param_size(l_stmt))));
     return l_stmt;
   end export_action_types;
   
@@ -1718,10 +1736,10 @@ as
     p_sra_sgr_id in sct_rule_group.sgr_id%type,
     p_sra_spi_id in sct_page_item.spi_id%type,
     p_sra_sat_id in sct_action_type.sat_id%type,
+    p_sra_sort_seq in sct_rule_action.sra_sort_seq%type,
     p_sra_param_1 in sct_rule_action.sra_param_1%type default null,
     p_sra_param_2 in sct_rule_action.sra_param_2%type default null,
     p_sra_param_3 in sct_rule_action.sra_param_3%type default null,
-    p_sra_sort_seq in sct_rule_action.sra_sort_seq%type,
     p_sra_on_error in sct_rule_action.sra_on_error%type default sct_util.C_FALSE,
     p_sra_raise_recursive in sct_rule_action.sra_raise_recursive%type default sct_util.C_TRUE,
     p_sra_active in sct_rule_action.sra_active%type default sct_util.C_TRUE,
@@ -1736,10 +1754,10 @@ as
                   p_sra_sgr_id sra_sgr_id,
                   p_sra_spi_id sra_spi_id,
                   p_sra_sat_id sra_sat_id,
+                  p_sra_sort_seq sra_sort_seq,
                   p_sra_param_1 sra_param_1,
                   p_sra_param_2 sra_param_2,
                   p_sra_param_3 sra_param_3,
-                  p_sra_sort_seq sra_sort_seq,
                   sct_util.get_boolean(p_sra_on_error) sra_on_error,
                   sct_util.get_boolean(p_sra_raise_recursive) sra_raise_recursive,
                   sct_util.get_boolean(p_sra_active) sra_active,
@@ -1749,18 +1767,20 @@ as
      when matched then update set
           t.sra_spi_id = s.sra_spi_id, 
           t.sra_sat_id = s.sra_sat_id,
+          t.sra_sort_seq = s.sra_sort_seq,
           t.sra_param_1 = s.sra_param_1,
           t.sra_param_2 = s.sra_param_2,
-          t.sra_sort_seq = s.sra_sort_seq,
+          t.sra_param_3 = s.sra_param_3,
+          t.sra_on_error = s.sra_on_error,
           t.sra_raise_recursive = s.sra_raise_recursive,
           t.sra_active = s.sra_active,
           t.sra_comment = s.sra_comment
      when not matched then insert (
-            sra_id, sra_sru_id, sra_sgr_id, sra_spi_id, sra_sat_id, sra_param_1, sra_param_2, sra_param_3, 
-            sra_sort_seq, sra_on_error, sra_raise_recursive, sra_active, sra_comment)
+            sra_id, sra_sru_id, sra_sgr_id, sra_spi_id, sra_sat_id, sra_sort_seq, sra_param_1, sra_param_2, sra_param_3, 
+            sra_on_error, sra_raise_recursive, sra_active, sra_comment)
           values(
-            s.sra_id, s.sra_sru_id, s.sra_sgr_id, s.sra_spi_id, s.sra_sat_id, s.sra_param_1, s.sra_param_2, s.sra_param_3, 
-            s.sra_sort_seq, s.sra_on_error, s.sra_raise_recursive, s.sra_active, s.sra_comment);
+            s.sra_id, s.sra_sru_id, s.sra_sgr_id, s.sra_spi_id, s.sra_sat_id, s.sra_sort_seq, s.sra_param_1, s.sra_param_2, s.sra_param_3, 
+            s.sra_on_error, s.sra_raise_recursive, s.sra_active, s.sra_comment);
     
     pit.leave_mandatory;
   exception

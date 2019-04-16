@@ -1,5 +1,5 @@
 create or replace package sct_admin
-  authid current_user
+  authid definer
 as 
   
   /** Package to implement all functionality around maintaining SCT rules
@@ -11,7 +11,7 @@ as
     
   /** Method to map technical IDs upon import or copying of rule groups
    * @param [p_id] ID to map to a new ID. If NULL, the mapping list is initialized
-   * @usage  As it is not know beforhand which ID an entry in a table will get, this method maintains a mapping table
+   * @usage  As it is not known beforhand which ID an entry in a table will get, this method maintains a mapping table
    *         that maps the original ID to the newly created IDs from a sequence.
    *         If the ID passed in is not found in the table, it returns the newly created ID.
    *         If the ID is found in the table, the method returns the mapped ID.
@@ -54,7 +54,7 @@ as
   procedure delete_rule_group(
     p_sgr_id in sct_rule_group.sgr_id%type);
   
-  /** Overlaod with a rowtype record. This sometimes is easier, fi if a composed PK exists or a rowtype record exists anyway */
+  /** Overlaod with a rowtype record. This is sometimes easier, fi if a composed PK exists or a rowtype record exists anyway */
   procedure delete_rule_group(
     p_row in out nocopy sct_rule_group%rowtype);
     
@@ -313,18 +313,20 @@ as
 
  
   /** Administration of ACTION PARAMETER TYPES
-   * @param  p_spt_id           ID of the action parameter type
-   * @param  p_spt_name         Name of the action parameter type
-   * @param  p_spt_description  Optional description
-   * @param  p_spt_item_type    Choice of input item type for this parameter type, one of SELECT_LIST|TEXT_AREA|TEXT
-   *                            If set to SELECT_LIST, a view of name SCT_PARAM_LOV_<SPT_ID> must be provided to calculate
-   *                            the available values. This list may be filtered using SGR_ID.
-   * @param [p_spt_active]      Flag to indicate whether this action parameter type is used. Defaults to SCT_UTIL.C_TRUE
+   * @param  p_spt_id            ID of the action parameter type
+   * @param  p_spt_name          Name of the action parameter type
+   * @param  p_spt_display_name  Display name of the action parameter type
+   * @param  p_spt_description   Optional description
+   * @param  p_spt_item_type     Choice of input item type for this parameter type, one of SELECT_LIST|TEXT_AREA|TEXT
+   *                             If set to SELECT_LIST, a view of name SCT_PARAM_LOV_<SPT_ID> must be provided to calculate
+   *                             the available values. This list may be filtered using SGR_ID.
+   * @param [p_spt_active]       Flag to indicate whether this action parameter type is used. Defaults to SCT_UTIL.C_TRUE
    */
   procedure merge_action_param_type(
     p_spt_id in sct_action_param_type.spt_id%type,
     p_spt_name in pit_translatable_item.pti_name%type,
-    p_spt_description in pit_translatable_item.pti_description%type,
+    p_spt_display_name in pit_translatable_item.pti_display_name%type default null,
+    p_spt_description in pit_translatable_item.pti_description%type default null,
     p_spt_item_type in sct_action_param_type.spt_item_type%type,
     p_spt_active in sct_action_param_type.spt_active%type default SCT_UTIL.C_TRUE);
 
@@ -443,10 +445,10 @@ as
    * @param  p_sra_sgr_id           Reference to SCT_RULE_GROUP
    * @param  p_sra_spi_id           Reference to SCT_PAGE_ITEM
    * @param  p_sra_sat_id           Reference to SCT_ACTION_TYPE
-   * @param  p_sra_param_1          Optional parameter 1
-   * @param  p_sra_param_2          Optional parameter 2
-   * @param  p_sra_param_3          Optional parameter 3
    * @param  p_sort_seq             Sort criteria to organize the order of execution
+   * @param [p_sra_param_1]         Optional parameter 1
+   * @param [p_sra_param_2]         Optional parameter 2
+   * @param [p_sra_param_3]         Optional parameter 3
    * @param [p_sra_on_error]        Flag to indicate whether this action is executed as an error handler for that rule. 
    *                                Defaults to SCT_UTIL.C_FALSE
    * @param [p_sra_raise_recursive] Flag to indicate whether this action allows recursive executions of other rules. 
@@ -460,10 +462,10 @@ as
     p_sra_sgr_id in sct_rule_group.sgr_id%type,
     p_sra_spi_id in sct_page_item.spi_id%type,
     p_sra_sat_id in sct_action_type.sat_id%type,
+    p_sra_sort_seq in sct_rule_action.sra_sort_seq%type,
     p_sra_param_1 in sct_rule_action.sra_param_1%type default null,
     p_sra_param_2 in sct_rule_action.sra_param_2%type default null,
     p_sra_param_3 in sct_rule_action.sra_param_3%type default null,
-    p_sra_sort_seq in sct_rule_action.sra_sort_seq%type,
     p_sra_on_error in sct_rule_action.sra_on_error%type default sct_util.C_FALSE,
     p_sra_raise_recursive in sct_rule_action.sra_raise_recursive%type default sct_util.C_TRUE,
     p_sra_active in sct_rule_action.sra_active%type default sct_util.C_TRUE,

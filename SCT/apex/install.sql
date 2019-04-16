@@ -45,6 +45,9 @@ prompt &s1.Create view SCT_UI_ADMIN_SGR_RULES
 prompt &s1.Create view SCT_UI_EDIT_SAA
 @&view_dir.sct_ui_edit_saa.vw
 
+prompt &s1.Create view SCT_UI_EDIT_SAT
+@&view_dir.sct_ui_edit_sat.vw
+
 prompt &s1.Create view SCT_UI_EDIT_SGR
 @&view_dir.sct_ui_edit_sgr.vw
 
@@ -65,6 +68,15 @@ prompt &s1.Create view SCT_UI_LIST_ACTION_TYPE
 
 prompt &s1.Create view SCT_UI_LIST_PAGE_ITEMS
 @&view_dir.sct_ui_list_page_items.vw
+
+prompt &s1.Create view SCT_UI_LOV_ACTION_ITEM_FOCUS
+@&view_dir.sct_ui_lov_action_item_focus.vw
+
+prompt &s1.Create view SCT_UI_LOV_ACTION_PARAM_TYPE
+@&view_dir.sct_ui_lov_action_param_type.vw
+
+prompt &s1.Create view SCT_UI_LOV_ACTION_TYPE_GROUP
+@&view_dir.sct_ui_lov_action_type_group.vw
 
 prompt &s1.Create view SCT_UI_LOV_APEX_ACTION_TYPE
 @&view_dir.sct_ui_lov_apex_action_type.vw
@@ -155,6 +167,9 @@ alter package sct_admin compile package;
 call dbms_session.reset_package();
 
 prompt &h2.Create SCT rules
+prompt &s1.Import ACTION TYPES rule
+@&apex_script_dir.merge_action_types.sql
+
 prompt &s1.Import SCT_ADMIN_SGR rule
 @&apex_script_dir.merge_rule_group_sct_admin_sgr.sql
 

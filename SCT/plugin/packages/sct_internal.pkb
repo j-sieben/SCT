@@ -22,7 +22,7 @@ as
   C_EVENT_INITIALIZE constant sct_util.ora_name_type := 'initialize';
   
   C_BIND_JSON_TEMPLATE constant varchar2(100) := '[#JSON#]';
-  C_BIND_JSON_ELEMENT constant varchar2(100) := '{"id":"#ID#","event":"#EVENT#"}';
+  C_BIND_JSON_ELEMENT constant varchar2(100) := '{"id":"#ID#","event":"#EVENT#","action":"#STATIC_ACTION#"}';
   C_PAGE_JSON_ELEMENT constant varchar2(100) := '{"id":"#ID#","value":"#VALUE#"}';  
   C_JS_NAMESPACE constant varchar2(50 byte) := 'de.condes.plugin.sct';
   C_JS_SCRIPT_START constant varchar2(300) := q'^<script>#CR#  /** Init: #DURATION#hsec*/#CR#  #JS_FILE#.setItemValues(#ITEM_JSON#);#CR#  #JS_FILE#.setErrors(#ERROR_JSON#);^';
@@ -554,7 +554,7 @@ as
     
     append(l_js, sct_util.C_CR || C_JS_SCRIPT_END);
     
-    pit.leave_optional(msg_params(msg_param('JavaScript', l_js)));
+    pit.leave_optional(msg_params(msg_param('JavaScript', substr(l_js, 1, 4000))));
     return l_js;
   end get_java_script;
   
@@ -1179,7 +1179,8 @@ as
         l_json,
         utl_text.bulk_replace(C_BIND_JSON_ELEMENT, char_table(
           'ID', item.spi_id,
-          'EVENT', item.sit_event)),
+          'EVENT', item.sit_event,
+          'STATIC_ACTION', item.static_action)),
         ',', true);
       -- register relevant items with session state to make sure that their actual value is harmonized with the page
       -- (this task is served by REGISTER_ITEM after initialization)
@@ -1973,3 +1974,4 @@ as
 begin
   initialize;
 end sct_internal;
+/

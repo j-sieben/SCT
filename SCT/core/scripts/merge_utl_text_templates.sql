@@ -413,7 +413,9 @@ q'^  #RULE_ACTION_PARAMS#^',
     p_uttm_text => q'^  sct_admin.merge_action_param_type(\CR\^' || 
 q'^    p_spt_id => '#SPT_ID#',\CR\^' || 
 q'^    p_spt_name => '#SPT_NAME#',\CR\^' || 
+q'^    p_spt_display_name => '#SPT_DISPLAY_NAME#',\CR\^' || 
 q'^    p_spt_description => #SPT_DESCRIPTION#,\CR\^' || 
+q'^    p_spt_item_type => #SPT_ITEM_TYPE#,\CR\^' || 
 q'^    p_spt_active => #SPT_ACTIVE#);\CR\^' || 
 q'^^',
     p_uttm_log_text => q'^^',

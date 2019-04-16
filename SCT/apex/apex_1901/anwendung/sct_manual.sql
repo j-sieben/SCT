@@ -13,7 +13,7 @@ prompt  WEBSHEET APPLICATION 101 - SCT
 -- Websheet Application Export:
 --   Application:     101
 --   Name:            SCT
---   Date and Time:   14:31 Montag November 19, 2018
+--   Date and Time:   09:38 Sunday February 24, 2019
 --   Exported By:     BUCH_ADMIN
 --   Export Type:     Websheet Application Export
 --   Version:         18.2.0.00.12
@@ -60,7 +60,7 @@ begin execute immediate 'alter session set nls_numeric_characters=''.,''';
 end;
 
 /
-begin wwv_flow.g_browser_language := 'de'; end;
+begin wwv_flow.g_browser_language := 'en'; end;
 /
 prompt  Check Compatibility...
  

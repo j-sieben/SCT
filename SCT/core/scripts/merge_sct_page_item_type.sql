@@ -6,13 +6,13 @@ using (select 'ITEM' sit_id,
               'Element' sit_name,
               sct_util.get_true sit_has_value,
               'change' sit_event,
-              q'~plugin_sct.get_char('#ITEM#') #ITEM#~' sit_col_template,
+              q'~sct_internal.get_char('#ITEM#') #ITEM#~' sit_col_template,
               q'~itm.#ITEM#~' sit_init_template,
               sct_util.get_false sit_include_in_view
          from dual
         union all 
-       select 'NUMBER_ITEM', 'Element (Zahl)', sct_util.get_true, 'change', q'~plugin_sct.get_number('#ITEM#',replace( '#CONVERSION#', 'G')) #ITEM#~', q'~to_char(itm.#ITEM#, '#CONVERSION#')~', sct_util.get_false from dual union all
-       select 'DATE_ITEM', 'Element (Datum)', sct_util.get_true, 'change', q'~plugin_sct.get_date('#ITEM#', '#CONVERSION#') #ITEM#~', q'~to_char(to_date(itm.#ITEM#), '#CONVERSION#')~', sct_util.get_false from dual union all
+       select 'NUMBER_ITEM', 'Element (Zahl)', sct_util.get_true, 'change', q'~sct_internal.get_number('#ITEM#',replace( '#CONVERSION#', 'G')) #ITEM#~', q'~to_char(itm.#ITEM#, '#CONVERSION#')~', sct_util.get_false from dual union all
+       select 'DATE_ITEM', 'Element (Datum)', sct_util.get_true, 'change', q'~sct_internal.get_date('#ITEM#', '#CONVERSION#') #ITEM#~', q'~to_char(to_date(itm.#ITEM#), '#CONVERSION#')~', sct_util.get_false from dual union all
        select 'APP_ITEM', 'Anwendungselement', sct_util.get_true, 'change', q'~v('#ITEM#') #ITEM#~', 'itm.#ITEM#', sct_util.get_false from dual union all
        select 'BUTTON', 'Schaltfläche', sct_util.get_false, 'click', q'~case plugin_sct.get_firing_item when '#ITEM#' then 1 else 0 end #ITEM#~', null, sct_util.get_false from dual union all
        select 'REGION', 'Region', sct_util.get_false, null, q'~null #ITEM#~', null, sct_util.get_false from dual union all

@@ -16,6 +16,7 @@ select /*+ no_merge(p) */
        sra_sort_seq,
        sra_param_1,
        sra_param_2,
+       sra_param_3,
        sra_comment,
        case sra_on_error when p.c_true then flg_yes else flg_no end sra_on_error,
        case sra_raise_recursive when p.c_true then flg_yes else flg_no end sra_raise_recursive,

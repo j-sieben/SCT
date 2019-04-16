@@ -290,3 +290,4 @@ as
   /* @see plugin_sct.submit_page */
   procedure submit_page;
 end sct_internal;
+/

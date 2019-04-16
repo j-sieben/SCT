@@ -12,6 +12,8 @@ create table sct_action_type(
 	constraint p_sct_action_type primary key (sat_id),
   constraint fk_sat_stg_id foreign key(sat_stg_id)
     references sct_action_type_group(stg_id),
+  constraint fk_sat_sif_id foreign key(sat_sif_id)
+    references sct_action_item_focus(sif_id),
   constraint fk_sat_pti_id foreign key(sat_pti_id, sat_pmg_name)
     references &PIT_OWNER..pit_translatable_item(pti_uid, pti_pmg_name) on delete cascade,
   constraint nn_sat_pti_id check(sat_pti_id is not null),

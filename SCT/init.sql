@@ -35,7 +35,7 @@ select owner pit_owner
 
 -- Apex Pfad anhand von installiertem APEX-Benutzer ermitteln
 select case 
-       when max(username) >= 'APEX_180200' then 'apex_1802'
+       when max(username) >= 'APEX_190100' then 'apex_1901'
        else 'apex_0500' end apex_path
   from all_users
  where username like 'APEX_______';

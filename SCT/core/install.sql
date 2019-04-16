@@ -30,6 +30,9 @@ prompt &s1.Create table SCT_RULE_GROUP
 prompt &s1.Create table SCT_ACTION_TYPE_GROUP
 @&table_dir.sct_action_type_group.tbl
 
+prompt &s1.Create table SCT_ACTION_ITEM_FOCUS
+@&table_dir.sct_action_item_focus.tbl
+
 prompt &s1.Create table SCT_ACTION_TYPE
 @&table_dir.sct_action_type.tbl
 
@@ -41,9 +44,6 @@ prompt &s1.Create table SCT_APEX_ACTION_TYPE
 
 prompt &s1.Create table SCT_PAGE_ITEM_TYPE
 @&table_dir.sct_page_item_type.tbl
-
-prompt &s1.Create table SCT_ACTION_ITEM_FOCUS
-@&table_dir.sct_action_item_focus.tbl
 
 prompt &s1.Create table SCT_ACTION_PARAMETER
 @&table_dir.sct_action_parameter.tbl
@@ -126,11 +126,11 @@ prompt &s1.Create internal SCT page item
 prompt &s1.Create Action Parameter types 
 @&script_dir.merge_sct_action_param_type.sql
 
-prompt &s1.Create SCT action types
-@&script_dir.merge_sct_action_type.sql
-
 prompt &s1.Create Action Item Focus
 @&script_dir.merge_sct_action_item_focus.sql
+
+prompt &s1.Create SCT action types
+@&script_dir.merge_sct_action_type.sql
 
 prompt &s1.Create APEX action types
 @&script_dir.merge_sct_apex_action_type.sql

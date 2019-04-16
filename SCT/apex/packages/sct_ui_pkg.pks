@@ -96,6 +96,24 @@ as
   procedure process_edit_sra;
   
   
+  /** Method to validate page EDIT_SAT
+   * @usage  Is called to validate user data if the page is submitted
+   */
+  function validate_edit_sat
+    return boolean;
+    
+  /** Method to process page EDIT_SAT
+   * @usage  Is called to process user data if the page is submitted
+   */
+  procedure process_edit_sat;
+  
+  
+  /** Method to print SAT help text to help region
+   * @usage  Is called to dynamically show the help text for a given SAT
+   */
+  procedure print_sat_help;
+  
+  
   /** Method to validate page EDIT_SAA
    * @usage  Is called to validate user data if the page is submitted
    */

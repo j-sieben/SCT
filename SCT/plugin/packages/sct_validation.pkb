@@ -353,7 +353,7 @@ end;~';
     when 'STRING_OR_PIT_MESSAGE' then
       validate_is_string_or_message(p_value, p_spi_id);
     else
-      null;
+      pit.error(msg.SCT_UNKNOWN_SPT, msg_args(p_spt_id));
     end case;
   end validate_parameter;
   

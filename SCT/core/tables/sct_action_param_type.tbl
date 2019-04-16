@@ -15,7 +15,7 @@ organization index;
 
 create unique index idx_spt_pti_pmg_name on sct_action_param_type(spt_pti_id, spt_pmg_name);
 
-comment on table sct_action_param_type is 'Table to store SCT Action Parameter types';
+comment on table sct_action_param_type is 'Table to store SCT Action Parameter types. Is not maintained by the UI, as entries require package methods for validation';
 comment on column sct_action_param_type.spt_id is 'PK, technical key';
 comment on column sct_action_param_type.spt_pti_id is 'Reference to PIT_TRANSLATABLE_ITEM, translatable NAME';
 comment on column sct_action_param_type.spt_pmg_name is 'Reference to PIT_TRANSLATABLE_ITEM, Fixed value SCT';

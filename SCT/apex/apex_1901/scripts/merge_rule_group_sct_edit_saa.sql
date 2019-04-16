@@ -41,7 +41,6 @@ begin
     p_sra_sat_id => 'SET_ITEM',
     p_sra_param_1 => q'|'ACTION'|',
     p_sra_param_2 => q'||',
-    p_sra_param_3 => q'||',
     p_sra_sort_seq => 20,
     p_sra_on_error => sct_util.C_FALSE,
     p_sra_raise_recursive => sct_util.C_TRUE,
@@ -55,7 +54,6 @@ begin
     p_sra_sat_id => 'DISABLE_ITEM',
     p_sra_param_1 => q'||',
     p_sra_param_2 => q'||',
-    p_sra_param_3 => q'||',
     p_sra_sort_seq => 10,
     p_sra_on_error => sct_util.C_FALSE,
     p_sra_raise_recursive => sct_util.C_TRUE,
@@ -78,7 +76,6 @@ begin
     p_sra_sat_id => 'IS_MANDATORY',
     p_sra_param_1 => q'||',
     p_sra_param_2 => q'|.sct-ui-action-mandatory|',
-    p_sra_param_3 => q'||',
     p_sra_sort_seq => 30,
     p_sra_on_error => sct_util.C_FALSE,
     p_sra_raise_recursive => sct_util.C_TRUE,
@@ -92,22 +89,7 @@ begin
     p_sra_sat_id => 'TOGGLE_ITEMS',
     p_sra_param_1 => q'|.sct-ui-action|',
     p_sra_param_2 => q'|.sct-ui-hide|',
-    p_sra_param_3 => q'||',
     p_sra_sort_seq => 10,
-    p_sra_on_error => sct_util.C_FALSE,
-    p_sra_raise_recursive => sct_util.C_TRUE,
-    p_sra_active => sct_util.C_TRUE);
-
-  sct_admin.merge_rule_action(
-    p_sra_id => sct_admin.map_id(84),
-    p_sra_sru_id => sct_admin.map_id(78),
-    p_sra_sgr_id => sct_admin.map_id(70),
-    p_sra_spi_id => 'P9_SAA_SAI_LIST',
-    p_sra_sat_id => 'REFRESH_AND_SET_VALUE',
-    p_sra_param_1 => q'||',
-    p_sra_param_2 => q'||',
-    p_sra_param_3 => q'||',
-    p_sra_sort_seq => 20,
     p_sra_on_error => sct_util.C_FALSE,
     p_sra_raise_recursive => sct_util.C_TRUE,
     p_sra_active => sct_util.C_TRUE);
@@ -129,22 +111,7 @@ begin
     p_sra_sat_id => 'TOGGLE_ITEMS',
     p_sra_param_1 => q'|.sct-ui-toggle|',
     p_sra_param_2 => q'|.sct-ui-hide|',
-    p_sra_param_3 => q'||',
     p_sra_sort_seq => 10,
-    p_sra_on_error => sct_util.C_FALSE,
-    p_sra_raise_recursive => sct_util.C_TRUE,
-    p_sra_active => sct_util.C_TRUE);
-
-  sct_admin.merge_rule_action(
-    p_sra_id => sct_admin.map_id(90),
-    p_sra_sru_id => sct_admin.map_id(86),
-    p_sra_sgr_id => sct_admin.map_id(70),
-    p_sra_spi_id => 'P9_SAA_SAI_LIST',
-    p_sra_sat_id => 'REFRESH_AND_SET_VALUE',
-    p_sra_param_1 => q'||',
-    p_sra_param_2 => q'||',
-    p_sra_param_3 => q'||',
-    p_sra_sort_seq => 20,
     p_sra_on_error => sct_util.C_FALSE,
     p_sra_raise_recursive => sct_util.C_TRUE,
     p_sra_active => sct_util.C_TRUE);
@@ -166,22 +133,7 @@ begin
     p_sra_sat_id => 'TOGGLE_ITEMS',
     p_sra_param_1 => q'|.sct-ui-list|',
     p_sra_param_2 => q'|.sct-ui-hide|',
-    p_sra_param_3 => q'||',
     p_sra_sort_seq => 10,
-    p_sra_on_error => sct_util.C_FALSE,
-    p_sra_raise_recursive => sct_util.C_TRUE,
-    p_sra_active => sct_util.C_TRUE);
-
-  sct_admin.merge_rule_action(
-    p_sra_id => sct_admin.map_id(96),
-    p_sra_sru_id => sct_admin.map_id(92),
-    p_sra_sgr_id => sct_admin.map_id(70),
-    p_sra_spi_id => 'P9_SAA_SAI_LIST',
-    p_sra_sat_id => 'REFRESH_AND_SET_VALUE',
-    p_sra_param_1 => q'||',
-    p_sra_param_2 => q'||',
-    p_sra_param_3 => q'||',
-    p_sra_sort_seq => 20,
     p_sra_on_error => sct_util.C_FALSE,
     p_sra_raise_recursive => sct_util.C_TRUE,
     p_sra_active => sct_util.C_TRUE);

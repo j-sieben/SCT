@@ -1,8 +1,6 @@
 create or replace package body sct_ui_pkg
 as
 
-  c_pkg constant sct_util.ora_name_type := $$PLSQL_UNIT;
-
   C_SRA_COLLECTION constant sct_util.ora_name_type := 'SCT_UI_EDIT_SRA';
   C_SAA_COLLECTION constant sct_util.ora_name_type := 'SCT_UI_EDIT_SAA';
 
@@ -13,6 +11,14 @@ as
   g_edit_saa_row sct_ui_edit_saa%rowtype;
 
 
+  /** Helper to sanitize any SCT name to comply with internal naming rules
+   * @param  p_name  Name to sanitize
+   * @return Name that adheres to the following naming conventions:
+   *         - no quotes
+   *         - no blanks (replaced by underscores)
+   *         - all uppercase
+   *         - legnth limit 50
+   */
   function clean_sct_name(
     p_name in varchar2)
     return varchar2
@@ -35,7 +41,7 @@ as
   begin
     pit.enter_detailed;
     g_page_values := utl_apex.get_page_values;
-    g_edit_sgr_row.sgr_id := to_number(utl_apex.get(g_page_values, 'SGR_ID'), 'fm9999999999990d99999999');
+    g_edit_sgr_row.sgr_id := coalesce(to_number(utl_apex.get(g_page_values, 'SGR_ID'), 'fm9999999999990d99999999'), sct_seq.nextval);
     g_edit_sgr_row.sgr_name := clean_sct_name(utl_apex.get(g_page_values, 'SGR_NAME'));
     g_edit_sgr_row.sgr_description := utl_apex.get(g_page_values, 'SGR_DESCRIPTION');
     g_edit_sgr_row.sgr_app_id := to_number(utl_apex.get(g_page_values, 'SGR_APP_ID'), 'fm9999999999990d99999999');
@@ -167,8 +173,10 @@ as
     l_clob clob;
     l_blob blob;
     l_zip_file blob;
+    l_file_name varchar2(100);
 
     C_FILE_NAME constant varchar2(100 byte) := 'merge_rule_group_#SGR_NAME#.sql';
+    C_ACTION_TYPE_FILE_NAME constant sct_util.ora_name_type := 'merge_action_types.sql';
     C_ZIP_APP_RULES_NAME constant sct_util.ora_name_type := 'application_#APP_ID#_rule_groups.zip';
     C_ZIP_ALL_RULES_NAME constant sct_util.ora_name_type := 'all_rule_groups.zip';
   begin
@@ -177,42 +185,45 @@ as
     l_sgr_app_id := to_number(v('P8_SGR_APP_ID'));
     l_sgr_id := to_number(v('P8_SGR_ID'));
 
-    case v('REQUEST')
-    when 'EXPORT_SGR' then
+    case when utl_apex.request_is('EXPORT_SGR') then
       if l_sgr_id is not null then
         -- export single rule group
         select lower(sgr_name) sgr_name
-          into l_sgr_name
+          into l_file_name
           from sct_rule_group
          where sgr_id = l_sgr_id;
         l_clob := sct_admin.export_rule_group(l_sgr_id);
 
         l_blob := utl_text.clob_to_blob(l_clob);
-        utl_apex.download_blob(l_blob, replace(C_FILE_NAME, '#SGR_NAME#', l_sgr_name));
+        utl_apex.download_blob(l_blob, replace(C_FILE_NAME, '#SGR_NAME#', l_file_name));
       end if;
-    when 'EXPORT_APP' then
+    when utl_apex.request_is('EXPORT_APP') then
       -- export all rule groupes of an application
       for sgr in sgr_cur(l_sgr_app_id) loop
         l_blob := utl_text.clob_to_blob(sct_admin.export_rule_group(p_sgr_id => sgr.sgr_id));
+        l_file_name := replace(C_FILE_NAME, '#SGR_NAME#', sgr.sgr_name);
+        
         apex_zip.add_file(
           p_zipped_blob => l_zip_file,
-          p_file_name => replace(C_FILE_NAME, '#SGR_NAME#', sgr.sgr_name),
+          p_file_name => l_file_name,
           p_content => l_blob);
       end loop;
 
       apex_zip.finish(l_zip_file);
       utl_apex.download_blob(l_zip_file, replace(C_ZIP_APP_RULES_NAME, '#APP_ID#', l_sgr_app_id));
     else
-
-      -- export all rule groups, including action types
+      -- export action types
       l_blob := utl_text.clob_to_blob(sct_admin.export_action_types);
       apex_zip.add_file(
         p_zipped_blob => l_zip_file,
-        p_file_name => 'merge_action_types.sql',
+        p_file_name => C_ACTION_TYPE_FILE_NAME,
         p_content => l_blob);
 
+      -- export all rule groups
       for sgr in sgr_cur(null) loop
         l_blob := utl_text.clob_to_blob(sct_admin.export_rule_group(p_sgr_id => sgr.sgr_id));
+        l_file_name := replace(C_FILE_NAME, '#SGR_NAME#', sgr.sgr_name);
+        
         apex_zip.add_file(
           p_zipped_blob => l_zip_file,
           p_file_name => replace(C_FILE_NAME, '#SGR_NAME#', sgr.sgr_name),
@@ -505,6 +516,7 @@ as
         p_sru_active => g_edit_sru_row.sru_active);
 
       -- Copy data from Collection and merge into SCT_RULE_ACTION
+      -- Direct DML because of bulk orientied approach against APEX collection view
       delete from sct_rule_action
        where sra_sru_id = g_edit_sru_row.sru_id
          and sra_id not in(
@@ -687,6 +699,53 @@ as
   end process_edit_sra;
 
 
+  function validate_edit_sat
+    return boolean
+  as
+  begin
+    -- copy_edit_saa;
+
+    return true;
+  end validate_edit_sat;
+
+
+  procedure process_edit_sat
+  as
+  begin
+    --copy_edit_sat;
+    case
+    when utl_apex.inserting then
+      null;
+    when utl_apex.updating then
+      null;
+    when utl_apex.deleting then
+      null;
+    else
+      null;
+    end case;
+  end process_edit_sat;
+  
+  
+  procedure print_sat_help
+  as
+    l_help_text clob;
+    l_sat_id utl_apex.ora_name_type;
+  begin
+    l_sat_id := v('P3_SAT_ID');
+    
+    select help_text
+      into l_help_text
+      from sct_bl_sat_help
+     where sat_id = l_sat_id;
+    
+    htp.p(l_help_text);
+  exception
+    when NO_DATA_FOUND then
+      -- No SAT_ID given (fi upon creation), ignore
+      null;
+  end print_sat_help;
+  
+
   function validate_edit_saa
     return boolean
   as
@@ -856,6 +915,7 @@ as
     
     -- Action CREATE_RULE
     utl_apex_action.action_init('create-rule');
+    
     if l_sgr_id is not null then
       -- persist APP_ID and PAGE_ID in case exporting this rule is called
       select sgr_app_id, sgr_page_id
@@ -876,10 +936,12 @@ as
     else
       utl_apex_action.set_disabled(true);
     end if;
+    
     plugin_sct.add_javascript(utl_apex_action.get_action_script);
 
     -- Action COPY_RULEGROUP
     utl_apex_action.action_init('copy-rulegroup');
+    
     if l_sgr_id is not null then
       -- Check whether a target application to copy the rule to exists
       select count(*)
@@ -901,10 +963,12 @@ as
     else
       utl_apex_action.set_disabled(true);
     end if;
+    
     plugin_sct.add_javascript(utl_apex_action.get_action_script);
 
     -- Action EXPORT_RULEGROUP
     utl_apex_action.action_init('export-rulegroup');
+    
     l_javascript := utl_apex.get_page_url(
                       p_param_items => 'P8_SGR_ID:P8_SGR_APP_ID:P8_SGR_PAGE_ID',
                       p_value_items => 'P1_SGR_ID:P1_SGR_APP_ID:P1_SGR_PAGE_ID',
@@ -922,7 +986,7 @@ as
     l_javascript varchar2(32767);
   begin
     pit.enter_optional;
-
+    -- Intenionally left blank TODO: Implement
     pit.leave_optional;
   end set_action_edit_sgr;
 
@@ -934,6 +998,7 @@ as
     l_sgr_id sct_rule_group.sgr_id%type;
     l_sgr_name sct_rule_group.sgr_name%type;
     C_SUCCESS_COMMAND constant varchar2(100) := q'^apex.submit('EXPORT_#TYPE#');^';
+    l_action varchar2(100);
   begin
     pit.enter_optional;
 
@@ -941,6 +1006,7 @@ as
     l_export_type := v('P8_EXPORT_TYPE');
     l_app_id := v('P8_SGR_APP_ID');
     l_sgr_id := v('P8_SGR_ID');
+    l_action := replace(C_SUCCESS_COMMAND, '#TYPE#', l_export_type);
 
     utl_apex_action.action_init('export-rulegroup');
 
@@ -953,15 +1019,15 @@ as
        where sgr_id = l_sgr_id;
       utl_apex_action.set_label(l_sgr_name);
       utl_apex_action.set_disabled(false);
-      utl_apex_action.set_action(replace(C_SUCCESS_COMMAND, '#TYPE#', l_export_type));
+      utl_apex_action.set_action(l_action);
     when l_export_type = 'APP' and l_app_id is not null then
       utl_apex_action.set_label(pit.get_trans_item_name('SCT', 'SGR_EXPORT_LABEL_APP', msg_args(to_char(l_app_id))));
       utl_apex_action.set_disabled(false);
-      utl_apex_action.set_action(replace(C_SUCCESS_COMMAND, '#TYPE#', l_export_type));
+      utl_apex_action.set_action(l_action);
     when l_export_type = 'ALL_SGR' then
       utl_apex_action.set_label(pit.get_trans_item_name('SCT', 'SGR_EXPORT_LABEL_ALL'));
       utl_apex_action.set_disabled(false);
-      utl_apex_action.set_action(replace(C_SUCCESS_COMMAND, '#TYPE#', l_export_type));
+      utl_apex_action.set_action(l_action);
     else
       if l_export_type = 'APP' then
         utl_apex_action.set_label(pit.get_trans_item_name('SCT', 'SELECT_APP'));
@@ -984,7 +1050,7 @@ as
     l_javascript varchar2(32767);
   begin
     pit.enter_optional;
-
+    -- Intenionally left blank TODO: Implement
     pit.leave_optional;
   end set_action_edit_sru;
 
