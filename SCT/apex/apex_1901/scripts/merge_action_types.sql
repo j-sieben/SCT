@@ -480,7 +480,7 @@ q'{  de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sat_sif_id => 'NONE',
     p_sat_name => 'PL/SQL-Code ausführen',
     p_sat_description => q'{<p>F&uuml;hrt den als Parameter &uuml;bergebenen PL/SQL-Code aus.</p>}',
-    p_sat_pl_sql => q'{plugin_sct.do_cmd('#PARAM_1#');}',
+    p_sat_pl_sql => q'{plugin_sct.execute_plsql('#PARAM_1#');}',
     p_sat_js => q'{}',
     p_sat_is_editable => sct_util.C_FALSE,
     p_sat_raise_recursive => sct_util.C_TRUE);

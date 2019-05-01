@@ -46,11 +46,23 @@ as
 
 
   /* Method to adjust the action label
-   * %param  p_label  Label that is to be set for this action
+   * %param  p_label   Label that is to be set for this action
+   * %param  p_is_key  Flag to distinguish plain label text (false) from reference to APEX_MESSAGE (true). Default to true.
    * %usage  Allows to change the label of an action on the fly, based on some condition.
    */
   procedure set_label(
-    p_label in sct_apex_action.saa_label%type);
+    p_label in sct_apex_action.saa_label%type,
+    p_is_key in boolean default false);
+
+
+  /* Method to adjust the action title
+   * %param  p_title   Title that is to be set for this action
+   * %param  p_is_key  Flag to distinguish plain label text (false) from reference to APEX_MESSAGE (true). Default to true.
+   * %usage  Allows to change the label of an action on the fly, based on some condition.
+   */
+  procedure set_title(
+    p_title in sct_apex_action.saa_title%type,
+    p_is_key in boolean default false);
 
 
   /* Method to disable or enable an action 

@@ -563,6 +563,7 @@ q'^  ]);^',
     p_uttm_mode => 'ACTION',
     p_uttm_text => q'^{"name":"#SAA_NAME#"^' || 
 q'^#SAA_LABEL|,^CR^"label":"|"|#^' || 
+q'^#SAA_LABEL_KEY|,^CR^"labelKey":"|"|#^' || 
 q'^#SAA_CONTEXT_LABEL|,^CR^"contextLabel":"|"|#^' || 
 q'^#SAA_ICON|,^CR^"icon":"|"|#^' || 
 q'^#SAA_ICON_TYPE|,^CR^"iconType":"|"|#^' || 

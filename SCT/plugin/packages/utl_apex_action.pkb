@@ -14,15 +14,22 @@ as
   
   C_PKG constant utl_apex.ora_name_type := $$PLSQL_UNIT;
   C_INIT_TEMPLATE constant template_t := q'^var action = apex.actions.lookup('#NAME#');^';
+  
   C_UPDATE_TEMPLATE constant template_t := q'^apex.actions.update('#NAME#');^';
+  C_EXECUTE_IMMEDIATE constant template_t := q'^apex.actions.invoke('#NAME#');^';
+  
   C_HREF_TEMPLATE constant template_t := q'^action.href="#JS##HREF#"; action.action='';^';
-  C_ACTION_TEMPLATE constant template_t := q'^action.action=function(){#ACTION#}; action.href='';^';
+  C_ACTION_TEMPLATE constant template_t := q'^action.action = function(){#ACTION#}; action.href='';^';
   C_LABEL_TEMPLATE constant template_t := q'^action.label = #LABEL#;^';
-  C_DISABLE_TEMPLATE constant template_t := q'^apex.actions.disable('#NAME#');^';
-  C_ENABLE_TEMPLATE constant template_t := q'^apex.actions.enable('#NAME#');^';
-  C_SHOW_TEMPLATE constant template_t := q'^apex.actions.show('#NAME#');^';
-  C_HIDE_TEMPLATE constant template_t := q'^apex.actions.hide('#NAME#');^';
-  C_EXECUTE_IMMEDIATE constant template_t := q'^action.invoke('#NAME#');^';
+  C_LABEL_KEY_TEMPLATE constant template_t := q'^action.labelKey = #LABEL_KEY#;^';
+  C_TITLE_TEMPLATE constant template_t := q'^action.title = #TITLE#;^';
+  C_TITLE_KEY_TEMPLATE constant template_t := q'^action.titleKey = #TITLE_KEY#;^';
+  C_DISABLE_TEMPLATE constant template_t := q'^action.disabled = true;^';
+  C_ENABLE_TEMPLATE constant template_t := q'^action.disabled = false;^';
+  C_SHOW_TEMPLATE constant template_t := q'^action.hide = false;^';
+  C_HIDE_TEMPLATE constant template_t := q'^action.hide = true;^';
+  
+  C_JAVA_SCRIPT_TAG constant sct_util.ora_name_type := 'javascript:';
 
 
   /* Helper method to append a chunk to the JavaScript stack. Replaces #ACTION# with action name
@@ -130,7 +137,7 @@ as
   begin
     pit.enter_optional;
   
-      append(replace(C_ACTION_TEMPLATE, '#ACTION#', p_action));
+      append(replace(replace(C_ACTION_TEMPLATE, '#ACTION#', p_action), C_JAVA_SCRIPT_TAG));
     
     pit.leave_optional;
   end set_action;
@@ -153,16 +160,49 @@ as
 
 
   procedure set_label(
-    p_label in sct_apex_action.saa_label%type)
+    p_label in sct_apex_action.saa_label%type,
+    p_is_key in boolean default false)
   is
+    l_template utl_apex.ora_name_type;
+    l_anchor utl_apex.ora_name_type;
   begin
-    pit.enter_optional;
+    if p_is_key then
+      l_template := C_LABEL_KEY_TEMPLATE;
+      l_anchor := '#LABEL_KEY#';
+    else
+      l_template := C_LABEL_TEMPLATE;
+      l_anchor := '#LABEL#';
+    end if;
     
-    append(replace(C_LABEL_TEMPLATE, '#LABEL#', apex_escape.js_literal(p_label)));
+    append(replace(l_template, l_anchor, apex_escape.js_literal(p_label)));
     g_action.needs_update := TRUE;
     
     pit.leave_optional;
   end set_label;
+
+
+  procedure set_title(
+    p_title in sct_apex_action.saa_title%type,
+    p_is_key in boolean default false)
+  is
+    l_template utl_apex.ora_name_type;
+    l_anchor utl_apex.ora_name_type;
+  begin
+    pit.enter_optional;
+    
+    if p_is_key then
+      l_template := C_TITLE_KEY_TEMPLATE;
+      l_anchor := '#TITLE_KEY#';
+    else
+      l_template := C_TITLE_TEMPLATE;
+      l_anchor := '#TITLE#';
+    end if;
+    
+    append(replace(l_template, l_anchor, apex_escape.js_literal(p_title)));
+    g_action.needs_update := TRUE;
+    
+    pit.leave_optional;
+  end set_title;
 
 
   procedure set_disabled(

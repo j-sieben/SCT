@@ -41,11 +41,11 @@ as
   begin
     pit.enter_detailed;
     g_page_values := utl_apex.get_page_values;
-    g_edit_sgr_row.sgr_id := coalesce(to_number(utl_apex.get(g_page_values, 'SGR_ID'), 'fm9999999999990d99999999'), sct_seq.nextval);
+    g_edit_sgr_row.sgr_id := coalesce(to_number(utl_apex.get(g_page_values, 'SGR_ID'), '999990'), sct_seq.nextval);
     g_edit_sgr_row.sgr_name := clean_sct_name(utl_apex.get(g_page_values, 'SGR_NAME'));
     g_edit_sgr_row.sgr_description := utl_apex.get(g_page_values, 'SGR_DESCRIPTION');
-    g_edit_sgr_row.sgr_app_id := to_number(utl_apex.get(g_page_values, 'SGR_APP_ID'), 'fm9999999999990d99999999');
-    g_edit_sgr_row.sgr_page_id := to_number(utl_apex.get(g_page_values, 'SGR_PAGE_ID'), 'fm9999999999990d99999999');
+    g_edit_sgr_row.sgr_app_id := to_number(utl_apex.get(g_page_values, 'SGR_APP_ID'), 'fm9999999999990');
+    g_edit_sgr_row.sgr_page_id := to_number(utl_apex.get(g_page_values, 'SGR_PAGE_ID'), 'fm9999999999990');
     g_edit_sgr_row.sgr_active := utl_apex.get(g_page_values, 'SGR_ACTIVE');
     g_edit_sgr_row.sgr_with_recursion := utl_apex.get(g_page_values, 'SGR_WITH_RECURSION');
     pit.leave_detailed;
@@ -59,11 +59,12 @@ as
     g_page_values := utl_apex.get_page_values;
     g_edit_sru_row.sru_id := to_number(utl_apex.get(g_page_values, 'SRU_ID'), '999990');
     g_edit_sru_row.sru_sgr_id := to_number(utl_apex.get(g_page_values, 'SRU_SGR_ID'), '999990');
-    g_edit_sru_row.sru_sort_seq := to_number(utl_apex.get(g_page_values, 'SRU_SORT_SEQ'), 'fm9999999999990d99999999');
+    g_edit_sru_row.sru_sort_seq := to_number(utl_apex.get(g_page_values, 'SRU_SORT_SEQ'), '999990');
     g_edit_sru_row.sru_name := utl_apex.get(g_page_values, 'SRU_NAME');
     g_edit_sru_row.sru_condition := utl_apex.get(g_page_values, 'SRU_CONDITION');
     g_edit_sru_row.sru_fire_on_page_load := utl_apex.get(g_page_values, 'SRU_FIRE_ON_PAGE_LOAD');
     g_edit_sru_row.sru_active := utl_apex.get(g_page_values, 'SRU_ACTIVE');
+    
     pit.leave_detailed;
   end copy_edit_sru;
 
@@ -73,20 +74,21 @@ as
   begin
     pit.enter_detailed;
     g_page_values := utl_apex.get_page_values;
-    g_edit_sra_row.seq_id := to_number(utl_apex.get(g_page_values, 'SEQ_ID'), 'fm9999999999990d99999999');
-    g_edit_sra_row.sra_id := to_number(utl_apex.get(g_page_values, 'SRA_ID'), 'fm9999999999990d99999999');
-    g_edit_sra_row.sra_sgr_id := to_number(utl_apex.get(g_page_values, 'SRA_SGR_ID'), 'fm9999999999990d99999999');
-    g_edit_sra_row.sra_sru_id := to_number(utl_apex.get(g_page_values, 'SRA_SRU_ID'), 'fm9999999999990d99999999');
+    g_edit_sra_row.seq_id := to_number(utl_apex.get(g_page_values, 'SEQ_ID'), '999990');
+    g_edit_sra_row.sra_id := to_number(utl_apex.get(g_page_values, 'SRA_ID'), '999990');
+    g_edit_sra_row.sra_sgr_id := to_number(utl_apex.get(g_page_values, 'SRA_SGR_ID'), '999990');
+    g_edit_sra_row.sra_sru_id := to_number(utl_apex.get(g_page_values, 'SRA_SRU_ID'), '999990');
     g_edit_sra_row.sra_sort_seq := to_number(utl_apex.get(g_page_values, 'SRA_SORT_SEQ'), '999990');
     g_edit_sra_row.sra_spi_id := utl_apex.get(g_page_values, 'SRA_SPI_ID');
     g_edit_sra_row.sra_sat_id := utl_apex.get(g_page_values, 'SRA_SAT_ID');
-    g_edit_sra_row.sra_param_1 := utl_apex.get(g_page_values, 'SRA_PARAM_1');
-    g_edit_sra_row.sra_param_2 := utl_apex.get(g_page_values, 'SRA_PARAM_2');
-    g_edit_sra_row.sra_param_3 := utl_apex.get(g_page_values, 'SRA_PARAM_3');
+    g_edit_sra_row.sra_param_1 := coalesce(utl_apex.get(g_page_values, 'SRA_PARAM_1'), utl_apex.get(g_page_values, 'SRA_PARAM_LOV_1'), utl_apex.get(g_page_values, 'SRA_PARAM_AREA_1'));
+    g_edit_sra_row.sra_param_2 := coalesce(utl_apex.get(g_page_values, 'SRA_PARAM_2'), utl_apex.get(g_page_values, 'SRA_PARAM_LOV_2'), utl_apex.get(g_page_values, 'SRA_PARAM_AREA_2'));
+    g_edit_sra_row.sra_param_3 := coalesce(utl_apex.get(g_page_values, 'SRA_PARAM_3'), utl_apex.get(g_page_values, 'SRA_PARAM_LOV_3'), utl_apex.get(g_page_values, 'SRA_PARAM_AREA_3'));
     g_edit_sra_row.sra_active := utl_apex.get(g_page_values, 'SRA_ACTIVE');
     g_edit_sra_row.sra_on_error := utl_apex.get(g_page_values, 'SRA_ON_ERROR');
     g_edit_sra_row.sra_raise_recursive := utl_apex.get(g_page_values, 'SRA_RAISE_RECURSIVE');
     g_edit_sra_row.sra_comment := utl_apex.get(g_page_values, 'SRA_COMMENT');
+    
     pit.leave_detailed;
   end copy_edit_sra;
 
@@ -161,13 +163,18 @@ as
 
   procedure process_export_sgr
   as
-    cursor sgr_cur(p_sgr_app_id in sct_rule_group.sgr_app_id%type) is
+    cursor sgr_cur(
+      p_sgr_app_id in sct_rule_group.sgr_app_id%type default null,
+      p_sgr_page_id in sct_rule_group.sgr_page_id%type default null) 
+    is
       select sgr_id, lower(sgr_name) sgr_name
         from sct_rule_group
        where (sgr_app_id = p_sgr_app_id or p_sgr_app_id is null)
+         and (sgr_page_id = p_sgr_page_id or p_sgr_page_id is null)
          and sgr_id > 0;
 
     l_sgr_app_id sct_rule_group.sgr_app_id%type;
+    l_sgr_page_id sct_rule_group.sgr_page_id%type;
     l_sgr_id sct_rule_group.sgr_id%type;
     l_sgr_name sct_rule_group.sgr_name%type;
     l_clob clob;
@@ -178,11 +185,13 @@ as
     C_FILE_NAME constant varchar2(100 byte) := 'merge_rule_group_#SGR_NAME#.sql';
     C_ACTION_TYPE_FILE_NAME constant sct_util.ora_name_type := 'merge_action_types.sql';
     C_ZIP_APP_RULES_NAME constant sct_util.ora_name_type := 'application_#APP_ID#_rule_groups.zip';
+    C_ZIP_PAGE_RULES_NAME constant sct_util.ora_name_type := 'app_#APP_ID#_page_#PAGE_ID#_rule_groups.zip';
     C_ZIP_ALL_RULES_NAME constant sct_util.ora_name_type := 'all_rule_groups.zip';
   begin
     pit.enter_mandatory;
 
     l_sgr_app_id := to_number(v('P8_SGR_APP_ID'));
+    l_sgr_page_id := to_number(v('P8_SGR_PAGE_ID'));
     l_sgr_id := to_number(v('P8_SGR_ID'));
 
     case when utl_apex.request_is('EXPORT_SGR') then
@@ -192,11 +201,24 @@ as
           into l_file_name
           from sct_rule_group
          where sgr_id = l_sgr_id;
-        l_clob := sct_admin.export_rule_group(l_sgr_id);
 
-        l_blob := utl_text.clob_to_blob(l_clob);
+        l_blob := utl_text.clob_to_blob(sct_admin.export_rule_group(p_sgr_id => l_sgr_id));
         utl_apex.download_blob(l_blob, replace(C_FILE_NAME, '#SGR_NAME#', l_file_name));
       end if;
+    when utl_apex.request_is('EXPORT_PAGE') then
+      -- export all rule groupes of an application page
+      for sgr in sgr_cur(l_sgr_app_id, l_sgr_page_id) loop
+        l_blob := utl_text.clob_to_blob(sct_admin.export_rule_group(p_sgr_id => sgr.sgr_id));
+        l_file_name := replace(C_FILE_NAME, '#SGR_NAME#', sgr.sgr_name);
+        
+        apex_zip.add_file(
+          p_zipped_blob => l_zip_file,
+          p_file_name => l_file_name,
+          p_content => l_blob);
+      end loop;
+
+      apex_zip.finish(l_zip_file);
+      utl_apex.download_blob(l_zip_file, replace(C_ZIP_APP_RULES_NAME, '#APP_ID#', l_sgr_app_id));
     when utl_apex.request_is('EXPORT_APP') then
       -- export all rule groupes of an application
       for sgr in sgr_cur(l_sgr_app_id) loop
@@ -220,7 +242,7 @@ as
         p_content => l_blob);
 
       -- export all rule groups
-      for sgr in sgr_cur(null) loop
+      for sgr in sgr_cur loop
         l_blob := utl_text.clob_to_blob(sct_admin.export_rule_group(p_sgr_id => sgr.sgr_id));
         l_file_name := replace(C_FILE_NAME, '#SGR_NAME#', sgr.sgr_name);
         
@@ -248,6 +270,8 @@ as
 
     case when v('P8_SGR_ID') is not null then
       l_export_type := 'SGR';
+    when v('P8_SGR_PAGE_ID') is not null then
+      l_export_type := 'PAGE';
     when v('P8_SGR_APP_ID') is not null then
       l_export_type := 'APP';
     else
@@ -421,6 +445,7 @@ as
                 t.saa_name = s.saa_name,
                 t.saa_label = s.saa_label,
                 t.saa_context_label = s.saa_context_label,
+                t.saa_icon = s.saa_icon,
                 t.saa_icon_type = s.saa_icon_type,
                 t.saa_title = s.saa_title,
                 t.saa_shortcut = s.saa_shortcut,
@@ -532,6 +557,7 @@ as
                 t.sra_sat_id = s.sra_sat_id,
                 t.sra_param_1 = s.sra_param_1,
                 t.sra_param_2 = s.sra_param_2,
+                t.sra_param_3 = s.sra_param_3,
                 t.sra_comment = s.sra_comment,
                 t.sra_on_error = s.sra_on_error,
                 t.sra_raise_recursive = s.sra_raise_recursive,
@@ -539,10 +565,10 @@ as
                 t.sra_active = s.sra_active,
                 t.sra_has_error = s.sra_has_error
          when not matched then insert (
-                sra_id, sra_sgr_id, sra_sru_id, sra_spi_id, sra_sat_id, sra_param_1, sra_param_2,
+                sra_id, sra_sgr_id, sra_sru_id, sra_spi_id, sra_sat_id, sra_param_1, sra_param_2, sra_param_3,
                 sra_comment, sra_on_error, sra_raise_recursive, sra_sort_seq, sra_active, sra_has_error)
               values(
-                s.sra_id, s.sra_sgr_id, g_edit_sru_row.sru_id, s.sra_spi_id, s.sra_sat_id, s.sra_param_1, s.sra_param_2,
+                s.sra_id, s.sra_sgr_id, g_edit_sru_row.sru_id, s.sra_spi_id, s.sra_sat_id, s.sra_param_1, s.sra_param_2, s.sra_param_3,
                 s.sra_comment, s.sra_on_error, s.sra_raise_recursive, s.sra_sort_seq, s.sra_active, s.sra_has_error);
       exception
         when NO_DATA_FOUND then
@@ -551,7 +577,7 @@ as
     when utl_apex.deleting then
       sct_admin.delete_rule(g_edit_sru_row.sru_id);
     else
-      pit.error(msg.UTL_INVALID_REQUEST, msg_args(v('REQUEST')));
+      utl_apex.unhandled_request;
     end case;
     sct_admin.propagate_rule_change(g_edit_sru_row.sru_sgr_id);
   end process_edit_sru;
@@ -703,7 +729,7 @@ as
     return boolean
   as
   begin
-    -- copy_edit_saa;
+    -- copy_edit_sat;
 
     return true;
   end validate_edit_sat;
@@ -852,14 +878,23 @@ as
   as
     l_sra_sort_seq sct_rule_action.sra_sort_seq%type;
     l_sru_id sct_rule.sru_id%type;
+    l_sra_id sct_rule_action.sra_id%type;
   begin
     pit.enter_mandatory;
     l_sru_id := to_number(v('P11_SRA_SRU_ID'));
+    l_sra_id := to_number(v('P11_SRA_ID'));
 
-    select coalesce(max(trunc(sra_sort_seq, -1)) + 10, 10)
-      into l_sra_sort_seq
-      from sct_ui_edit_sra
-     where sra_sru_id = l_sru_id;
+    if l_sra_id is null then
+      select coalesce(max(trunc(sra_sort_seq, -1)) + 10, 10)
+        into l_sra_sort_seq
+        from sct_ui_edit_sra
+       where sra_sru_id = l_sru_id;
+    else
+      select sra_sort_seq
+        into l_sra_sort_seq
+        from sct_ui_edit_sra
+       where sra_id = l_sra_id;
+    end if;
 
     pit.leave_mandatory;
     return l_sra_sort_seq;
@@ -926,7 +961,7 @@ as
       apex_util.set_session_state('P1_SGR_PAGE_ID', l_sgr_page_id);
 
       l_javascript := utl_apex.get_page_url(
-                        p_param_items => 'P5_SRU_SGR_ID:P5_SRU_ID',
+                        p_param_items => 'P5_SRU_SGR_ID',
                         p_value_items => 'P1_SGR_ID',
                         p_url_template => 'SCT:EDIT_SRU',
                         p_triggering_element => 'R1_RULE_OVERVIEW',
@@ -974,6 +1009,7 @@ as
                       p_value_items => 'P1_SGR_ID:P1_SGR_APP_ID:P1_SGR_PAGE_ID',
                       p_url_template => 'SCT:EXPORT_SGR',
                       p_triggering_element => 'B1_EXPORT_SGR');
+                      
     utl_apex_action.set_action(l_javascript);
     plugin_sct.add_javascript(utl_apex_action.get_action_script);
 
@@ -994,7 +1030,8 @@ as
   procedure set_action_export_sgr
   as
     l_export_type varchar2(10);
-    l_app_id sct_rule_group.sgr_app_id%type;
+    l_sgr_app_id sct_rule_group.sgr_app_id%type;
+    l_sgr_page_id sct_rule_group.sgr_page_id%type;
     l_sgr_id sct_rule_group.sgr_id%type;
     l_sgr_name sct_rule_group.sgr_name%type;
     C_SUCCESS_COMMAND constant varchar2(100) := q'^apex.submit('EXPORT_#TYPE#');^';
@@ -1004,7 +1041,8 @@ as
 
     -- Initialzation
     l_export_type := v('P8_EXPORT_TYPE');
-    l_app_id := v('P8_SGR_APP_ID');
+    l_sgr_app_id := v('P8_SGR_APP_ID');
+    l_sgr_page_id := v('P8_SGR_PAGE_ID');
     l_sgr_id := v('P8_SGR_ID');
     l_action := replace(C_SUCCESS_COMMAND, '#TYPE#', l_export_type);
 
@@ -1020,8 +1058,12 @@ as
       utl_apex_action.set_label(l_sgr_name);
       utl_apex_action.set_disabled(false);
       utl_apex_action.set_action(l_action);
-    when l_export_type = 'APP' and l_app_id is not null then
-      utl_apex_action.set_label(pit.get_trans_item_name('SCT', 'SGR_EXPORT_LABEL_APP', msg_args(to_char(l_app_id))));
+    when l_export_type = 'PAGE' and l_sgr_page_id is not null then
+      utl_apex_action.set_label(pit.get_trans_item_name('SCT', 'SGR_EXPORT_LABEL_PAGE', msg_args(to_char(l_sgr_page_id))));
+      utl_apex_action.set_disabled(false);
+      utl_apex_action.set_action(l_action);
+    when l_export_type = 'APP' and l_sgr_app_id is not null then
+      utl_apex_action.set_label(pit.get_trans_item_name('SCT', 'SGR_EXPORT_LABEL_APP', msg_args(to_char(l_sgr_app_id))));
       utl_apex_action.set_disabled(false);
       utl_apex_action.set_action(l_action);
     when l_export_type = 'ALL_SGR' then

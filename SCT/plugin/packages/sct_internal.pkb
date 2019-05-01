@@ -289,18 +289,25 @@ as
                     utl_text.generate_text(cursor(
                       select uttm_text template, chr(10) || '    ' cr,
                              saa_sgr_id, saa_sty_id, saa_name, 
-                             apex_escape.json(saa_label) saa_label, 
+                             case when aat.translatable_message is null then apex_escape.json(saa_label) end saa_label,
+                             case when aat.translatable_message is not null then apex_escape.json(saa_label) end saa_label_key, 
                              apex_escape.json(saa_context_label) saa_context_label, 
                              saa_icon, saa_icon_type,
-                             apex_escape.json(coalesce(saa_title, saa_label)) saa_title,
+                             case when aat.translatable_message is null then apex_escape.json(coalesce(saa_title, saa_label)) end saa_title,
+                             case when aat.translatable_message is not null then apex_escape.json(coalesce(saa_title, saa_label)) end saa_title_key,
                              saa_shortcut,
                              case saa_initially_disabled when sct_util.c_true then 'true' else 'false' end saa_initially_disabled,
                              case saa_initially_hidden when sct_util.c_true then 'true' else 'false' end saa_initially_hidden,
                              saa_href, saa_action
                         from sct_apex_action saa
-                        join templates
-                          on saa_sgr_id = sgr_id
-                         and uttm_mode = saa_sty_id),
+                        join sct_rule_group sgr
+                          on saa.saa_sgr_id = sgr.sgr_id
+                        join templates t
+                          on t.sgr_id = sgr.sgr_id
+                         and uttm_mode = saa_sty_id
+                        left join apex_application_translations aat
+                          on saa.saa_label = aat.translatable_message
+                         and sgr.sgr_app_id = aat.application_id),
                       p_delimiter => ',' || chr(10) || '   '
                     ) action_list
                from templates
@@ -554,7 +561,7 @@ as
     
     append(l_js, sct_util.C_CR || C_JS_SCRIPT_END);
     
-    pit.leave_optional(msg_params(msg_param('JavaScript', substr(l_js, 1, 4000))));
+    pit.leave_optional(msg_params(msg_param('JavaScript', substr(l_js, 1, 3000))));
     return l_js;
   end get_java_script;
   

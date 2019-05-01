@@ -33,6 +33,9 @@ prompt &s1.Create view SCT_PARAM_LOV_PIT_MESSAGE
 prompt &s1.Create view SCT_PARAM_LOV_SEQUENCE
 @&view_dir.sct_param_lov_sequence.vw
 
+prompt &s1.Create view SCT_UI_ACTION_TYPE
+@&view_dir.sct_ui_admin_sat.vw
+
 prompt &s1.Create view SCT_UI_ADMIN_SAT
 @&view_dir.sct_ui_admin_sat.vw
 
@@ -41,6 +44,15 @@ prompt &s1.Create view SCT_UI_ADMIN_SGR_MAIN
 
 prompt &s1.Create view SCT_UI_ADMIN_SGR_RULES
 @&view_dir.sct_ui_admin_sgr_rules.vw
+
+prompt &s1.Create view SCT_UI_EDIT_GROUP_APEX_ACTION
+@&view_dir.sct_ui_edit_group_apex_action.vw
+
+prompt &s1.Create view SCT_UI_EDIT_RULE
+@&view_dir.sct_ui_edit_rule.vw
+
+prompt &s1.Create view SCT_UI_EDIT_RULE_ACTION
+@&view_dir.sct_ui_edit_rule_action.vw
 
 prompt &s1.Create view SCT_UI_EDIT_SAA
 @&view_dir.sct_ui_edit_saa.vw

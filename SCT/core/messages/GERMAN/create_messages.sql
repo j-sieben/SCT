@@ -416,6 +416,14 @@ begin
     p_pti_description => null);
     
   pit_admin.merge_translatable_item(
+    p_pti_id => 'SGR_EXPORT_LABEL_PAGE',
+    p_pti_pml_name => 'GERMAN',
+    p_pti_pmg_name => 'SCT',
+    p_pti_name => 'Regelgruppen der Anwendungsseite "#1#" exportieren',
+    p_pti_display_name => null,
+    p_pti_description => null);
+    
+  pit_admin.merge_translatable_item(
     p_pti_id => 'SGR_EXPORT_LABEL_SGR',
     p_pti_pml_name => 'GERMAN',
     p_pti_pmg_name => 'SCT',
