@@ -9,6 +9,7 @@ as
   g_edit_sru_row sct_rule%rowtype;
   g_edit_sra_row sct_ui_edit_sra%rowtype;
   g_edit_saa_row sct_ui_edit_saa%rowtype;
+  g_edit_sat_row sct_ui_edit_sat%rowtype;
 
 
   /** Helper to sanitize any SCT name to comply with internal naming rules
@@ -125,6 +126,43 @@ as
     g_edit_saa_row.saa_sai_list := utl_apex.get(g_page_values, 'SAA_SAI_LIST');
     pit.leave_detailed;
   end copy_edit_saa;
+  
+  
+  procedure copy_edit_sat
+  as
+  begin
+    pit.enter_detailed;
+    g_page_values := utl_apex.get_page_values;
+    g_edit_sat_row.sat_id := clean_sct_name(utl_apex.get(g_page_values, 'SAT_ID'));
+    g_edit_sat_row.sat_stg_id := clean_sct_name(utl_apex.get(g_page_values, 'SAT_STG_ID'));
+    g_edit_sat_row.sat_sif_id := clean_sct_name(utl_apex.get(g_page_values, 'SAT_SIF_ID'));
+    g_edit_sat_row.sat_name := utl_apex.get(g_page_values, 'SAT_NAME');
+    g_edit_sat_row.sat_description := utl_apex.get(g_page_values, 'SAT_DESCRIPTION');
+    g_edit_sat_row.sat_pl_sql := utl_apex.get(g_page_values, 'SAT_PL_SQL');
+    g_edit_sat_row.sat_js := utl_apex.get(g_page_values, 'SAT_JS');
+    g_edit_sat_row.sat_is_editable := utl_apex.get(g_page_values, 'SAT_IS_EDITABLE');
+    g_edit_sat_row.sat_raise_recursive := utl_apex.get(g_page_values, 'SAT_RAISE_RECURSIVE');
+    g_edit_sat_row.sat_active := utl_apex.get(g_page_values, 'SAT_ACTIVE');
+    g_edit_sat_row.sap_spt_id_1 := utl_apex.get(g_page_values, 'SAP_SPT_ID_1');
+    g_edit_sat_row.sap_display_name_1 := utl_apex.get(g_page_values, 'SAP_DISPLAY_NAME_1');
+    g_edit_sat_row.sap_description_1 := utl_apex.get(g_page_values, 'SAP_DESCRIPTION_1');
+    g_edit_sat_row.sap_default_1 := utl_apex.get(g_page_values, 'SAP_DEFAULT_1');
+    g_edit_sat_row.sap_mandatory_1 := utl_apex.get(g_page_values, 'SAP_MANDATORY_1');
+    g_edit_sat_row.sap_active_1 := utl_apex.get(g_page_values, 'SAP_ACTIVE_1');
+    g_edit_sat_row.sap_spt_id_2 := utl_apex.get(g_page_values, 'SAP_SPT_ID_2');
+    g_edit_sat_row.sap_display_name_2 := utl_apex.get(g_page_values, 'SAP_DISPLAY_NAME_2');
+    g_edit_sat_row.sap_description_2 := utl_apex.get(g_page_values, 'SAP_DESCRIPTION_2');
+    g_edit_sat_row.sap_default_2 := utl_apex.get(g_page_values, 'SAP_DEFAULT_2');
+    g_edit_sat_row.sap_mandatory_2 := utl_apex.get(g_page_values, 'SAP_MANDATORY_2');
+    g_edit_sat_row.sap_active_2 := utl_apex.get(g_page_values, 'SAP_ACTIVE_2');
+    g_edit_sat_row.sap_spt_id_3 := utl_apex.get(g_page_values, 'SAP_SPT_ID_3');
+    g_edit_sat_row.sap_display_name_3 := utl_apex.get(g_page_values, 'SAP_DISPLAY_NAME_3');
+    g_edit_sat_row.sap_description_3 := utl_apex.get(g_page_values, 'SAP_DESCRIPTION_3');
+    g_edit_sat_row.sap_default_3 := utl_apex.get(g_page_values, 'SAP_DEFAULT_3');
+    g_edit_sat_row.sap_mandatory_3 := utl_apex.get(g_page_values, 'SAP_MANDATORY_3');
+    g_edit_sat_row.sap_active_3 := utl_apex.get(g_page_values, 'SAP_ACTIVE_3');
+    pit.leave_detailed;
+  end copy_edit_sat;
 
 
   /* INTERFACE */
@@ -503,7 +541,7 @@ as
       p_error => l_error);
 
     if l_error is not null then
-      plugin_sct.register_error(
+      sct.register_error(
         p_spi_id => 'P5_SRU_CONDITION',
         p_error_msg => l_error,
         p_internal_error => null);
@@ -604,9 +642,6 @@ as
          and sap_active = p.is_active
          and spt_active = p.is_active
        order by sat_id, sap_sort_seq;
-    C_SHOW_ITEM constant sct_action_type.sat_id%type := 'SHOW_ITEM';
-    C_HIDE_ITEM constant sct_action_type.sat_id%type := 'HIDE_ITEM';
-    C_REFRESH_ITEM constant sct_action_type.sat_id%type := 'REFRESH_ITEM';
     C_SET_LABEL constant varchar2(100) := q'^$('^#ITEM_ID#_LABEL').html('#SPT_NAME#');^';
     C_SET_SAT_HELP constant varchar2(100) := q'^$('^R11_SAT_HELP .t-Region-body').html('#HELP_TEXT#');^';
     l_region_id sct_util.ora_name_type;
@@ -616,29 +651,34 @@ as
     l_sat_id sct_action_type.sat_id%type;
   begin
     l_sat_id := v('P11_SRA_SAT_ID');
-    plugin_sct.execute_action(C_HIDE_ITEM, '.sct-hide');
+    sct.toggle_item_visibility(
+      p_selector => '.sct-hide',
+      p_visible => false);
 
     -- Adjust Parameter settings to show only required parameters in the correct format
     for param in action_type_cur(l_sat_id) loop
       l_region_id := 'R11_PARAMETER_' || param.sap_sort_seq;
+      
       -- Show region
-      plugin_sct.execute_action(C_SHOW_ITEM, l_region_id);
+      sct.toggle_item_visibility(
+        p_selector => l_region_id);
 
       -- UI visibility and label
       case param.spt_item_type
       when 'SELECT_LIST' then
         l_lov_param_id := 'P11_LOV_PARAM_' || param.sap_sort_seq;
         l_item_id := 'P11_SRA_PARAM_LOV_' || param.sap_sort_seq;
-        plugin_sct.set_session_state(l_lov_param_id, param.spt_id);
-        plugin_sct.execute_action(C_REFRESH_ITEM, l_item_id);
+        sct.set_session_state(l_lov_param_id, param.spt_id);
+        sct.refresh_item(l_item_id);
       when 'TEXT_AREA' then
         l_item_id := 'P11_SRA_PARAM_AREA_' || param.sap_sort_seq;
       else
         l_item_id := 'P11_SRA_PARAM_' || param.sap_sort_seq;
       end case;
 
-      plugin_sct.execute_action(C_SHOW_ITEM, l_item_id);
-      plugin_sct.add_javascript(utl_text.bulk_replace(C_SET_LABEL, char_table('ITEM_ID', l_item_id, 'SPT_NAME', param.spt_name)));
+      sct.toggle_item_visibility(
+        p_selector => l_item_id);
+      sct.add_javascript(utl_text.bulk_replace(C_SET_LABEL, char_table('ITEM_ID', l_item_id, 'SPT_NAME', param.spt_name)));
 
     end loop;
 
@@ -647,11 +687,11 @@ as
       into l_help_text
       from sct_bl_sat_help
      where sat_id = l_sat_id;
-    plugin_sct.add_javascript(utl_text.bulk_replace(C_SET_SAT_HELP, char_table('HELP_TEXT', l_help_text)));
+    sct.add_javascript(utl_text.bulk_replace(C_SET_SAT_HELP, char_table('HELP_TEXT', l_help_text)));
 
   exception
     when NO_DATA_FOUND then
-      plugin_sct.add_javascript(utl_text.bulk_replace(C_SET_SAT_HELP, char_table('HELP_TEXT', pit.get_trans_item_name('SCT', 'SRA_NO_HELP'))));
+      sct.add_javascript(utl_text.bulk_replace(C_SET_SAT_HELP, char_table('HELP_TEXT', pit.get_trans_item_name('SCT', 'SRA_NO_HELP'))));
   end configure_edit_sra;
 
 
@@ -729,7 +769,7 @@ as
     return boolean
   as
   begin
-    -- copy_edit_sat;
+    copy_edit_sat;
 
     return true;
   end validate_edit_sat;
@@ -737,15 +777,64 @@ as
 
   procedure process_edit_sat
   as
+    l_sat_row sct_action_type_v%rowtype;
+    l_sap_row sct_action_parameter_v%rowtype;
   begin
-    --copy_edit_sat;
+    copy_edit_sat;
+    
+    l_sat_row.sat_id := g_edit_sat_row.sat_id;
+    l_sat_row.sat_stg_id := g_edit_sat_row.sat_stg_id;
+    l_sat_row.sat_sif_id := g_edit_sat_row.sat_sif_id;
+    l_sat_row.sat_name := g_edit_sat_row.sat_name;
+    l_sat_row.sat_description := g_edit_sat_row.sat_description;
+    l_sat_row.sat_pl_sql := g_edit_sat_row.sat_pl_sql;
+    l_sat_row.sat_js := g_edit_sat_row.sat_js;
+    l_sat_row.sat_is_editable := g_edit_sat_row.sat_is_editable;
+    l_sat_row.sat_raise_recursive := g_edit_sat_row.sat_raise_recursive;
+    l_sat_row.sat_active := g_edit_sat_row.sat_active;
+    
+    -- copy constant parameter values to param record
+    l_sap_row.sap_sat_id := l_sat_row.sat_id;
+    
     case
-    when utl_apex.inserting then
-      null;
-    when utl_apex.updating then
-      null;
+    when utl_apex.inserting or utl_apex.updating then
+      sct_admin.merge_action_type(l_sat_row);
+      
+      if g_edit_sat_row.sap_spt_id_1 is not null then
+        l_sap_row.sap_spt_id := g_edit_sat_row.sap_spt_id_1;
+        l_sap_row.sap_display_name := g_edit_sat_row.sap_display_name_1;
+        l_sap_row.sap_description := g_edit_sat_row.sap_description_1;
+        l_sap_row.sap_default := g_edit_sat_row.sap_default_1;
+        l_sap_row.sap_mandatory := g_edit_sat_row.sap_mandatory_1;
+        l_sap_row.sap_active := g_edit_sat_row.sap_active_1;
+        l_sap_row.sap_sort_seq := 1;
+        sct_admin.merge_action_parameter(l_sap_row);
+      end if;
+      
+      if g_edit_sat_row.sap_spt_id_2 is not null then
+        l_sap_row.sap_spt_id := g_edit_sat_row.sap_spt_id_2;
+        l_sap_row.sap_display_name := g_edit_sat_row.sap_display_name_2;
+        l_sap_row.sap_description := g_edit_sat_row.sap_description_2;
+        l_sap_row.sap_default := g_edit_sat_row.sap_default_2;
+        l_sap_row.sap_mandatory := g_edit_sat_row.sap_mandatory_2;
+        l_sap_row.sap_active := g_edit_sat_row.sap_active_2;
+        l_sap_row.sap_sort_seq := 2;
+        sct_admin.merge_action_parameter(l_sap_row);
+      end if;
+      
+      if g_edit_sat_row.sap_spt_id_3 is not null then
+        l_sap_row.sap_spt_id := g_edit_sat_row.sap_spt_id_3;
+        l_sap_row.sap_display_name := g_edit_sat_row.sap_display_name_3;
+        l_sap_row.sap_description := g_edit_sat_row.sap_description_3;
+        l_sap_row.sap_default := g_edit_sat_row.sap_default_3;
+        l_sap_row.sap_mandatory := g_edit_sat_row.sap_mandatory_3;
+        l_sap_row.sap_active := g_edit_sat_row.sap_active_3;
+        l_sap_row.sap_sort_seq := 3;
+        sct_admin.merge_action_parameter(l_sap_row);
+      end if;
+    
     when utl_apex.deleting then
-      null;
+      sct_admin.delete_action_type(l_sat_row);
     else
       null;
     end case;
@@ -972,7 +1061,7 @@ as
       utl_apex_action.set_disabled(true);
     end if;
     
-    plugin_sct.add_javascript(utl_apex_action.get_action_script);
+    sct.add_javascript(utl_apex_action.get_action_script);
 
     -- Action COPY_RULEGROUP
     utl_apex_action.action_init('copy-rulegroup');
@@ -999,7 +1088,7 @@ as
       utl_apex_action.set_disabled(true);
     end if;
     
-    plugin_sct.add_javascript(utl_apex_action.get_action_script);
+    sct.add_javascript(utl_apex_action.get_action_script);
 
     -- Action EXPORT_RULEGROUP
     utl_apex_action.action_init('export-rulegroup');
@@ -1011,7 +1100,7 @@ as
                       p_triggering_element => 'B1_EXPORT_SGR');
                       
     utl_apex_action.set_action(l_javascript);
-    plugin_sct.add_javascript(utl_apex_action.get_action_script);
+    sct.add_javascript(utl_apex_action.get_action_script);
 
     pit.leave_optional;
   end set_action_admin_sgr;
@@ -1078,12 +1167,12 @@ as
       end if;
       utl_apex_action.set_disabled(true);
     end case;
-    plugin_sct.add_javascript(utl_apex_action.get_action_script);
+    sct.add_javascript(utl_apex_action.get_action_script);
 
     pit.leave_optional;
   exception
     when others then
-      plugin_sct.register_error('DOCUMENT', sqlerrm, pit_util.get_call_stack);
+      sct.register_error('DOCUMENT', sqlerrm, pit_util.get_call_stack);
   end set_action_export_sgr;
 
 

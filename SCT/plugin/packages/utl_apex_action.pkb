@@ -81,7 +81,7 @@ as
     pit.leave_optional;
   exception
     when no_data_found then
-      plugin_sct.register_error(
+      sct.register_error(
         p_spi_id => null,
         p_error_msg => 'APEX-Aktion ' || p_action_name || ' existiert nicht');
   end action_init;

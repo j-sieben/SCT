@@ -1313,6 +1313,35 @@ as
   end delete_action_type_group;
   
   
+  procedure validate_action_type(
+    p_pl_sql in sct_action_type.sat_pl_sql%type,
+    p_param_1 in varchar2,
+    p_param_2 in varchar2,
+    p_param_3 in varchar2)
+  as
+    l_cur binary_integer;
+    c_stmt constant varchar2(100) := 'begin #STMT#; end;';
+    l_stmt varchar2(32767);
+  begin
+    if p_pl_sql is not null then
+      l_cur := dbms_sql.open_cursor;
+      l_stmt := utl_text.bulk_replace(c_stmt, char_table(
+                  '#STMT#', rtrim(p_pl_sql, ';'),
+                  '#ITEM#', 'FOO',
+                  '#ALLOW_RECURSION#', 'true',
+                  '#PARAM_1#', p_param_1,
+                  '#PARAM_2#', p_param_2,
+                  '#PARAM_3#', p_param_3));
+      dbms_sql.parse(l_cur, l_stmt, dbms_sql.native);
+      dbms_sql.close_cursor(l_cur);
+    end if;
+  exception
+    when others then
+      dbms_sql.close_cursor(l_cur);
+      raise;
+  end validate_action_type;
+  
+  
   procedure merge_action_param_type(
     p_spt_id in sct_action_param_type.spt_id%type,
     p_spt_name in pit_translatable_item.pti_name%type,

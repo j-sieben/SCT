@@ -1,6 +1,6 @@
 create or replace package sct_internal
   authid definer
-  --accessible by (package plugin_sct, package sct_ui, package sct_validation)
+  accessible by (package sct, package plugin_sct, package sct_ui, package sct_validation)
 as
 
   /** Package SCT_INTERNAL to maintain State Charts as a dynamic action plugin
@@ -29,30 +29,13 @@ as
     return clob;
     
     
-  /** Method to retrieve the value of a page item as char
-   * @param  p_spi_id  ID of the page item
-   * @return Value of the requested page item
-   * @usage  Is used to get the value of a page item.
-   *         As an extension to V(P_SPI_ID) this method retrieves a default value as defined within the APEX data dictionary
-   *         if the actual value of the page item is NULL
-   */
+  /* @see sct.get_char */
   function get_char(
     p_spi_id in sct_page_item.spi_id%type)
     return varchar2;
     
-    
-  /** Method to retrieve the value of a page item as char
-   * @param  p_spi_id       ID of the page item
-   * @param  p_format_mask  Format mask that is used to convert the string representation within the session state
-   * @param [p_throw_error] Flag to indicate whether a non successful conversion is treated as an error. Defaults to C_TRUE.
-   *                        - C_TRUE: an error is registered and thrown
-   *                        - C_FALSE: an error is registered but not thrown
-   * @return DATE value
-   * @usage  Is used to convert a session state string value into date
-   *         Depending on parameter P_THROW_ERROR an error is not only register upon unsuccessful conversion but thrown as well.
-   *         This is useful if a rule cannot be processed any further if the conversion is not successful.
-   *         If the element is mandatory and NULL, a default value is returned as defined in the APEX metadata
-   */
+
+  /* @see sct.get_date */
   function get_date(
     p_spi_id in sct_page_item.spi_id%type,
     p_format_mask in varchar2,
@@ -81,18 +64,7 @@ as
     return varchar2;
   
   
-  /** Method to retrieve the value of a page item as number
-   * @param  p_spi_id       ID of the page item
-   * @param  p_format_mask  Format mask that is used to convert the string representation within the session state
-   * @param [p_throw_error] Flag to indicate whether a non successful conversion is treated as an error. Defaults to C_FALSE.
-   *                        - C_TRUE: an error is registered and thrown
-   *                        - C_FALSE: an error is registered but not thrown
-   * @return DATE value
-   * @usage  Is used to convert a session state string value into date
-   *         Depending on parameter P_THROW_ERROR an error is not only register upon unsuccessful conversion but thrown as well.
-   *         This is useful if a rule cannot be processed any further if the conversion is not successful.
-   *         If the element is mandatory and NULL, a default value is returned as defined in the APEX metadata
-   */
+  /* @see sct.get_number */
   function get_number(
     p_spi_id in sct_page_item.spi_id%type,
     p_format_mask in varchar2,
@@ -158,28 +130,28 @@ as
 
 
   /* Methods to implement the SCT specific functionality */
-  /* @see plugin_sct.add_javascript */
+  /* @see sct.add_javascript */
   procedure add_javascript(
     p_javascript in varchar2);
 
 
-  /* @see plugin_sct.check_date */
+  /* @see sct.check_date */
   procedure check_date(
     p_spi_id in sct_page_item.spi_id%type);
 
 
-  /* @see plugin_sct.execute_action */
+  /* @see sct.execute_action */
   procedure check_mandatory(
     p_spi_id in sct_page_item.spi_id%type,
     p_push_item out nocopy sct_page_item.spi_id%type);
 
 
-  /* @see plugin_sct.execute_action */
+  /* @see sct.execute_action */
   procedure check_number(
     p_spi_id in sct_page_item.spi_id%type);
 
 
-  /* @see plugin_sct.execute_action */
+  /* @see sct.execute_action */
   procedure execute_action(
     p_sat_id in sct_action_type.sat_id%type,
     p_spi_id in sct_page_item.spi_id%type,
@@ -188,12 +160,12 @@ as
     p_param_3 in sct_rule_action.sra_param_3%type);
 
 
-  /* @see plugin_sct.execute_javascript */
+  /* @see sct.execute_javascript */
   procedure execute_javascript(
     p_plsql in varchar2);
 
 
-  /* @see plugin_sct.exclusive_or */
+  /* @see sct.exclusive_or */
   procedure exclusive_or(
     p_spi_id in sct_page_item.spi_id%type,
     p_value_list in varchar2,
@@ -201,45 +173,45 @@ as
     p_error_on_null in boolean default false);
 
 
-  /* @see plugin_sct.exclusive_or */
+  /* @see sct.exclusive_or */
   function exclusive_or(
     p_value_list in varchar2)
     return number;
 
 
-  /* @see plugin_sct.notify */
+  /* @see sct.notify */
   procedure notify(
     p_message in varchar2);
 
 
-  /* @see plugin_sct.not_null */
+  /* @see sct.not_null */
   procedure not_null(
     p_spi_id in sct_page_item.spi_id%type,
     p_value_list in varchar2,
     p_message in varchar2);
 
 
-  /* @see plugin_sct.not_null */
+  /* @see sct.not_null */
   function not_null(
     p_value_list in varchar2)
     return number;
 
 
-  /* @see plugin_sct.register_error */
+  /* @see sct.register_error */
   procedure register_error(
     p_spi_id in varchar2,
     p_error_msg in varchar2,
     p_internal_error in varchar2);
 
 
-  /* @see plugin_sct.register_error */
+  /* @see sct.register_error */
   procedure register_error(
     p_spi_id in varchar2,
     p_message_name in varchar2,
     p_arg_list in msg_args default null);
 
 
-  /* @see plugin_sct.register_mandatory */
+  /* @see sct.register_mandatory */
   procedure register_mandatory(
     p_spi_id in sct_page_item.spi_id%type,
     p_spi_mandatory_message in varchar2,
@@ -247,29 +219,29 @@ as
     p_param_2 in sct_rule_action.sra_param_2%type default null);
 
 
-  /* @see plugin_sct.register_notification */
+  /* @see sct.register_notification */
   procedure register_notification(
     p_text in varchar2);
 
 
-  /* @see plugin_sct.register_notification */
+  /* @see sct.register_notification */
   procedure register_notification(
     p_message_name in varchar2,
     p_arg_list in msg_args);
     
   
-  /* @see plugin_sct.register_observer */
+  /* @see sct.register_observer */
   function register_observer
     return varchar2;
 
 
-  /* @see plugin_sct.set_list_from_stmt */
+  /* @see sct.set_list_from_stmt */
   procedure set_list_from_stmt(
     p_spi_id in sct_page_item.spi_id%type,
     p_stmt in varchar2);
 
 
-  /* @see plugin_sct.set_session_state */
+  /* @see sct.set_session_state */
   procedure set_session_state(
     p_spi_id in sct_page_item.spi_id%type,
     p_value in varchar2,
@@ -277,17 +249,17 @@ as
     p_param_2 in sct_rule_action.sra_param_2%type default null);
 
 
-  /* @see plugin_sct.set_value_from_stmt */
+  /* @see sct.set_value_from_stmt */
   procedure set_value_from_stmt(
     p_spi_id in sct_page_item.spi_id%type,
     p_stmt in varchar2);
 
 
-  /* @see plugin_sct.stop_rule */
+  /* @see sct.stop_rule */
   procedure stop_rule;
 
 
-  /* @see plugin_sct.submit_page */
-  procedure submit_page;
+  /* @see sct.validate_page */
+  procedure validate_page;
 end sct_internal;
 /

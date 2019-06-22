@@ -114,9 +114,6 @@ prompt &s1.Create package Body SCT_ADMIN
 show errors
 
 prompt &h2.Merge initial data
-prompt &s1.Create internal SCT rule group
-@&script_dir.merge_sct_rule_group.sql
-
 prompt &s1.Create SCT page item types
 @&script_dir.merge_sct_page_item_type.sql
 

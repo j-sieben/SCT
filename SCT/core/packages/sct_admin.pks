@@ -398,6 +398,19 @@ as
     
   procedure delete_action_type(
     p_row in sct_action_type_v%rowtype);
+    
+  /** Method to validate a new or changed ACTION_TYPE and its parameters.
+   * @param  p_pl_sql   PL/SQL code to check
+   * @param  p_param_1  First parameter default value
+   * @param  p_param_2  Second parameter default value
+   * @param  p_param_3  Third parameter default value
+   * @usage  Is used to check the PL/SQL portion of an ACTION_TYPE. Parses the statement and throws an error, should parsing fail.
+   */
+  procedure validate_action_type(
+    p_pl_sql in sct_action_type.sat_pl_sql%type,
+    p_param_1 in varchar2,
+    p_param_2 in varchar2,
+    p_param_3 in varchar2);
 
   
   /** Method to export an action type

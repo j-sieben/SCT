@@ -673,7 +673,8 @@ as
   
 
   /** Helper to analyze an attribute
-   * @param  p_param  attribute value to analyze
+   * @param  p_spi_id  Name of the referenced item or sct_uit.C_NO_FIRING_ITEM
+   * @param  p_param   Attribute value to analyze
    * @return result of the analysis, either static or dynamic 
    * @usage  Used to evaluate an attribute. The following syntactical possibilities exist:
    *         - jQuery CSS selector
@@ -1566,7 +1567,7 @@ as
   as
     l_row sct_action_type%rowtype;
   begin
-    -- Tracing done in PLUGIN_SCT
+    -- Tracing done in SCT
     select *
       into l_row
       from sct_action_type
@@ -1574,7 +1575,7 @@ as
 
     if l_row.sat_pl_sql is not null then
       l_row.sat_pl_sql := utl_text.bulk_replace('begin #CODE#; end;', char_table(
-                            'CODE', l_row.sat_pl_sql,
+                            'CODE', rtrim(l_row.sat_pl_sql, ';'),
                             'ITEM', p_spi_id,
                             'PARAM_1', p_param_1,
                             'PARAM_2', p_param_2,
@@ -1583,12 +1584,12 @@ as
     end if;
 
     if l_row.sat_js is not null then
-      l_row.sat_js := utl_text.bulk_replace(l_row.sat_js, char_table(
-                        'ITEM', p_spi_id,
-                        'SELECTOR', p_spi_id,
-                        'PARAM_1', p_param_1,
-                        'PARAM_2', p_param_2,
-                        'PARAM_3', p_param_3));
+      utl_text.bulk_replace(l_row.sat_js, char_table(
+        'ITEM', p_spi_id,
+        'SELECTOR', analyze_parameter(p_spi_id, l_row.sat_js, '#SELECTOR#', p_param_2),
+        'PARAM_1', p_param_1,
+        'PARAM_2', p_param_2,
+        'PARAM_3', p_param_3));
       add_java_script(l_row.sat_js);
     end if;
   exception
@@ -1959,7 +1960,7 @@ as
   end stop_rule;
     
   
-  procedure submit_page
+  procedure validate_page
   as
     cursor mandatory_items(p_sgr_id in sct_rule_group.sgr_id%type) is
       select spi_id, spi_mandatory_message
@@ -1976,7 +1977,7 @@ as
         register_error(itm.spi_id, itm.spi_mandatory_message, '');
       end if;
     end loop;
-  end submit_page;
+  end validate_page;
   
 begin
   initialize;

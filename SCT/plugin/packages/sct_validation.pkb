@@ -307,8 +307,8 @@ end;~';
   begin
     if p_spt_id is not null then
       l_stmt := utl_text.bulk_replace(C_STMT, char_table(
-               'SPT_ID', lower(p_spt_id),
-               'SGR_ID', p_sgr_id));
+                  'SPT_ID', lower(p_spt_id),
+                  'SGR_ID', p_sgr_id));
     else
       l_stmt := 'select null d, null r from dual';
     end if;
