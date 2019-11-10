@@ -7,8 +7,8 @@ as
   C_MODE_FRAME constant sct_util.ora_name_type := 'FRAME';
   C_MODE_DEFAULT constant sct_util.ora_name_type := 'DEFAULT';
 
-  C_PAGE_ITEMS constant number := 1;
-  C_FIRING_ITEMS constant number := 2;
+  C_PAGE_ITEMS constant binary_integer := 1;
+  C_FIRING_ITEMS constant binary_integer := 2;
   
   C_JS_CODE constant binary_integer := 1;
   C_JS_RULE_ORIGIN constant binary_integer := 2;
@@ -21,12 +21,11 @@ as
   C_DELIMITER constant varchar2(1 byte) := ',';
   C_EVENT_INITIALIZE constant sct_util.ora_name_type := 'initialize';
   
-  C_BIND_JSON_TEMPLATE constant varchar2(100) := '[#JSON#]';
-  C_BIND_JSON_ELEMENT constant varchar2(100) := '{"id":"#ID#","event":"#EVENT#","action":"#STATIC_ACTION#"}';
-  C_PAGE_JSON_ELEMENT constant varchar2(100) := '{"id":"#ID#","value":"#VALUE#"}';  
-  C_JS_NAMESPACE constant varchar2(50 byte) := 'de.condes.plugin.sct';
-  C_JS_SCRIPT_START constant varchar2(300) := q'^<script>#CR#  /** Init: #DURATION#hsec*/#CR#  #JS_FILE#.setItemValues(#ITEM_JSON#);#CR#  #JS_FILE#.setErrors(#ERROR_JSON#);^';
-  C_JS_SCRIPT_END constant varchar2(30) := q'^</script>^';
+  C_BIND_JSON_TEMPLATE constant sct_util.sql_char := '[#JSON#]';
+  C_BIND_JSON_ELEMENT constant sct_util.sql_char := '{"id":"#ID#","event":"#EVENT#","action":"#STATIC_ACTION#"}';
+  C_PAGE_JSON_ELEMENT constant sct_util.sql_char := '{"id":"#ID#","value":"#VALUE#"}';  
+  C_JS_NAMESPACE constant sct_util.ora_name_type := 'de.condes.plugin.sct';
+  C_JS_SCRIPT_FRAME constant sct_util.sql_char := q'^<script>#CR#  /** Init: #DURATION#hsec*/#CR#  #JS_FILE#.setItemValues(#ITEM_JSON#);#CR#  #JS_FILE#.setErrors(#ERROR_JSON#);#CR##SCRIPT##CR#</script>^';
 
   /** Private types */
   type item_stack_t is table of number index by varchar2(50);
@@ -80,6 +79,7 @@ as
     item sct_page_item.spi_id%type,
     pl_sql sct_action_type.sat_pl_sql%type,
     js sct_action_type.sat_js%type,
+    sra_sort_seq sct_rule_action.sra_sort_seq%type,
     sra_param_1 sct_rule_action.sra_param_1%type,
     sra_param_2 sct_rule_action.sra_param_2%type,
     sra_param_3 sct_rule_action.sra_param_3%type,
@@ -92,10 +92,180 @@ as
   g_has_errors boolean;
   g_param param_rec;
   g_recursion_limit binary_integer;
-  g_recursion_loop_is_error boolean;
-  -- Subset of G_PARAM for validation purposes
-  g_environment environment_rec;
+  g_recursion_loop_is_error boolean;  
   
+  $IF sct_util.C_WITH_UNIT_TESTS $THEN
+  /*============ UNIT TEST ============*/ 
+  g_test_mode boolean := false;
+  g_test_result sct_test_result;
+  
+  procedure set_test_mode(
+    p_mode in boolean default false)
+  as
+  begin
+    g_test_mode := p_mode;
+  end set_test_mode;
+  
+  function get_test_mode
+    return boolean
+  as
+  begin
+    return g_test_mode;
+  end get_test_mode;
+  
+  
+  function get_test_result
+    return sct_test_result
+  as
+  begin
+    return g_test_result;
+  end get_test_result;
+  
+  
+  function to_char_table(
+    p_list item_stack_t)
+    return char_table
+  as
+    l_table char_table := char_table();
+    l_key varchar2(50);
+  begin
+    if p_list.count > 0 then
+      l_key := p_list.first;
+      while l_key is not null loop
+        l_table.extend;
+        l_table(l_table.count) := l_key;
+        l_key := p_list.next(l_key);
+      end loop;
+    end if;
+    
+    return l_table;
+  end to_char_table;
+  
+  
+  function to_char_table(
+    p_list recursive_stack_t)
+    return char_table
+  as
+    l_table char_table := char_table();
+    l_key varchar2(50);
+  begin
+    if p_list.count > 0 then
+      l_key := p_list.first;
+      while l_key is not null loop
+        l_table.extend;
+        l_table(l_table.count) := l_key;
+        l_key := p_list.next(l_key);
+      end loop;
+    end if;
+    
+    return l_table;
+  end to_char_table;
+  
+  
+  function to_char_table(
+    p_list error_stack_t)
+    return char_table
+  as
+    l_table char_table := char_table();
+  begin
+    if p_list.count > 0 then
+      for i in 1 .. p_list.count loop
+        l_table.extend;
+        l_table(l_table.count) := p_list(i);
+      end loop;
+    end if;
+    
+    return l_table;
+  end to_char_table;
+  
+  
+  function to_char_table(
+    p_list level_length_t)
+    return char_table
+  as
+    l_table char_table := char_table();
+  begin
+    if p_list.count > 0 then
+      for i in 1 .. p_list.count loop
+        l_table.extend;
+        l_table(l_table.count) := to_char(p_list(i));
+      end loop;
+    end if;
+    
+    return l_table;
+  end to_char_table;
+  
+  
+  function to_sct_test_js_list(
+    p_js_list js_list)
+    return sct_test_js_list
+  as
+    l_test_js_list sct_test_js_list := sct_test_js_list();
+    l_js_rec js_rec;
+    l_test_js_rec sct_test_js_rec;
+  begin
+    for i in 1 .. p_js_list.count loop
+      l_js_rec := p_js_list(i);
+      l_test_js_rec := sct_test_js_rec(substr(l_js_rec.script, 1, 4000), l_js_rec.hash, l_js_rec.debug_level);
+      l_test_js_list.extend;
+      l_test_js_list(l_test_js_list.count) := l_test_js_rec;
+    end loop;
+    return l_test_js_list;
+  end to_sct_test_js_list;
+  
+  
+  function to_sct_test_row(
+    p_rule_rec rule_rec)
+    return sct_test_row
+  as
+    l_test_row sct_test_row;
+  begin
+    l_test_row := sct_test_row(
+                    -- Rule
+                    p_rule_rec.sru_id, p_rule_rec.sru_sort_seq, p_rule_rec.sru_name, p_rule_rec.sru_firing_items,
+                    p_rule_rec.sru_fire_on_page_load, p_rule_rec.item, p_rule_rec.pl_sql, p_rule_rec.js, 
+                    p_rule_rec.sra_sort_seq, p_rule_rec.sra_param_1, p_rule_rec.sra_param_2, p_rule_rec.sra_param_3, 
+                    p_rule_rec.sra_on_error, p_rule_rec.sru_on_error, p_rule_rec.is_first_row,
+                    -- Parameters
+                    g_param.id, g_param.sgr_id, g_param.firing_item, g_param.firing_event, g_param.error_dependent_items,
+                    to_char_table(g_param.bind_items), to_char_table(g_param.page_items), to_char_table(g_param.firing_items),
+                    to_char_table(g_param.error_stack),  to_char_table(g_param.recursive_stack), g_param.is_recursive, 
+                    to_sct_test_js_list(g_param.js_action_stack), to_char_table(g_param.level_length),
+                    g_param.recursive_level, sct_util.bool_to_flag(g_param.allow_recursion), g_param.notification_stack, 
+                    sct_util.bool_to_flag(g_param.stop_flag), g_param.now);
+    return l_test_row;
+  end to_sct_test_row;
+  $END
+  
+  
+  procedure initialize_test
+  as
+  begin
+    null;
+    $IF sct_util.C_WITH_UNIT_TESTS $THEN
+    if g_test_mode then
+      g_test_result := sct_test_result();
+    end if;
+    $END
+  end initialize_test;
+  
+  
+  procedure append_test_result(
+    p_rule in rule_rec default null)
+  as
+    l_test_row sct_test_row;
+  begin
+    null;
+    $IF sct_util.C_WITH_UNIT_TESTS $THEN
+    if g_test_mode then      
+      if p_rule.sru_id is not null then
+        l_test_row := to_sct_test_row(p_rule);
+        g_test_result.rule_list.extend;
+        g_test_result.rule_list(g_test_result.rule_list.count) := l_test_row;
+      end if;
+    end if;
+    $END
+  end append_test_result;
   
   /*============ HELPER ============*/ 
   
@@ -111,25 +281,27 @@ as
    *         especially useful if a region is refreshed.
    */
   procedure add_java_script(
-    p_script in varchar2,
+    p_java_script in varchar2,
     p_debug_level in binary_integer default C_JS_CODE)
   as
     C_COMMENT_OUT constant varchar2(20) := '// (double) ';
+    l_next_entry binary_integer;
     l_js js_rec;
   begin
     pit.enter_optional(
       p_params => msg_params(
-                    msg_param('p_script', p_script),
+                    msg_param('p_java_script', p_java_script),
                     msg_param('p_debug_level', to_char(p_debug_level))));
                     
-    if p_script is not null then
-      select p_script, standard_hash(p_script), p_debug_level
+    if p_java_script is not null then
+      l_next_entry := g_param.js_action_stack.count + 1;
+      
+      select p_java_script, standard_hash(p_java_script), p_debug_level
         into l_js
         from dual;
         
       -- comment out double JavaScript entries
-      -- TODO: Warum COUNT + 1?
-      for i in 1 .. g_param.js_action_stack.count + 1 loop
+      for i in 1 .. g_param.js_action_stack.count loop
         if g_param.js_action_stack.exists(i) then
           if g_param.js_action_stack(i).debug_level = C_JS_CODE and g_param.js_action_stack(i).hash = l_js.hash then
             g_param.js_action_stack(i).script := C_COMMENT_OUT || g_param.js_action_stack(i).script;
@@ -140,7 +312,7 @@ as
       end loop;
       
       -- persist JavaScript action
-      g_param.js_action_stack(g_param.js_action_stack.count + 1) := l_js;
+      g_param.js_action_stack(l_next_entry) := l_js;
       
       -- Caculate length of comments and scripts
       g_param.level_length(l_js.debug_level) := g_param.level_length(l_js.debug_level) + length(l_js.script);
@@ -173,7 +345,7 @@ as
    * @param  p_text  Text to append P_WHAT to
    * @param  p_what  Text to append
    * @return Text with the appendix, delimited by C_DELIMITER
-   * @usage  Is used to concatenate strings and to avoid repeating code
+   * @usage  Is used to concatenate strings and to add line feed and indent
    */
   procedure append(
     p_text in out nocopy varchar2,
@@ -193,7 +365,7 @@ as
    * @param  p_text    Text to limit
    * @param [p_length] Maximum length
    * @return P_TEXT, limited to P_LENGTH byte
-   * @usage  Is used to avoid overflow of variables by reducing the max length
+   * @usage  Limits text to P_LENGTH to avoid overflow of variables by reducing the max length
    */
   function limit_string(
     p_text in varchar2,
@@ -217,7 +389,8 @@ as
     l_list item_stack_t;
     l_item varchar2(50);
     l_result sct_util.max_char;
-  begin
+  begin 
+    -- get list
     case p_list
     when C_PAGE_ITEMS then
       l_list := g_param.page_items;
@@ -226,11 +399,14 @@ as
     else
       null;
     end case;
+    
+    -- concatenate list
     l_item := l_list.first;
     while l_item is not null loop
       l_result := l_result || C_DELIMITER || l_item;
       l_item := l_list.next(l_item);
     end loop;
+    
     return trim(C_DELIMITER from l_result);
   end join_list;
   
@@ -247,10 +423,8 @@ as
   begin
     pit.enter_optional;
     
-    if g_param.firing_event != C_EVENT_INITIALIZE then
-      -- include APEX actions only if page is initializing
-      return null;
-    end if;
+    -- excute only on initialization
+    pit.assert(g_param.firing_event = C_EVENT_INITIALIZE);
     
     -- Check whether APEX actions exist
     select count(*)
@@ -261,8 +435,8 @@ as
              from sct_apex_action_item
             where sai_spi_sgr_id = g_param.sgr_id);
             
-    if l_has_actions > 0 then
-      -- Generate initalization JavaScript for APEX actions
+    if l_has_actions = 1 then
+      -- Generate initalization JavaScript for APEX actions based on UTL_TEXT templates of name APEX_ACTION
       with templates as (
            select uttm_name, uttm_mode, uttm_text, g_param.sgr_id sgr_id
              from utl_text_templates
@@ -319,6 +493,9 @@ as
 
     pit.leave_optional(msg_params(msg_param('APEX_ACTIONS', limit_string(l_actions_js))));
     return l_actions_js;
+  exception
+    when msg.ASSERT_TRUE_ERR then
+      return null;
   end get_apex_actions;
   
   
@@ -343,13 +520,15 @@ as
     return l_conversion;
   exception
     when no_data_found then
-      /** TODO: Ueberlegen, ob Warnung ausgegeben werden soll wegen fehlender Formatmaske */
+      /** TODO: Raise warning if format mask is missing? */
       return null;
   end get_conversion;
   
    
   /** Method calculates all errors registered during rule evaluation and collects them as JSON
    * @return JSON instance for all page items referenced by the rule executed.
+   * @usage  Is used to convert the list of error to a JSON structure with the following structure:
+   *          {"type":"error","item":"#PAGE_ITEM#","message":"#MESSAGE#","location":#LOCATION#,"additionalInfo":"#ADDITIONAL_INFO#","unsafe":"false"}
    */
   function get_errors_as_json
     return varchar2
@@ -434,7 +613,7 @@ as
 
   /** Method calculates all items which are referenced by the rules executed and collects them as JSON
    * @return JSON instance for all page items referenced by the rule executed.
-   *         Structure: [{"id":"<ID>","value":"<"VALUE>"}, ...]
+   *         Structure: [{"id":"#ID#","value":"#VALUE#"}, ...]
    */
   function get_items_as_json
     return varchar2
@@ -515,22 +694,13 @@ as
     l_max_level binary_integer := 0;
   begin
     pit.enter_optional;
-    
-    -- create initial JS chunk
-    l_js := utl_text.bulk_replace(C_JS_SCRIPT_START, char_table(
-              'CR', sct_util.C_CR,
-              'ITEM_JSON', get_items_as_json,
-              'ERROR_JSON',  get_errors_as_json,
-              'FIRING_ITEMS', join_list(C_FIRING_ITEMS),
-              'JS_FILE', C_JS_NAMESPACE,
-              'DURATION', to_char(dbms_utility.get_time - g_param.now)));
-              
+                  
     -- add APEX actions, if existing
     append(l_js, get_apex_actions);
                         
     -- process rule javascript from stack
     if g_param.js_action_stack.count > 0 then
-      -- Mesaure total char length of every level on stack and limit lemgth to 32K max by emitting levels top down
+      -- Mesaure total char length of every level on stack and limit length to 32K max by emitting levels top down
       -- until length is below that barrier
       for i in 1 .. g_param.level_length.count loop
         if g_param.level_length.exists(i) then
@@ -559,7 +729,15 @@ as
       end loop;
     end if;
     
-    append(l_js, sct_util.C_CR || C_JS_SCRIPT_END);
+    -- wrap JavaScript in <script> tag and add item value and error scripts
+    l_js := utl_text.bulk_replace(C_JS_SCRIPT_FRAME, char_table(
+              'SCRIPT', l_js,
+              'CR', sct_util.C_CR,
+              'ITEM_JSON', get_items_as_json,
+              'ERROR_JSON',  get_errors_as_json,
+              'FIRING_ITEMS', join_list(C_FIRING_ITEMS),
+              'JS_FILE', C_JS_NAMESPACE,
+              'DURATION', to_char(dbms_utility.get_time - g_param.now)));
     
     pit.leave_optional(msg_params(msg_param('JavaScript', substr(l_js, 1, 3000))));
     return l_js;
@@ -567,19 +745,21 @@ as
   
   
   /* Helper method to create comments in JavaScript to indicate the rule details the script originates from
-   * and other usefule information such as the recursive depth, an indicator that JavaScript originates from an
-   * exception handler and so forth.
+   * and other useful information such as the recursive depth an exception handler and so forth.
    * @param  p_rule  Rule record of the active rule
    */
   procedure get_java_script_comments(
     p_rule in rule_rec)
   as
     l_origin_msg varchar2(1000);
+    l_actual_recursive_level binary_integer;
   begin
     pit.enter_optional;
     
     -- first line, add origin message
     if p_rule.is_first_row = sct_util.C_TRUE then
+      l_actual_recursive_level := g_param.recursive_level - 1;
+      
       if not g_has_errors then
         -- normal execution, add message
         if p_rule.sru_fire_on_page_load = sct_util.C_TRUE then
@@ -588,21 +768,21 @@ as
           l_origin_msg := msg.SCT_RULE_ORIGIN;
         end if;
         add_java_script(
-          p_script => sct_util.C_CR || 
-                      pit.get_message_text(
-                        p_message_name => l_origin_msg, 
-                        p_arg_list => msg_args(
-                                        to_char(g_param.recursive_level - 1), 
-                                        to_char(p_rule.sru_sort_seq), 
-                                        p_rule.sru_name, 
-                                        g_param.firing_item)),
+          p_java_script => sct_util.C_CR || 
+                           pit.get_message_text(
+                             p_message_name => l_origin_msg, 
+                             p_arg_list => msg_args(
+                                             to_char(l_actual_recursive_level), 
+                                             to_char(p_rule.sru_sort_seq), 
+                                             p_rule.sru_name, 
+                                             g_param.firing_item)),
           p_debug_level => C_JS_RULE_ORIGIN);
       else
         -- exception occurred, pass message
         add_comment(
           p_message_name => msg.SCT_ERROR_HANDLING, 
           p_arg_list => msg_args(
-                          to_char(g_param.recursive_level - 1), 
+                          to_char(l_actual_recursive_level), 
                           to_char(p_rule.sru_sort_seq), 
                           p_rule.sru_name, 
                           g_param.firing_item));
@@ -830,11 +1010,6 @@ as
                      'FIRING_ITEM', g_param.firing_item,
                      'CR', sct_util.C_CR));
       add_java_script(l_js_code, C_JS_CODE);
-    else
-      -- No JavaScript necessary, notify if set to verbose
-      add_comment(
-        p_message_name => msg.SCT_NO_JAVASCRIPT, 
-        p_arg_list => msg_args(p_rule.sru_name, sct_util.C_CR));
     end if;
     
     pit.leave_optional;
@@ -904,9 +1079,11 @@ as
   procedure create_action
   as
     l_rule rule_rec;
+    l_rule_name sct_rule.sru_name%type;
     l_action_cur sys_refcursor;
     l_stmt sct_util.max_char;
     l_now binary_integer;
+    l_has_js boolean default false;
   begin
     pit.enter_mandatory;
 
@@ -925,12 +1102,15 @@ as
                 and uttm_mode = C_MODE_DEFAULT))
       into l_stmt
       from dual;
-    pit.verbose(msg.allg_pass_information, msg_args('Rule SQL: ' || l_stmt));
+    pit.verbose(msg.SCT_DEBUG_RULE_STMT, msg_args(l_stmt));
     
     -- Calculate the rule actions. Explicit cursor control because of dynamic SQL
     open l_action_cur for l_stmt;
     fetch l_action_cur into l_rule;  -- Evaluates rule
+    pit.verbose(msg.SCT_PROCESSING_RULE, msg_args(to_char(l_rule.sru_sort_seq), l_rule.sru_name));
     while l_action_cur%FOUND loop
+      l_rule_name := l_rule.sru_name;
+      append_test_result(l_rule);
       case when ((l_rule.sru_on_error = sct_util.C_FALSE or not g_has_errors) 
             and l_rule.sra_on_error = sct_util.C_FALSE) 
              or (l_rule.sra_on_error = sct_util.C_TRUE and g_has_errors) then
@@ -954,12 +1134,23 @@ as
     
     -- Add time measurement and collected notification messages to origin comments
     for i in 1 .. g_param.js_action_stack.count loop
-      if g_param.js_action_stack(i).debug_level = C_JS_RULE_ORIGIN then
+      case when g_param.js_action_stack(i).debug_level = C_JS_RULE_ORIGIN then
         utl_text.bulk_replace(g_param.js_action_stack(i).script, char_table(
           'NOTIFICATION', g_param.notification_stack,
           'TIME', coalesce(dbms_utility.get_time - l_now, 0) || 'hsec'));
-      end if;
+      when g_param.js_action_stack(i).debug_level = C_JS_CODE then
+        l_has_js := true;
+      else
+        null;
+      end case;
     end loop;
+    
+    if not l_has_js then
+      -- No JavaScript found, notify if set to verbose
+      add_comment(
+        p_message_name => msg.SCT_NO_JAVASCRIPT, 
+        p_arg_list => msg_args(l_rule_name, sct_util.C_CR));
+    end if;
     
     pit.leave_mandatory;
   exception
@@ -980,9 +1171,6 @@ as
    */
   procedure process_rule
   as
-    l_firing_items sct_rule.sru_firing_items%type;
-    l_js_action_chunk sct_util.max_char;
-    l_js_action sct_util.max_char;
     l_has_recursive_request boolean := false;
     l_processed_item sct_page_item.spi_id%type;
     l_actual_recursive_level binary_integer;
@@ -1209,11 +1397,11 @@ as
   as
     l_char varchar2(32767);
   begin
-    pit.enter_optional(p_params => msg_params(msg_param('p_spi_id', p_spi_id)));
+    pit.enter_detailed(p_params => msg_params(msg_param('p_spi_id', p_spi_id)));
     
     l_char := coalesce(v(p_spi_id), get_mandatory_default_value(p_spi_id));
     
-    pit.leave_optional(p_params => msg_params(msg_param('Result', l_char)));
+    pit.leave_detailed(p_params => msg_params(msg_param('Result', l_char)));
     return l_char;
   end get_char;
     
@@ -1227,7 +1415,7 @@ as
     l_raw_value sct_util.max_char;
     l_date date;
   begin
-    pit.enter_optional(
+    pit.enter_detailed(
       p_params => msg_params(
                     msg_param('p_spi_id', p_spi_id),
                     msg_param('p_format_mask', p_format_mask),
@@ -1237,7 +1425,7 @@ as
     l_raw_value := get_char(p_spi_id);
     l_date := to_date(l_raw_value, p_format_mask);
     
-    pit.leave_mandatory(p_params => msg_params(msg_param('Result', to_char(l_date, 'yyyy-mm-dd'))));
+    pit.leave_detailed(p_params => msg_params(msg_param('Result', to_char(l_date, 'yyyy-mm-dd'))));
     return l_date;
   exception
     when msg.INVALID_DATE_ERR then
@@ -1245,18 +1433,21 @@ as
       if p_throw_error = sct_util.C_TRUE then
         raise;
       end if;
+      pit.leave_detailed(p_params => msg_params(msg_param('Result', to_char(l_date, 'yyyy-mm-dd'))));
       return null;
     when msg.INVALID_DATE_FORMAT_ERR then
       register_error(p_spi_id, msg.INVALID_DATE_FORMAT, msg_args(l_raw_value, p_format_mask));
       if p_throw_error = sct_util.C_TRUE then
         raise;
       end if;
+      pit.leave_detailed(p_params => msg_params(msg_param('Result', to_char(l_date, 'yyyy-mm-dd'))));
       return null;
     when msg.INVALID_YEAR_ERR or msg.INVALID_MONTH_ERR or msg.INVALID_DAY_ERR then
       register_error(p_spi_id, msg.INVALID_YEAR, msg_args(sqlerrm));
       if p_throw_error = sct_util.C_TRUE then
         raise;
       end if;
+      pit.leave_detailed(p_params => msg_params(msg_param('Result', to_char(l_date, 'yyyy-mm-dd'))));
       return null;
   end get_date;
 
@@ -1297,7 +1488,7 @@ as
     l_raw_value sct_util.max_char;
     l_result number;
   begin
-    pit.enter_optional(
+    pit.enter_detailed(
       p_params => msg_params(
                     msg_param('p_spi_id', p_spi_id),
                     msg_param('p_format_mask', p_format_mask),
@@ -1307,7 +1498,7 @@ as
     l_raw_value := rtrim(ltrim(l_raw_value, ', '));
     l_result := to_number(l_raw_value, p_format_mask);
     
-    pit.leave_optional(p_params => msg_params(msg_param('Result', to_char(l_result))));
+    pit.leave_detailed(p_params => msg_params(msg_param('Result', to_char(l_result))));
     return l_result;
   exception
     when msg.INVALID_NUMBER_FORMAT_ERR then
@@ -1315,12 +1506,14 @@ as
       if p_throw_error = sct_util.C_TRUE then
         raise;
       end if;
+      pit.leave_detailed(p_params => msg_params(msg_param('Result', to_char(l_result))));
       return null;
     when INVALID_NUMBER or VALUE_ERROR then
       register_error(p_spi_id, msg.SCT_INVALID_NUMBER_REMOVED, msg_args(l_raw_value));
       if p_throw_error = sct_util.C_TRUE then
         raise;
       end if;
+      pit.leave_detailed(p_params => msg_params(msg_param('Result', to_char(l_result))));
       return null;
   end get_number;
 
@@ -1473,14 +1666,8 @@ as
     
     format_firing_item;
     
-    -- Registrer FIRING_ELEMENT on recursion level 1
+    -- Register FIRING_ELEMENT on recursion level 1
     g_param.recursive_stack(g_param.firing_item) := g_param.recursive_level;
-    
-    -- Fill g_environment with subset of G_PARAM
-    select sgr_id, sgr_app_id, sgr_page_id
-      into g_environment.sgr_id, g_environment.app_id, g_environment.page_id
-      from sct_rule_group
-     where sgr_id = g_param.sgr_id;
     
     pit.leave_optional;
   exception

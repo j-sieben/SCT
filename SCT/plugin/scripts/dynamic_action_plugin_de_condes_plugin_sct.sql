@@ -40,7 +40,7 @@ wwv_flow_api.create_plugin(
 ,p_css_file_urls=>'../de/condes/plugin/sct/css/sct.css'
 ,p_api_version=>1
 ,p_render_function=>'plugin_sct.render'
-,p_ajax_function=>'plugin_sct.ajax'
+,p_ajax_function=>'sct.ajax'
 ,p_substitute_attributes=>true
 ,p_subscribe_plugin_settings=>true
 ,p_help_text=>wwv_flow_string.join(wwv_flow_t_varchar2(

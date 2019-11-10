@@ -19,6 +19,10 @@ as
         p_dynamic_action => p_dynamic_action);
     end if;
     
+    $IF sct_util.C_WITH_UNIT_TESTS $THEN
+    sct_internal.initialize_test;
+    $END
+    
     -- Initialize
     sct_internal.read_settings(
       p_firing_item => apex_application.g_x01,
@@ -61,6 +65,10 @@ as
         p_plugin => p_plugin,
         p_dynamic_action => p_dynamic_action);
     end if;
+    
+    $IF sct_util.C_WITH_UNIT_TESTS $THEN
+    sct_internal.initialize_test;
+    $END
     
     -- Initialize
     sct_internal.read_settings(

@@ -16,12 +16,17 @@ prompt &h3.Create SCT messages
 
 prompt &h2.Create PL/SQL objects
 prompt &h3.Create packages
+
+prompt &s1.Create package SCT_INTERNAL
+@&plugin_dir.packages/sct_internal.pks
+show errors
+
 prompt &s1.Create package PLUGIN_SCT
 @&plugin_dir.packages/plugin_sct.pks
 show errors
 
-prompt &s1.Create package SCT_INTERNAL
-@&plugin_dir.packages/sct_internal.pks
+prompt &s1.Create package SCT
+@&plugin_dir.packages/sct.pks
 show errors
 
 prompt &s1.Create package SCT_VALIDATION
@@ -33,12 +38,17 @@ prompt &s1.Create package UTL_APEX_ACTION
 show errors
 
 prompt &h3.Create package bodies
-prompt &s1.Create package Body PLUGIN_SCT
-@&plugin_dir.packages/plugin_sct.pkb
-show errors
-
 prompt &s1.Create package Body SCT_INTERNAL
 @&plugin_dir.packages/sct_internal.pkb
+show errors
+
+prompt &s1.Create package Body PLUGIN_SCT
+@&plugin_dir.packages/plugin_sct.pkb
+show 
+
+
+prompt &s1.Create package Body SCT
+@&plugin_dir.packages/sct.pkb
 show errors
 
 prompt &s1.Create package Body SCT_VALIDATION

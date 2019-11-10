@@ -9,8 +9,8 @@ begin
   $IF dbms_db_version.ver_le_11 $THEN
   null;
   $ELSE
-  dbms_output.put_line('&s1.INHERIT PRIVILEGES from ' || user || ' to &INSTALL_USER. granted');
-  execute immediate 'grant inherit privileges on user ' || user || ' to &INSTALL_USER.';
+  dbms_output.put_line('&s1.INHERIT PRIVILEGES from ' || user || ' to PUBLIC granted');
+  execute immediate 'grant inherit privileges on user ' || user || ' to PUBLIC';
   $END
 end;
 /

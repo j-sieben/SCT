@@ -26,6 +26,13 @@ as
     p_spt_id in sct_action_param_type.spt_id%type,
     p_spi_id in sct_page_item.spi_id%type,
     p_environment in sct_internal.environment_rec);
+       
+  /** Method to dynamically execute a validation for a page item
+   * %param  p_item             Name of the item the validation refers to
+   *                            an error message.
+   */
+  procedure validate_page_item(
+    p_item in varchar2);
     
 end sct_validation;
 /

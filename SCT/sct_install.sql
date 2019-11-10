@@ -19,6 +19,9 @@ prompt &h2.grant user rights
 alter session set current_schema=&INSTALL_USER.;
 @set_compiler_flags.sql
 
+@check_unit_test_exists.sql "unit_test/uninstall.sql" "clean up"
+@check_unit_test_exists.sql "unit_test/install.sql" "installation"
+
 prompt
 prompt &section.
 prompt &h1.State Chart Toolkit (SCT)) Installation at user &INSTALL_USER.
@@ -35,7 +38,6 @@ prompt
 prompt &section.
 prompt &h1.APEX application SCT
 @apex/install.sql
-
 
 prompt
 prompt &section.

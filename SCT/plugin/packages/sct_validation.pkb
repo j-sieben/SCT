@@ -2,15 +2,30 @@ create or replace package body sct_validation
 as
 
   /* Private constants*/
-
+  C_ALPHANUMERIC_CHARS constant varchar2(100) := 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_';
   /* Private types */
 
-  /* Private global variables */
+  /* Private global variables */  
+  
+  procedure parse(
+    p_stmt in varchar2)
+  as
+    l_cur binary_integer;
+  begin
+    l_cur := dbms_sql.open_cursor(p_stmt);
+    dbms_sql.parse(l_cur, p_stmt, dbms_sql.NATIVE);
+    dbms_sql.close_cursor(l_cur);
+  exception
+    when others then
+      dbms_sql.close_cursor(l_cur);
+      raise;
+  end parse;
+  
+  
   procedure parse_sql(
     p_stmt in varchar2)
   as
-    l_stmt varchar2(32767);
-    l_cur binary_integer;
+    l_stmt utl_apex.max_char;
     C_STMT_TMPL constant varchar2(200) := 'select * from (#STMT#)';
   begin
     l_stmt := utl_text.bulk_replace(C_STMT_TMPL, char_table(
@@ -19,23 +34,17 @@ as
                 'PARAM_1', null,
                 'PARAM_2', null,
                 'PARAM_3', null));
-    l_cur := dbms_sql.open_cursor(l_stmt);
-    dbms_sql.parse(l_cur, l_stmt, dbms_sql.NATIVE);
-    dbms_sql.close_cursor(l_cur);
-  exception
-    when others then
-      dbms_sql.close_cursor(l_cur);
-      raise;
+    parse(l_stmt);
   end parse_sql;
   
   
   procedure parse_string(
     p_value in out nocopy varchar2)
   as
-    l_stmt varchar2(32767);
+    l_stmt utl_apex.max_char;
     l_cur binary_integer;
     C_STMT_TMPL constant varchar2(200) := q'~declare 
-  l_string varchar2(32767);
+  l_string utl_apex.max_char;
 begin
   select #VALUE#
     into l_string
@@ -51,8 +60,8 @@ end;~';
     p_value in out nocopy varchar2,
     p_function in boolean default true)
   as
-    C_FUNCTION_STMT constant varchar2(200) := q'^declare l_foo varchar2(32767); begin l_foo := #STMT#; end;^';
-    C_PROCEDURE_STMT constant varchar2(200) := q'^declare l_foo varchar2(32767); begin #STMT#; end;^';
+    C_FUNCTION_STMT constant varchar2(200) := q'^declare l_foo utl_apex.max_char; begin l_foo := #STMT#; end;^';
+    C_PROCEDURE_STMT constant varchar2(200) := q'^declare l_foo utl_apex.max_char; begin #STMT#; end;^';
     l_cur binary_integer;
     l_stmt varchar2(2000);
   begin
@@ -212,7 +221,7 @@ end;~';
     p_target in varchar2)
   as
     C_STMT constant varchar2(100) := 'select * from (#STMT#)';
-    l_stmt varchar2(32767);
+    l_stmt utl_apex.max_char;
     l_cur binary_integer;
   begin
     l_stmt := replace(C_STMT, '#STMT#', p_value);
@@ -293,6 +302,75 @@ end;~';
   end validate_is_sequence;
   
   
+  procedure execute_plsql_code(
+    p_plsql_code in varchar2)
+  as
+    C_STMT constant varchar2(100) := 'begin #EXPRESSION#; end;';
+    l_stmt utl_apex.max_char;
+    l_result boolean;
+  begin
+    l_stmt := replace(C_STMT, '#EXPRESSION#', rtrim(p_plsql_code, ';'));
+    parse(l_stmt);
+    execute immediate l_stmt;
+  end execute_plsql_code;
+  
+  
+  function execute_function_as_varchar2(
+    p_plsql_code in varchar2)
+    return varchar2
+  as
+    C_STMT constant varchar2(100) := 'begin :x := #EXPRESSION#; end;';
+    l_stmt utl_apex.max_char;
+    l_result utl_apex.max_char;
+  begin
+    l_stmt := replace(C_STMT, '#EXPRESSION#', rtrim(p_plsql_code, ';'));
+    parse(l_stmt);
+    execute immediate l_stmt using out l_result;
+    return l_result;
+  end execute_function_as_varchar2;
+  
+  
+  function execute_function_as_boolean(
+    p_plsql_code in varchar2)
+    return boolean
+  as
+    C_STMT constant varchar2(100) := q'^declare function bool return boolean as begin #EXPRESSION#; end; begin :x := bool; end;^';
+    l_stmt utl_apex.max_char;
+    l_result boolean;
+  begin
+    l_stmt := replace(C_STMT, '#EXPRESSION#', rtrim(p_plsql_code, ';'));
+    parse(l_stmt);
+    execute immediate l_stmt using out l_result;
+    return l_result;
+  end execute_function_as_boolean;
+  
+  
+  function evaluate_plsql_expression(
+    p_plsql_code in varchar2)
+    return boolean
+  as
+    C_STMT constant varchar2(100) := 'begin :x := #EXPRESSION#; end;';
+    l_stmt utl_apex.max_char;
+    l_result boolean;
+  begin
+    l_stmt := replace(C_STMT, '#EXPRESSION#', rtrim(p_plsql_code, ';'));
+    parse(l_stmt);
+    execute immediate l_stmt using out l_result;
+    return l_result;
+  end evaluate_plsql_expression;
+  
+  
+  procedure evaluate_sql_expression(
+    p_stmt in varchar2)
+  as
+    C_STMT constant varchar2(100) := 'select count(*) from dual where #EXPRESSION#';
+    l_stmt utl_apex.max_char;
+  begin
+    l_stmt := replace(C_STMT, '#EXPRESSION#', p_stmt);
+    pit.assert_exists(p_stmt);
+  end evaluate_sql_expression;
+  
+  
   /* INTERFACE */
   function get_lov_sql(
     p_spt_id in sct_action_param_type.spt_id%type,
@@ -356,6 +434,154 @@ end;~';
       pit.error(msg.SCT_UNKNOWN_SPT, msg_args(p_spt_id));
     end case;
   end validate_parameter;
+  
+    
+  procedure validate_page_item(
+    p_item in varchar2)
+  as
+    l_expression1 utl_apex.max_char;
+    l_expression2 utl_apex.max_char;
+    l_value utl_apex.max_char;
+    l_row apex_application_page_val%rowtype;
+  
+    function get_value(
+      p_name in varchar2)
+      return varchar2
+    is
+    begin
+      return replace(v(p_name), '%null%');
+    end get_value;
+    
+    procedure put_error_on_stack
+    is
+      l_associated_item utl_apex.ora_name_type := p_item;
+    begin
+      if l_row.validation_failure_text is not null then
+        if l_associated_item is null and
+          (l_row.validation_type_code like 'ITEM\_%' escape '\' or 
+           l_row.validation_type_code = 'REGULAR_EXPRESSION')
+        then
+            l_associated_item := l_expression1;
+        end if;
+    
+        /*sct_internal.register_error (
+          p_spi_id => l_associated_item,
+          p_error_msg => l_row.validation_failure_text,
+          p_internal_error => null);*/
+        dbms_output.put_line(l_row.validation_failure_text);
+      end if;
+    end put_error_on_stack;
+    
+    procedure assert(
+      p_test in boolean)
+    as
+    begin
+      if not(p_test) then
+        put_error_on_stack;
+      end if;
+    end assert;
+    
+  begin
+      with params as(
+           select utl_apex.get_application_id application_id,
+                  utl_apex.get_page_id page_id
+              from dual)
+    select /*+ no_merge(p) */ v.*
+      into l_row
+      from apex_application_page_val v
+      join params p
+        on v.application_id = p.application_id
+       and v.page_id = p.page_id
+     where associated_item = p_item;
+       
+    l_expression1 := wwv_flow.do_substitutions(l_row.validation_expression1);
+    l_expression2 := wwv_flow.do_substitutions(l_row.validation_expression2);
+  
+    case l_row.validation_type_code
+    when 'EXISTS' then
+      pit.assert_exists(p_stmt => l_expression1);
+    when 'NOT_EXISTS' then
+      pit.assert_not_exists(p_stmt => l_expression1);
+    when 'ITEM_NOT_ZERO' then
+      assert(utl_apex.get_number(l_expression1) != 0);
+    when 'ITEM_NOT_NULL' then
+      assert(get_value(l_expression1) is not null);
+    when 'ITEM_NOT_NULL_OR_ZERO' then
+      assert(get_value(l_expression1) is not null and utl_apex.get_number(l_expression1) != 0);
+    when 'ITEM_IS_ALPHANUMERIC' then
+      l_value := get_value(l_expression1);
+      for j in 1 .. coalesce(length(l_value),0) loop
+        if instr(C_ALPHANUMERIC_CHARS, substr(l_value, j, 1)) = 0 then
+          put_error_on_stack;
+          exit;
+        end if;
+      end loop;
+    when 'ITEM_IS_NUMERIC' then
+      assert(utl_apex.get_number(l_expression1) is not null);
+    when 'ITEM_CONTAINS_NO_SPACES' then
+      assert(instr(get_value(l_expression1), ' ') = 0);
+    when 'ITEM_IS_DATE' then
+      assert(utl_apex.get_date(l_expression1) is not null);
+    when 'ITEM_IS_TIMESTAMP' then
+      assert(utl_apex.get_timestamp(l_expression1) is not null);
+    when 'SQL_EXPRESSION' then
+      evaluate_sql_expression(p_stmt => l_expression1);
+    when 'PLSQL_EXPRESSION' then
+      assert(evaluate_plsql_expression(p_plsql_code => l_expression1));
+    when 'PLSQL_ERROR' then
+      execute_plsql_code(p_plsql_code => l_expression1); 
+ /*   when 'FUNC_BODY_RETURNING_ERR_TEXT' then
+      put_error_on_stack(execute_function_as_varchar2(p_plsql_code => l_expression1));*/
+    when 'FUNC_BODY_RETURNING_BOOLEAN' then
+      assert(execute_function_as_boolean(p_plsql_code => l_expression1));
+    when 'REGULAR_EXPRESSION' then
+      assert(regexp_like(get_value(l_expression1), l_expression2));
+    when 'ITEM_IN_VALIDATION_IN_STRING2' then
+      assert(instr(l_expression2, get_value(l_expression1)) > 0);
+    when 'ITEM_IN_VALIDATION_NOT_IN_STRING2' then
+      assert(instr(l_expression2, get_value(l_expression1)) = 0
+          or get_value(l_expression1) is null);
+    when 'ITEM_IN_VALIDATION_EQ_STRING2' then
+      assert(l_expression2 = get_value(l_expression1));
+    when 'ITEM_IN_VALIDATION_NOT_EQ_STRING2' then
+      assert(l_expression2 != get_value(l_expression1) 
+          or get_value(l_expression1) is null);
+    when 'ITEM_IN_VALIDATION_CONTAINS_ONLY_CHAR_IN_STRING2' then
+      l_value := get_value(l_expression1);
+      if l_value is not null then
+        for i in 1 .. length(l_value) loop
+          if instr(l_expression2, substr(l_value, i, 1)) = 0 then
+            put_error_on_stack;
+            exit;
+          end if;
+        end loop;
+      end if;
+    when 'ITEM_IN_VALIDATION_CONTAINS_AT_LEAST_ONE_CHAR_IN_STRING2' then
+      l_value := get_value(l_expression1);
+      assert(l_value is not null);
+      for i in 1 .. coalesce(length(l_value), 0) loop
+        if instr(l_expression2, substr(l_value, i, 1)) > 0 then
+          put_error_on_stack;
+          exit;
+        end if;
+      end loop;
+    when 'ITEM_IN_VALIDATION_CONTAINS_NO_CHAR_IN_STRING2' then
+      l_value := get_value(l_expression1);
+      for i in 1 .. coalesce(length(l_value), 0) loop
+        if instr(l_expression2, substr(l_value, i, 1)) > 0 then
+          put_error_on_stack;
+          exit;
+        end if;
+      end loop;
+    else
+      raise_application_error(-20000, 'unsupported validation_type ' || l_row.validation_type_code);
+    end case;
+   
+  exception
+    when NO_DATA_FOUND then
+      -- No validation for item found, ignore
+      null;
+  end validate_page_item;
   
 end sct_validation;
 /

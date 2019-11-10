@@ -134,6 +134,24 @@ begin
   );
 
   pit_admin.merge_message(
+    p_pms_name => 'SCT_DEBUG_RULE_STMT',
+    p_pms_pmg_name => 'SCT',
+    p_pms_text => q'~Regel-SQL: "#1#"~',
+    p_pms_pse_id => 70,
+    p_pms_pml_name => 'GERMAN',
+    p_error_number => null
+  );
+
+  pit_admin.merge_message(
+    p_pms_name => 'SCT_PROCESSING_RULE',
+    p_pms_pmg_name => 'SCT',
+    p_pms_text => q'~Erzeuge Aktion für Regel #1# (#2#)~',
+    p_pms_pse_id => 70,
+    p_pms_pml_name => 'GERMAN',
+    p_error_number => null
+  );
+
+  pit_admin.merge_message(
     p_pms_name => 'SCT_PAGE_DOES_NOT_EXIST',
     p_pms_pmg_name => 'SCT',
     p_pms_text => q'~APEX-Anwendungsseite #1# existiert nicht in Anwendung #2#.~',

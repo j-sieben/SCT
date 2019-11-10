@@ -7,6 +7,26 @@ as
    * @usage  Used to implement the public interface of SCT. Is called by PLUGIN_SCT, SCT rule views and directly from PL/SQL
    * @headcom
    */
+   
+  $IF sct_util.C_WITH_UNIT_TESTS $THEN
+  /* Setter/getter to switch package to test mode
+   * %param  p_mode  Switch to toggle test mode
+   * %usage  For automated tests, this switch controls wehther SCT fills an object structure with the outcome of
+   *         the processing. This is easier and saver than parsing OWA streams
+   */
+  procedure set_test_mode(
+    p_mode in boolean default false);    
+    
+  function get_test_mode
+    return boolean;
+    
+  /** Method to retrieve the result of the last action
+   * @return Object structure that contains the result of the process.
+   */
+  function get_test_result
+    return sct_test_result;
+
+  $END
 
   /* CORE FUNCTIONALITY wrapper around SCT_INTERNAL */
   /** Method to retrieve the value of a page item as char

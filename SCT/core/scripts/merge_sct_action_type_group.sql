@@ -158,7 +158,7 @@ q'{werden in den zugehoerigen Seitenelementen gesetzt</dd>\CR\}' ||
 q'{<p>Format:</p><p>Die SQL-Anweisung wird so &uuml;bergeben, wie sie im\CR\}' || 
 q'{SQL-Developer geschrieben würde. Kein abschließendes Semikolon\CR\}' || 
 q'{erforderlich.</p>}',
-    p_sat_pl_sql => q'{plugin_sct.set_value_from_stmt('#ITEM#',q'##PARAM_1##');}',
+    p_sat_pl_sql => q'{sct.set_value_from_stmt('#ITEM#',q'##PARAM_1##');}',
     p_sat_js => q'{}',
     p_sat_is_editable => 'N',
     p_sat_raise_recursive => sct_rule.C_TRUE);
@@ -195,7 +195,7 @@ q'{den als Parameter übergebenen Wert.</p>\CR\}' ||
 q'{<p><em>Parameter</em>: Wert des Elements oder Funktion, die Wert liefert.\CR\}' || 
 q'{Zeichenketten benötigen Hochkommata.</p>\CR\}' || 
 q'{}',
-    p_sat_pl_sql => q'{plugin_sct.set_session_state('#ITEM#', #PARAM_1#, '#ALLOW_RECURSION#', '#PARAM_2');}',
+    p_sat_pl_sql => q'{sct.set_session_state('#ITEM#', #PARAM_1#, '#ALLOW_RECURSION#', '#PARAM_2');}',
     p_sat_js => q'{}',
     p_sat_is_editable => 'N',
     p_sat_raise_recursive => sct_rule.C_TRUE);
@@ -227,7 +227,7 @@ q'{Werten, basierend auf einer SQL-Anweisung.</p>\CR\}' ||
 q'{<p><em>Parameter</em>:  SQL-Anweisung, die eine Werteliste in einer Spalte\CR\}' || 
 q'{namens VALUE zurückgibt</p>\CR\}' || 
 q'{}',
-    p_sat_pl_sql => q'{plugin_sct.set_list_from_stmt('#ITEM#','#PARAM_1#');}',
+    p_sat_pl_sql => q'{sct.set_list_from_stmt('#ITEM#','#PARAM_1#');}',
     p_sat_js => q'{}',
     p_sat_is_editable => 'N',
     p_sat_raise_recursive => sct_rule.C_TRUE);
@@ -252,7 +252,7 @@ q'{<p><em>Parameter</em>: Zweiter Parameter kann jQuery-Ausdruck enthalten, um\C
 q'{mehrere Elemente zu bearbeiten. Wird dieser Parameter verwendet, muss als\CR\}' || 
 q'{ausl&ouml;sendes Element <code>DOCUMENT</code> eingetragen werden.</p>\CR\}' || 
 q'{}',
-    p_sat_pl_sql => q'{plugin_sct.set_session_state('#ITEM#', '', '#ALLOW_RECURSION#', '#PARAM_2');}',
+    p_sat_pl_sql => q'{sct.set_session_state('#ITEM#', '', '#ALLOW_RECURSION#', '#PARAM_2');}',
     p_sat_js => q'{de.condes.plugin.sct.disable('#SELECTOR#');}',
     p_sat_is_editable => 'N',
     p_sat_raise_recursive => sct_rule.C_TRUE);
@@ -277,7 +277,7 @@ q'{<p><em>Parameter</em>: Zweiter Parameter kann jQuery-Ausdruck enthalten, um\C
 q'{mehrere Elemente zu bearbeiten. Wird dieser Parameter verwendet, muss als\CR\}' || 
 q'{ausl&ouml;sendes Element <code>DOCUMENT</code> eingetragen werden.</p>\CR\}' || 
 q'{}',
-    p_sat_pl_sql => q'{plugin_sct.set_session_state('#ITEM#', '', '#ALLOW_RECURSION#', '#PARAM_2');}',
+    p_sat_pl_sql => q'{sct.set_session_state('#ITEM#', '', '#ALLOW_RECURSION#', '#PARAM_2');}',
     p_sat_js => q'{de.condes.plugin.sct.hide('#SELECTOR#');de.condes.plugin.sct.setMandatory('#SELECTOR#', false);}',
     p_sat_is_editable => 'N',
     p_sat_raise_recursive => sct_rule.C_TRUE);
@@ -322,7 +322,7 @@ q'{}',
 q'{den übergebenen Wert, ohne weitere Rekursionen auszulösen</p>\CR\}' || 
 q'{<p><em>Parameter</em>: Keine</p>\CR\}' || 
 q'{}',
-    p_sat_pl_sql => q'{plugin_sct.set_session_state('#ITEM#','#PARAM_1#', 0, '#PARAM_2');}',
+    p_sat_pl_sql => q'{sct.set_session_state('#ITEM#','#PARAM_1#', 0, '#PARAM_2');}',
     p_sat_js => q'{}',
     p_sat_is_editable => 'N',
     p_sat_raise_recursive => sct_rule.C_TRUE);
@@ -353,7 +353,7 @@ q'{}',
 q'{Fehlermeldung auf der Seite.</p>\CR\}' || 
 q'{<p><em>Parameter</em>: Text der Fehlermeldung</p>\CR\}' || 
 q'{}',
-    p_sat_pl_sql => q'{plugin_sct.register_error('#ITEM#', '#PARAM_1#','');}',
+    p_sat_pl_sql => q'{sct.register_error('#ITEM#', '#PARAM_1#','');}',
     p_sat_js => q'{}',
     p_sat_is_editable => 'N',
     p_sat_raise_recursive => sct_rule.C_TRUE);
@@ -421,7 +421,7 @@ q'{}',
 q'{erlaubt keine rekursive Ausführung weiterer Regeln.</p>\CR\}' || 
 q'{<p><em>Parameter</em>: Keine</p>\CR\}' || 
 q'{}',
-    p_sat_pl_sql => q'{plugin_sct.stop_rule;}',
+    p_sat_pl_sql => q'{sct.stop_rule;}',
     p_sat_js => q'{}',
     p_sat_is_editable => 'N',
     p_sat_raise_recursive => sct_rule.C_TRUE);
@@ -442,7 +442,7 @@ q'{</span>verwendet.</li>\CR\}' ||
 q'{<li><span style="font-family:courier new,courier,monospace">MESSAGE\CR\}' || 
 q'{</span>wird verwendet, um die Nachricht auf der Seite zu definieren.</li>\CR\}' || 
 q'{</ul>}',
-    p_sat_pl_sql => q'{plugin_sct.submit_page;}',
+    p_sat_pl_sql => q'{sct.submit_page;}',
     p_sat_js => q'{de.condes.plugin.sct.submit('#PARAM_1#','#PARAM_2#');}',
     p_sat_is_editable => 'N',
     p_sat_raise_recursive => sct_rule.C_TRUE);
@@ -480,7 +480,7 @@ q'{</span>verwendet.</li>\CR\}' ||
 q'{<li><span style="font-family:courier new,courier,monospace">MESSAGE\CR\}' || 
 q'{</span>wird verwendet, um die Nachricht auf der Seite zu definieren.</li>\CR\}' || 
 q'{</ul>}',
-    p_sat_pl_sql => q'{plugin_sct.submit_page(false);}',
+    p_sat_pl_sql => q'{sct.submit_page(false);}',
     p_sat_js => q'{de.condes.plugin.sct.submit('#PARAM_1#','#PARAM_2#');}',
     p_sat_is_editable => 'N',
     p_sat_raise_recursive => sct_rule.C_TRUE);
@@ -543,7 +543,7 @@ q'{de.condes.plugin.sct.show('#PARAM_1#');}',
 q'{SUBMIT der Seite aus.</p>\CR\}' || 
 q'{<p><em>Parameter</em>: Keine</p>\CR\}' || 
 q'{}',
-    p_sat_pl_sql => q'{plugin_sct.submit_page;}',
+    p_sat_pl_sql => q'{sct.submit_page;}',
     p_sat_js => q'{}',
     p_sat_is_editable => 'N',
     p_sat_raise_recursive => sct_rule.C_TRUE);
@@ -588,7 +588,7 @@ q'{<dt>Parameter 2</dt><dd>Meldungsname, der ausgegeben werden soll, falls die\C
 q'{Pr&uuml;fung misslingt. Muss ein PIT-Meldungsname sein, in der Form\CR\}' || 
 q'{MSG.&lt;Meldungsname&gt;</dd></dl>\CR\}' || 
 q'{}',
-    p_sat_pl_sql => q'{plugin_sct.xor('#ITEM#', '#PARAM_1#',#PARAM_2, false);}',
+    p_sat_pl_sql => q'{sct.xor('#ITEM#', '#PARAM_1#',#PARAM_2, false);}',
     p_sat_js => q'{}',
     p_sat_is_editable => 'N',
     p_sat_raise_recursive => sct_rule.C_TRUE);
@@ -617,7 +617,7 @@ q'{<dt>Parameter 2</dt><dd>Medlungsname, der ausgegeben werden soll, falls die\C
 q'{Pr&uuml;fung misslingt. Muss ein PIT-Meldungsname sein, in der Form\CR\}' || 
 q'{MSG.&lt;Meldungsname&gt;</dd></dl>\CR\}' || 
 q'{}',
-    p_sat_pl_sql => q'{plugin_sct.xor('#ITEM#', '#PARAM_1#',#PARAM_2, true);}',
+    p_sat_pl_sql => q'{sct.xor('#ITEM#', '#PARAM_1#',#PARAM_2, true);}',
     p_sat_js => q'{}',
     p_sat_is_editable => 'N',
     p_sat_raise_recursive => sct_rule.C_TRUE);
@@ -671,7 +671,7 @@ q'{}',
 q'{enthalten.</p>\CR\}' || 
 q'{<p><em>Parameter</em>: Keine</p>\CR\}' || 
 q'{}',
-    p_sat_pl_sql => q'{plugin_sct.check_mandatory('#ITEM#');}',
+    p_sat_pl_sql => q'{sct.check_mandatory('#ITEM#');}',
     p_sat_js => q'{}',
     p_sat_is_editable => 'N',
     p_sat_raise_recursive => sct_rule.C_TRUE);
@@ -808,7 +808,7 @@ q'{<p><em>Format</em>: PL/SQL-Funktion wird so &uuml;bergeben, wie sie im\CR\}' 
 q'{SQL-Developer geschrieben w&uuml;rde, keine doppelten\CR\}' || 
 q'{Anf&uuml;hrungsstriche, Semikolon kann gesetzt werden, muss aber\CR\}' || 
 q'{nicht.</p>}',
-    p_sat_pl_sql => q'{plugin_sct.execute_javascript(q'##PARAM_1##');}',
+    p_sat_pl_sql => q'{sct.execute_javascript(q'##PARAM_1##');}',
     p_sat_js => q'{}',
     p_sat_is_editable => 'N',
     p_sat_raise_recursive => sct_rule.C_TRUE);
@@ -830,7 +830,7 @@ q'{nicht.</p>}',
 q'{style="font-family:courier new,courier,monospace">NULL</span></p>\CR\}' || 
 q'{<p><em>Parameter</em>: Keine</p>\CR\}' || 
 q'{}',
-    p_sat_pl_sql => q'{plugin_sct.set_session_state('#ITEM#', '', '#ALLOW_RECURSION#', '#PARAM_2');}',
+    p_sat_pl_sql => q'{sct.set_session_state('#ITEM#', '', '#ALLOW_RECURSION#', '#PARAM_2');}',
     p_sat_js => q'{}',
     p_sat_is_editable => 'N',
     p_sat_raise_recursive => sct_rule.C_TRUE);
@@ -923,7 +923,7 @@ q'{APEX-Aktion angelegt worden sein muss.</p>\CR\}' ||
 q'{<p><em>Parameter</em>: Im ersten Parameter wird der Name der APEX-Aktion\CR\}' || 
 q'{eingetragen.</p>\CR\}' || 
 q'{}',
-    p_sat_pl_sql => q'{plugin_sct.execute_apex_action('#PARAM_1#');}',
+    p_sat_pl_sql => q'{sct.execute_apex_action('#PARAM_1#');}',
     p_sat_js => q'{}',
     p_sat_is_editable => 'N',
     p_sat_raise_recursive => sct_rule.C_TRUE);
@@ -945,7 +945,7 @@ q'{}',
 q'{neuen Sequenzwert.</p>\CR\}' || 
 q'{<p><em>Parameter</em>: Name der Sequenz muss übergeben werden.</p>\CR\}' || 
 q'{}',
-    p_sat_pl_sql => q'{plugin_sct.set_session_state('#ITEM#',#PARAM_1#.nextval, '#ALLOW_RECURSION#', '#PARAM_2');}',
+    p_sat_pl_sql => q'{sct.set_session_state('#ITEM#',#PARAM_1#.nextval, '#ALLOW_RECURSION#', '#PARAM_2');}',
     p_sat_js => q'{}',
     p_sat_is_editable => 'N',
     p_sat_raise_recursive => sct_rule.C_TRUE);
@@ -992,7 +992,7 @@ q'{enth&auml;lt. Grundlage f&uuml;r die Konvertierung ist die Formatmaske, die\C
 q'{f&uuml;r dieses Feld in APEX hinterlegt ist.</p>\CR\}' || 
 q'{<p><em>Parameter:</em> Keine</p>\CR\}' || 
 q'{}',
-    p_sat_pl_sql => q'{plugin_sct.check_date('#ITEM#');}',
+    p_sat_pl_sql => q'{sct.check_date('#ITEM#');}',
     p_sat_js => q'{}',
     p_sat_is_editable => 'N',
     p_sat_raise_recursive => sct_rule.C_TRUE);
@@ -1010,7 +1010,7 @@ q'{jQuery-Ausdruck enthalten, um mehrere Elemente zu bearbeiten. Wird dieser\CR\
 q'{Parameter verwendet, muss als ausl&ouml;sendes Element\CR\}' || 
 q'{<code>DOCUMENT</code> eingetragen werden.</p>\CR\}' || 
 q'{}',
-    p_sat_pl_sql => q'{plugin_sct.register_mandatory('#ITEM#','#PARAM_1#', true, '#PARAM_2');}',
+    p_sat_pl_sql => q'{sct.register_mandatory('#ITEM#','#PARAM_1#', true, '#PARAM_2');}',
     p_sat_js => q'{de.condes.plugin.sct.setMandatory('#SELECTOR#', true);\CR\}' || 
 q'{de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sat_is_editable => 'N',
@@ -1034,7 +1034,7 @@ q'{numerischen Wert enth&auml;lt. Grundlage f&uuml;r die Konvertierung ist die\C
 q'{Formatmaske, die f&uuml;r dieses Feld in APEX hinterlegt ist.</p>\CR\}' || 
 q'{<p><em>Parameter:</em> Keine</p>\CR\}' || 
 q'{}',
-    p_sat_pl_sql => q'{plugin_sct.check_number('#ITEM#');}',
+    p_sat_pl_sql => q'{sct.check_number('#ITEM#');}',
     p_sat_js => q'{}',
     p_sat_is_editable => 'N',
     p_sat_raise_recursive => sct_rule.C_TRUE);
@@ -1050,7 +1050,7 @@ q'{<p><em>Parameter</em>: Zweiter Parameter kann jQuery-Ausdruck enthalten, um\C
 q'{mehrere Elemente zu bearbeiten. Wird dieser Parameter verwendet, muss als\CR\}' || 
 q'{ausl&ouml;sendes Element <code>DOCUMENT</code> eingetragen werden.</p>\CR\}' || 
 q'{}',
-    p_sat_pl_sql => q'{plugin_sct.register_mandatory('#ITEM#', null, false,'#PARAM_2');}',
+    p_sat_pl_sql => q'{sct.register_mandatory('#ITEM#', null, false,'#PARAM_2');}',
     p_sat_js => q'{de.condes.plugin.sct.setMandatory('#SELECTOR#',false);}',
     p_sat_is_editable => 'N',
     p_sat_raise_recursive => sct_rule.C_TRUE);
@@ -1074,7 +1074,7 @@ q'{<p><em>Parameter</em>: Zweiter Parameter kann jQuery-Ausdruck enthalten, um\C
 q'{mehrere Elemente zu bearbeiten. Wird dieser Parameter verwendet, muss als\CR\}' || 
 q'{ausl&ouml;sendes Element <code>DOCUMENT</code> eingetragen werden.</p>\CR\}' || 
 q'{}',
-    p_sat_pl_sql => q'{plugin_sct.set_session_state('#ITEM#', '', '#ALLOW_RECURSION#', '#PARAM_2');}',
+    p_sat_pl_sql => q'{sct.set_session_state('#ITEM#', '', '#ALLOW_RECURSION#', '#PARAM_2');}',
     p_sat_js => q'{de.condes.plugin.sct.enable('#SELECTOR#');}',
     p_sat_is_editable => 'N',
     p_sat_raise_recursive => sct_rule.C_TRUE);
@@ -1123,7 +1123,7 @@ q'{wird sie als konstanter Text ausgegeben.<br>Wird der Parameter ohne\CR\}' ||
 q'{Hochkommata übergeben, wird er als PL/SQL-Funktkion interpretiert, die\CR\}' || 
 q'{einen Meldungstext liefert.</p>\CR\}' || 
 q'{}',
-    p_sat_pl_sql => q'{plugin_sct.notify(#PARAM_1#);}',
+    p_sat_pl_sql => q'{sct.notify(#PARAM_1#);}',
     p_sat_js => q'{}',
     p_sat_is_editable => 'N',
     p_sat_raise_recursive => sct_rule.C_TRUE);
@@ -1151,7 +1151,7 @@ q'{<dt>Parameter 2</dt><dd>Meldungsname, der ausgegeben werden soll, falls die\C
 q'{Pr&uuml;fung misslingt. Muss ein PIT-Meldungsname sein, in der Form\CR\}' || 
 q'{MSG.&lt;Meldungsname&gt;</dd></dl>\CR\}' || 
 q'{}',
-    p_sat_pl_sql => q'{plugin_sct.not_null('#ITEM#', '#PARAM_1#',#PARAM_2);}',
+    p_sat_pl_sql => q'{sct.not_null('#ITEM#', '#PARAM_1#',#PARAM_2);}',
     p_sat_js => q'{}',
     p_sat_is_editable => 'N',
     p_sat_raise_recursive => sct_rule.C_TRUE);
@@ -1182,7 +1182,7 @@ q'{}',
 q'{\CR\}' || 
 q'{<p><em>Parameter</em>: PL/SQL-Code, der ausgef&uuml;hrt werden soll. (mit Semikolon)</p>\CR\}' || 
 q'{}',
-    p_sat_pl_sql => q'{plugin_sct.do_cmd('#PARAM_1#');}',
+    p_sat_pl_sql => q'{sct.do_cmd('#PARAM_1#');}',
     p_sat_js => q'{}',
     p_sat_is_editable => 'N',
     p_sat_raise_recursive => sct_rule.C_TRUE);
@@ -1243,7 +1243,7 @@ q'{}',
     p_sat_stg_id => 'ITEM',
     p_sat_name => 'Feld-Event auslösen',
     p_sat_description => q'{<p>Löst einen CHANGE-Event auf das angegebene Feld aus und sorgt für die Abarbeitung der zugehörigen Regeln</p>}',
-    p_sat_pl_sql => q'{plugin_sct.register_item('#ITEM#', '#ALLOW_RECURSION#');}',
+    p_sat_pl_sql => q'{sct.register_item('#ITEM#', '#ALLOW_RECURSION#');}',
     p_sat_js => q'{}',
     p_sat_is_editable => 'N',
     p_sat_raise_recursive => sct_rule.C_TRUE);

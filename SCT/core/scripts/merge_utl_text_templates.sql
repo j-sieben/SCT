@@ -198,7 +198,7 @@ q'^         from dual),\CR\^' ||
 q'^       data as (\CR\^' || 
 q'^       select /*+ NO_MERGE(s) */\CR\^' || 
 q'^              r.sru_id, r.sru_name, r.sru_firing_items, r.sru_fire_on_page_load,\CR\^' || 
-q'^              r.sra_spi_id, r.sra_sat_id, r.sra_param_1, r.sra_param_2, r.sra_param_3, r.sra_on_error, r.sra_raise_recursive, r.sra_sort_seq,\CR\^' || 
+q'^              r.sra_spi_id, r.sra_sat_id, r.sra_sort_seq, r.sra_param_1, r.sra_param_2, r.sra_param_3, r.sra_on_error, r.sra_raise_recursive, r.sra_sort_seq,\CR\^' || 
 q'^              rank() over (order by r.sru_sort_seq) rang, case s.initializing when 1 then s.is_true else s.is_false end initializing\CR\^' || 
 q'^         from sct_bl_rules r\CR\^' || 
 q'^         join session_state s\CR\^' || 
@@ -314,7 +314,7 @@ q'^ where #CONDITION#^',
     p_uttm_name => 'VIEW_ITEM',
     p_uttm_type => 'SCT',
     p_uttm_mode => 'BUTTON',
-    p_uttm_text => q'^case plugin_sct.get_firing_item when '#ITEM#' then 1 else 0 end #ITEM#^',
+    p_uttm_text => q'^case sct.get_firing_item when '#ITEM#' then 1 else 0 end #ITEM#^',
     p_uttm_log_text => q'^^',
     p_uttm_log_severity => 70
   );
@@ -670,7 +670,7 @@ q'^       select sct_util.get_true is_true,
                  sct_util.get_false is_false
             from dual)\CR\^' || 
 q'^select /*+ no_merge(p) */sru.sru_id, sru.sru_sort_seq, sru.sru_name, sru.sru_firing_items, sru_fire_on_page_load,\CR\^' || 
-q'^       sra_spi_id item, sat_pl_sql pl_sql, sat_js js, sra_param_1 param_1, sra_param_2 param_2, sra_param_3 param_3, sra_on_error,\CR\^' || 
+q'^       sra_spi_id item, sat_pl_sql pl_sql, sat_js js, sra_sort_seq, sra_param_1 param_1, sra_param_2 param_2, sra_param_3 param_3, sra_on_error,\CR\^' || 
 q'^       max(sra_on_error) over (partition by sru_sort_seq) sru_on_error,\CR\^' || 
 q'^       case row_number() over (partition by sru_sort_seq, sra_on_error order by srg.sra_sort_seq) when 1 then is_true else is_false end is_first_row\CR\^' || 
 q'^  from #RULE_VIEW# srg\CR\^' || 

@@ -18,4 +18,6 @@ prompt &h2.Deinstall PLUGIN
 prompt &h2.Deinstall CORE Functionality
 @core/clean_up_install.sql
 
+@check_unit_test_exists.sql "unit_test/uninstall.sql" "de-installation"
+
 exit;

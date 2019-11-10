@@ -7,6 +7,8 @@ as
   subtype sql_char is varchar2(4000 byte);
   subtype max_char is varchar2(32767 byte);
   subtype flag_type is &FLAG_TYPE.;
+  
+  C_WITH_UNIT_TESTS constant boolean := &WITH_UT.;
 
   /* Package constants */
   C_NO_FIRING_ITEM constant varchar2(30 byte) := 'DOCUMENT';

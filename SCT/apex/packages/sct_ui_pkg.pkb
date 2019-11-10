@@ -417,9 +417,9 @@ as
     copy_edit_sgr;
 
     -- Validierungen
-    utl_apex.assert_not_null(g_edit_sgr_row.sgr_app_id, msg.APEX_REQUIRED_VAL_MISSING, utl_apex.get_page|| 'SGR_APP_ID');
-    utl_apex.assert_not_null(g_edit_sgr_row.sgr_page_id, msg.APEX_REQUIRED_VAL_MISSING, utl_apex.get_page|| 'SGR_PAGE_ID');
-    utl_apex.assert_not_null(g_edit_sgr_row.sgr_name, msg.APEX_REQUIRED_VAL_MISSING, utl_apex.get_page|| 'SGR_NAME');
+    utl_apex.assert_not_null(g_edit_sgr_row.sgr_app_id, msg.APEX_REQUIRED_VAL_MISSING, utl_apex.get_page_prefix|| 'SGR_APP_ID');
+    utl_apex.assert_not_null(g_edit_sgr_row.sgr_page_id, msg.APEX_REQUIRED_VAL_MISSING, utl_apex.get_page_prefix || 'SGR_PAGE_ID');
+    utl_apex.assert_not_null(g_edit_sgr_row.sgr_name, msg.APEX_REQUIRED_VAL_MISSING, utl_apex.get_page_prefix || 'SGR_NAME');
 
     if utl_apex.inserting then
       select count(*)
@@ -434,7 +434,7 @@ as
         p_condition => l_exists = 0,
         p_message_name => msg.SCT_SGR_MUST_BE_UNIQUE,
         p_arg_list => null,
-        p_affected_id => utl_apex.get_page || 'SGR_NAME');
+        p_affected_id => utl_apex.get_page_prefix || 'SGR_NAME');
     end if;
 
     pit.leave_mandatory;
@@ -1050,9 +1050,9 @@ as
       apex_util.set_session_state('P1_SGR_PAGE_ID', l_sgr_page_id);
 
       l_javascript := utl_apex.get_page_url(
+                        p_page => 'EDIT_SRU',
                         p_param_items => 'P5_SRU_SGR_ID',
                         p_value_items => 'P1_SGR_ID',
-                        p_url_template => 'SCT:EDIT_SRU',
                         p_triggering_element => 'R1_RULE_OVERVIEW',
                         p_clear_cache => 5);
       utl_apex_action.set_action(l_javascript);
@@ -1077,9 +1077,9 @@ as
               where application_id not in (apex_application.g_flow_id, l_sgr_app_id));
       if l_has_target_application = 1 then
         l_javascript := utl_apex.get_page_url(
+                          p_page => 'COPY_SGR',
                           p_param_items => 'P4_SGR_ID',
                           p_value_items => 'P1_SGR_ID',
-                          p_url_template => 'SCT:COPY_SGR',
                           p_triggering_element => 'B1_COPY_SGR');
         utl_apex_action.set_action(l_javascript);
         utl_apex_action.set_disabled(false);
@@ -1094,9 +1094,9 @@ as
     utl_apex_action.action_init('export-rulegroup');
     
     l_javascript := utl_apex.get_page_url(
+                      p_page => 'EXPORT_SGR',
                       p_param_items => 'P8_SGR_ID:P8_SGR_APP_ID:P8_SGR_PAGE_ID',
                       p_value_items => 'P1_SGR_ID:P1_SGR_APP_ID:P1_SGR_PAGE_ID',
-                      p_url_template => 'SCT:EXPORT_SGR',
                       p_triggering_element => 'B1_EXPORT_SGR');
                       
     utl_apex_action.set_action(l_javascript);

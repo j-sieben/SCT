@@ -284,7 +284,7 @@ c:=c||'<p>[[ image: Aktionstypen | width=&quot;66%&quot; ]]</p>'||chr(10)||
 c:=c||'en im SessionState hinterlegt werden, ge&auml;nderte Werte werden auf die Anwendungsseite &uuml;bernommen. Nutzen Sie hierf&uuml;r <em>nicht</em> die Funktion <code>APEX_UTIL.SET_SESSION_STATE</code>, sondern das Pendant <code>PLUGIN_SCT.SET_SESSION_STATE</code>, da ansonsten das Plugin nicht wei&szlig;, dass die Information ge&auml;ndert wurde.</li>'||chr(10)||
 '	<li>Fehlermeldungen von PL/SQL-Code sollten &u';
 
-c:=c||'uml;ber die Prozedur <code>plugin_sct.register_error(&#39;#ITEM#&#39;, &#39;#ATTRIBUTE#&#39;);</code> aufgezeichnet werden, damit sie auf der Oberfl&auml;che angezeigt werden k&ouml;nnen. <code>#ATTRIBUTE#</code> referenziert dabei die Fehlermeldung.</li>'||chr(10)||
+c:=c||'uml;ber die Prozedur <code>sct.register_error(&#39;#ITEM#&#39;, &#39;#ATTRIBUTE#&#39;);</code> aufgezeichnet werden, damit sie auf der Oberfl&auml;che angezeigt werden k&ouml;nnen. <code>#ATTRIBUTE#</code> referenziert dabei die Fehlermeldung.</li>'||chr(10)||
 '</ul>'||chr(10)||
 ''||chr(10)||
 '<p>#ITEM#</p>'||chr(10)||

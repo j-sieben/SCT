@@ -6,23 +6,23 @@ using (select 'ITEM' sit_id,
               'Element' sit_name,
               sct_util.get_true sit_has_value,
               'change' sit_event,
-              q'~sct_internal.get_char('#ITEM#') #ITEM#~' sit_col_template,
+              q'~sct.get_char('#ITEM#') #ITEM#~' sit_col_template,
               q'~itm.#ITEM#~' sit_init_template,
               sct_util.get_false sit_include_in_view
          from dual
         union all 
-       select 'NUMBER_ITEM', 'Element (Zahl)', sct_util.get_true, 'change', q'~sct_internal.get_number('#ITEM#',replace( '#CONVERSION#', 'G')) #ITEM#~', q'~to_char(itm.#ITEM#, '#CONVERSION#')~', sct_util.get_false from dual union all
-       select 'DATE_ITEM', 'Element (Datum)', sct_util.get_true, 'change', q'~sct_internal.get_date('#ITEM#', '#CONVERSION#') #ITEM#~', q'~to_char(to_date(itm.#ITEM#), '#CONVERSION#')~', sct_util.get_false from dual union all
+       select 'NUMBER_ITEM', 'Element (Zahl)', sct_util.get_true, 'change', q'~sct.get_number('#ITEM#',replace( '#CONVERSION#', 'G')) #ITEM#~', q'~to_char(itm.#ITEM#, '#CONVERSION#')~', sct_util.get_false from dual union all
+       select 'DATE_ITEM', 'Element (Datum)', sct_util.get_true, 'change', q'~sct.get_date('#ITEM#', '#CONVERSION#') #ITEM#~', q'~to_char(to_date(itm.#ITEM#), '#CONVERSION#')~', sct_util.get_false from dual union all
        select 'APP_ITEM', 'Anwendungselement', sct_util.get_true, 'change', q'~v('#ITEM#') #ITEM#~', 'itm.#ITEM#', sct_util.get_false from dual union all
-       select 'BUTTON', 'Schaltfläche', sct_util.get_false, 'click', q'~case plugin_sct.get_firing_item when '#ITEM#' then 1 else 0 end #ITEM#~', null, sct_util.get_false from dual union all
+       select 'BUTTON', 'Schaltfläche', sct_util.get_false, 'click', q'~case sct.get_firing_item when '#ITEM#' then 1 else 0 end #ITEM#~', null, sct_util.get_false from dual union all
        select 'REGION', 'Region', sct_util.get_false, null, q'~null #ITEM#~', null, sct_util.get_false from dual union all
        select 'DOCUMENT', 'Dokument', sct_util.get_false, null, q'~null #ITEM#~', null, sct_util.get_false from dual union all
-       select 'DIALOG_CLOSED', 'Dialog geschlossen', sct_util.get_false, 'apexafterclosedialog', q'~case plugin_sct.get_event when '#SIT_EVENT#' then plugin_sct.get_firing_item end dialog_closed~', null, sct_util.get_true from dual union all
-       select 'AFTER_REFRESH', 'Nach Refresh', sct_util.get_false, 'apexafterrefresh', q'~case plugin_sct.get_event when '#SIT_EVENT#' then plugin_sct.get_firing_item end after_refresh~', null, sct_util.get_true from dual union all
-       select 'ENTER_KEY', 'Enter-Taste', sct_util.get_false, 'enter', q'~case plugin_sct.get_event when '#SIT_EVENT#' then plugin_sct.get_firing_item end enter_key~', null, sct_util.get_true from dual union all
-       select 'DOUBLE_CLICK', 'Doppelklick', sct_util.get_false, 'dblclick', q'~case plugin_sct.get_event when '#SIT_EVENT#' then plugin_sct.get_firing_item end double_click~', null, sct_util.get_true from dual union all
-       select 'FIRING_ITEM', 'Firing Item', sct_util.get_false, null, q'~plugin_sct.get_firing_item firing_item~', null, sct_util.get_true from dual union all
-       select 'INITIALIZING', 'Initialize Flag', sct_util.get_false, null, q'~case plugin_sct.get_firing_item when 'DOCUMENT' then 1 else 0 end initializing~', null, sct_util.get_true from dual union all
+       select 'DIALOG_CLOSED', 'Dialog geschlossen', sct_util.get_false, 'apexafterclosedialog', q'~case sct.get_event when '#SIT_EVENT#' then sct.get_firing_item end dialog_closed~', null, sct_util.get_true from dual union all
+       select 'AFTER_REFRESH', 'Nach Refresh', sct_util.get_false, 'apexafterrefresh', q'~case sct.get_event when '#SIT_EVENT#' then sct.get_firing_item end after_refresh~', null, sct_util.get_true from dual union all
+       select 'ENTER_KEY', 'Enter-Taste', sct_util.get_false, 'enter', q'~case sct.get_event when '#SIT_EVENT#' then sct.get_firing_item end enter_key~', null, sct_util.get_true from dual union all
+       select 'DOUBLE_CLICK', 'Doppelklick', sct_util.get_false, 'dblclick', q'~case sct.get_event when '#SIT_EVENT#' then sct.get_firing_item end double_click~', null, sct_util.get_true from dual union all
+       select 'FIRING_ITEM', 'Firing Item', sct_util.get_false, null, q'~sct.get_firing_item firing_item~', null, sct_util.get_true from dual union all
+       select 'INITIALIZING', 'Initialize Flag', sct_util.get_false, null, q'~case sct.get_firing_item when 'DOCUMENT' then 1 else 0 end initializing~', null, sct_util.get_true from dual union all
        select 'ALL', 'Alle', sct_util.get_false, null, null, null, sct_util.get_false from dual) v
    on (s.sit_id = v.sit_id)
  when matched then update set

@@ -13,6 +13,9 @@ prompt &h2.Check installation prerequisites
 prompt &h2.Remove existing installation
 @core/clean_up_install.sql
 
+prompt &h2.Checking whether utPLSQL is installed in usable version
+@check_unit_test_exists.sql "null.sql" "preparation"
+
 prompt &h2.Create database objects
 prompt &h3.Create sequences
 prompt &s1.Create sequence SCT_SEQ
@@ -118,7 +121,7 @@ prompt &s1.Create SCT page item types
 @&script_dir.merge_sct_page_item_type.sql
 
 prompt &s1.Create internal SCT page item 
-@&script_dir.merge_sct_page_item.sql
+--@&script_dir.merge_sct_page_item.sql
 
 prompt &s1.Create Action Parameter types 
 @&script_dir.merge_sct_action_param_type.sql

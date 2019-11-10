@@ -2,7 +2,7 @@ create or replace package body sct
 as
 
   C_BUTTON constant sct_page_item_type.sit_id%type := 'BUTTON';
-
+  
   /* Helper */
   /** Method to check whether a selector is a page item ID or a jQuery expression
    * %param  p_selector  Selector to check
@@ -15,8 +15,8 @@ as
     l_item_type sct_page_item_type.sit_id%type;
   begin
       with params as(
-           select to_number(v('APP_ID')) app_id,
-                  to_number(v('APP_PAGE_ID')) page_id
+           select apex_application.g_flow_id app_id,
+                  apex_application.g_flow_step_id page_id
              from dual)
     select /*+ no_merge (p) */ max(spi_sit_id)
       into l_item_type
@@ -68,7 +68,31 @@ as
     pit.leave_mandatory;
   end execute_action;
   
-
+  $IF sct_util.C_WITH_UNIT_TESTS $THEN
+  procedure set_test_mode(
+    p_mode in boolean default false)
+  as
+  begin
+    sct_internal.set_test_mode(p_mode);
+  end set_test_mode;
+  
+  function get_test_mode
+    return boolean
+  as
+  begin
+    return sct_internal.get_test_mode;
+  end get_test_mode;
+  
+  
+  function get_test_result
+    return sct_test_result
+  as
+  begin
+    return sct_internal.get_test_result;
+  end get_test_result;
+  $END
+  
+  
   /* CORE FUNCTIONALITY wrapper around SCT_INTERNAL */
   function get_char(
     p_spi_id in sct_page_item.spi_id%type)

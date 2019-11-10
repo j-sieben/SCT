@@ -16826,7 +16826,7 @@ wwv_flow_api.create_plugin(
 '/de/condes/plugin/sct/js/sctApex.js'))
 ,p_css_file_urls=>'/de/condes/plugin/sct/css/sct.css'
 ,p_render_function=>'plugin_sct.render'
-,p_ajax_function=>'plugin_sct.ajax'
+,p_ajax_function=>'sct.ajax'
 ,p_substitute_attributes=>true
 ,p_subscribe_plugin_settings=>true
 ,p_help_text=>wwv_flow_utilities.join(wwv_flow_t_varchar2(
@@ -17865,7 +17865,7 @@ wwv_flow_api.create_page_plug(
 '<code>APEX_UTIL.SET_SESSION_STATE</code>, sondern das Pendant <code>PLUGIN_SCT.SET_SESSION_STATE</code>, da ansonsten das Plugin nicht',
 'weiß, dass die Information geändert wurde.</li>',
 '      <li>Fehlermeldungen von PL/SQL-Code sollten über die Prozedur',
-'<code>plugin_sct.register_error(''#ITEM#'', ''#PARA_1#'');</code>',
+'<code>sct.register_error(''#ITEM#'', ''#PARA_1#'');</code>',
 'aufgezeichnet werden, damit sie auf der Oberfläche angezeigt werden können.',
 '<code>#PARAM_1#</code> referenziert dabei die Fehlermeldung.</li>',
 '  </ul>'))
