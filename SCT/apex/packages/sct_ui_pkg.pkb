@@ -132,7 +132,7 @@ as
   as
   begin
     pit.enter_detailed;
-    g_page_values := utl_apex.get_page_values;
+    g_page_values := utl_apex.get_page_values('EDIT_SAT');
     g_edit_sat_row.sat_id := clean_sct_name(utl_apex.get(g_page_values, 'SAT_ID'));
     g_edit_sat_row.sat_stg_id := clean_sct_name(utl_apex.get(g_page_values, 'SAT_STG_ID'));
     g_edit_sat_row.sat_sif_id := clean_sct_name(utl_apex.get(g_page_values, 'SAT_SIF_ID'));

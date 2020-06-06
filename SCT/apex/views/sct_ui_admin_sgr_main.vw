@@ -21,7 +21,8 @@ select /*+ NO_MERGE (p) */
        app.application_name || ' (' || app.application_id || ')' application_name,
        pag.page_name || ' (Seite ' || pag.page_id || ')' page_name,
        coalesce(sru.sru_amount, 0) sru_amount, coalesce(saa.saa_amount, 0) saa_amount,
-       case sgr_active when is_true then 'fa-check' else 'fa-times' end sgr_active
+       sgr_with_recursion,
+       /*case sgr_active when is_true then 'fa-check' else 'fa-times' end*/ sgr_active
   from sct_rule_group sgr
   left join rule_details sru
     on sgr.sgr_id = sru.sru_sgr_id

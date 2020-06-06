@@ -8,6 +8,7 @@ create or replace force view sct_ui_edit_sru_action as
               utl_apex.get_false c_false
          from dual)
 select /*+ no_merge(p) */ 
+       max(sra_id) over () + 1 seq_id,
        sra_id,
        sra_sgr_id,
        sra_sru_id,

@@ -41,10 +41,11 @@ create or replace force view sct_ui_admin_sgr_rules as
                 when sra.sra_active = p.c_false then p.span_disabled || p.sgr_page_prefix || sra_spi_id || ': ' || sat_name || p.close_span
                 else p.sgr_page_prefix || sra_spi_id || ': ' || sat_name
               end sra_name,
-              case sru.sru_active
+              sru.sru_fire_on_page_load,
+              /*case sru.sru_active
                 when p.c_true then p.fa_check
                 else p.fa_uncheck
-              end sru_active
+              end*/ sru.sru_active
          from params p
          join sct_rule sru
            on p.sgr_id = sru.sru_sgr_id
@@ -70,6 +71,7 @@ select app.application_id,
        a.sru_id, a.sgr_id, a.sgr_name, a.sru_name, a.sru_condition, a.sru_firing_items, a.sru_sort_seq,
        listagg(a.sra_name, '<br>')
          within group (order by sra_sort_seq) sru_action,
+       sru_fire_on_page_load,
        sru_active
   from actions a
   join apex_applications app
@@ -79,6 +81,6 @@ select app.application_id,
    and a.sgr_page_id = pag.page_id
  group by app.application_id, app.application_name || ' (' || app.application_id || ')',
        pag.page_id, pag.page_name || ' (' || pag.page_id || ')',
-       a.sru_id, a.sgr_id, a.sgr_name, a.sru_name, a.sru_condition, a.sru_firing_items, a.sru_sort_seq, sru_active;
+       a.sru_id, a.sgr_id, a.sgr_name, a.sru_name, a.sru_condition, a.sru_firing_items, a.sru_sort_seq, sru_fire_on_page_load, sru_active;
 
 set define on

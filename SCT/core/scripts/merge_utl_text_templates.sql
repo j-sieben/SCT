@@ -198,7 +198,7 @@ q'^         from dual),\CR\^' ||
 q'^       data as (\CR\^' || 
 q'^       select /*+ NO_MERGE(s) */\CR\^' || 
 q'^              r.sru_id, r.sru_name, r.sru_firing_items, r.sru_fire_on_page_load,\CR\^' || 
-q'^              r.sra_spi_id, r.sra_sat_id, r.sra_sort_seq, r.sra_param_1, r.sra_param_2, r.sra_param_3, r.sra_on_error, r.sra_raise_recursive, r.sra_sort_seq,\CR\^' || 
+q'^              r.sra_spi_id, r.sra_sat_id, r.sra_sort_seq, r.sra_param_1, r.sra_param_2, r.sra_param_3, r.sra_on_error, r.sra_raise_recursive,\CR\^' || 
 q'^              rank() over (order by r.sru_sort_seq) rang, case s.initializing when 1 then s.is_true else s.is_false end initializing\CR\^' || 
 q'^         from sct_bl_rules r\CR\^' || 
 q'^         join session_state s\CR\^' || 
