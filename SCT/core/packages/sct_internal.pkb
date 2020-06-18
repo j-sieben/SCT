@@ -1749,10 +1749,10 @@ as
 
   procedure execute_action(
     p_sat_id in sct_action_type.sat_id%type,
-    p_spi_id in sct_page_item.spi_id%type,
-    p_param_1 in sct_rule_action.sra_param_1%type,
-    p_param_2 in sct_rule_action.sra_param_2%type,
-    p_param_3 in sct_rule_action.sra_param_3%type)
+    p_spi_id in sct_page_item.spi_id%type default null,
+    p_param_1 in sct_rule_action.sra_param_1%type default null,
+    p_param_2 in sct_rule_action.sra_param_2%type default null,
+    p_param_3 in sct_rule_action.sra_param_3%type default null)
   as
     l_row sct_action_type%rowtype;
   begin

@@ -65,7 +65,7 @@ as
     g_edit_sru_row.sru_condition := utl_apex.get(g_page_values, 'SRU_CONDITION');
     g_edit_sru_row.sru_fire_on_page_load := utl_apex.get(g_page_values, 'SRU_FIRE_ON_PAGE_LOAD');
     g_edit_sru_row.sru_active := utl_apex.get(g_page_values, 'SRU_ACTIVE');
-    
+
     pit.leave_detailed;
   end copy_edit_sru;
 
@@ -89,7 +89,7 @@ as
     g_edit_sra_row.sra_on_error := utl_apex.get(g_page_values, 'SRA_ON_ERROR');
     g_edit_sra_row.sra_raise_recursive := utl_apex.get(g_page_values, 'SRA_RAISE_RECURSIVE');
     g_edit_sra_row.sra_comment := utl_apex.get(g_page_values, 'SRA_COMMENT');
-    
+
     pit.leave_detailed;
   end copy_edit_sra;
 
@@ -126,8 +126,8 @@ as
     g_edit_saa_row.saa_sai_list := utl_apex.get(g_page_values, 'SAA_SAI_LIST');
     pit.leave_detailed;
   end copy_edit_saa;
-  
-  
+
+
   procedure copy_edit_sat
   as
   begin
@@ -203,7 +203,7 @@ as
   as
     cursor sgr_cur(
       p_sgr_app_id in sct_rule_group.sgr_app_id%type default null,
-      p_sgr_page_id in sct_rule_group.sgr_page_id%type default null) 
+      p_sgr_page_id in sct_rule_group.sgr_page_id%type default null)
     is
       select sgr_id, lower(sgr_name) sgr_name
         from sct_rule_group
@@ -248,7 +248,7 @@ as
       for sgr in sgr_cur(l_sgr_app_id, l_sgr_page_id) loop
         l_blob := utl_text.clob_to_blob(sct_admin.export_rule_group(p_sgr_id => sgr.sgr_id));
         l_file_name := replace(C_FILE_NAME, '#SGR_NAME#', sgr.sgr_name);
-        
+
         apex_zip.add_file(
           p_zipped_blob => l_zip_file,
           p_file_name => l_file_name,
@@ -262,7 +262,7 @@ as
       for sgr in sgr_cur(l_sgr_app_id) loop
         l_blob := utl_text.clob_to_blob(sct_admin.export_rule_group(p_sgr_id => sgr.sgr_id));
         l_file_name := replace(C_FILE_NAME, '#SGR_NAME#', sgr.sgr_name);
-        
+
         apex_zip.add_file(
           p_zipped_blob => l_zip_file,
           p_file_name => l_file_name,
@@ -283,7 +283,7 @@ as
       for sgr in sgr_cur loop
         l_blob := utl_text.clob_to_blob(sct_admin.export_rule_group(p_sgr_id => sgr.sgr_id));
         l_file_name := replace(C_FILE_NAME, '#SGR_NAME#', sgr.sgr_name);
-        
+
         apex_zip.add_file(
           p_zipped_blob => l_zip_file,
           p_file_name => replace(C_FILE_NAME, '#SGR_NAME#', sgr.sgr_name),
@@ -658,7 +658,7 @@ as
     -- Adjust Parameter settings to show only required parameters in the correct format
     for param in action_type_cur(l_sat_id) loop
       l_region_id := 'R11_PARAMETER_' || param.sap_sort_seq;
-      
+
       -- Show region
       sct.toggle_item_visibility(
         p_selector => l_region_id);
@@ -781,7 +781,7 @@ as
     l_sap_row sct_action_parameter_v%rowtype;
   begin
     copy_edit_sat;
-    
+
     l_sat_row.sat_id := g_edit_sat_row.sat_id;
     l_sat_row.sat_stg_id := g_edit_sat_row.sat_stg_id;
     l_sat_row.sat_sif_id := g_edit_sat_row.sat_sif_id;
@@ -792,14 +792,14 @@ as
     l_sat_row.sat_is_editable := g_edit_sat_row.sat_is_editable;
     l_sat_row.sat_raise_recursive := g_edit_sat_row.sat_raise_recursive;
     l_sat_row.sat_active := g_edit_sat_row.sat_active;
-    
+
     -- copy constant parameter values to param record
     l_sap_row.sap_sat_id := l_sat_row.sat_id;
-    
+
     case
     when utl_apex.inserting or utl_apex.updating then
       sct_admin.merge_action_type(l_sat_row);
-      
+
       if g_edit_sat_row.sap_spt_id_1 is not null then
         l_sap_row.sap_spt_id := g_edit_sat_row.sap_spt_id_1;
         l_sap_row.sap_display_name := g_edit_sat_row.sap_display_name_1;
@@ -810,7 +810,7 @@ as
         l_sap_row.sap_sort_seq := 1;
         sct_admin.merge_action_parameter(l_sap_row);
       end if;
-      
+
       if g_edit_sat_row.sap_spt_id_2 is not null then
         l_sap_row.sap_spt_id := g_edit_sat_row.sap_spt_id_2;
         l_sap_row.sap_display_name := g_edit_sat_row.sap_display_name_2;
@@ -821,7 +821,7 @@ as
         l_sap_row.sap_sort_seq := 2;
         sct_admin.merge_action_parameter(l_sap_row);
       end if;
-      
+
       if g_edit_sat_row.sap_spt_id_3 is not null then
         l_sap_row.sap_spt_id := g_edit_sat_row.sap_spt_id_3;
         l_sap_row.sap_display_name := g_edit_sat_row.sap_display_name_3;
@@ -832,34 +832,34 @@ as
         l_sap_row.sap_sort_seq := 3;
         sct_admin.merge_action_parameter(l_sap_row);
       end if;
-    
+
     when utl_apex.deleting then
       sct_admin.delete_action_type(l_sat_row);
     else
       null;
     end case;
   end process_edit_sat;
-  
-  
+
+
   procedure print_sat_help
   as
     l_help_text clob;
     l_sat_id utl_apex.ora_name_type;
   begin
     l_sat_id := v('P3_SAT_ID');
-    
+
     select help_text
       into l_help_text
       from sct_bl_sat_help
      where sat_id = l_sat_id;
-    
+
     htp.p(l_help_text);
   exception
     when NO_DATA_FOUND then
       -- No SAT_ID given (fi upon creation), ignore
       null;
   end print_sat_help;
-  
+
 
   function validate_edit_saa
     return boolean
@@ -1036,10 +1036,10 @@ as
     pit.enter_optional;
 
     l_sgr_id := to_number(v('P1_SGR_ID'));
-    
+
     -- Action CREATE_RULE
     utl_apex_action.action_init('create-rule');
-    
+
     if l_sgr_id is not null then
       -- persist APP_ID and PAGE_ID in case exporting this rule is called
       select sgr_app_id, sgr_page_id
@@ -1060,12 +1060,12 @@ as
     else
       utl_apex_action.set_disabled(true);
     end if;
-    
+
     sct.add_javascript(utl_apex_action.get_action_script);
 
     -- Action COPY_RULEGROUP
     utl_apex_action.action_init('copy-rulegroup');
-    
+
     if l_sgr_id is not null then
       -- Check whether a target application to copy the rule to exists
       select count(*)
@@ -1087,18 +1087,18 @@ as
     else
       utl_apex_action.set_disabled(true);
     end if;
-    
+
     sct.add_javascript(utl_apex_action.get_action_script);
 
     -- Action EXPORT_RULEGROUP
     utl_apex_action.action_init('export-rulegroup');
-    
+
     l_javascript := utl_apex.get_page_url(
                       p_page => 'EXPORT_SGR',
                       p_param_items => 'P8_SGR_ID:P8_SGR_APP_ID:P8_SGR_PAGE_ID',
                       p_value_items => 'P1_SGR_ID:P1_SGR_APP_ID:P1_SGR_PAGE_ID',
                       p_triggering_element => 'B1_EXPORT_SGR');
-                      
+
     utl_apex_action.set_action(l_javascript);
     sct.add_javascript(utl_apex_action.get_action_script);
 

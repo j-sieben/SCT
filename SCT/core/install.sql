@@ -116,6 +116,39 @@ prompt &s1.Create package Body SCT_ADMIN
 @&pkg_dir.sct_admin.pkb
 show errors
 
+prompt &s1.Create package SCT_INTERNAL
+@&pkg_dir.packages/sct_internal.pks
+show errors
+
+prompt &s1.Create package SCT
+@&pkg_dir.packages/sct.pks
+show errors
+
+prompt &s1.Create package SCT_VALIDATION
+@&pkg_dir.packages/sct_validation.pks
+show errors
+
+prompt &s1.Create package UTL_APEX_ACTION
+@&pkg_dir.packages/utl_apex_action.pks
+show errors
+
+prompt &h3.Create package bodies
+prompt &s1.Create package Body SCT_INTERNAL
+@&pkg_dir.packages/sct_internal.pkb
+show errors
+
+prompt &s1.Create package Body SCT
+@&pkg_dir.packages/sct.pkb
+show errors
+
+prompt &s1.Create package Body SCT_VALIDATION
+@&pkg_dir.packages/sct_validation.pkb
+show errors
+
+prompt &s1.Create package Body UTL_APEX_ACTION
+@&pkg_dir.packages/utl_apex_action.pkb
+show errors
+
 prompt &h2.Merge initial data
 prompt &s1.Create SCT page item types
 @&script_dir.merge_sct_page_item_type.sql
