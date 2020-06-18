@@ -56,7 +56,7 @@ begin
     execute immediate 'drop view &INSTALL_USER..' || vw.view_name;
   end loop;
 
-  pit_admin.remove_message_group('SCT');
+  pit_admin.delete_message_group('SCT', true);
   dbms_session.reset_package;
   pit_admin.create_message_package;
   dbms_output.put_line('&s1.Messages deleted.');

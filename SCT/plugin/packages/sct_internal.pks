@@ -20,7 +20,7 @@ as
     
   function get_test_mode
     return boolean;
-    
+  
   /** Method to retrieve the result of the last action
    * @return Object structure that contains the result of the process.
    */

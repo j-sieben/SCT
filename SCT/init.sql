@@ -50,6 +50,7 @@ define C_FALSE="'N'";
 
 define MIN_UT_VERSION="v3.1"
 define WITH_UT=false
+
    
 col ora_name_type new_val ORA_NAME_TYPE format a30
 select 'varchar2(' || data_length || ' byte)' ora_name_type

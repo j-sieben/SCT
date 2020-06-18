@@ -6,7 +6,7 @@ create table sct_action_param_type(
   spt_active &FLAG_TYPE. default &C_TRUE.,
   constraint pk_sct_action_param_type primary key(spt_id),
   constraint fk_pti_id foreign key(spt_pti_id, spt_pmg_name)
-    references &PIT_OWNER..pit_translatable_item(pti_uid, pti_pmg_name) on delete cascade,
+    references &PIT_OWNER..pit_translatable_item(pti_uid, pti_upmg) on delete cascade,
   constraint nn_spt_pti_id check(spt_pti_id is not null),
   constraint chk_spt_pmg_name check(spt_pmg_name = 'SCT'),
   constraint chk_spt_active check(spt_active in (&C_TRUE., &C_FALSE.))

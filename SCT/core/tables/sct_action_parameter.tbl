@@ -15,7 +15,7 @@ create table sct_action_parameter(
   constraint fk_sap_spt_id foreign key(sap_spt_id)
     references sct_action_param_type(spt_id) on delete cascade,
   constraint fk_sap_pti_id foreign key(sap_pti_id, sap_pmg_name)
-    references &PIT_OWNER..pit_translatable_item(pti_uid, pti_pmg_name) on delete cascade,
+    references &PIT_OWNER..pit_translatable_item(pti_uid, pti_upmg) on delete cascade,
   constraint nn_sap_pti_id check(sap_pti_id is not null),
   constraint chk_sap_pmg_name check(sap_pmg_name = 'SCT'),
   constraint c_sap_sort_seq check(sap_sort_seq in (1, 2, 3)),

@@ -253,7 +253,9 @@ as
   procedure append_test_result(
     p_rule in rule_rec default null)
   as
+    $IF sct_util.C_WITH_UNIT_TESTS $THEN
     l_test_row sct_test_row;
+    $END
   begin
     null;
     $IF sct_util.C_WITH_UNIT_TESTS $THEN

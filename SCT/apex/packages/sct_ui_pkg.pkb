@@ -417,9 +417,9 @@ as
     copy_edit_sgr;
 
     -- Validierungen
-    utl_apex.assert_not_null(g_edit_sgr_row.sgr_app_id, msg.APEX_REQUIRED_VAL_MISSING, utl_apex.get_page_prefix|| 'SGR_APP_ID');
-    utl_apex.assert_not_null(g_edit_sgr_row.sgr_page_id, msg.APEX_REQUIRED_VAL_MISSING, utl_apex.get_page_prefix || 'SGR_PAGE_ID');
-    utl_apex.assert_not_null(g_edit_sgr_row.sgr_name, msg.APEX_REQUIRED_VAL_MISSING, utl_apex.get_page_prefix || 'SGR_NAME');
+    utl_apex.assert_not_null(g_edit_sgr_row.sgr_app_id, msg.APEX_REQUIRED_VAL_MISSING, 'SGR_APP_ID');
+    utl_apex.assert_not_null(g_edit_sgr_row.sgr_page_id, msg.APEX_REQUIRED_VAL_MISSING, 'SGR_PAGE_ID');
+    utl_apex.assert_not_null(g_edit_sgr_row.sgr_name, msg.APEX_REQUIRED_VAL_MISSING, 'SGR_NAME');
 
     if utl_apex.inserting then
       select count(*)
@@ -433,8 +433,8 @@ as
       utl_apex.assert(
         p_condition => l_exists = 0,
         p_message_name => msg.SCT_SGR_MUST_BE_UNIQUE,
-        p_arg_list => null,
-        p_affected_id => utl_apex.get_page_prefix || 'SGR_NAME');
+        p_msg_args => null,
+        p_page_item => 'SGR_NAME');
     end if;
 
     pit.leave_mandatory;

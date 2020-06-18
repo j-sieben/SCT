@@ -7,7 +7,7 @@ create table sct_action_item_focus(
   sif_active &FLAG_TYPE. default &C_TRUE.,
   constraint pk_sct_action_item_focus primary key(sif_id),
   constraint fk_sif_pti_id foreign key(sif_pti_id, sif_pmg_name)
-    references &PIT_OWNER..pit_translatable_item(pti_uid, pti_pmg_name) on delete cascade,
+    references &PIT_OWNER..pit_translatable_item(pti_uid, pti_upmg) on delete cascade,
   constraint nn_sif_pti_id check(sif_pti_id is not null),
   constraint chk_sif_pmg_name check(sif_pmg_name = 'SCT'),
   constraint chk_sif_actual_page_only check(sif_actual_page_only in (&C_TRUE., &C_FALSE.)),

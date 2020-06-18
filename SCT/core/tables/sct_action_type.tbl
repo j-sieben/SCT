@@ -15,7 +15,7 @@ create table sct_action_type(
   constraint fk_sat_sif_id foreign key(sat_sif_id)
     references sct_action_item_focus(sif_id),
   constraint fk_sat_pti_id foreign key(sat_pti_id, sat_pmg_name)
-    references &PIT_OWNER..pit_translatable_item(pti_uid, pti_pmg_name) on delete cascade,
+    references &PIT_OWNER..pit_translatable_item(pti_uid, pti_upmg) on delete cascade,
   constraint nn_sat_pti_id check(sat_pti_id is not null),
   constraint chk_sat_pmg_name check(sat_pmg_name = 'SCT'),
   constraint c_sat_is_editable check (sat_is_editable in (&C_FALSE., &C_TRUE.)),

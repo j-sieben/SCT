@@ -5,7 +5,7 @@ create table sct_action_type_group(
   stg_active &FLAG_TYPE. default &C_TRUE.,
   constraint pk_sct_action_type_group primary key(stg_id),
   constraint fk_stg_pti_id foreign key(stg_pti_id, stg_pmg_name)
-    references &PIT_OWNER..pit_translatable_item(pti_uid, pti_pmg_name) on delete cascade,
+    references &PIT_OWNER..pit_translatable_item(pti_uid, pti_upmg) on delete cascade,
   constraint nn_stg_pti_id check(stg_pti_id is not null),
   constraint chk_stg_pmg_name check(stg_pmg_name = 'SCT'),
   constraint nn_stg_name check(stg_pmg_name is not null),

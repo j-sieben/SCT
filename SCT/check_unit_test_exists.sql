@@ -8,15 +8,28 @@ declare
   l_pkg_exists pls_integer;
   C_NULL_SCRIPT constant varchar2(10) := 'null.sql';
 begin
-  select case when ut.version >= '&MIN_UT_VERSION.' 
-         then '&1.'
-         else C_NULL_SCRIPT end
-    into :script_name
-    from dual;
-    
-    :with_ut := 'true';
-  if :script_name = C_NULL_SCRIPT then
-    :comments := '&s1.utPLSQL too old, skipping Unit Test &2.. Minim,um Version required is &MIN_UT_VERSION.';
+  select count(*)
+    into l_pkg_exists
+    from dual
+   where exists (
+         select null
+           from all_objects
+          where object_name = 'UT'
+            and object_type = 'PACKAGE');
+  if l_pkg_exists = 1 then
+    execute immediate q'^select case when ut.version >= '&MIN_UT_VERSION.' 
+           then '&1.'
+           else C_NULL_SCRIPT end
+      from dual^' into :script_name;
+    if :script_name = C_NULL_SCRIPT then
+      :comments := '&s1.utPLSQL too old, skipping Unit Test &2.. Minim,um Version required is &MIN_UT_VERSION.';
+    else
+      :with_ut := 'true';
+    end if;
+  else
+    :script_name := C_NULL_SCRIPT;
+    :comments := '&s1.utPLSQL not installed, skipping Unit Tests.';
+    :with_ut := 'false';
   end if;
 exception
   when others then
