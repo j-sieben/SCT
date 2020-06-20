@@ -1,7 +1,6 @@
-set define off
-
-create or replace force view sct_ui_admin_sgr_rules as
-  with params as (
+create or replace editionable view sct_ui_admin_sgr_rules
+as 
+with params as (
        select sgr_id, sgr_app_id, sgr_page_id, sgr_name,
               '- ' sgr_page_prefix,
               ',' delimiter,
@@ -54,7 +53,7 @@ create or replace force view sct_ui_admin_sgr_rules as
           and instr(p.delimiter || sru_firing_items || p.delimiter, p.delimiter || spi.spi_id || p.delimiter) > 0
           and spi.spi_has_error = p.c_true
          left join (
-              select sra.sra_id, sra.sra_sgr_id, 
+              select sra.sra_id, sra.sra_sgr_id,
                      case when sra.sra_spi_id = 'DOCUMENT' and to_char(sra.sra_param_2) is not null then '[' || to_char(sra.sra_param_2) || ']' else sra.sra_spi_id end sra_spi_id,
                      sra.sra_sru_id, sra.sra_sat_id, sra.sra_sort_seq, sra.sra_active, spi.spi_has_error, sra.sra_on_error
                 from sct_rule_action sra
@@ -82,5 +81,3 @@ select app.application_id,
  group by app.application_id, app.application_name || ' (' || app.application_id || ')',
        pag.page_id, pag.page_name || ' (' || pag.page_id || ')',
        a.sru_id, a.sgr_id, a.sgr_name, a.sru_name, a.sru_condition, a.sru_firing_items, a.sru_sort_seq, sru_fire_on_page_load, sru_active;
-
-set define on

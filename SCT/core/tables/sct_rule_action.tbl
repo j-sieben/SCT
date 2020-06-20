@@ -1,0 +1,50 @@
+create table sct_rule_action(
+  sra_id number default on null sct_seq.nextval constraint nn_sra_id not null, 
+	sra_sgr_id number, 
+	sra_sru_id number, 
+	sra_spi_id varchar2(50 char), 
+	sra_sat_id varchar2(50 char), 
+	sra_on_error &FLAG_TYPE. default &C_FALSE., 
+	sra_param_1 varchar2(4000 byte), 
+	sra_param_2 varchar2(4000 byte), 
+	sra_param_3 varchar2(4000 byte), 
+	sra_comment varchar2(200 char), 
+	sra_raise_recursive &FLAG_TYPE. default &C_TRUE., 
+	sra_sort_seq number, 
+	sra_active &FLAG_TYPE. default &C_TRUE., 
+	sra_has_error &FLAG_TYPE. default &C_FALSE.,
+  constraint pk_sct_rule_action primary key (sra_id),
+  constraint fk_sra_sat_id foreign key (sra_sat_id)
+	  references sct_action_type (sat_id) on delete cascade,
+  constraint fk_sra_spi_id foreign key (sra_sgr_id, sra_spi_id)
+	  references sct_page_item (spi_sgr_id, spi_id) on delete cascade,
+  constraint fk_sra_sru_id foreign key (sra_sru_id)
+	  references sct_rule (sru_id) on delete cascade,
+  constraint chk_sra_active check (sra_active in (&C_TRUE., &C_FALSE.)),
+  constraint chk_sra_has_error check (sra_has_error in (&C_TRUE., &C_FALSE.)),
+  constraint chk_sra_raise_recursive check (sra_raise_recursive in (&C_TRUE., &C_FALSE.)),
+  constraint chk_sra_on_error check (sra_on_error in (&C_TRUE., &C_FALSE.))
+);
+
+create unique index idx_sra_sgr_sru_spi_sat_err on sct_rule_action (sra_sgr_id, sra_sru_id, sra_spi_id, sra_sat_id, sra_on_error);
+create index idx_sra_spi_id on sct_rule_action (sra_spi_id);
+create index idx_sra_sat_id on sct_rule_action (sra_sat_id);
+create index idx_sra_sru_id on sct_rule_action (sra_sru_id);
+
+
+comment on table sct_rule_action  is 'Table to store activities per rule';
+comment on column sct_rule_action.sra_id is 'PK';
+comment on column sct_rule_action.sra_sgr_id is 'Unique, references SCT_RULE';
+comment on column sct_rule_action.sra_sru_id is 'Unique, references SCT_RULE';
+comment on column sct_rule_action.sra_spi_id is 'Unique, references SCT_PAGE_ITEM';
+comment on column sct_rule_action.sra_sat_id is 'Unique, references SCT_ACTION_TYPE';
+comment on column sct_rule_action.sra_on_error is 'Unique Flag to indicate whether RULE_ACTION shall be executed only in case of PL/SQL error';
+comment on column sct_rule_action.sra_param_1 is 'Optional first parameter, passed to ACTION_TYPE';
+comment on column sct_rule_action.sra_param_2 is 'Optional second parameter, passed to ACTION_TYPE';
+comment on column sct_rule_action.sra_param_3 is 'Optional third parameter, passed to ACTION_TYPE';
+comment on column sct_rule_action.sra_comment is 'Optional comment to describe the action. Used if something unusual happens.';
+comment on column sct_rule_action.sra_raise_recursive is 'Flag to indicate whether RULE_ACTION triggers recursive rul execution';
+comment on column sct_rule_action.sra_sort_seq is 'Sorting criteria to control execution flow';
+comment on column sct_rule_action.sra_active is 'Flag to indicate whether RULE_ACTION is in use actually';
+comment on column sct_rule_action.sra_has_error is 'Flag to indicate whether RULE_ACTION has got an error';
+

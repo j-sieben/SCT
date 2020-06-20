@@ -1,15 +1,12 @@
 create table sct_action_param_type(
   spt_id varchar2(50 char),
-  spt_pti_id varchar2(50 char),
-  spt_pmg_name varchar2(3 byte) default 'SCT',
+  spt_pti_id varchar2(50 char) constraint nn_spt_pti_id not null,
+  spt_pmg_name varchar2(3 byte) default 'SCT' constraint chk_spt_pmg_name check(spt_pmg_name = 'SCT'),
   spt_item_type varchar2(50 char),
-  spt_active &FLAG_TYPE. default &C_TRUE.,
+  spt_active &FLAG_TYPE. default &C_TRUE. constraint chk_spt_active check(spt_active in (&C_TRUE., &C_FALSE.)),
   constraint pk_sct_action_param_type primary key(spt_id),
   constraint fk_pti_id foreign key(spt_pti_id, spt_pmg_name)
-    references &PIT_OWNER..pit_translatable_item(pti_uid, pti_upmg) on delete cascade,
-  constraint nn_spt_pti_id check(spt_pti_id is not null),
-  constraint chk_spt_pmg_name check(spt_pmg_name = 'SCT'),
-  constraint chk_spt_active check(spt_active in (&C_TRUE., &C_FALSE.))
+    references &PIT_OWNER..pit_translatable_item(pti_uid, pti_upmg) on delete cascade
 ) 
 organization index;
 

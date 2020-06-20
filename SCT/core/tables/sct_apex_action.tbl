@@ -1,0 +1,61 @@
+create table sct_apex_action(
+  saa_id number default on null sct_seq.nextval constraint nn_saa_id not null, 
+	saa_sgr_id number, 
+	saa_sty_id varchar2(11 char), 
+	saa_name varchar2(50 char), 
+	saa_label varchar2(50 char), 
+	saa_context_label varchar2(200 char), 
+	saa_icon varchar2(50 char), 
+	saa_icon_type varchar2(50 char) default 'fa', 
+	saa_title varchar2(200 char), 
+	saa_shortcut varchar2(50 char), 
+	saa_initially_disabled &FLAG_TYPE. default &C_FALSE., 
+	saa_initially_hidden &FLAG_TYPE. default &C_FALSE., 
+	saa_href varchar2(200 char), 
+	saa_action varchar2(200 char), 
+	saa_on_label varchar2(50 char), 
+	saa_off_label varchar2(50 char), 
+	saa_get varchar2(50 char), 
+	saa_set varchar2(50 char), 
+	saa_choices varchar2(1000 char), 
+	saa_label_classes varchar2(50 char), 
+	saa_label_start_classes varchar2(50 char), 
+	saa_label_end_classes varchar2(50 char), 
+	saa_item_wrap_class varchar2(50 char),
+  constraint pk_sct_apex_action primary key (saa_id),
+  constraint fk_saa_sgr_id foreign key (saa_sgr_id)
+	  references sct_rule_group (sgr_id),
+  constraint fk_saa_sty_id foreign key (saa_sty_id)
+	  references sct_apex_action_type (sty_id),
+  constraint chk_saa_initially_disabled check (saa_initially_disabled in (&C_TRUE., &C_FALSE.)),
+  constraint chk_saa_initially_hidden check (saa_initially_hidden in (&C_TRUE., &C_FALSE.))
+);
+
+create unique index idx_saa_sgr_name on sct_apex_action (saa_sgr_id, saa_name);
+create index idx_fk_saa_sgr_id on sct_apex_action (saa_sgr_id);
+create index idx_fk_saa_sty_id on sct_apex_action (saa_sty_id);
+
+comment on table sct_apex_action  is 'Table to store apex actions to be maintained by SCT';
+
+comment on column sct_apex_action.saa_sgr_id is 'Part of Unique, Reference to SCT_RULE_GROUP';
+comment on column sct_apex_action.saa_sty_id is 'Type of the action. Reference to SCT_APEX_ACTION_TYPE';
+comment on column sct_apex_action.saa_name is 'Part of Unique, a unique name for the action within that SCT_RULE_GROPU. By convention the style of names uses a dash to separate words as in clear-log. Name must not contain spaces, >, :, quote, or double quote, or non-printing characters.';
+comment on column sct_apex_action.saa_label is 'translatable label for action used in buttons, menus etc. Note: if this is a radio group action (action has choices property) the label is optional. It is used in results of the list and listShortcuts methods. Depending on what kind of UI control the action is bound to it may be used as a label for the whole group. For example using aria-label.';
+comment on column sct_apex_action.saa_context_label is 'A more descriptive label used in place of label for use in listing actions and shortcuts.';
+comment on column sct_apex_action.saa_icon is 'The icon for action may be used in buttons and menus';
+comment on column sct_apex_action.saa_icon_type is 'The icon type. Defaults to fa (FontApex). Updates to the iconType may not be supported by all control types that can be associated with actions.';
+comment on column sct_apex_action.saa_title is 'The title to use as the title attribute when appropriate.';
+comment on column sct_apex_action.saa_shortcut is 'The keyboard shortcut to invoke action (not allowed for radio group actions).';
+comment on column sct_apex_action.saa_initially_disabled is 'Flag to indicate whether this action is initially disabled. Default 0 = initially enabled';
+comment on column sct_apex_action.saa_initially_hidden is 'Flag to indicate whether this action is initially hidded. Default 0 = initially visible';
+comment on column sct_apex_action.saa_href is 'For actions that navigate set href to the URL to navigate to and don''t set an action function. An action of type action must have an href or action property set.';
+comment on column sct_apex_action.saa_action is 'function(event, focusElement):boolean The function that is called when the action is invoked with actions#invoke. The action must return true if it sets focus. An action of type action must have an href or action property set.';
+comment on column sct_apex_action.saa_on_label is 'Only for dynamic antonyms toggle actions. This is the label when the value is true.';
+comment on column sct_apex_action.saa_off_label is 'Only for dynamic antonyms toggle actions. This is the label when the value is false.';
+comment on column sct_apex_action.saa_get is 'For toggle actions this function should return true or false. For radio group actions this should return the current value.';
+comment on column sct_apex_action.saa_set is 'For toggle actions this receives a boolean value. For radio group actions this function receives the new value.';
+comment on column sct_apex_action.saa_choices is 'This is only for radio group actions. SQL statement that creates a list of objects. Each object has properties: label, value, icon, iconType, shortcut, disabled, group (for select lists only)';
+comment on column sct_apex_action.saa_label_classes is 'This is only for radio group actions. Classes to add to all radio labels. This and the next two label properties are only used when rendering radio group choices.';
+comment on column sct_apex_action.saa_label_start_classes is 'Only for radio group actions. Classes to add to last radio label';
+comment on column sct_apex_action.saa_label_end_classes is 'Only for radio group actions. Classes to add to last radio label';
+comment on column sct_apex_action.saa_item_wrap_class is 'Only for radio group actions. Classes to add to a span wrapper element. Or to change the span use one of these prefixes: p:, li:, div:, span: For example li:myRadio';

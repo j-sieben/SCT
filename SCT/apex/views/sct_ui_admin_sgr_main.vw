@@ -1,4 +1,5 @@
-create or replace force view sct_ui_admin_sgr_main as
+create or replace editionable view sct_ui_admin_sgr_main
+as 
 with params as (
        select v('APP_ID') app_id,
               v('P1_SGR_APP_ID') sgr_app_id,

@@ -3,24 +3,19 @@
 create table sct_action_parameter(
   sap_sat_id varchar2(50 char),
   sap_spt_id varchar2(50 char),
-  sap_sort_seq integer default 1,
+  sap_sort_seq integer default 1 constraint chk_sap_sort_seq check(sap_sort_seq in (1, 2, 3)),
   sap_default varchar2(100 char),
-  sap_pti_id varchar2(50 char),
-  sap_pmg_name varchar2(3 byte) default 'SCT',
-  sap_mandatory &FLAG_TYPE. default &C_FALSE.,
-  sap_active &FLAG_TYPE. default &C_TRUE.,
+  sap_pti_id varchar2(50 char) constraint nn_sap_pti_id not null,
+  sap_pmg_name varchar2(3 byte) default 'SCT' constraint chk_sap_pmg_name check(sap_pmg_name = 'SCT'),
+  sap_mandatory &FLAG_TYPE. default &C_FALSE. constraint chk_sap_mandatory check(sap_mandatory in (&C_FALSE., &C_TRUE.)),
+  sap_active &FLAG_TYPE. default &C_TRUE. constraint chk_sap_active check(sap_active in (&C_FALSE., &C_TRUE.)),
   constraint pk_sct_action_parameter primary key(sap_sat_id, sap_spt_id, sap_sort_seq),
   constraint fk_sap_sat_id foreign key(sap_sat_id)
     references sct_action_type(sat_id) on delete cascade,
   constraint fk_sap_spt_id foreign key(sap_spt_id)
     references sct_action_param_type(spt_id) on delete cascade,
   constraint fk_sap_pti_id foreign key(sap_pti_id, sap_pmg_name)
-    references &PIT_OWNER..pit_translatable_item(pti_uid, pti_upmg) on delete cascade,
-  constraint nn_sap_pti_id check(sap_pti_id is not null),
-  constraint chk_sap_pmg_name check(sap_pmg_name = 'SCT'),
-  constraint c_sap_sort_seq check(sap_sort_seq in (1, 2, 3)),
-  constraint c_sap_mandatory check(sap_mandatory in (&C_FALSE., &C_TRUE.)),
-  constraint c_sap_active check(sap_active in (&C_FALSE., &C_TRUE.))
+    references &PIT_OWNER..pit_translatable_item(pti_uid, pti_upmg) on delete cascade
 ) 
 organization index;
 

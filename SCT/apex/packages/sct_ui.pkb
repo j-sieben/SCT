@@ -1,4 +1,4 @@
-create or replace package body sct_ui_pkg
+create or replace package body sct_ui
 as
 
   C_SRA_COLLECTION constant sct_util.ora_name_type := 'SCT_UI_EDIT_SRA';
@@ -12,26 +12,6 @@ as
   g_edit_sat_row sct_ui_edit_sat%rowtype;
 
 
-  /** Helper to sanitize any SCT name to comply with internal naming rules
-   * @param  p_name  Name to sanitize
-   * @return Name that adheres to the following naming conventions:
-   *         - no quotes
-   *         - no blanks (replaced by underscores)
-   *         - all uppercase
-   *         - legnth limit 50
-   */
-  function clean_sct_name(
-    p_name in varchar2)
-    return varchar2
-  as
-    l_name sct_rule_group.sgr_name%type;
-  begin
-    l_name := replace(replace(p_name, '"'), ' ', '_');
-    l_name := upper(substr(l_name, 1, 50));
-    return l_name;
-  end clean_sct_name;
-
-
   /** Helper to copy APEX session state values into type safe record structures
    * @usage  Is called to copy the actual session state values entered into a type safe record structure.
    *         Type casting is auto detected if APEX has knowledge of the type, fi by using a format mask.
@@ -43,7 +23,7 @@ as
     pit.enter_detailed;
     g_page_values := utl_apex.get_page_values;
     g_edit_sgr_row.sgr_id := coalesce(to_number(utl_apex.get(g_page_values, 'SGR_ID'), '999990'), sct_seq.nextval);
-    g_edit_sgr_row.sgr_name := clean_sct_name(utl_apex.get(g_page_values, 'SGR_NAME'));
+    g_edit_sgr_row.sgr_name := sct_util.clean_sct_name(utl_apex.get(g_page_values, 'SGR_NAME'));
     g_edit_sgr_row.sgr_description := utl_apex.get(g_page_values, 'SGR_DESCRIPTION');
     g_edit_sgr_row.sgr_app_id := to_number(utl_apex.get(g_page_values, 'SGR_APP_ID'), 'fm9999999999990');
     g_edit_sgr_row.sgr_page_id := to_number(utl_apex.get(g_page_values, 'SGR_PAGE_ID'), 'fm9999999999990');
@@ -133,9 +113,9 @@ as
   begin
     pit.enter_detailed;
     g_page_values := utl_apex.get_page_values('EDIT_SAT');
-    g_edit_sat_row.sat_id := clean_sct_name(utl_apex.get(g_page_values, 'SAT_ID'));
-    g_edit_sat_row.sat_stg_id := clean_sct_name(utl_apex.get(g_page_values, 'SAT_STG_ID'));
-    g_edit_sat_row.sat_sif_id := clean_sct_name(utl_apex.get(g_page_values, 'SAT_SIF_ID'));
+    g_edit_sat_row.sat_id := sct_util.clean_sct_name(utl_apex.get(g_page_values, 'SAT_ID'));
+    g_edit_sat_row.sat_stg_id := sct_util.clean_sct_name(utl_apex.get(g_page_values, 'SAT_STG_ID'));
+    g_edit_sat_row.sat_sif_id := sct_util.clean_sct_name(utl_apex.get(g_page_values, 'SAT_SIF_ID'));
     g_edit_sat_row.sat_name := utl_apex.get(g_page_values, 'SAT_NAME');
     g_edit_sat_row.sat_description := utl_apex.get(g_page_values, 'SAT_DESCRIPTION');
     g_edit_sat_row.sat_pl_sql := utl_apex.get(g_page_values, 'SAT_PL_SQL');
@@ -416,28 +396,26 @@ as
     pit.enter_mandatory;
     copy_edit_sgr;
 
-    -- Validierungen
-    utl_apex.assert_not_null(g_edit_sgr_row.sgr_app_id, msg.APEX_REQUIRED_VAL_MISSING, 'SGR_APP_ID');
-    utl_apex.assert_not_null(g_edit_sgr_row.sgr_page_id, msg.APEX_REQUIRED_VAL_MISSING, 'SGR_PAGE_ID');
-    utl_apex.assert_not_null(g_edit_sgr_row.sgr_name, msg.APEX_REQUIRED_VAL_MISSING, 'SGR_NAME');
-
-    if utl_apex.inserting then
-      select count(*)
-        into l_exists
-        from dual
-       where exists(
-             select null
-               from sct_rule_group
-              where sgr_app_id = g_edit_sgr_row.sgr_app_id
-                and sgr_name = g_edit_sgr_row.sgr_name);
-      utl_apex.assert(
-        p_condition => l_exists = 0,
-        p_message_name => msg.SCT_SGR_MUST_BE_UNIQUE,
-        p_msg_args => null,
-        p_page_item => 'SGR_NAME');
-    end if;
-
+    pit.start_message_collection;
+    sct_admin.validate_rule_group(
+        p_sgr_app_id => g_edit_sgr_row.sgr_app_id,
+        p_sgr_page_id => g_edit_sgr_row.sgr_page_id,
+        p_sgr_id => g_edit_sgr_row.sgr_id,
+        p_sgr_name => g_edit_sgr_row.sgr_name,
+        p_sgr_description => g_edit_sgr_row.sgr_description,
+        p_sgr_with_recursion => g_edit_sgr_row.sgr_with_recursion,
+        p_sgr_active => g_edit_sgr_row.sgr_active);
+    pit.stop_message_collection;
+    
     pit.leave_mandatory;
+    return true;
+  exception
+    when msg.PIT_BULK_ERROR_ERR then
+      utl_apex.handle_bulk_errors(char_table(
+        'SGR_APP_ID_MISSING', 'SGR_APP_ID',
+        'SGR_PAGE_ID_MISSING', 'SGR_PAGE_ID',
+        'SGR_NAME_MISSING', 'SGR_NAME',
+        'SCT_SGR_MUST_BE_UNIQUE', 'SGR_NAME'));
     return true;
   end validate_edit_sgr;
 
@@ -623,6 +601,9 @@ as
 
   procedure configure_edit_sra
   as
+    C_SET_LABEL constant varchar2(100) := q'^$('^#ITEM_ID#_LABEL').html('#SPT_NAME#');^';
+    C_SET_SAT_HELP constant varchar2(100) := q'^$('^R11_SAT_HELP .t-Region-body').html('#HELP_TEXT#');^';
+    
     cursor action_type_cur(p_sat_id in sct_action_type.sat_id%type) is
         with params as(
              select sct_util.get_true is_active,
@@ -642,15 +623,17 @@ as
          and sap_active = p.is_active
          and spt_active = p.is_active
        order by sat_id, sap_sort_seq;
-    C_SET_LABEL constant varchar2(100) := q'^$('^#ITEM_ID#_LABEL').html('#SPT_NAME#');^';
-    C_SET_SAT_HELP constant varchar2(100) := q'^$('^R11_SAT_HELP .t-Region-body').html('#HELP_TEXT#');^';
+       
     l_region_id sct_util.ora_name_type;
     l_lov_param_id sct_util.ora_name_type;
     l_item_id sct_util.ora_name_type;
     l_help_text sct_util.max_char;
     l_sat_id sct_action_type.sat_id%type;
   begin
+    pit.enter_mandatory;
+    
     l_sat_id := v('P11_SRA_SAT_ID');
+    
     sct.toggle_item_visibility(
       p_selector => '.sct-hide',
       p_visible => false);
@@ -689,9 +672,11 @@ as
      where sat_id = l_sat_id;
     sct.add_javascript(utl_text.bulk_replace(C_SET_SAT_HELP, char_table('HELP_TEXT', l_help_text)));
 
+    pit.leave_mandatory;
   exception
     when NO_DATA_FOUND then
       sct.add_javascript(utl_text.bulk_replace(C_SET_SAT_HELP, char_table('HELP_TEXT', pit.get_trans_item_name('SCT', 'SRA_NO_HELP'))));
+      pit.leave_mandatory;
   end configure_edit_sra;
 
 
@@ -769,7 +754,7 @@ as
     return boolean
   as
   begin
-    copy_edit_sat;
+    --copy_edit_sat;
 
     return true;
   end validate_edit_sat;
@@ -1185,5 +1170,5 @@ as
     pit.leave_optional;
   end set_action_edit_sru;
 
-end sct_ui_pkg;
+end sct_ui;
 /

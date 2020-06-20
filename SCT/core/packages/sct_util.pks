@@ -62,5 +62,18 @@ as
     p_bool in flag_type)
     return varchar2;
 
+
+  /** Helper to sanitize any SCT name to comply with internal naming rules
+   * @param  p_name  Name to sanitize
+   * @return Name that adheres to the following naming conventions:
+   *         - no quotes
+   *         - no blanks (replaced by underscores)
+   *         - all uppercase
+   *         - legnth limit 50
+   */
+  function clean_sct_name(
+    p_name in varchar2)
+    return varchar2;
+
 end sct_util;
 /

@@ -1,0 +1,22 @@
+create table sct_apex_action_item(
+  sai_saa_id number, 
+	sai_spi_sgr_id number, 
+	sai_spi_id varchar2(50 char), 
+	sai_active &FLAG_TYPE. default &C_TRUE., 
+  constraint pk_sct_apex_action_item primary key (sai_saa_id, sai_spi_sgr_id, sai_spi_id),
+  constraint fk_sai_saa_id foreign key (sai_saa_id)
+	  references sct_apex_action (saa_id) on delete cascade,
+  constraint fk_sai_spi_id foreign key (sai_spi_sgr_id, sai_spi_id)
+	  references sct_page_item (spi_sgr_id, spi_id),
+  constraint chk_sai_active check (sai_active in (&C_TRUE., &C_FALSE.))
+) organization index;
+
+create index idx_fk_sai_saa_id on sct_apex_action_item (sai_saa_id);
+create index idx_fk_sai_spi_id on sct_apex_action_item (sai_spi_sgr_id, sai_spi_id) ;
+
+comment on table sct_apex_action_item  is 'Table to store initial references between page items and apex actions';
+comment on column sct_apex_action_item.sai_saa_id is 'Part of PK, Refrence to SCT_APEX_ACTION';
+comment on column sct_apex_action_item.sai_spi_sgr_id is 'Part of PK, Refrence to SCT_PAGE_ITEM';
+comment on column sct_apex_action_item.sai_spi_id is 'Part of PK, Refrence to SCT_PAGE_ITEM';
+comment on column sct_apex_action_item.sai_active is 'Flag to indicate whether page item shall be connected with this action initially';
+

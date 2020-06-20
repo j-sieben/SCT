@@ -68,12 +68,6 @@ prompt &s1.Create table SCT_RULE_ACTION
 
 
 prompt &h3.Create views
-prompt &s1.Create view SCT_BL_RULES
-@&view_dir.sct_bl_rules.vw
-
-prompt &s1.Create view SCT_BL_PAGE_TARGETS
-@&view_dir.sct_bl_page_targets.vw
-
 prompt &s1.Create view SCT_ACTION_ITEM_FOCUS_V
 @&view_dir.sct_action_item_focus_v.vw
 
@@ -92,10 +86,28 @@ prompt &s1.Create view SCT_ACTION_TYPE_GROUP_V
 prompt &s1.Create view SCT_APEX_ACTION_TYPE_V
 @&view_dir.sct_apex_action_type_v.vw
 
+prompt &s1.Create view SCT_BL_PAGE_ITEMS
+@&view_dir.sct_bl_page_items.vw
+
+prompt &s1.Create view SCT_BL_PAGE_TARGETS
+@&view_dir.sct_bl_page_targets.vw
+
+prompt &s1.Create view SCT_BL_RULES
+@&view_dir.sct_bl_rules.vw
+
+prompt &s1.Create view SCT_BL_PAGE_TARGETS
+@&view_dir.sct_bl_page_targets.vw
+
 
 prompt &h2.Merge default data
+prompt &h3.Create SCT parameters
+@&plugin_dir.scripts/ParameterGroup_SCT.sql
+
 prompt &h3.Create SCT messages
-@&msg_dir.create_messages.sql
+@&msg_dir.MessageGroup_SCT.sql
+
+prompt &h3.Create SCT translatable items
+@&msg_dir.TranslatableItemGroup_SCT.sql
 
 prompt &h3.Create UTL_TEXT templates
 @&script_dir.merge_utl_text_templates.sql

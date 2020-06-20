@@ -1,4 +1,4 @@
-create or replace package sct_ui_pkg
+create or replace package sct_ui
   authid definer
 as
 
@@ -170,4 +170,5 @@ as
    */
   procedure set_action_edit_sru;
 
-end sct_ui_pkg;
+end sct_ui;
+/

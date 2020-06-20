@@ -1,17 +1,13 @@
 create table sct_action_item_focus(
   sif_id varchar2(50 char),
-  sif_pti_id varchar2(50 char),
-  sif_pmg_name varchar2(3 byte) default 'SCT',
-  sif_actual_page_only &FLAG_TYPE. default &C_TRUE.,
+  sif_pti_id varchar2(50 char) constraint nn_sif_pti_id not null,
+  sif_pmg_name varchar2(3 byte) default 'SCT' constraint chk_sif_pmg_name check(sif_pmg_name = 'SCT'),
+  sif_actual_page_only &FLAG_TYPE. default &C_TRUE. constraint chk_sif_actual_page_only check(sif_actual_page_only in (&C_TRUE., &C_FALSE.)),
   sif_item_types varchar2(100 byte), 
-  sif_active &FLAG_TYPE. default &C_TRUE.,
+  sif_active &FLAG_TYPE. default &C_TRUE. constraint chk_sif_active check(sif_active in (&C_TRUE., &C_FALSE.)),
   constraint pk_sct_action_item_focus primary key(sif_id),
   constraint fk_sif_pti_id foreign key(sif_pti_id, sif_pmg_name)
-    references &PIT_OWNER..pit_translatable_item(pti_uid, pti_upmg) on delete cascade,
-  constraint nn_sif_pti_id check(sif_pti_id is not null),
-  constraint chk_sif_pmg_name check(sif_pmg_name = 'SCT'),
-  constraint chk_sif_actual_page_only check(sif_actual_page_only in (&C_TRUE., &C_FALSE.)),
-  constraint chk_sif_active check(sif_active in (&C_TRUE., &C_FALSE.))
+    references &PIT_OWNER..pit_translatable_item(pti_uid, pti_upmg) on delete cascade
 ) 
 organization index;
 

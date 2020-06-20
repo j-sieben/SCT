@@ -1,5 +1,6 @@
-create or replace force view sct_ui_edit_sru_action as
-  with params as(
+create or replace editionable view sct_ui_edit_sru_action
+as 
+with params as(
        select v('P5_SRU_ID') sru_id,
               v('P5_SRU_SGR_ID') sru_sgr_id,
               'fa-check' flg_yes,
@@ -7,7 +8,7 @@ create or replace force view sct_ui_edit_sru_action as
               utl_apex.get_true c_true,
               utl_apex.get_false c_false
          from dual)
-select /*+ no_merge(p) */ 
+select /*+ no_merge(p) */
        max(sra_id) over () + 1 seq_id,
        sra_id,
        sra_sgr_id,
@@ -22,7 +23,8 @@ select /*+ no_merge(p) */
        case sra_on_error when p.c_true then flg_yes else flg_no end sra_on_error,
        case sra_raise_recursive when p.c_true then flg_yes else flg_no end sra_raise_recursive,
        case sra_active when p.c_true then flg_yes else flg_no end sra_active,
-       sra_has_error
+       -- Change logic to allow for "is_valid" flag
+       case sra_has_error when p.c_true then flg_no else flg_yes end sra_has_error
   from sct_ui_edit_sra
   join sct_action_type_v
     on sra_sat_id = sat_id

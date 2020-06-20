@@ -1,0 +1,15 @@
+define apex_dir=apex/
+define apex_version_dir=&apex_dir.apex_&APEX_VERSION./
+define app_dir=&apex_version_dir.application/
+define script_dir=&apex_version_dir.scripts/
+
+prompt &s1.Install action types
+@&script_dir.merge_action_types.sql
+
+prompt &h3.Install APEX-application from folder apex_&APEX_VERSION.
+prompt &s1.Prepare installation
+@&apex_version_dir./prepare_apex_import.sql
+
+prompt &s1.Install application
+@&app_dir/sct.sql
+@&app_dir/sct_manual.sql

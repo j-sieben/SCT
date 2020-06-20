@@ -1,14 +1,12 @@
 create table sct_apex_action_type(
   sty_id varchar2(50 char),
-  sty_pti_id varchar2(50 char),
-  sty_pmg_name varchar2(3 byte) default 'SCT',
+  sty_pti_id varchar2(50 char) constraint nn_sty_pti_id not null,
+  sty_pmg_name varchar2(3 byte) default 'SCT' constraint chk_sty_pmg_name check(sty_pmg_name = 'SCT'),
 	sty_active &FLAG_TYPE. default &C_TRUE.,
   constraint pk_sct_apex_action_type primary key(sty_id),
   constraint fk_sty_pti_id foreign key(sty_pti_id, sty_pmg_name)
     references &PIT_OWNER..pit_translatable_item(pti_uid, pti_upmg) on delete cascade,
-  constraint nn_sty_pti_id check(sty_pti_id is not null),
-  constraint chk_sty_pmg_name check(sty_pmg_name = 'SCT'),
-  constraint c_sty_active check (sty_active in (&C_FALSE., &C_TRUE.))
+  constraint chk_sty_active check (sty_active in (&C_FALSE., &C_TRUE.))
 ) organization index;
 
 create unique index idx_sty_pti_pmg_name on sct_apex_action_type(sty_pti_id, sty_pmg_name);
