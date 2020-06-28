@@ -372,6 +372,37 @@ end;~';
   
   
   /* INTERFACE */
+  procedure validate_param_lov(
+    p_spt_id in sct_action_param_type.spt_id%type,
+    p_spt_item_type in sct_action_param_type.spt_item_type%type)
+  as
+    C_SELECT_LIST constant utl_apex.ora_name_type := 'SELECT_LIST';
+    C_VIEW_PATTERN constant utl_apex.ora_name_type := 'SCT_PARAM_LOV_';
+    C_COLUMN_LIST constant char_table := char_table('D', 'R', 'SGR_ID');
+    
+    l_view_exists number;
+    l_column_count number;
+  begin
+    pit.enter_optional(
+      p_params => msg_params(
+                    msg_param('p_spt_id', p_spt_id),
+                    msg_param('p_sp_spt_item_typept_id', p_spt_item_type)));
+                    
+    if p_spt_item_type = C_SELECT_LIST then
+      select count(distinct table_name) view_exists, count(*) column_count
+        into l_view_exists, l_column_count
+        from user_tab_columns
+       where table_name = C_VIEW_PATTERN || p_spt_id
+         and column_name member of C_COLUMN_LIST;
+         
+      pit.assert(l_view_exists = 1, msg.SCT_PARAM_LOV_MISSING);
+      pit.assert(l_column_count = 3, msg.SCT_PARAM_LOV_INCORRECT);
+    end if;
+    
+    pit.leave_optional;
+  end validate_param_lov;
+  
+  
   function get_lov_sql(
     p_spt_id in sct_action_param_type.spt_id%type,
     p_sgr_id in sct_rule_group.sgr_id%type)
@@ -434,154 +465,6 @@ end;~';
       pit.error(msg.SCT_UNKNOWN_SPT, msg_args(p_spt_id));
     end case;
   end validate_parameter;
-  
-    
-  procedure validate_page_item(
-    p_item in varchar2)
-  as
-    l_expression1 utl_apex.max_char;
-    l_expression2 utl_apex.max_char;
-    l_value utl_apex.max_char;
-    l_row apex_application_page_val%rowtype;
-  
-    function get_value(
-      p_name in varchar2)
-      return varchar2
-    is
-    begin
-      return replace(v(p_name), '%null%');
-    end get_value;
-    
-    procedure put_error_on_stack
-    is
-      l_associated_item utl_apex.ora_name_type := p_item;
-    begin
-      if l_row.validation_failure_text is not null then
-        if l_associated_item is null and
-          (l_row.validation_type_code like 'ITEM\_%' escape '\' or 
-           l_row.validation_type_code = 'REGULAR_EXPRESSION')
-        then
-            l_associated_item := l_expression1;
-        end if;
-    
-        /*sct_internal.register_error (
-          p_spi_id => l_associated_item,
-          p_error_msg => l_row.validation_failure_text,
-          p_internal_error => null);*/
-        dbms_output.put_line(l_row.validation_failure_text);
-      end if;
-    end put_error_on_stack;
-    
-    procedure assert(
-      p_test in boolean)
-    as
-    begin
-      if not(p_test) then
-        put_error_on_stack;
-      end if;
-    end assert;
-    
-  begin
-      with params as(
-           select utl_apex.get_application_id application_id,
-                  utl_apex.get_page_id page_id
-              from dual)
-    select /*+ no_merge(p) */ v.*
-      into l_row
-      from apex_application_page_val v
-      join params p
-        on v.application_id = p.application_id
-       and v.page_id = p.page_id
-     where associated_item = p_item;
-       
-    l_expression1 := wwv_flow.do_substitutions(l_row.validation_expression1);
-    l_expression2 := wwv_flow.do_substitutions(l_row.validation_expression2);
-  
-    case l_row.validation_type_code
-    when 'EXISTS' then
-      pit.assert_exists(p_stmt => l_expression1);
-    when 'NOT_EXISTS' then
-      pit.assert_not_exists(p_stmt => l_expression1);
-    when 'ITEM_NOT_ZERO' then
-      assert(utl_apex.get_number(l_expression1) != 0);
-    when 'ITEM_NOT_NULL' then
-      assert(get_value(l_expression1) is not null);
-    when 'ITEM_NOT_NULL_OR_ZERO' then
-      assert(get_value(l_expression1) is not null and utl_apex.get_number(l_expression1) != 0);
-    when 'ITEM_IS_ALPHANUMERIC' then
-      l_value := get_value(l_expression1);
-      for j in 1 .. coalesce(length(l_value),0) loop
-        if instr(C_ALPHANUMERIC_CHARS, substr(l_value, j, 1)) = 0 then
-          put_error_on_stack;
-          exit;
-        end if;
-      end loop;
-    when 'ITEM_IS_NUMERIC' then
-      assert(utl_apex.get_number(l_expression1) is not null);
-    when 'ITEM_CONTAINS_NO_SPACES' then
-      assert(instr(get_value(l_expression1), ' ') = 0);
-    when 'ITEM_IS_DATE' then
-      assert(utl_apex.get_date(l_expression1) is not null);
-    when 'ITEM_IS_TIMESTAMP' then
-      assert(utl_apex.get_timestamp(l_expression1) is not null);
-    when 'SQL_EXPRESSION' then
-      evaluate_sql_expression(p_stmt => l_expression1);
-    when 'PLSQL_EXPRESSION' then
-      assert(evaluate_plsql_expression(p_plsql_code => l_expression1));
-    when 'PLSQL_ERROR' then
-      execute_plsql_code(p_plsql_code => l_expression1); 
- /*   when 'FUNC_BODY_RETURNING_ERR_TEXT' then
-      put_error_on_stack(execute_function_as_varchar2(p_plsql_code => l_expression1));*/
-    when 'FUNC_BODY_RETURNING_BOOLEAN' then
-      assert(execute_function_as_boolean(p_plsql_code => l_expression1));
-    when 'REGULAR_EXPRESSION' then
-      assert(regexp_like(get_value(l_expression1), l_expression2));
-    when 'ITEM_IN_VALIDATION_IN_STRING2' then
-      assert(instr(l_expression2, get_value(l_expression1)) > 0);
-    when 'ITEM_IN_VALIDATION_NOT_IN_STRING2' then
-      assert(instr(l_expression2, get_value(l_expression1)) = 0
-          or get_value(l_expression1) is null);
-    when 'ITEM_IN_VALIDATION_EQ_STRING2' then
-      assert(l_expression2 = get_value(l_expression1));
-    when 'ITEM_IN_VALIDATION_NOT_EQ_STRING2' then
-      assert(l_expression2 != get_value(l_expression1) 
-          or get_value(l_expression1) is null);
-    when 'ITEM_IN_VALIDATION_CONTAINS_ONLY_CHAR_IN_STRING2' then
-      l_value := get_value(l_expression1);
-      if l_value is not null then
-        for i in 1 .. length(l_value) loop
-          if instr(l_expression2, substr(l_value, i, 1)) = 0 then
-            put_error_on_stack;
-            exit;
-          end if;
-        end loop;
-      end if;
-    when 'ITEM_IN_VALIDATION_CONTAINS_AT_LEAST_ONE_CHAR_IN_STRING2' then
-      l_value := get_value(l_expression1);
-      assert(l_value is not null);
-      for i in 1 .. coalesce(length(l_value), 0) loop
-        if instr(l_expression2, substr(l_value, i, 1)) > 0 then
-          put_error_on_stack;
-          exit;
-        end if;
-      end loop;
-    when 'ITEM_IN_VALIDATION_CONTAINS_NO_CHAR_IN_STRING2' then
-      l_value := get_value(l_expression1);
-      for i in 1 .. coalesce(length(l_value), 0) loop
-        if instr(l_expression2, substr(l_value, i, 1)) > 0 then
-          put_error_on_stack;
-          exit;
-        end if;
-      end loop;
-    else
-      raise_application_error(-20000, 'unsupported validation_type ' || l_row.validation_type_code);
-    end case;
-   
-  exception
-    when NO_DATA_FOUND then
-      -- No validation for item found, ignore
-      null;
-  end validate_page_item;
   
 end sct_validation;
 /

@@ -8,15 +8,6 @@ as
    * @usage  This package implements the methods required to maintain SCT rule groups via an APEX application
    */
 
-  /* Getter/Setter */
-
-  /** Method to adjust rule group region headers
-   * @return String that is set as the new region header
-   */
-  function set_rule_overview_heading
-    return varchar2;
-
-
   /** Method to copy a rule group to a different application or application page
    * @usage  Is used after an APEX application has been copiued to a different ID within the same workspace
    *         to copy all rule groups to the newly created application
@@ -57,13 +48,6 @@ as
    *         Required to capture new rule actions without  saving them to the target table directly
    */
   procedure initialize_saa_collection;
-
-
-  /** Method to validate a rule condition
-   * @usage  Is called to validate a rule condition.
-   *         Register any error with the SCT error stack.
-   */
-  procedure validate_rule;
 
 
   /** Method to validate page EDIT_SRU

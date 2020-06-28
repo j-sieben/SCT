@@ -3,6 +3,18 @@ create or replace package sct_validation
   --accessible by (package plugin_sct, package sct_ui, package sct_internal)
 as 
 
+  /* Method checks that a lov view exists for an action parameter type with an item type of SELECT_LIST
+   * %param  p_spt_id         Parameter Type
+   * @param  p_spt_item_type  Item type
+   * %usage  Method is used to assert that a LOV for a parameter type of item type SELECT_LIST exists 
+   *         with the correct column structure that is able to deliver LOV data
+   * @throws msg.SCT_PARAM_LOV_MISSING if LOV view is required but missing
+   *         msg.SCT_PARAM_LOV_INCORRECT if required LOV view exists but with the wrong structure
+   */
+  procedure validate_param_lov(
+    p_spt_id in sct_action_param_type.spt_id%type,
+    p_spt_item_type in sct_action_param_type.spt_item_type%type);
+
   /* Method to calculate the SQL statement for a parameter type
    * %param  p_spt_id       Parameter Type
    * %param  p_environment  Record with environmental data such as SGR_ID
@@ -26,13 +38,6 @@ as
     p_spt_id in sct_action_param_type.spt_id%type,
     p_spi_id in sct_page_item.spi_id%type,
     p_environment in sct_internal.environment_rec);
-       
-  /** Method to dynamically execute a validation for a page item
-   * %param  p_item             Name of the item the validation refers to
-   *                            an error message.
-   */
-  procedure validate_page_item(
-    p_item in varchar2);
     
 end sct_validation;
 /

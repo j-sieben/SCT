@@ -21,31 +21,6 @@ as
   function map_id(
     p_id in number default null)
     return number;
-
-  /** Validation of RULE_GROUPS
-   * @param  p_sgr_app_id          APEX application id
-   * @param  p_sgr_page_id         APEX application page id
-   * @param  p_sgr_id              Technical ID of the rule group. Upon script based import this parameter is used as
-   *                               a foreign key for rules in order to organize the relationship even if new IDs are created
-   * @param  p_sgr_name            Displaytext of the rule group
-   * @param  p_sgr_description     Optional description of the rule group
-   * @param  p_sgr_with_recursion  Flag to indicate whehter this rule allows recursive calls
-   * @param [p_sgr_active]         Flag to indicate, whether this rule group is actually used. Defaults to SCT_UTIL.C_TRUE
-   * @usage  Is used to validate a rule group. Also called internally by MERGE_RULE_GROUP
-   * @throws Error Codes
-   *         - SGR_APP_ID_MISSING, if Parameter SGR_APP_ID IS NULL
-   *         - SGR_PAGE_ID_MISSING, if Parameter SGR_PAGE_ID IS NULL
-   *         - SGR_NAME_MISSING, if Parameter SGR_NAME IS NULL
-   *         - SCT_SGR_MUST_BE_UNIQUE, if provided SGR_NAME already exists within that APEX application
-   */
-  procedure validate_rule_group(
-    p_sgr_app_id in sct_rule_group.sgr_app_id%type,
-    p_sgr_page_id in sct_rule_group.sgr_page_id%type,
-    p_sgr_id in sct_rule_group.sgr_id%type,
-    p_sgr_name in sct_rule_group.sgr_name%type,
-    p_sgr_description in sct_rule_group.sgr_description%type,
-    p_sgr_with_recursion in sct_rule_group.sgr_with_recursion%type,
-    p_sgr_active in sct_rule_group.sgr_active%type default sct_util.C_TRUE);
     
     
   /** Administration of RULE GROUPS
@@ -84,6 +59,26 @@ as
   procedure delete_rule_group(
     p_row in out nocopy sct_rule_group%rowtype);
 
+  /** Method validates a newly created or updated rule group tupel
+   * @throws Error Codes
+   *         - SGR_APP_ID_MISSING, if Parameter SGR_APP_ID IS NULL
+   *         - SGR_PAGE_ID_MISSING, if Parameter SGR_PAGE_ID IS NULL
+   *         - SGR_NAME_MISSING, if Parameter SGR_NAME IS NULL
+   *         - SCT_SGR_MUST_BE_UNIQUE, if provided SGR_NAME already exists within that APEX application
+   */
+  procedure validate_rule_group(
+    p_row in sct_rule_group%rowtype);
+
+
+  /** Method checks all rules of a rule group to find invalid rules
+   * @param  p_sgr_id  Rule group ID to check
+   * %return Returns an error message if any error has occurred
+   * @usage  Is called before a rule group is exported.
+   */
+  function validate_rule_group(
+    p_sgr_id in sct_rule_group.sgr_id%type)
+    return varchar2;
+
 
   /** Method to propagate that a rule has changed.
    * @paramn p_sgr_id  ID of the rule group that has changed
@@ -96,18 +91,8 @@ as
     p_sgr_id in sct_rule_group.sgr_id%type);
 
 
-  /** Method to check a rule group
-   * @param  p_sgr_id  Rule group ID to check
-   * %return Returns an error message if any error has occurred
-   * @usage  Is called before a rule group is exported.
-   */
-  function validate_rule_group(
-    p_sgr_id in sct_rule_group.sgr_id%type)
-    return varchar2;
-
-
   /** Method to copy a rule group between APEX applications
-   * @param  p_sgr_id          Name der Regelgruppe, die kopiert werden soll
+   * @param  p_sgr_id          ID of the rule group to copy
    * @param  p_sgr_app_id_to   APEX application id of the application the rule is to be copied to
    * @param  p_sgr_page_id_to  APEX application page id of the application the rule is to be copied to
    * @usage  Is used to copy an existing rule group between APEX applications of the same workspace.
@@ -180,7 +165,10 @@ as
     p_sty_id in sct_apex_action_type.sty_id%type);
 
   procedure delete_apex_action_type(
-    p_row in out nocopy sct_apex_action_type_v%rowtype);
+    p_row in sct_apex_action_type_v%rowtype);
+
+  procedure validate_apex_action_type(
+    p_row in sct_apex_action_type_v%rowtype);
 
 
   /** Administration of APEX ACTIONS
@@ -246,7 +234,11 @@ as
     p_saa_id sct_apex_action.saa_id%type);
 
   procedure delete_apex_action(
-    p_row in out nocopy sct_apex_action%rowtype);
+    p_row in sct_apex_action%rowtype);
+
+  procedure validate_apex_action(
+    p_row in sct_apex_action%rowtype);
+    
 
   /** Administration of APEX ACTION ITEMS
    * @param  p_sai_saa_id      Reference to a SCT_APEX_ACTION
@@ -255,16 +247,22 @@ as
    * @param [p_sai_active]     Flag to indicate whether this apex action item is actually used. Defaults to SCT_UTIL.C_TRUE
    */
   procedure merge_apex_action_item(
-    p_sai_saa_id     in sct_apex_action_item.sai_saa_id%type,
+    p_sai_saa_id in sct_apex_action_item.sai_saa_id%type,
     p_sai_spi_sgr_id in sct_apex_action_item.sai_spi_sgr_id%type,
-    p_sai_spi_id     in sct_apex_action_item.sai_spi_id%type,
-    p_sai_active     in sct_apex_action_item.sai_active%type default sct_util.C_TRUE);
+    p_sai_spi_id in sct_apex_action_item.sai_spi_id%type,
+    p_sai_active in sct_apex_action_item.sai_active%type default sct_util.C_TRUE);
 
   procedure merge_apex_action_item(
     p_row sct_apex_action_item%rowtype);
 
   procedure delete_apex_action_item(
-    p_row sct_apex_action_item%rowtype);
+    p_sai_saa_id in sct_apex_action_item.sai_saa_id%type);
+
+  procedure delete_apex_action_item(
+    p_row in sct_apex_action_item%rowtype);
+
+  procedure validate_apex_action_item(
+    p_row in sct_apex_action_item%rowtype);
 
 
   /** Administration of RULES *
@@ -292,19 +290,17 @@ as
     p_sru_id in sct_rule.sru_id%type);
 
   procedure delete_rule(
-    p_row in out nocopy sct_rule%rowtype);
-
+    p_row in sct_rule%rowtype);
 
   /** Method to validate a rule
-   * @param  p_sgr_id         ID of the rule group
-   * @param  p_sru_condition  rule condition to check
-   * @param  p_error          Error message that is returned if the check raises an error
-   * @usage  Is used to validate a rule condition
+   * @throws msg.SQL_ERROR_ERR if any invalid conditions are entered
+   *         Error-Codes:
+   *         - SRU_SGR_ID_MISSING, if Parameter SRU_SGR_ID IS NULL
+   *         - SRU_NAME_MISSING, if Parameter SRU_NAME IS NULL
+   *         - SRU_CONDITION_MISSING, if Parameter SRU_CONDITION IS NULL
    */
   procedure validate_rule(
-    p_sgr_id in sct_rule_group.sgr_id%type,
-    p_sru_condition in sct_rule.sru_condition%type,
-    p_error out nocopy varchar2);
+    p_row in sct_rule%rowtype);
 
 
   /** Helper to resequence rules and rule actions
@@ -335,7 +331,10 @@ as
     p_stg_id in sct_action_type_group.stg_id%type);
 
   procedure delete_action_type_group(
-    p_row in out nocopy sct_action_type_group_v%rowtype);
+    p_row in sct_action_type_group_v%rowtype);
+
+  procedure validate_action_type_group(
+    p_row in sct_action_type_group_v%rowtype);
 
 
   /** Administration of ACTION PARAMETER TYPES
@@ -365,7 +364,18 @@ as
 
   procedure delete_action_param_type(
     p_row in sct_action_param_type_v%rowtype);
-
+    
+  /**
+   * @throws msg.SCT_PARAM_LOV_MISSING if LOV view is required but missing
+   *         msg.SCT_PARAM_LOV_INCORRECT if required LOV view exists but with the wrong structure
+   *         Error-Codes:
+   *         SPT_ID_MISSING if parameter P_SPT_ID is NULL
+   *         SPT_NAME_MISSING if parameter P_SPT_NAME is NULL
+   *         SPT_ITEM_TYPE_MISSING if parameter P_SPT_ITEM_TYPE is NULL
+   */
+  procedure validate_action_param_type(
+    p_row in sct_action_param_type_v%rowtype);
+    
 
   /** Administration of ACTION ITEM FOCUS */
   /** Methode zur Erzeugung eines ITEM-Fokus
@@ -391,7 +401,10 @@ as
     p_sif_id in sct_action_item_focus.sif_id%type);
 
   procedure delete_action_item_focus(
-    p_row in out nocopy sct_action_item_focus_v%rowtype);
+    p_row in sct_action_item_focus_v%rowtype);
+
+  procedure validate_action_item_focus(
+    p_row in sct_action_item_focus_v%rowtype);
 
 
   /** Administration of ACTION TYPES
@@ -404,7 +417,7 @@ as
    * @param  p_sat_js               JavaScript code that is to be executed
    * @param [p_sat_is_editable]     Flag to indicate whether this action type is editable by the end user
    * @param [p_sat_raise_recursive] Flag to indicate whether this action type allow recursive calls of rules
-   */
+   */    
   procedure merge_action_type(
     p_sat_id in sct_action_type.sat_id%type,
     p_sat_stg_id in sct_action_type_group.stg_id%type,
@@ -424,19 +437,16 @@ as
 
   procedure delete_action_type(
     p_row in sct_action_type_v%rowtype);
-
-  /** Method to validate a new or changed ACTION_TYPE and its parameters.
-   * @param  p_pl_sql   PL/SQL code to check
-   * @param  p_param_1  First parameter default value
-   * @param  p_param_2  Second parameter default value
-   * @param  p_param_3  Third parameter default value
-   * @usage  Is used to check the PL/SQL portion of an ACTION_TYPE. Parses the statement and throws an error, should parsing fail.
+    
+  /**
+   * @throws Error-Codes:
+   *         SAT_ID_MISSING if parameter P_SAT_ID is NULL
+   *         SAT_STG_ID_MISSING if parameter P_SAT_STG_ID is NULL
+   *         SAT_SIF_ID_MISSING if parameter P_SAT_SIF_ID is NULL
+   *         SAT_NAME_MISSING if parameter P_SAT_NAME is NULL
    */
   procedure validate_action_type(
-    p_pl_sql in sct_action_type.sat_pl_sql%type,
-    p_param_1 in varchar2,
-    p_param_2 in varchar2,
-    p_param_3 in varchar2);
+    p_row in sct_action_type_v%rowtype);
 
 
   /** Method to export an action type
@@ -473,8 +483,15 @@ as
   procedure merge_action_parameter(
     p_row in out nocopy sct_action_parameter_v%rowtype);
 
+  procedure delete_action_parameter(
+    p_sap_sat_id in sct_action_parameter.sap_sat_id%type,
+    p_sap_spt_id in sct_action_parameter.sap_spt_id%type,
+    p_sap_sort_seq in sct_action_parameter.sap_sort_seq%type);
 
   procedure delete_action_parameter(
+    p_row in sct_action_parameter_v%rowtype);
+
+  procedure validate_action_parameter(
     p_row in sct_action_parameter_v%rowtype);
 
 
@@ -513,12 +530,21 @@ as
   procedure merge_rule_action(
     p_row in out nocopy sct_rule_action%rowtype);
 
-
   procedure delete_rule_action(
     p_sra_id in sct_rule_action.sra_id%type);
 
   procedure delete_rule_action(
-    p_row in out nocopy sct_rule_action%rowtype);
+    p_row in sct_rule_action%rowtype);
+
+  /** Method to validate a rule action
+   * @throws Error Codes
+   *         - SRA_SRU_ID_MISSING if Parameter SRA_SRU_ID IS NULL
+   *         - SRA_SGR_ID_MISSING if Parameter SRA_SGR_ID IS NULL
+   *         - SRA_SPI_ID_MISSING if Parameter SRA_SPI_ID IS NULL
+   *         - SRA_SAT_ID_MISSING if Parameter SRA_SAT_ID IS NULL
+   */
+  procedure validate_rule_action(
+    p_row in sct_rule_action%rowtype);
 
 
   /** Method to add translated data

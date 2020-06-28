@@ -1,4 +1,4 @@
-create or replace editionable view sct_ui_admin_sgr_main
+create or replace view sct_ui_admin_sgr_main
 as 
 with params as (
        select v('APP_ID') app_id,
@@ -35,7 +35,7 @@ select /*+ NO_MERGE (p) */
     on sgr.sgr_app_id = pag.application_id
    and sgr.sgr_page_id = pag.page_id
   join params p
-    on (sgr.sgr_app_id = p.sgr_app_id or p.sgr_app_id is null)
+    on sgr.sgr_app_id = p.sgr_app_id
    and (sgr.sgr_page_id = p.sgr_page_id or p.sgr_page_id is null)
  where sgr.sgr_app_id != app_id
     or p.is_sct_admin = is_true;

@@ -99,6 +99,19 @@ prompt &s1.Create view SCT_BL_PAGE_TARGETS
 @&view_dir.sct_bl_page_targets.vw
 
 
+prompt &s1.Create view SCT_PARAM_LOV_APEX_ACTION
+@&view_dir.sct_param_lov_apex_action.vw
+
+prompt &s1.Create view SCT_PARAM_LOV_PAGE_ITEM
+@&view_dir.sct_param_lov_page_item.vw
+
+prompt &s1.Create view SCT_PARAM_LOV_PIT_MESSAGE
+@&view_dir.sct_param_lov_pit_message.vw
+
+prompt &s1.Create view SCT_PARAM_LOV_SEQUENCE
+@&view_dir.sct_param_lov_sequence.vw
+
+
 prompt &h2.Merge default data
 prompt &h3.Create SCT parameters
 @&plugin_dir.scripts/ParameterGroup_SCT.sql

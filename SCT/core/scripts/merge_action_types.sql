@@ -2,127 +2,6 @@ set define off
 set sqlblanklines on
 
 begin
-  
-  sct_admin.merge_action_param_type(
-    p_spt_id => 'APEX_ACTION',
-    p_spt_name => 'APEX-Aktion',
-    p_spt_description => q'{Existierende APEX-Aktion der Regelgruppe}',
-    p_spt_active => sct_util.C_TRUE);
-
-  sct_admin.merge_action_param_type(
-    p_spt_id => 'FUNCTION',
-    p_spt_name => 'PL/SQL-Funktion',
-    p_spt_description => q'{Eine bestehende PL/SQL-Funktion}',
-    p_spt_active => sct_util.C_TRUE);
-
-  sct_admin.merge_action_param_type(
-    p_spt_id => 'JAVA_SCRIPT',
-    p_spt_name => 'JavaScript-Ausdruck',
-    p_spt_description => q'{Ausführbarer JavaScript-Ausdruck}',
-    p_spt_active => sct_util.C_TRUE);
-
-  sct_admin.merge_action_param_type(
-    p_spt_id => 'JAVA_SCRIPT_FUNCTION',
-    p_spt_name => 'JavaScript-Funktion',
-    p_spt_description => q'{Name einer JavaScript-Funktion oder anonyme Funktionsdefinition}',
-    p_spt_active => sct_util.C_TRUE);
-
-  sct_admin.merge_action_param_type(
-    p_spt_id => 'JQUERY_SELECTOR',
-    p_spt_name => 'jQuery-Selektor',
-    p_spt_description => q'{jQuery-Selektor, Setzt voraus, dass als Anwendungselement DOCUMENTgewählt wurde.}',
-    p_spt_active => sct_util.C_TRUE);
-
-  sct_admin.merge_action_param_type(
-    p_spt_id => 'PAGE_ITEM',
-    p_spt_name => 'Seitenelement',
-    p_spt_description => q'{Seitenelement oder Region der aktuellen Seite}',
-    p_spt_active => sct_util.C_TRUE);
-
-  sct_admin.merge_action_param_type(
-    p_spt_id => 'PIT_MESSAGE',
-    p_spt_name => 'Name der Meldung',
-    p_spt_description => q'{Bezeichner einer PIT-Meldung in der Form msg.NAMEoder 'NAME', muss eine existierende Meldung sein.}',
-    p_spt_active => sct_util.C_TRUE);
-
-  sct_admin.merge_action_param_type(
-    p_spt_id => 'PROCEDURE',
-    p_spt_name => 'PL/SQL-Prozedur',
-    p_spt_description => q'{Eine bestehende PL/SQL-Prozedur}',
-    p_spt_active => sct_util.C_TRUE);
-
-  sct_admin.merge_action_param_type(
-    p_spt_id => 'SEQUENCE',
-    p_spt_name => 'Sequenz',
-    p_spt_description => q'{Name einer existierenden Sequenz}',
-    p_spt_active => sct_util.C_TRUE);
-
-  sct_admin.merge_action_param_type(
-    p_spt_id => 'SQL_STATEMENT',
-    p_spt_name => 'SQL-Anweisung',
-    p_spt_description => q'{Ausführbare SQL-Anweisung}',
-    p_spt_active => sct_util.C_TRUE);
-
-  sct_admin.merge_action_param_type(
-    p_spt_id => 'STRING',
-    p_spt_name => 'Zeichenkette',
-    p_spt_description => q'{Einfache Zeichenkette, wird mit Hochkommata umgeben, daher ist die Eingabe dieser Zeichen nicht erforderlich}',
-    p_spt_active => sct_util.C_TRUE);
-
-  sct_admin.merge_action_param_type(
-    p_spt_id => 'STRING_OR_FUNCTION',
-    p_spt_name => 'Zeichenkette oder PL/SQL-Funktion',
-    p_spt_description => q'{Falls nicht mit Hochkommata eingeschlossen, eine bestehende PL/SQL-Funktion}',
-    p_spt_active => sct_util.C_TRUE);
-
-  sct_admin.merge_action_param_type(
-    p_spt_id => 'STRING_OR_JAVASCRIPT',
-    p_spt_name => 'Zeichenkette oder JS-Ausdruck',
-    p_spt_description => q'{Falls nicht mit Hochkommata eingeschlossen, ein JavaScript-Ausdruck}',
-    p_spt_active => sct_util.C_TRUE);
-
-  sct_admin.merge_action_param_type(
-    p_spt_id => 'STRING_OR_PIT_MESSAGE',
-    p_spt_name => 'Zeichenkette oder Meldungsname',
-    p_spt_description => q'{Falls nicht mit Hochkommata eingeschlossen, wird der Name als PIT-Meldungsname interpretiert}',
-    p_spt_active => sct_util.C_TRUE);
-
-    sct_admin.merge_action_type_group(
-    p_stg_id => 'BUTTON',
-    p_stg_name => 'Schaltlfäche',
-    p_stg_description => q'{Aktionen für Schaltflächen}',
-    p_stg_active => sct_util.C_TRUE);
-
-  sct_admin.merge_action_type_group(
-    p_stg_id => 'ITEM',
-    p_stg_name => 'Seitenelemente',
-    p_stg_description => q'{Aktionen für Eingabefelder}',
-    p_stg_active => sct_util.C_TRUE);
-
-  sct_admin.merge_action_type_group(
-    p_stg_id => 'JAVA_SCRIPT',
-    p_stg_name => 'JavaScript',
-    p_stg_description => q'{JavaScript-Funkionen und Events}',
-    p_stg_active => sct_util.C_TRUE);
-
-  sct_admin.merge_action_type_group(
-    p_stg_id => 'PAGE_ITEM',
-    p_stg_name => 'Seitenelement',
-    p_stg_description => q'{Aktionen für allgemeine Seitenelemente}',
-    p_stg_active => sct_util.C_TRUE);
-
-  sct_admin.merge_action_type_group(
-    p_stg_id => 'PL_SQL',
-    p_stg_name => 'PL/SQL',
-    p_stg_description => q'{PL/SQ-Funktionen}',
-    p_stg_active => sct_util.C_TRUE);
-
-  sct_admin.merge_action_type_group(
-    p_stg_id => 'SCT',
-    p_stg_name => 'Framework',
-    p_stg_description => q'{Allgemeine Aktionen}',
-    p_stg_active => sct_util.C_TRUE);
-  
   sct_admin.merge_action_type(
     p_sat_id => 'AFTER_REFRESH',
     p_sat_stg_id => 'JAVA_SCRIPT',
@@ -134,7 +13,7 @@ begin
     p_sat_is_editable => sct_util.C_FALSE,
     p_sat_raise_recursive => sct_util.C_TRUE);
 
-    sct_admin.merge_action_parameter(
+  sct_admin.merge_action_parameter(
     p_sap_sat_id => 'AFTER_REFRESH',
     p_sap_spt_id => 'JAVA_SCRIPT_FUNCTION',
     p_sap_sort_seq => 1,
@@ -143,7 +22,8 @@ begin
     p_sap_display_name => '',
     p_sap_mandatory => sct_util.C_TRUE,
     p_sap_active => sct_util.C_TRUE);
-
+    
+    
   sct_admin.merge_action_type(
     p_sat_id => 'CHECK_MANDATORY',
     p_sat_stg_id => 'SCT',
@@ -164,7 +44,7 @@ begin
     p_sap_display_name => 'Dialogtitel',
     p_sap_mandatory => sct_util.C_TRUE,
     p_sap_active => sct_util.C_TRUE);
-
+    
   sct_admin.merge_action_parameter(
     p_sap_sat_id => 'CHECK_MANDATORY',
     p_sap_spt_id => 'STRING_OR_PIT_MESSAGE',
@@ -174,19 +54,20 @@ begin
     p_sap_display_name => 'Meldung',
     p_sap_mandatory => sct_util.C_TRUE,
     p_sap_active => sct_util.C_TRUE);
-
+    
+    
   sct_admin.merge_action_type(
     p_sat_id => 'CONFIRM_CLICK',
     p_sat_stg_id => 'JAVA_SCRIPT',
-    p_sat_sif_id => 'BUTTON',
+    p_sat_sif_id => 'PAGE_BUTTON',
     p_sat_name => 'Schaltfläche an Bestätigungsfrage binden',
     p_sat_description => q'{<p>Sorgt dafür, dass bei einem Klick auf eine Schaltfläche eine Bestätigungsmeldung gezeigt wird.<br>Nur, wenn diese Nachfrage best&auml;tigt wird, wird das Ereignis an SCT gemeldet.</p>}',
     p_sat_pl_sql => q'{}',
     p_sat_js => q'{de.condes.plugin.sct.bindConfirmation('#ITEM#','#PARAM_1#', '#PARAM_2#');}',
     p_sat_is_editable => sct_util.C_TRUE,
     p_sat_raise_recursive => sct_util.C_TRUE);
+    
 
-  
   sct_admin.merge_action_type(
     p_sat_id => 'DIALOG_CLOSED',
     p_sat_stg_id => 'JAVA_SCRIPT',
@@ -198,7 +79,7 @@ begin
     p_sat_is_editable => sct_util.C_FALSE,
     p_sat_raise_recursive => sct_util.C_TRUE);
 
-    sct_admin.merge_action_parameter(
+  sct_admin.merge_action_parameter(
     p_sap_sat_id => 'DIALOG_CLOSED',
     p_sap_spt_id => 'JAVA_SCRIPT_FUNCTION',
     p_sap_sort_seq => 1,
@@ -207,11 +88,10 @@ begin
     p_sap_display_name => '',
     p_sap_mandatory => sct_util.C_FALSE,
     p_sap_active => sct_util.C_TRUE);
-
   sct_admin.merge_action_type(
     p_sat_id => 'DISABLE_BUTTON',
     p_sat_stg_id => 'BUTTON',
-    p_sat_sif_id => 'BUTTON',
+    p_sat_sif_id => 'PAGE_BUTTON',
     p_sat_name => 'Schaltfläche deaktivieren',
     p_sat_description => q'{<p>Deaktiviert eine Schaltfl&auml;che. <br>Zum Deaktivieren eines Seitenelements verwenden Sie bitte <span style="font-family:courier new,courier,monospace">Feld deaktivieren</span>.</p>}',
     p_sat_pl_sql => q'{}',
@@ -219,7 +99,6 @@ begin
     p_sat_is_editable => sct_util.C_FALSE,
     p_sat_raise_recursive => sct_util.C_TRUE);
 
-  
   sct_admin.merge_action_type(
     p_sat_id => 'DISABLE_ITEM',
     p_sat_stg_id => 'ITEM',
@@ -231,7 +110,7 @@ begin
     p_sat_is_editable => sct_util.C_FALSE,
     p_sat_raise_recursive => sct_util.C_TRUE);
 
-    sct_admin.merge_action_parameter(
+  sct_admin.merge_action_parameter(
     p_sap_sat_id => 'DISABLE_ITEM',
     p_sap_spt_id => 'JQUERY_SELECTOR',
     p_sap_sort_seq => 2,
@@ -240,7 +119,8 @@ begin
     p_sap_display_name => '',
     p_sap_mandatory => sct_util.C_FALSE,
     p_sap_active => sct_util.C_TRUE);
-
+    
+    
   sct_admin.merge_action_type(
     p_sat_id => 'DOUBLE_CLICK',
     p_sat_stg_id => 'JAVA_SCRIPT',
@@ -252,7 +132,7 @@ begin
     p_sat_is_editable => sct_util.C_FALSE,
     p_sat_raise_recursive => sct_util.C_TRUE);
 
-    sct_admin.merge_action_parameter(
+  sct_admin.merge_action_parameter(
     p_sap_sat_id => 'DOUBLE_CLICK',
     p_sap_spt_id => 'JAVA_SCRIPT_FUNCTION',
     p_sap_sort_seq => 1,
@@ -261,7 +141,6 @@ begin
     p_sap_display_name => '',
     p_sap_mandatory => sct_util.C_FALSE,
     p_sap_active => sct_util.C_TRUE);
-
   sct_admin.merge_action_type(
     p_sat_id => 'DYNAMIC_JAVASCRIPT',
     p_sat_stg_id => 'JAVA_SCRIPT',
@@ -273,7 +152,7 @@ begin
     p_sat_is_editable => sct_util.C_FALSE,
     p_sat_raise_recursive => sct_util.C_TRUE);
 
-    sct_admin.merge_action_parameter(
+  sct_admin.merge_action_parameter(
     p_sap_sat_id => 'DYNAMIC_JAVASCRIPT',
     p_sap_spt_id => 'FUNCTION',
     p_sap_sort_seq => 1,
@@ -282,7 +161,6 @@ begin
     p_sap_display_name => '',
     p_sap_mandatory => sct_util.C_TRUE,
     p_sap_active => sct_util.C_TRUE);
-
   sct_admin.merge_action_type(
     p_sat_id => 'EMPTY_FIELD',
     p_sat_stg_id => 'PAGE_ITEM',
@@ -294,7 +172,7 @@ begin
     p_sat_is_editable => sct_util.C_FALSE,
     p_sat_raise_recursive => sct_util.C_TRUE);
 
-    sct_admin.merge_action_parameter(
+  sct_admin.merge_action_parameter(
     p_sap_sat_id => 'EMPTY_FIELD',
     p_sap_spt_id => 'JQUERY_SELECTOR',
     p_sap_sort_seq => 2,
@@ -303,11 +181,10 @@ begin
     p_sap_display_name => '',
     p_sap_mandatory => sct_util.C_FALSE,
     p_sap_active => sct_util.C_TRUE);
-
   sct_admin.merge_action_type(
     p_sat_id => 'ENABLE_BUTTON',
     p_sat_stg_id => 'BUTTON',
-    p_sat_sif_id => 'BUTTON',
+    p_sat_sif_id => 'PAGE_BUTTON',
     p_sat_name => 'Schaltfläche aktivieren',
     p_sat_description => q'{<p>Aktiviert eine Schaltfl&auml;che. Zum Aktivieren eines Seitenelements verwenden Sie bitte <span style="font-family:courier new,courier,monospace">Feld anzeigen</span>.</p>}',
     p_sat_pl_sql => q'{}',
@@ -315,7 +192,7 @@ begin
     p_sat_is_editable => sct_util.C_FALSE,
     p_sat_raise_recursive => sct_util.C_TRUE);
 
-  
+
   sct_admin.merge_action_type(
     p_sat_id => 'ENABLE_ITEM',
     p_sat_stg_id => 'ITEM',
@@ -327,7 +204,7 @@ begin
     p_sat_is_editable => sct_util.C_FALSE,
     p_sat_raise_recursive => sct_util.C_TRUE);
 
-    sct_admin.merge_action_parameter(
+  sct_admin.merge_action_parameter(
     p_sap_sat_id => 'ENABLE_ITEM',
     p_sap_spt_id => 'JQUERY_SELECTOR',
     p_sap_sort_seq => 2,
@@ -336,7 +213,8 @@ begin
     p_sap_display_name => '',
     p_sap_mandatory => sct_util.C_FALSE,
     p_sap_active => sct_util.C_TRUE);
-
+    
+    
   sct_admin.merge_action_type(
     p_sat_id => 'ENTER_KEY',
     p_sat_stg_id => 'JAVA_SCRIPT',
@@ -348,7 +226,7 @@ begin
     p_sat_is_editable => sct_util.C_FALSE,
     p_sat_raise_recursive => sct_util.C_TRUE);
 
-    sct_admin.merge_action_parameter(
+  sct_admin.merge_action_parameter(
     p_sap_sat_id => 'ENTER_KEY',
     p_sap_spt_id => 'JAVA_SCRIPT_FUNCTION',
     p_sap_sort_seq => 1,
@@ -357,7 +235,8 @@ begin
     p_sap_display_name => '',
     p_sap_mandatory => sct_util.C_FALSE,
     p_sap_active => sct_util.C_TRUE);
-
+    
+    
   sct_admin.merge_action_type(
     p_sat_id => 'EXECUTE_APEX_ACTION',
     p_sat_stg_id => 'JAVA_SCRIPT',
@@ -369,7 +248,7 @@ begin
     p_sat_is_editable => sct_util.C_FALSE,
     p_sat_raise_recursive => sct_util.C_TRUE);
 
-    sct_admin.merge_action_parameter(
+  sct_admin.merge_action_parameter(
     p_sap_sat_id => 'EXECUTE_APEX_ACTION',
     p_sap_spt_id => 'APEX_ACTION',
     p_sap_sort_seq => 1,
@@ -378,7 +257,8 @@ begin
     p_sap_display_name => '',
     p_sap_mandatory => sct_util.C_TRUE,
     p_sap_active => sct_util.C_TRUE);
-
+    
+    
   sct_admin.merge_action_type(
     p_sat_id => 'GET_SEQ_VAL',
     p_sat_stg_id => 'PL_SQL',
@@ -390,7 +270,7 @@ begin
     p_sat_is_editable => sct_util.C_FALSE,
     p_sat_raise_recursive => sct_util.C_TRUE);
 
-    sct_admin.merge_action_parameter(
+  sct_admin.merge_action_parameter(
     p_sap_sat_id => 'GET_SEQ_VAL',
     p_sap_spt_id => 'SEQUENCE',
     p_sap_sort_seq => 1,
@@ -399,7 +279,8 @@ begin
     p_sap_display_name => '',
     p_sap_mandatory => sct_util.C_TRUE,
     p_sap_active => sct_util.C_TRUE);
-
+    
+    
   sct_admin.merge_action_type(
     p_sat_id => 'HIDE_ITEM',
     p_sat_stg_id => 'ITEM',
@@ -411,7 +292,7 @@ begin
     p_sat_is_editable => sct_util.C_FALSE,
     p_sat_raise_recursive => sct_util.C_TRUE);
 
-    sct_admin.merge_action_parameter(
+  sct_admin.merge_action_parameter(
     p_sap_sat_id => 'HIDE_ITEM',
     p_sap_spt_id => 'JQUERY_SELECTOR',
     p_sap_sort_seq => 2,
@@ -420,7 +301,6 @@ begin
     p_sap_display_name => '',
     p_sap_mandatory => sct_util.C_FALSE,
     p_sap_active => sct_util.C_TRUE);
-
   sct_admin.merge_action_type(
     p_sat_id => 'IS_DATE',
     p_sat_stg_id => 'PAGE_ITEM',
@@ -432,7 +312,6 @@ begin
     p_sat_is_editable => sct_util.C_FALSE,
     p_sat_raise_recursive => sct_util.C_TRUE);
 
-  
   sct_admin.merge_action_type(
     p_sat_id => 'IS_MANDATORY',
     p_sat_stg_id => 'PAGE_ITEM',
@@ -445,7 +324,7 @@ q'{  de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sat_is_editable => sct_util.C_FALSE,
     p_sat_raise_recursive => sct_util.C_TRUE);
 
-    sct_admin.merge_action_parameter(
+  sct_admin.merge_action_parameter(
     p_sap_sat_id => 'IS_MANDATORY',
     p_sap_spt_id => 'JQUERY_SELECTOR',
     p_sap_sort_seq => 2,
@@ -454,7 +333,8 @@ q'{  de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sap_display_name => '',
     p_sap_mandatory => sct_util.C_FALSE,
     p_sap_active => sct_util.C_TRUE);
-
+    
+    
   sct_admin.merge_action_parameter(
     p_sap_sat_id => 'IS_MANDATORY',
     p_sap_spt_id => 'STRING_OR_PIT_MESSAGE',
@@ -464,7 +344,8 @@ q'{  de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sap_display_name => '',
     p_sap_mandatory => sct_util.C_FALSE,
     p_sap_active => sct_util.C_TRUE);
-
+    
+    
   sct_admin.merge_action_type(
     p_sat_id => 'IS_NUMERIC',
     p_sat_stg_id => 'PAGE_ITEM',
@@ -475,8 +356,8 @@ q'{  de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sat_js => q'{}',
     p_sat_is_editable => sct_util.C_FALSE,
     p_sat_raise_recursive => sct_util.C_TRUE);
+    
 
-  
   sct_admin.merge_action_type(
     p_sat_id => 'IS_OPTIONAL',
     p_sat_stg_id => 'PAGE_ITEM',
@@ -488,7 +369,7 @@ q'{  de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sat_is_editable => sct_util.C_FALSE,
     p_sat_raise_recursive => sct_util.C_TRUE);
 
-    sct_admin.merge_action_parameter(
+  sct_admin.merge_action_parameter(
     p_sap_sat_id => 'IS_OPTIONAL',
     p_sap_spt_id => 'JQUERY_SELECTOR',
     p_sap_sort_seq => 2,
@@ -497,7 +378,8 @@ q'{  de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sap_display_name => '',
     p_sap_mandatory => sct_util.C_FALSE,
     p_sap_active => sct_util.C_TRUE);
-
+    
+    
   sct_admin.merge_action_type(
     p_sat_id => 'ITEM_NULL_SHOW',
     p_sat_stg_id => 'PAGE_ITEM',
@@ -509,7 +391,7 @@ q'{  de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sat_is_editable => sct_util.C_FALSE,
     p_sat_raise_recursive => sct_util.C_TRUE);
 
-    sct_admin.merge_action_parameter(
+  sct_admin.merge_action_parameter(
     p_sap_sat_id => 'ITEM_NULL_SHOW',
     p_sap_spt_id => 'JQUERY_SELECTOR',
     p_sap_sort_seq => 2,
@@ -518,7 +400,6 @@ q'{  de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sap_display_name => '',
     p_sap_mandatory => sct_util.C_FALSE,
     p_sap_active => sct_util.C_TRUE);
-
   sct_admin.merge_action_type(
     p_sat_id => 'JAVA_SCRIPT_CODE',
     p_sat_stg_id => 'JAVA_SCRIPT',
@@ -530,7 +411,7 @@ q'{  de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sat_is_editable => sct_util.C_FALSE,
     p_sat_raise_recursive => sct_util.C_TRUE);
 
-    sct_admin.merge_action_parameter(
+  sct_admin.merge_action_parameter(
     p_sap_sat_id => 'JAVA_SCRIPT_CODE',
     p_sap_spt_id => 'JAVA_SCRIPT',
     p_sap_sort_seq => 1,
@@ -539,7 +420,8 @@ q'{  de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sap_display_name => '',
     p_sap_mandatory => sct_util.C_TRUE,
     p_sap_active => sct_util.C_TRUE);
-
+    
+    
   sct_admin.merge_action_type(
     p_sat_id => 'NOTIFY',
     p_sat_stg_id => 'JAVA_SCRIPT',
@@ -551,7 +433,7 @@ q'{  de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sat_is_editable => sct_util.C_FALSE,
     p_sat_raise_recursive => sct_util.C_TRUE);
 
-    sct_admin.merge_action_parameter(
+  sct_admin.merge_action_parameter(
     p_sap_sat_id => 'NOTIFY',
     p_sap_spt_id => 'STRING_OR_FUNCTION',
     p_sap_sort_seq => 1,
@@ -560,7 +442,8 @@ q'{  de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sap_display_name => 'Meldung',
     p_sap_mandatory => sct_util.C_TRUE,
     p_sap_active => sct_util.C_TRUE);
-
+    
+    
   sct_admin.merge_action_type(
     p_sat_id => 'NOT_NULL',
     p_sat_stg_id => 'SCT',
@@ -572,7 +455,7 @@ q'{  de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sat_is_editable => sct_util.C_FALSE,
     p_sat_raise_recursive => sct_util.C_TRUE);
 
-    sct_admin.merge_action_parameter(
+  sct_admin.merge_action_parameter(
     p_sap_sat_id => 'NOT_NULL',
     p_sap_spt_id => 'JQUERY_SELECTOR',
     p_sap_sort_seq => 1,
@@ -581,7 +464,7 @@ q'{  de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sap_display_name => '',
     p_sap_mandatory => sct_util.C_TRUE,
     p_sap_active => sct_util.C_TRUE);
-
+    
   sct_admin.merge_action_parameter(
     p_sap_sat_id => 'NOT_NULL',
     p_sap_spt_id => 'PIT_MESSAGE',
@@ -591,7 +474,8 @@ q'{  de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sap_display_name => '',
     p_sap_mandatory => sct_util.C_TRUE,
     p_sap_active => sct_util.C_TRUE);
-
+    
+    
   sct_admin.merge_action_type(
     p_sat_id => 'PLSQL_CODE',
     p_sat_stg_id => 'PL_SQL',
@@ -603,7 +487,7 @@ q'{  de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sat_is_editable => sct_util.C_FALSE,
     p_sat_raise_recursive => sct_util.C_TRUE);
 
-    sct_admin.merge_action_parameter(
+  sct_admin.merge_action_parameter(
     p_sap_sat_id => 'PLSQL_CODE',
     p_sap_spt_id => 'PROCEDURE',
     p_sap_sort_seq => 1,
@@ -612,7 +496,8 @@ q'{  de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sap_display_name => '',
     p_sap_mandatory => sct_util.C_TRUE,
     p_sap_active => sct_util.C_TRUE);
-
+    
+    
   sct_admin.merge_action_type(
     p_sat_id => 'REFRESH_AND_SET_VALUE',
     p_sat_stg_id => 'PAGE_ITEM',
@@ -624,7 +509,7 @@ q'{  de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sat_is_editable => sct_util.C_FALSE,
     p_sat_raise_recursive => sct_util.C_TRUE);
 
-    sct_admin.merge_action_parameter(
+  sct_admin.merge_action_parameter(
     p_sap_sat_id => 'REFRESH_AND_SET_VALUE',
     p_sap_spt_id => 'STRING_OR_JAVASCRIPT',
     p_sap_sort_seq => 1,
@@ -633,7 +518,8 @@ q'{  de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sap_display_name => '',
     p_sap_mandatory => sct_util.C_TRUE,
     p_sap_active => sct_util.C_TRUE);
-
+    
+    
   sct_admin.merge_action_type(
     p_sat_id => 'REFRESH_ITEM',
     p_sat_stg_id => 'ITEM',
@@ -645,7 +531,6 @@ q'{  de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sat_is_editable => sct_util.C_FALSE,
     p_sat_raise_recursive => sct_util.C_TRUE);
 
-  
   sct_admin.merge_action_type(
     p_sat_id => 'REGISTER_ITEM',
     p_sat_stg_id => 'PAGE_ITEM',
@@ -657,7 +542,6 @@ q'{  de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sat_is_editable => sct_util.C_FALSE,
     p_sat_raise_recursive => sct_util.C_TRUE);
 
-  
   sct_admin.merge_action_type(
     p_sat_id => 'REGISTER_OBSERVER',
     p_sat_stg_id => 'PAGE_ITEM',
@@ -669,7 +553,7 @@ q'{  de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sat_is_editable => sct_util.C_FALSE,
     p_sat_raise_recursive => sct_util.C_TRUE);
 
-    sct_admin.merge_action_parameter(
+  sct_admin.merge_action_parameter(
     p_sap_sat_id => 'REGISTER_OBSERVER',
     p_sap_spt_id => 'JQUERY_SELECTOR',
     p_sap_sort_seq => 2,
@@ -678,7 +562,8 @@ q'{  de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sap_display_name => '',
     p_sap_mandatory => sct_util.C_FALSE,
     p_sap_active => sct_util.C_TRUE);
-
+    
+    
   sct_admin.merge_action_type(
     p_sat_id => 'SET_CONSOLE',
     p_sat_stg_id => 'JAVA_SCRIPT',
@@ -690,7 +575,7 @@ q'{  de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sat_is_editable => sct_util.C_FALSE,
     p_sat_raise_recursive => sct_util.C_TRUE);
 
-    sct_admin.merge_action_parameter(
+  sct_admin.merge_action_parameter(
     p_sap_sat_id => 'SET_CONSOLE',
     p_sap_spt_id => 'STRING_OR_FUNCTION',
     p_sap_sort_seq => 1,
@@ -699,7 +584,8 @@ q'{  de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sap_display_name => 'Nachricht',
     p_sap_mandatory => sct_util.C_TRUE,
     p_sap_active => sct_util.C_TRUE);
-
+    
+    
   sct_admin.merge_action_type(
     p_sat_id => 'SET_ELEMENT_FROM_STMT',
     p_sat_stg_id => 'PL_SQL',
@@ -711,7 +597,7 @@ q'{  de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sat_is_editable => sct_util.C_FALSE,
     p_sat_raise_recursive => sct_util.C_TRUE);
 
-    sct_admin.merge_action_parameter(
+  sct_admin.merge_action_parameter(
     p_sap_sat_id => 'SET_ELEMENT_FROM_STMT',
     p_sap_spt_id => 'SQL_STATEMENT',
     p_sap_sort_seq => 1,
@@ -720,50 +606,8 @@ q'{  de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sap_display_name => '',
     p_sap_mandatory => sct_util.C_TRUE,
     p_sap_active => sct_util.C_TRUE);
-
-  sct_admin.merge_action_type(
-    p_sat_id => 'SET_FOCUS',
-    p_sat_stg_id => 'PAGE_ITEM',
-    p_sat_sif_id => 'PAGE_ITEM',
-    p_sat_name => 'Focus in Feld setzen',
-    p_sat_description => q'{<p>Fokus in Eingabefeld der Seite setzen</p>}',
-    p_sat_pl_sql => q'{}',
-    p_sat_js => q'{$('##SELECTOR#').focus();}',
-    p_sat_is_editable => sct_util.C_FALSE,
-    p_sat_raise_recursive => sct_util.C_TRUE);
-
-  
-  sct_admin.merge_action_type(
-    p_sat_id => 'SET_ITEM',
-    p_sat_stg_id => 'PAGE_ITEM',
-    p_sat_sif_id => 'PAGE_ITEM',
-    p_sat_name => 'Feld auf Wert setzen',
-    p_sat_description => q'{<p>Setzt das referenzierte Seitenelement auf den als Parameter übergebenen Wert.</p>}',
-    p_sat_pl_sql => q'{sct.set_session_state('#ITEM#', #PARAM_1#, '#ALLOW_RECURSION#', '#PARAM_2#');}',
-    p_sat_js => q'{}',
-    p_sat_is_editable => sct_util.C_FALSE,
-    p_sat_raise_recursive => sct_util.C_TRUE);
-
-    sct_admin.merge_action_parameter(
-    p_sap_sat_id => 'SET_ITEM',
-    p_sap_spt_id => 'JQUERY_SELECTOR',
-    p_sap_sort_seq => 2,
-    p_sap_default => q'{}',
-    p_sap_description => q'{}',
-    p_sap_display_name => '',
-    p_sap_mandatory => sct_util.C_FALSE,
-    p_sap_active => sct_util.C_TRUE);
-
-  sct_admin.merge_action_parameter(
-    p_sap_sat_id => 'SET_ITEM',
-    p_sap_spt_id => 'STRING_OR_FUNCTION',
-    p_sap_sort_seq => 1,
-    p_sap_default => q'{}',
-    p_sap_description => q'{<p>Der Elementwert.</p>}',
-    p_sap_display_name => '',
-    p_sap_mandatory => sct_util.C_TRUE,
-    p_sap_active => sct_util.C_TRUE);
-
+    
+    
   sct_admin.merge_action_type(
     p_sat_id => 'SET_NULL_DISABLE',
     p_sat_stg_id => 'PAGE_ITEM',
@@ -775,7 +619,7 @@ q'{  de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sat_is_editable => sct_util.C_FALSE,
     p_sat_raise_recursive => sct_util.C_TRUE);
 
-    sct_admin.merge_action_parameter(
+  sct_admin.merge_action_parameter(
     p_sap_sat_id => 'SET_NULL_DISABLE',
     p_sap_spt_id => 'JQUERY_SELECTOR',
     p_sap_sort_seq => 2,
@@ -784,7 +628,8 @@ q'{  de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sap_display_name => '',
     p_sap_mandatory => sct_util.C_FALSE,
     p_sap_active => sct_util.C_TRUE);
-
+    
+    
   sct_admin.merge_action_type(
     p_sat_id => 'SET_NULL_HIDE',
     p_sat_stg_id => 'PAGE_ITEM',
@@ -796,7 +641,7 @@ q'{  de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sat_is_editable => sct_util.C_FALSE,
     p_sat_raise_recursive => sct_util.C_TRUE);
 
-    sct_admin.merge_action_parameter(
+  sct_admin.merge_action_parameter(
     p_sap_sat_id => 'SET_NULL_HIDE',
     p_sap_spt_id => 'JQUERY_SELECTOR',
     p_sap_sort_seq => 2,
@@ -805,7 +650,8 @@ q'{  de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sap_display_name => '',
     p_sap_mandatory => sct_util.C_FALSE,
     p_sap_active => sct_util.C_TRUE);
-
+    
+    
   sct_admin.merge_action_type(
     p_sat_id => 'SET_VALUE_ONLY',
     p_sat_stg_id => 'PAGE_ITEM',
@@ -817,7 +663,7 @@ q'{  de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sat_is_editable => sct_util.C_FALSE,
     p_sat_raise_recursive => sct_util.C_TRUE);
 
-    sct_admin.merge_action_parameter(
+  sct_admin.merge_action_parameter(
     p_sap_sat_id => 'SET_VALUE_ONLY',
     p_sap_spt_id => 'JQUERY_SELECTOR',
     p_sap_sort_seq => 2,
@@ -826,7 +672,8 @@ q'{  de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sap_display_name => '',
     p_sap_mandatory => sct_util.C_FALSE,
     p_sap_active => sct_util.C_TRUE);
-
+    
+    
   sct_admin.merge_action_parameter(
     p_sap_sat_id => 'SET_VALUE_ONLY',
     p_sap_spt_id => 'STRING_OR_FUNCTION',
@@ -836,7 +683,8 @@ q'{  de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sap_display_name => '',
     p_sap_mandatory => sct_util.C_TRUE,
     p_sap_active => sct_util.C_TRUE);
-
+    
+    
   sct_admin.merge_action_type(
     p_sat_id => 'SHOW_ERROR',
     p_sat_stg_id => 'JAVA_SCRIPT',
@@ -848,7 +696,7 @@ q'{  de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sat_is_editable => sct_util.C_FALSE,
     p_sat_raise_recursive => sct_util.C_TRUE);
 
-    sct_admin.merge_action_parameter(
+  sct_admin.merge_action_parameter(
     p_sap_sat_id => 'SHOW_ERROR',
     p_sap_spt_id => 'STRING_OR_FUNCTION',
     p_sap_sort_seq => 1,
@@ -857,7 +705,8 @@ q'{  de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sap_display_name => '',
     p_sap_mandatory => sct_util.C_TRUE,
     p_sap_active => sct_util.C_TRUE);
-
+    
+    
   sct_admin.merge_action_type(
     p_sat_id => 'SHOW_ITEM',
     p_sat_stg_id => 'ITEM',
@@ -869,7 +718,7 @@ q'{  de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sat_is_editable => sct_util.C_FALSE,
     p_sat_raise_recursive => sct_util.C_TRUE);
 
-    sct_admin.merge_action_parameter(
+  sct_admin.merge_action_parameter(
     p_sap_sat_id => 'SHOW_ITEM',
     p_sap_spt_id => 'JQUERY_SELECTOR',
     p_sap_sort_seq => 2,
@@ -878,7 +727,8 @@ q'{  de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sap_display_name => '',
     p_sap_mandatory => sct_util.C_FALSE,
     p_sap_active => sct_util.C_TRUE);
-
+    
+    
   sct_admin.merge_action_type(
     p_sat_id => 'SHOW_TIP',
     p_sat_stg_id => 'JAVA_SCRIPT',
@@ -890,7 +740,7 @@ q'{  de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sat_is_editable => sct_util.C_TRUE,
     p_sat_raise_recursive => sct_util.C_TRUE);
 
-    sct_admin.merge_action_parameter(
+  sct_admin.merge_action_parameter(
     p_sap_sat_id => 'SHOW_TIP',
     p_sap_spt_id => 'STRING_OR_FUNCTION',
     p_sap_sort_seq => 1,
@@ -899,7 +749,8 @@ q'{  de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sap_display_name => '',
     p_sap_mandatory => sct_util.C_FALSE,
     p_sap_active => sct_util.C_TRUE);
-
+    
+    
   sct_admin.merge_action_type(
     p_sat_id => 'STOP_RULE',
     p_sat_stg_id => 'SCT',
@@ -911,7 +762,6 @@ q'{  de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sat_is_editable => sct_util.C_FALSE,
     p_sat_raise_recursive => sct_util.C_TRUE);
 
-  
   sct_admin.merge_action_type(
     p_sat_id => 'SUBMIT',
     p_sat_stg_id => 'SCT',
@@ -923,7 +773,7 @@ q'{  de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sat_is_editable => sct_util.C_FALSE,
     p_sat_raise_recursive => sct_util.C_TRUE);
 
-    sct_admin.merge_action_parameter(
+  sct_admin.merge_action_parameter(
     p_sap_sat_id => 'SUBMIT',
     p_sap_spt_id => 'PIT_MESSAGE',
     p_sap_sort_seq => 2,
@@ -932,7 +782,7 @@ q'{  de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sap_display_name => '',
     p_sap_mandatory => sct_util.C_FALSE,
     p_sap_active => sct_util.C_TRUE);
-
+    
   sct_admin.merge_action_parameter(
     p_sap_sat_id => 'SUBMIT',
     p_sap_spt_id => 'STRING',
@@ -942,7 +792,8 @@ q'{  de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sap_display_name => 'Request',
     p_sap_mandatory => sct_util.C_FALSE,
     p_sap_active => sct_util.C_TRUE);
-
+    
+    
   sct_admin.merge_action_type(
     p_sat_id => 'SUBMIT_WO_VALIDATION',
     p_sat_stg_id => 'SCT',
@@ -954,7 +805,7 @@ q'{  de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sat_is_editable => sct_util.C_FALSE,
     p_sat_raise_recursive => sct_util.C_TRUE);
 
-    sct_admin.merge_action_parameter(
+  sct_admin.merge_action_parameter(
     p_sap_sat_id => 'SUBMIT_WO_VALIDATION',
     p_sap_spt_id => 'STRING',
     p_sap_sort_seq => 1,
@@ -963,7 +814,8 @@ q'{  de.condes.plugin.sct.show('#SELECTOR#');}',
     p_sap_display_name => '',
     p_sap_mandatory => sct_util.C_FALSE,
     p_sap_active => sct_util.C_TRUE);
-
+    
+    
   sct_admin.merge_action_type(
     p_sat_id => 'TOGGLE_ITEMS',
     p_sat_stg_id => 'JAVA_SCRIPT',
@@ -976,7 +828,7 @@ q'{  de.condes.plugin.sct.show('#PARAM_1#');}',
     p_sat_is_editable => sct_util.C_TRUE,
     p_sat_raise_recursive => sct_util.C_TRUE);
 
-    sct_admin.merge_action_parameter(
+  sct_admin.merge_action_parameter(
     p_sap_sat_id => 'TOGGLE_ITEMS',
     p_sap_spt_id => 'JQUERY_SELECTOR',
     p_sap_sort_seq => 1,
@@ -985,7 +837,8 @@ q'{  de.condes.plugin.sct.show('#PARAM_1#');}',
     p_sap_display_name => 'Einzublendende Seitenelemente',
     p_sap_mandatory => sct_util.C_TRUE,
     p_sap_active => sct_util.C_TRUE);
-
+    
+    
   sct_admin.merge_action_parameter(
     p_sap_sat_id => 'TOGGLE_ITEMS',
     p_sap_spt_id => 'JQUERY_SELECTOR',
@@ -995,7 +848,8 @@ q'{  de.condes.plugin.sct.show('#PARAM_1#');}',
     p_sap_display_name => 'Auszublendende Seitenelemente',
     p_sap_mandatory => sct_util.C_TRUE,
     p_sap_active => sct_util.C_TRUE);
-
+    
+    
   sct_admin.merge_action_type(
     p_sat_id => 'VALIDATE',
     p_sat_stg_id => 'SCT',
@@ -1006,8 +860,8 @@ q'{  de.condes.plugin.sct.show('#PARAM_1#');}',
     p_sat_js => q'{}',
     p_sat_is_editable => sct_util.C_FALSE,
     p_sat_raise_recursive => sct_util.C_TRUE);
+    
 
-  
   sct_admin.merge_action_type(
     p_sat_id => 'WAIT_FOR_REFRESH',
     p_sat_stg_id => 'JAVA_SCRIPT',
@@ -1018,8 +872,51 @@ q'{  de.condes.plugin.sct.show('#PARAM_1#');}',
     p_sat_js => q'{drv.ek.waitUntilRefresh('#ITEM#');}',
     p_sat_is_editable => sct_util.C_TRUE,
     p_sat_raise_recursive => sct_util.C_TRUE);
+    
 
-  
+  sct_admin.merge_action_type(
+    p_sat_id => 'SET_FOCUS',
+    p_sat_stg_id => 'PAGE_ITEM',
+    p_sat_sif_id => 'PAGE_ITEM',
+    p_sat_name => 'Focus in Feld setzen',
+    p_sat_description => q'{<p>Fokus in Eingabefeld der Seite setzen</p>}',
+    p_sat_pl_sql => q'{}',
+    p_sat_js => q'{$('##SELECTOR#').focus();}',
+    p_sat_is_editable => sct_util.C_FALSE,
+    p_sat_raise_recursive => sct_util.C_TRUE);
+
+  sct_admin.merge_action_type(
+    p_sat_id => 'SET_ITEM',
+    p_sat_stg_id => 'PAGE_ITEM',
+    p_sat_sif_id => 'PAGE_ITEM',
+    p_sat_name => 'Feld auf Wert setzen',
+    p_sat_description => q'{<p>Setzt das referenzierte Seitenelement auf den als Parameter übergebenen Wert.</p>}',
+    p_sat_pl_sql => q'{sct.set_session_state('#ITEM#', #PARAM_1#, '#ALLOW_RECURSION#', '#PARAM_2#');}',
+    p_sat_js => q'{}',
+    p_sat_is_editable => sct_util.C_FALSE,
+    p_sat_raise_recursive => sct_util.C_TRUE);
+
+  sct_admin.merge_action_parameter(
+    p_sap_sat_id => 'SET_ITEM',
+    p_sap_spt_id => 'JQUERY_SELECTOR',
+    p_sap_sort_seq => 2,
+    p_sap_default => q'{}',
+    p_sap_description => q'{}',
+    p_sap_display_name => '',
+    p_sap_mandatory => sct_util.C_FALSE,
+    p_sap_active => sct_util.C_TRUE);
+    
+  sct_admin.merge_action_parameter(
+    p_sap_sat_id => 'SET_ITEM',
+    p_sap_spt_id => 'STRING_OR_FUNCTION',
+    p_sap_sort_seq => 1,
+    p_sap_default => q'{}',
+    p_sap_description => q'{<p>Der Elementwert.</p>}',
+    p_sap_display_name => '',
+    p_sap_mandatory => sct_util.C_TRUE,
+    p_sap_active => sct_util.C_TRUE);
+    
+    
   sct_admin.merge_action_type(
     p_sat_id => 'XOR',
     p_sat_stg_id => 'SCT',
@@ -1031,7 +928,7 @@ q'{  de.condes.plugin.sct.show('#PARAM_1#');}',
     p_sat_is_editable => sct_util.C_FALSE,
     p_sat_raise_recursive => sct_util.C_TRUE);
 
-    sct_admin.merge_action_parameter(
+  sct_admin.merge_action_parameter(
     p_sap_sat_id => 'XOR',
     p_sap_spt_id => 'JQUERY_SELECTOR',
     p_sap_sort_seq => 2,
@@ -1040,7 +937,8 @@ q'{  de.condes.plugin.sct.show('#PARAM_1#');}',
     p_sap_display_name => '',
     p_sap_mandatory => sct_util.C_TRUE,
     p_sap_active => sct_util.C_TRUE);
-
+    
+    
   sct_admin.merge_action_type(
     p_sat_id => 'XOR_NN',
     p_sat_stg_id => 'SCT',
@@ -1052,7 +950,7 @@ q'{  de.condes.plugin.sct.show('#PARAM_1#');}',
     p_sat_is_editable => sct_util.C_FALSE,
     p_sat_raise_recursive => sct_util.C_TRUE);
 
-    sct_admin.merge_action_parameter(
+  sct_admin.merge_action_parameter(
     p_sap_sat_id => 'XOR_NN',
     p_sap_spt_id => 'JQUERY_SELECTOR',
     p_sap_sort_seq => 2,
@@ -1061,7 +959,42 @@ q'{  de.condes.plugin.sct.show('#PARAM_1#');}',
     p_sap_display_name => '',
     p_sap_mandatory => sct_util.C_TRUE,
     p_sap_active => sct_util.C_TRUE);
-
+    
+  sct_admin.merge_action_parameter(
+    p_sap_sat_id => 'XOR_NN',
+    p_sap_spt_id => 'STRING',
+    p_sap_sort_seq => 1,
+    p_sap_default => q'{}',
+    p_sap_description => q'{<p>Komma-separierte Liste von Elementnamen oder CSS-Klassen, die die Felder identifizieren, die zu einer Gruppe zusammengefasst werden. Innerhalb dieser Gruppe muss beim Pr&uuml;fen der Werte genau ein Feld einen NOT NULL-Wert besitzen.<br />\CR\}' || 
+q'{Sind alle Elemente NULL oder sind mehr al ein Element NOT NULL, wird ein Fehler geworfen</p>\CR\}' || 
+q'{}',
+    p_sap_display_name => 'Seitenelemente',
+    p_sap_mandatory => sct_util.C_TRUE,
+    p_sap_active => sct_util.C_TRUE);
+    
+  sct_admin.merge_action_parameter(
+    p_sap_sat_id => 'XOR_NN',
+    p_sap_spt_id => 'PIT_MESSAGE',
+    p_sap_sort_seq => 2,
+    p_sap_default => q'{}',
+    p_sap_description => q'{<p>Medlungsname, der ausgegeben werden soll, falls die Pr&uuml;fung misslingt. Muss ein PIT-Meldungsname sein, in der Form MSG.&lt;Meldungsname&gt;</p>\CR\}' || 
+q'{}',
+    p_sap_display_name => 'Meldungsname',
+    p_sap_mandatory => sct_util.C_TRUE,
+    p_sap_active => sct_util.C_TRUE);
+    
+    
+  sct_admin.merge_action_type(
+    p_sat_id => 'HIDE_IR_IG_FILTER',
+    p_sat_stg_id => 'IG',
+    p_sat_sif_id => 'PAGE_REGION',
+    p_sat_name => 'Filterbank von IR/IG ausblenden',
+    p_sat_description => q'{<p>Blendet die Filterbank von Interactive Report/Grid aus.</p>}',
+    p_sat_pl_sql => q'{}',
+    p_sat_js => q'{de.condes.plugin.sct.hideFilterPanel('#ITEM#');}',
+    p_sat_is_editable => sct_util.C_FALSE,
+    p_sat_raise_recursive => sct_util.C_FALSE);
+  
   commit;
 end;
 /

@@ -1,13 +1,15 @@
 create or replace package body sct_admin
 as
 
-  C_PKG constant sct_util.ora_name_type := $$PLSQL_UNIT;
   C_SCT constant utl_text_templates.uttm_type%type := 'SCT';
   C_FRAME constant sct_util.ora_name_type := 'FRAME';
   C_DEFAULT constant sct_util.ora_name_type := 'DEFAULT';
 
   C_REGEX_ITEM constant varchar2(50 byte) := q'~(^|[ '\(])#ITEM#([ ',=<^>\)]|$)~';
   C_REGEX_CSS constant varchar2(50 byte) := q'~'.+'~';
+  
+  C_APOS constant char(1 byte) := chr(39);
+  C_PIPE constant char(1 byte) := '|';
 
   /* Globale Variablen */
   g_offset binary_integer;
@@ -42,9 +44,11 @@ as
     p_sgr_id in sct_rule_group.sgr_id%type)
     return varchar2
   as
-    l_initialization_code varchar2(32767);
+    l_initialization_code utl_apex.max_char;
   begin
-    pit.enter_optional(p_params => msg_params(msg_param('p_sgr_id', to_char(p_sgr_id))));
+    pit.enter_optional(
+      p_params => msg_params(
+                    msg_param('p_sgr_id', to_char(p_sgr_id))));
 
       with params as (
            -- Get common values, depending on whether the page contains a DML_FETCH_ROW process
@@ -115,9 +119,11 @@ as
     p_new_condition in sct_rule.sru_condition%type default null)
   as
     l_initialization_code sct_rule_group.sgr_initialization_code%type;
-    l_is_true utl_text.flag_type := utl_text.C_TRUE;
+    l_is_true utl_text.flag_type := utl_apex.C_TRUE;
   begin
-    pit.enter_optional(p_params => msg_params(msg_param('p_sgr_id', to_char(p_sgr_id))));
+    pit.enter_optional(
+      p_params => msg_params(
+                    msg_param('p_sgr_id', to_char(p_sgr_id))));
 
       -- Step 1: remove REQUIRED flags
       update sct_page_item
@@ -169,7 +175,7 @@ as
                      select spi_sgr_id, spi_id
                        from sct_page_item spi
                       where (regexp_instr(upper(p_new_condition), replace(C_REGEX_ITEM, '#ITEM#', spi.spi_id)) > 0
-                         or instr(spi.spi_css, replace(regexp_substr(p_new_condition, C_REGEX_CSS), '''', '|')) > 0)
+                         or instr(spi.spi_css, replace(regexp_substr(p_new_condition, C_REGEX_CSS), C_APOS, C_PIPE)) > 0)
                         and spi_sgr_id = p_sgr_id)) s
          on (t.spi_id = s.spi_id
          and t.spi_sgr_id = s.spi_sgr_id)
@@ -254,7 +260,9 @@ as
     p_sgr_id in sct_rule_group.sgr_id%type)
   as
   begin
-    pit.enter_detailed(p_params => msg_params(msg_param('p_sgr_id', to_char(p_sgr_id))));
+    pit.enter_detailed(
+      p_params => msg_params(
+                    msg_param('p_sgr_id', to_char(p_sgr_id))));
 
     merge into sct_rule t
     using (select sru.sru_id,
@@ -263,7 +271,7 @@ as
              join sct_rule sru
                on spi.spi_sgr_id = sru.sru_sgr_id
               and (regexp_instr(upper(sru.sru_condition), replace(C_REGEX_ITEM, '#ITEM#', spi.spi_id)) > 0
-               or instr(spi.spi_css, replace(regexp_substr(sru.sru_condition, C_REGEX_CSS), '''', '|')) > 0)
+               or instr(spi.spi_css, replace(regexp_substr(sru.sru_condition, C_REGEX_CSS), C_APOS, C_PIPE)) > 0)
             where spi.spi_sgr_id = p_sgr_id
               and sru.sru_active = sct_util.C_TRUE
             group by sru.sru_id) s
@@ -306,8 +314,8 @@ as
   procedure create_rule_view(
     p_sgr_id in sct_rule_group.sgr_id%type)
   as
-    l_stmt clob;
     C_UTTM_NAME constant utl_text_templates.uttm_name%type := 'RULE_VIEW';
+    l_stmt clob;
   begin
     pit.enter_optional(p_params => msg_params(msg_param('p_sgr_id', to_char(p_sgr_id))));
 
@@ -408,10 +416,11 @@ as
     p_sgr_name in sct_rule_group.sgr_name%type)
   as
   begin
-    pit.enter_mandatory(p_params => msg_params(
-      msg_param('p_sgr_app_id', to_char(p_sgr_app_id)),
-      msg_param('p_sgr_page_id', to_char(p_sgr_page_id)),
-      msg_param('p_sgr_name', p_sgr_name)));
+    pit.enter_mandatory(
+      p_params => msg_params(
+                    msg_param('p_sgr_app_id', to_char(p_sgr_app_id)),
+                    msg_param('p_sgr_page_id', to_char(p_sgr_page_id)),
+                    msg_param('p_sgr_name', p_sgr_name)));
 
     -- Recursively delete any existing rulegroup with same APP_ID, PAGE_ID and NAME
     delete from sct_rule_group
@@ -455,48 +464,7 @@ as
   end map_id;
 
 
-  /* Public DDL methods */  
-  procedure validate_rule_group(
-    p_sgr_app_id in sct_rule_group.sgr_app_id%type,
-    p_sgr_page_id in sct_rule_group.sgr_page_id%type,
-    p_sgr_id in sct_rule_group.sgr_id%type,
-    p_sgr_name in sct_rule_group.sgr_name%type,
-    p_sgr_description in sct_rule_group.sgr_description%type,
-    p_sgr_with_recursion in sct_rule_group.sgr_with_recursion%type,
-    p_sgr_active in sct_rule_group.sgr_active%type default sct_util.C_TRUE)
-  as
-    l_cur sys_refcursor;
-  begin
-    pit.enter_mandatory(p_params => msg_params(
-      msg_param('p_sgr_app_id', to_char(p_sgr_app_id)),
-      msg_param('p_sgr_page_id', to_char(p_sgr_page_id)),
-      msg_param('p_sgr_id', to_char(p_sgr_id)),
-      msg_param('p_sgr_name', p_sgr_name),
-      msg_param('p_sgr_description', p_sgr_description),
-      msg_param('p_sgr_with_recursion', to_char(p_sgr_with_recursion)),
-      msg_param('p_sgr_active', to_char(p_sgr_active))));
-      
-    pit.assert_not_null(p_sgr_app_id, msg.APEX_REQUIRED_VAL_MISSING, p_error_code => 'SGR_APP_ID_MISSING');
-    pit.assert_not_null(p_sgr_page_id, msg.APEX_REQUIRED_VAL_MISSING, p_error_code => 'SGR_PAGE_ID_MISSING');
-    pit.assert_not_null(p_sgr_name, msg.APEX_REQUIRED_VAL_MISSING, p_error_code => 'SGR_NAME_MISSING');
-
-    if p_sgr_id is null then
-      open l_cur for 
-        select null
-          from sct_rule_group
-         where sgr_app_id = p_sgr_app_id
-           and sgr_name = p_sgr_name;
-      pit.assert_not_exists(
-        p_cursor => l_cur,
-        p_message_name => msg.SCT_SGR_MUST_BE_UNIQUE,
-        p_arg_list => null,
-        p_affected_id => 'SGR_NAME');
-    end if;
-    
-    pit.leave_mandatory;
-  end validate_rule_group;
-  
-    
+  /* Public DDL methods */      
   procedure merge_rule_group(
     p_sgr_app_id in sct_rule_group.sgr_app_id%type,
     p_sgr_page_id in sct_rule_group.sgr_page_id%type,
@@ -508,23 +476,15 @@ as
   as
     l_sgr_id sct_rule_group.sgr_id%type;
   begin
-    pit.enter_mandatory(p_params => msg_params(
-      msg_param('p_sgr_app_id', to_char(p_sgr_app_id)),
-      msg_param('p_sgr_page_id', to_char(p_sgr_page_id)),
-      msg_param('p_sgr_id', to_char(p_sgr_id)),
-      msg_param('p_sgr_name', p_sgr_name),
-      msg_param('p_sgr_description', p_sgr_description),
-      msg_param('p_sgr_with_recursion', to_char(p_sgr_with_recursion)),
-      msg_param('p_sgr_active', to_char(p_sgr_active))));
-
-    validate_rule_group(
-      p_sgr_app_id => p_sgr_app_id,
-      p_sgr_page_id => p_sgr_page_id,
-      p_sgr_id => p_sgr_id,
-      p_sgr_name => p_sgr_name,
-      p_sgr_description => p_sgr_description,
-      p_sgr_with_recursion => p_sgr_with_recursion,
-      p_sgr_active => p_sgr_active);
+    pit.enter_mandatory(
+      p_params => msg_params(
+                    msg_param('p_sgr_app_id', to_char(p_sgr_app_id)),
+                    msg_param('p_sgr_page_id', to_char(p_sgr_page_id)),
+                    msg_param('p_sgr_id', to_char(p_sgr_id)),
+                    msg_param('p_sgr_name', p_sgr_name),
+                    msg_param('p_sgr_description', p_sgr_description),
+                    msg_param('p_sgr_with_recursion', to_char(p_sgr_with_recursion)),
+                    msg_param('p_sgr_active', to_char(p_sgr_active))));
       
     l_sgr_id := coalesce(p_sgr_id, sct_seq.nextval);
 
@@ -560,6 +520,10 @@ as
     p_row in out nocopy sct_rule_group%rowtype)
   as
   begin
+    pit.enter_mandatory;
+
+    validate_rule_group(p_row);
+      
     merge_rule_group(
       p_sgr_app_id => p_row.sgr_app_id,
       p_sgr_page_id => p_row.sgr_page_id,
@@ -568,6 +532,8 @@ as
       p_sgr_description => p_row.sgr_description,
       p_sgr_with_recursion => p_row.sgr_with_recursion,
       p_sgr_active => p_row.sgr_active);
+     
+    pit.leave_mandatory;
   end merge_rule_group;
 
 
@@ -575,15 +541,20 @@ as
     p_sgr_id in sct_rule_group.sgr_id%type)
   as
   begin
-    pit.enter_mandatory;
+    pit.enter_mandatory(
+      p_params => msg_params(
+                    msg_param('p_sgr_id', to_char(p_sgr_id))));
+                    
     begin
       execute immediate 'drop view ' || C_VIEW_NAME_PREFIX || p_sgr_id;
     exception
       when others then
         null;
     end;
+    
     delete from sct_rule_group
      where sgr_id = p_sgr_id;
+     
     pit.leave_mandatory;
   end delete_rule_group;
 
@@ -592,23 +563,40 @@ as
     p_row in out nocopy sct_rule_group%rowtype)
   as
   begin
+    pit.enter_mandatory;
+
     delete_rule_group(p_row.sgr_id);
-  end delete_rule_group;
-
-
-  procedure propagate_rule_change(
-    p_sgr_id in sct_rule_group.sgr_id%type)
-  as
-  begin
-    pit.enter_mandatory(p_params => msg_params(msg_param('p_sgr_id', to_char(p_sgr_id))));
-
-    harmonize_firing_items(p_sgr_id);
-    harmonize_sct_page_item(p_sgr_id);
-    create_rule_view(p_sgr_id);
-    resequence_rule_group(p_sgr_id);
-
+     
     pit.leave_mandatory;
-  end propagate_rule_change;
+  end delete_rule_group;
+  
+  
+  procedure validate_rule_group(
+    p_row in sct_rule_group%rowtype)
+  as
+    l_cur sys_refcursor;
+  begin
+    pit.enter_mandatory;
+      
+    pit.assert_not_null(p_row.sgr_app_id, msg.SCT_PARAM_MISSING, p_error_code => 'SGR_APP_ID_MISSING');
+    pit.assert_not_null(p_row.sgr_page_id, msg.SCT_PARAM_MISSING, p_error_code => 'SGR_PAGE_ID_MISSING');
+    pit.assert_not_null(p_row.sgr_name, msg.SCT_PARAM_MISSING, p_error_code => 'SGR_NAME_MISSING');
+
+    if p_row.sgr_id is null then
+      open l_cur for 
+        select null
+          from sct_rule_group
+         where sgr_app_id = p_row.sgr_app_id
+           and sgr_name = p_row.sgr_name;
+      pit.assert_not_exists(
+        p_cursor => l_cur,
+        p_message_name => msg.SCT_SGR_MUST_BE_UNIQUE,
+        p_arg_list => null,
+        p_affected_id => 'SGR_NAME');
+    end if;
+    
+    pit.leave_mandatory;
+  end validate_rule_group;
 
 
   function validate_rule_group(
@@ -618,11 +606,13 @@ as
     C_UTTM_NAME constant utl_text_templates.uttm_name%type := 'VALIDATE_RULE_GROUP_EXPORT';
     l_error_list clob;
   begin
-    pit.enter_mandatory(p_params => msg_params(msg_param('p_sgr_id', to_char(p_sgr_id))));
+    pit.enter_mandatory(
+      p_params => msg_params(
+                    msg_param('p_sgr_id', to_char(p_sgr_id))));
 
     harmonize_sct_page_item(p_sgr_id);
 
-      with params as (
+    with params as (
            select uttm_mode, uttm_text template,
                   sgr_id, sgr_name, sgr_app_id
              from sct_rule_group
@@ -657,6 +647,23 @@ as
   end validate_rule_group;
 
 
+  procedure propagate_rule_change(
+    p_sgr_id in sct_rule_group.sgr_id%type)
+  as
+  begin
+    pit.enter_mandatory(
+      p_params => msg_params(
+                    msg_param('p_sgr_id', to_char(p_sgr_id))));
+
+    harmonize_firing_items(p_sgr_id);
+    harmonize_sct_page_item(p_sgr_id);
+    create_rule_view(p_sgr_id);
+    resequence_rule_group(p_sgr_id);
+
+    pit.leave_mandatory;
+  end propagate_rule_change;
+
+
   procedure copy_rule_group(
     p_sgr_id in sct_rule_group.sgr_id%type,
     p_sgr_app_id_to in sct_rule_group.sgr_app_id%type,
@@ -667,10 +674,11 @@ as
     l_sgr_name sct_rule_group.sgr_name%type;
     l_stmt clob;
   begin
-    pit.enter_mandatory(p_params => msg_params(
-      msg_param('p_sgr_id', to_char(p_sgr_id)),
-      msg_param('p_sgr_app_id_to', to_char(p_sgr_app_id_to)),
-      msg_param('p_sgr_page_id_to', to_char(p_sgr_page_id_to))));
+    pit.enter_mandatory(
+      p_params => msg_params(
+                    msg_param('p_sgr_id', to_char(p_sgr_id)),
+                    msg_param('p_sgr_app_id_to', to_char(p_sgr_app_id_to)),
+                    msg_param('p_sgr_page_id_to', to_char(p_sgr_page_id_to))));
 
     -- Check whether source rule group exists
     pit.assert_exists(
@@ -828,9 +836,10 @@ as
     l_ws_id number;
     l_app_id number;
   begin
-    pit.enter_mandatory(p_params => msg_params(
-      msg_param('p_workspace', p_workspace),
-      msg_param('p_app_alias', p_app_alias)));
+    pit.enter_mandatory(
+      p_params => msg_params(
+                    msg_param('p_workspace', p_workspace),
+                    msg_param('p_app_alias', p_app_alias)));
 
     select workspace_id, application_id
       into l_ws_id, l_app_id
@@ -855,9 +864,10 @@ as
   as
     l_ws_id number;
   begin
-    pit.enter_mandatory(p_params => msg_params(
-      msg_param('p_workspace', p_workspace),
-      msg_param('p_app_id', to_char(p_app_id))));
+    pit.enter_mandatory(
+      p_params => msg_params(
+                    msg_param('p_workspace', p_workspace),
+                    msg_param('p_app_id', to_char(p_app_id))));
 
     select workspace_id
       into l_ws_id
@@ -880,7 +890,12 @@ as
   as
     l_pti_id pit_translatable_item.pti_id%type;
   begin
-    pit.enter_mandatory;
+    pit.enter_mandatory(
+      p_params => msg_params(
+                    msg_param('p_sty_id', p_sty_id),
+                    msg_param('p_sty_name', p_sty_name),
+                    msg_param('p_sty_description', p_sty_description),
+                    msg_param('p_sty_active', p_sty_active)));
 
     -- maintain translatable item
     l_pti_id := 'STY_' || p_sty_id;
@@ -903,6 +918,8 @@ as
             t.sty_active = s.sty_active
      when not matched then insert(t.sty_id, t.sty_pti_id, t.sty_pmg_name, t.sty_active)
           values(s.sty_id, s.sty_pti_id, s.sty_pmg_name, s.sty_active);
+    
+    pit.leave_mandatory;
   end merge_apex_action_type;
 
 
@@ -910,11 +927,17 @@ as
     p_row in out nocopy sct_apex_action_type_v%rowtype)
   as
   begin
+    pit.enter_mandatory;
+    
+    validate_apex_action_type(p_row);
+    
     merge_apex_action_type(
       p_sty_id => p_row.sty_id,
       p_sty_name => p_row.sty_name,
       p_sty_description => p_row.sty_description,
       p_sty_active => p_row.sty_active);
+      
+    pit.leave_mandatory;
   end merge_apex_action_type;
 
 
@@ -922,17 +945,39 @@ as
     p_sty_id in sct_apex_action_type.sty_id%type)
   as
   begin
+    pit.enter_mandatory(
+      p_params => msg_params(
+                    msg_param('p_sty_id', p_sty_id)));
+    
     delete from sct_apex_action_type
      where sty_id = p_sty_id;
+     
+    pit.leave_mandatory;
   end delete_apex_action_type;
 
 
   procedure delete_apex_action_type(
-    p_row in out nocopy sct_apex_action_type_v%rowtype)
+    p_row in sct_apex_action_type_v%rowtype)
   as
   begin
+    pit.enter_mandatory;
+    
     delete_apex_action_type(p_row.sty_id);
+    
+    pit.leave_mandatory;
   end delete_apex_action_type;
+  
+  
+  procedure validate_apex_action_type(
+    p_row in sct_apex_action_type_v%rowtype)
+  as
+  begin
+    pit.enter_mandatory;
+    
+    /** TODO: Enter validation */
+    
+    pit.leave_mandatory;
+  end validate_apex_action_type;
 
 
   procedure merge_apex_action(
@@ -964,67 +1009,57 @@ as
     p_saa_label_end_classes in sct_apex_action.saa_label_end_classes%type default null,
     p_saa_item_wrap_class in sct_apex_action.saa_item_wrap_class%type default null)
   as
-    l_row sct_apex_action%rowtype;
   begin
-    l_row.saa_id := p_saa_id;
-    l_row.saa_sgr_id := p_saa_sgr_id;
-    l_row.saa_name := p_saa_name;
-    l_row.saa_sty_id := p_saa_sty_id;
-    l_row.saa_label := p_saa_label;
-    l_row.saa_context_label := p_saa_context_label;
-    l_row.saa_icon := p_saa_icon;
-    l_row.saa_icon_type := p_saa_icon_type;
-    l_row.saa_title := p_saa_title;
-    l_row.saa_shortcut := p_saa_shortcut;
-    l_row.saa_initially_disabled := p_saa_initially_disabled;
-    l_row.saa_initially_hidden := p_saa_initially_hidden;
-    l_row.saa_href := p_saa_href;
-    l_row.saa_action := p_saa_action;
-    l_row.saa_on_label := p_saa_on_label;
-    l_row.saa_off_label := p_saa_off_label;
-    l_row.saa_get := p_saa_get;
-    l_row.saa_set := p_saa_set;
-    l_row.saa_choices := p_saa_choices;
-    l_row.saa_label_classes := p_saa_label_classes;
-    l_row.saa_label_start_classes := p_saa_label_start_classes;
-    l_row.saa_label_end_classes := p_saa_label_end_classes;
-    l_row.saa_item_wrap_class := p_saa_item_wrap_class;
-
-    merge_apex_action(l_row);
-
-  end merge_apex_action;
-
-
-  procedure merge_apex_action(
-    p_row in out nocopy sct_apex_action%rowtype)
-  as
-  begin
-    pit.enter_mandatory;
-
+    pit.enter_mandatory(
+      p_params => msg_params(
+                    msg_param('p_saa_id', p_saa_id),
+                    msg_param('p_saa_sgr_id', p_saa_sgr_id),
+                    msg_param('p_saa_sty_id', p_saa_sty_id),
+                    msg_param('p_saa_name', p_saa_name),
+                    msg_param('p_saa_label', p_saa_label),
+                    msg_param('p_saa_context_label', p_saa_context_label),
+                    msg_param('p_saa_icon', p_saa_icon),
+                    msg_param('p_saa_icon_type', p_saa_icon_type),
+                    msg_param('p_saa_title', p_saa_title),
+                    msg_param('p_saa_shortcut', p_saa_shortcut),
+                    msg_param('p_saa_initially_disabled', p_saa_initially_disabled),
+                    msg_param('p_saa_initially_hidden', p_saa_initially_hidden),
+                    msg_param('p_saa_href', p_saa_href),
+                    msg_param('p_saa_action', p_saa_action),
+                    msg_param('p_saa_on_label', p_saa_on_label),
+                    msg_param('p_saa_off_label', p_saa_off_label),
+                    msg_param('p_saa_get', p_saa_get),
+                    msg_param('p_saa_set', p_saa_set),
+                    msg_param('p_saa_choices', p_saa_choices),
+                    msg_param('p_saa_label_classes', p_saa_label_classes),
+                    msg_param('p_saa_label_start_classes', p_saa_label_start_classes),
+                    msg_param('p_saa_label_end_classes', p_saa_label_end_classes),
+                    msg_param('p_saa_item_wrap_class', p_saa_item_wrap_class)));
+    
     merge into sct_apex_action t
-    using (select p_row.saa_id saa_id,
-                  p_row.saa_sgr_id saa_sgr_id,
-                  p_row.saa_name saa_name,
-                  p_row.saa_sty_id saa_sty_id,
-                  p_row.saa_label saa_label,
-                  p_row.saa_context_label saa_context_label,
-                  p_row.saa_icon saa_icon,
-                  p_row.saa_icon_type saa_icon_type,
-                  p_row.saa_title saa_title,
-                  p_row.saa_shortcut saa_shortcut,
-                  sct_util.get_boolean(p_row.saa_initially_disabled) saa_initially_disabled,
-                  sct_util.get_boolean(p_row.saa_initially_hidden) saa_initially_hidden,
-                  p_row.saa_href saa_href,
-                  p_row.saa_action saa_action,
-                  p_row.saa_on_label saa_on_label,
-                  p_row.saa_off_label saa_off_label,
-                  p_row.saa_get saa_get,
-                  p_row.saa_set saa_set,
-                  p_row.saa_choices saa_choices,
-                  p_row.saa_label_classes saa_label_classes,
-                  p_row.saa_label_start_classes saa_label_start_classes,
-                  p_row.saa_label_end_classes saa_label_end_classes,
-                  p_row.saa_item_wrap_class saa_item_wrap_class
+    using (select p_saa_id saa_id,
+                  p_saa_sgr_id saa_sgr_id,
+                  p_saa_name saa_name,
+                  p_saa_sty_id saa_sty_id,
+                  p_saa_label saa_label,
+                  p_saa_context_label saa_context_label,
+                  p_saa_icon saa_icon,
+                  p_saa_icon_type saa_icon_type,
+                  p_saa_title saa_title,
+                  p_saa_shortcut saa_shortcut,
+                  sct_util.get_boolean(p_saa_initially_disabled) saa_initially_disabled,
+                  sct_util.get_boolean(p_saa_initially_hidden) saa_initially_hidden,
+                  p_saa_href saa_href,
+                  p_saa_action saa_action,
+                  p_saa_on_label saa_on_label,
+                  p_saa_off_label saa_off_label,
+                  p_saa_get saa_get,
+                  p_saa_set saa_set,
+                  p_saa_choices saa_choices,
+                  p_saa_label_classes saa_label_classes,
+                  p_saa_label_start_classes saa_label_start_classes,
+                  p_saa_label_end_classes saa_label_end_classes,
+                  p_saa_item_wrap_class saa_item_wrap_class
              from dual) s
        on (t.saa_id = s.saa_id)
      when matched then update set
@@ -1064,11 +1099,54 @@ as
   end merge_apex_action;
 
 
+  procedure merge_apex_action(
+    p_row in out nocopy sct_apex_action%rowtype)
+  as
+  begin
+    pit.enter_mandatory;
+
+    validate_apex_action(p_row);
+    
+    merge_apex_action(
+      p_saa_id => p_row.saa_id,
+      p_saa_sgr_id => p_row.saa_sgr_id,
+      p_saa_sty_id => p_row.saa_sty_id,
+      p_saa_name => p_row.saa_name,
+      p_saa_label => p_row.saa_label,
+      p_saa_context_label => p_row.saa_context_label,
+      p_saa_icon => p_row.saa_icon,
+      p_saa_icon_type => p_row.saa_icon_type,
+      p_saa_title => p_row.saa_title,
+      p_saa_shortcut => p_row.saa_shortcut,
+      p_saa_initially_disabled => p_row.saa_initially_disabled,
+      p_saa_initially_hidden => p_row.saa_initially_hidden,
+      -- ACTION
+      p_saa_href => p_row.saa_href,
+      p_saa_action => p_row.saa_action,
+      -- TOGGLE
+      p_saa_on_label => p_row.saa_on_label,
+      p_saa_off_label => p_row.saa_off_label,
+      -- TOGGLE | RADIO_GROUP
+      p_saa_get => p_row.saa_get,
+      p_saa_set => p_row.saa_set,
+      -- RADIO_GROUP
+      p_saa_choices => p_row.saa_choices,
+      p_saa_label_classes => p_row.saa_label_classes,
+      p_saa_label_start_classes => p_row.saa_label_start_classes,
+      p_saa_label_end_classes => p_row.saa_label_end_classes,
+      p_saa_item_wrap_class => p_row.saa_item_wrap_class);
+
+    pit.leave_mandatory;
+  end merge_apex_action;
+
+
   procedure delete_apex_action(
     p_saa_id in sct_apex_action.saa_id%type)
   as
   begin
-    pit.enter_mandatory;
+    pit.enter_mandatory(
+      p_params => msg_params(
+                    msg_param('p_saa_id', p_saa_id)));
 
     delete from sct_apex_action
      where saa_id = p_saa_id;
@@ -1078,7 +1156,7 @@ as
 
 
   procedure delete_apex_action(
-    p_row in out nocopy sct_apex_action%rowtype)
+    p_row in sct_apex_action%rowtype)
   as
   begin
     pit.enter_mandatory;
@@ -1089,6 +1167,18 @@ as
   end delete_apex_action;
 
 
+  procedure validate_apex_action(
+    p_row in sct_apex_action%rowtype)
+  as
+  begin
+    pit.enter_mandatory;
+    
+    /** TODO: Add validation*/
+    
+    pit.leave_mandatory;
+  end validate_apex_action;
+
+
   procedure merge_apex_action_item(
     p_sai_saa_id     in sct_apex_action_item.sai_saa_id%type,
     p_sai_spi_sgr_id in sct_apex_action_item.sai_spi_sgr_id%type,
@@ -1096,6 +1186,13 @@ as
     p_sai_active     in sct_apex_action_item.sai_active%type)
   as
   begin
+    pit.enter_mandatory(
+      p_params => msg_params(
+                    msg_param('p_sai_saa_id', p_sai_saa_id),
+                    msg_param('p_sai_spi_sgr_id', p_sai_spi_sgr_id),
+                    msg_param('p_sai_spi_id', p_sai_spi_id),
+                    msg_param('p_sai_active', p_sai_active)));
+                    
     merge into sct_apex_action_item t
     using (select p_sai_saa_id sai_saa_id,
                   p_sai_spi_sgr_id sai_spi_sgr_id,
@@ -1111,6 +1208,8 @@ as
             t.sai_saa_id, t.sai_spi_sgr_id, t.sai_spi_id, t.sai_active)
           values(
             s.sai_saa_id, s.sai_spi_sgr_id, s.sai_spi_id, s.sai_active);
+            
+    pit.leave_mandatory;
   end merge_apex_action_item;
 
 
@@ -1118,20 +1217,32 @@ as
     p_row sct_apex_action_item%rowtype)
   as
   begin
+    pit.enter_mandatory;
+    
+    validate_apex_action_item(p_row);
+    
     merge_apex_action_item(
       p_sai_saa_id => p_row.sai_saa_id,
       p_sai_spi_sgr_id => p_row.sai_spi_sgr_id,
       p_sai_spi_id => p_row.sai_spi_id,
       p_sai_active => p_row.sai_active);
+      
+    pit.leave_mandatory;
   end merge_apex_action_item;
 
 
   procedure delete_apex_action_item(
-    p_saa_id in sct_apex_action.saa_id%type)
+    p_sai_saa_id in sct_apex_action_item.sai_saa_id%type)
   as
   begin
+    pit.enter_mandatory(
+      p_params => msg_params(
+                    msg_param('p_sai_saa_id', p_sai_saa_id)));
+                    
     delete from sct_apex_action_item
-     where sai_saa_id = p_saa_id;
+     where sai_saa_id = p_sai_saa_id;
+    
+    pit.leave_mandatory;
   end delete_apex_action_item;
 
 
@@ -1139,8 +1250,24 @@ as
     p_row sct_apex_action_item%rowtype)
   as
   begin
+    pit.enter_mandatory;
+    
     delete_apex_action_item(p_row.sai_saa_id);
+    
+    pit.leave_mandatory;
   end delete_apex_action_item;
+  
+  
+  procedure validate_apex_action_item(
+    p_row in sct_apex_action_item%rowtype)
+  as
+  begin
+    pit.enter_mandatory;
+    
+    /** TODO: Add validation */
+    
+    pit.leave_mandatory;
+  end validate_apex_action_item;
 
 
   procedure merge_rule(
@@ -1153,7 +1280,15 @@ as
     p_sru_active in sct_rule.sru_active%type default sct_util.C_TRUE)
   as
   begin
-    pit.enter_mandatory;
+    pit.enter_mandatory(
+      p_params => msg_params(
+                    msg_param('p_sru_id', to_char(p_sru_id)),
+                    msg_param('p_sru_sgr_id', to_char(p_sru_sgr_id)),
+                    msg_param('p_sru_name', p_sru_name),
+                    msg_param('p_sru_condition', p_sru_condition),
+                    msg_param('p_sru_fire_on_page_load', p_sru_fire_on_page_load),
+                    msg_param('p_sru_sort_seq', to_char(p_sru_sort_seq)),
+                    msg_param('p_sru_active', p_sru_active)));
 
     merge into sct_rule t
     using (select p_sru_id sru_id,
@@ -1186,6 +1321,10 @@ as
     p_row in out nocopy sct_rule%rowtype)
   as
   begin
+    pit.enter_mandatory;
+    
+    validate_rule(p_row);
+    
     merge_rule(
       p_sru_id => p_row.sru_id,
       p_sru_sgr_id => p_row.sru_sgr_id,
@@ -1194,6 +1333,8 @@ as
       p_sru_fire_on_page_load => p_row.sru_fire_on_page_load,
       p_sru_sort_seq => p_row.sru_sort_seq,
       p_sru_active => p_row.sru_active);
+      
+    pit.leave_mandatory;
   end merge_rule;
 
 
@@ -1211,32 +1352,38 @@ as
 
 
   procedure delete_rule(
-    p_row in out nocopy sct_rule%rowtype)
+    p_row in sct_rule%rowtype)
   as
   begin
+    pit.enter_mandatory;
+    
     delete_rule(p_row.sru_id);
+
+    pit.leave_mandatory;
   end delete_rule;
 
 
   procedure validate_rule(
-    p_sgr_id in sct_rule_group.sgr_id%type,
-    p_sru_condition in sct_rule.sru_condition%type,
-    p_error out nocopy varchar2)
+    p_row in sct_rule%rowtype)
   as
     C_UTTM_NAME constant utl_text_templates.uttm_name%type := 'RULE_VALIDATION';
-    l_data_cols varchar2(32767);
-    l_stmt varchar2(32767);
+    l_data_cols utl_apex.max_char;
+    l_stmt utl_apex.max_char;
     l_ctx pls_integer;
   begin
     pit.enter_mandatory;
+    
+    pit.assert_not_null(p_row.sru_sgr_id, msg.SCT_PARAM_MISSING, p_error_code => 'SRU_SGR_ID_MISSING');
+    pit.assert_not_null(p_row.sru_name, msg.SCT_PARAM_MISSING, p_error_code => 'SRU_NAME_MISSING');
+    pit.assert_not_null(p_row.sru_condition, msg.SCT_PARAM_MISSING, p_error_code => 'SRU_CONDITION_MISSING');
 
-    harmonize_sct_page_item(p_sgr_id, p_sru_condition);
+    harmonize_sct_page_item(p_row.sru_sgr_id, p_row.sru_condition);
 
     -- create validation statement
-      with params as(
+    with params as(
            select uttm_text template,
-                  p_sgr_id sgr_id,
-                  p_sru_condition condition
+                  p_row.sru_sgr_id sgr_id,
+                  p_row.sru_condition condition
              from utl_text_templates
             where uttm_type = C_SCT
               and uttm_name = C_UTTM_NAME
@@ -1252,7 +1399,7 @@ as
                         left join (
                                select *
                                  from sct_page_item
-                                where spi_sgr_id = p_sgr_id) spi
+                                where spi_sgr_id = p_row.sru_sgr_id) spi
                           on sit.sit_id = spi.spi_sit_id
                        where sct_util.C_TRUE in (spi_is_required, sit_include_in_view)
                          and sit_col_template is not null
@@ -1269,9 +1416,7 @@ as
     pit.leave_mandatory;
   exception
     when others then
-      -- Return error statement. Will create an error on the page
-      p_error := substr(sqlerrm, 12);
-      pit.sql_exception;
+      pit.stop(msg.SQL_ERROR);
   end validate_rule;
 
 
@@ -1306,7 +1451,12 @@ as
   as
     l_pti_id pit_translatable_item.pti_id%type;
   begin
-    pit.enter_mandatory;
+    pit.enter_mandatory(
+      p_params => msg_params(
+                    msg_param('p_stg_id', p_stg_id),
+                    msg_param('p_stg_name', p_stg_name),
+                    msg_param('p_stg_description', p_stg_description),
+                    msg_param('p_stg_active', p_stg_active)));
 
     -- maintain translatable item
     l_pti_id := 'STG_' || p_stg_id;
@@ -1338,11 +1488,15 @@ as
     p_row in out nocopy sct_action_type_group_v%rowtype)
   as
   begin
+    pit.enter_mandatory;
+    
     merge_action_type_group(
       p_stg_id => p_row.stg_id,
       p_stg_name => p_row.stg_name,
       p_stg_description => p_row.stg_description,
       p_stg_active => p_row.stg_active);
+    
+    pit.leave_mandatory;
   end merge_action_type_group;
 
 
@@ -1350,48 +1504,40 @@ as
     p_stg_id in sct_action_type_group.stg_id%type)
   as
   begin
+    pit.enter_mandatory(
+      p_params => msg_params(
+                    msg_param('p_stg_id', p_stg_id)));
+                    
     delete from sct_action_type_group
      where stg_id = p_stg_id;
+    
+    pit.leave_mandatory;
   end delete_action_type_group;
 
 
   procedure delete_action_type_group(
-    p_row in out nocopy sct_action_type_group_v%rowtype)
+    p_row in sct_action_type_group_v%rowtype)
   as
   begin
+    pit.enter_mandatory;
+    
     delete_action_type_group(p_row.stg_id);
+    
+    pit.leave_mandatory;
   end delete_action_type_group;
 
-
-  procedure validate_action_type(
-    p_pl_sql in sct_action_type.sat_pl_sql%type,
-    p_param_1 in varchar2,
-    p_param_2 in varchar2,
-    p_param_3 in varchar2)
+  procedure validate_action_type_group(
+    p_row in sct_action_type_group_v%rowtype)
   as
-    l_cur binary_integer;
-    c_stmt constant varchar2(100) := 'begin #STMT#; end;';
-    l_stmt varchar2(32767);
   begin
-    if p_pl_sql is not null then
-      l_cur := dbms_sql.open_cursor;
-      l_stmt := utl_text.bulk_replace(c_stmt, char_table(
-                  '#STMT#', rtrim(p_pl_sql, ';'),
-                  '#ITEM#', 'FOO',
-                  '#ALLOW_RECURSION#', 'true',
-                  '#PARAM_1#', p_param_1,
-                  '#PARAM_2#', p_param_2,
-                  '#PARAM_3#', p_param_3));
-      dbms_sql.parse(l_cur, l_stmt, dbms_sql.native);
-      dbms_sql.close_cursor(l_cur);
-    end if;
-  exception
-    when others then
-      dbms_sql.close_cursor(l_cur);
-      raise;
-  end validate_action_type;
-
-
+    pit.enter_mandatory;
+    
+    /** TODO: Add validation*/
+    
+    pit.leave_mandatory;
+  end validate_action_type_group;
+  
+  
   procedure merge_action_param_type(
     p_spt_id in sct_action_param_type.spt_id%type,
     p_spt_name in pit_translatable_item.pti_name%type,
@@ -1402,8 +1548,18 @@ as
   as
     l_pti_id pit_translatable_item.pti_id%type;
   begin
+    pit.enter_mandatory(
+      p_params => msg_params(
+                    msg_param('p_spt_id', p_spt_id),
+                    msg_param('p_spt_name', p_spt_name),
+                    msg_param('p_spt_display_name', p_spt_display_name),
+                    msg_param('p_spt_description', p_spt_description),
+                    msg_param('p_spt_item_type', p_spt_item_type),
+                    msg_param('p_spt_active', p_spt_active)));
+    
     -- maintain translatable item
     l_pti_id := 'SPT_' || p_spt_id;
+    
     pit_admin.merge_translatable_item(
       p_pti_id => l_pti_id,
       p_pti_pml_name => null,
@@ -1426,6 +1582,8 @@ as
           t.spt_active = s.spt_active
      when not matched then insert(spt_id, spt_pti_id, spt_pmg_name, spt_item_type, spt_active)
           values(s.spt_id, s.spt_pti_id, s.spt_pmg_name, s.spt_item_type, s.spt_active);
+          
+    pit.leave_mandatory;
   end merge_action_param_type;
 
 
@@ -1433,6 +1591,10 @@ as
     p_row in out nocopy sct_action_param_type_v%rowtype)
   as
   begin
+    pit.enter_mandatory;
+    
+    validate_action_param_type(p_row);
+    
     merge_action_param_type(
       p_spt_id => p_row.spt_id,
       p_spt_name => p_row.spt_name,
@@ -1440,6 +1602,8 @@ as
       p_spt_description => p_row.spt_description,
       p_spt_item_type => p_row.spt_item_type,
       p_spt_active => p_row.spt_active);
+    
+    pit.leave_mandatory;
   end merge_action_param_type;
 
 
@@ -1447,8 +1611,14 @@ as
     p_spt_id in sct_action_param_type.spt_id%type)
   as
   begin
+    pit.enter_mandatory(
+      p_params => msg_params(
+                    msg_param('p_spt_id', p_spt_id)));
+                    
     delete from sct_action_param_type
      where spt_id = p_spt_id;
+    
+    pit.leave_mandatory;
   end delete_action_param_type;
 
 
@@ -1456,8 +1626,30 @@ as
     p_row in sct_action_param_type_v%rowtype)
   as
   begin
+    pit.enter_mandatory;
+    
     delete_action_param_type(p_row.spt_id);
+    
+    pit.leave_mandatory;
   end delete_action_param_type;
+  
+  
+  procedure validate_action_param_type(
+    p_row in sct_action_param_type_v%rowtype)
+  as
+  begin
+    pit.enter_mandatory;
+    
+    pit.assert_not_null(p_row.spt_id, msg.SCT_PARAM_MISSING, p_error_code => 'SPT_ID_MISSING');
+    pit.assert_not_null(p_row.spt_name, msg.SCT_PARAM_MISSING, p_error_code => 'SPT_NAME_MISSING');
+    pit.assert_not_null(p_row.spt_item_type, msg.SCT_PARAM_MISSING, p_error_code => 'SPT_ITEM_TYPE_MISSING');
+    
+    sct_validation.validate_param_lov(
+      p_spt_id => p_row.spt_id,
+      p_spt_item_type => p_row.spt_item_type);
+    
+    pit.leave_mandatory;
+  end validate_action_param_type;
 
 
   procedure merge_action_item_focus(
@@ -1470,6 +1662,15 @@ as
   as
     l_pti_id pit_translatable_item.pti_id%type;
   begin
+    pit.enter_mandatory(
+      p_params => msg_params(
+                    msg_param('p_sif_id', p_sif_id),
+                    msg_param('p_sif_name', p_sif_name),
+                    msg_param('p_sif_description', p_sif_description),
+                    msg_param('p_sif_actual_page_only', p_sif_actual_page_only),
+                    msg_param('p_sif_item_types', p_sif_item_types),
+                    msg_param('p_sif_active', p_sif_active)));
+                    
     -- maintain translatable item
     l_pti_id := 'SIF_' || p_sif_id;
     pit_admin.merge_translatable_item(
@@ -1495,6 +1696,8 @@ as
           t.sif_active = s.sif_active
      when not matched then insert(sif_id, sif_pti_id, sif_pmg_name, sif_actual_page_only, sif_item_types, sif_active)
           values(s.sif_id, s.sif_pti_id, s.sif_pmg_name, s.sif_actual_page_only, s.sif_item_types, s.sif_active);
+    
+    pit.leave_mandatory;
   end merge_action_item_focus;
 
 
@@ -1502,6 +1705,10 @@ as
     p_row in out nocopy sct_action_item_focus_v%rowtype)
   as
   begin
+    pit.enter_mandatory;
+    
+    validate_action_item_focus(p_row);
+    
     merge_action_item_focus(
       p_sif_id => p_row.sif_id,
       p_sif_name => p_row.sif_name,
@@ -1509,6 +1716,8 @@ as
       p_sif_actual_page_only => p_row.sif_actual_page_only,
       p_sif_item_types => p_row.sif_item_types,
       p_sif_active => p_row.sif_active);
+    
+    pit.leave_mandatory;
   end merge_action_item_focus;
 
 
@@ -1516,17 +1725,39 @@ as
     p_sif_id in sct_action_item_focus.sif_id%type)
   as
   begin
+    pit.enter_mandatory(
+      p_params => msg_params(
+                    msg_param('p_sif_id', p_sif_id)));
+                    
     delete from sct_action_item_focus
      where sif_id = p_sif_id;
+    
+    pit.leave_mandatory;
   end delete_action_item_focus;
 
 
   procedure delete_action_item_focus(
-    p_row in out nocopy sct_action_item_focus_v%rowtype)
+    p_row in sct_action_item_focus_v%rowtype)
   as
   begin
+    pit.enter_mandatory;
+    
     delete_action_item_focus(p_row.sif_id);
+    
+    pit.leave_mandatory;
   end delete_action_item_focus;
+  
+
+  procedure validate_action_item_focus(
+    p_row in sct_action_item_focus_v%rowtype)
+  as
+  begin
+    pit.enter_mandatory;
+    
+    /** TODO: Add validation */
+    
+    pit.leave_mandatory;
+  end validate_action_item_focus;
 
 
   procedure merge_action_type(
@@ -1542,8 +1773,18 @@ as
   as
     l_pti_id pit_translatable_item.pti_id%type;
   begin
-    pit.enter_mandatory;
-
+    pit.enter_mandatory(
+      p_params => msg_params(
+                    msg_param('p_sat_id', p_sat_id),
+                    msg_param('p_sat_stg_id', p_sat_stg_id),
+                    msg_param('p_sat_sif_id', p_sat_sif_id),
+                    msg_param('p_sat_name', p_sat_name),
+                    msg_param('p_sat_description', p_sat_description),
+                    msg_param('p_sat_pl_sql', p_sat_pl_sql),
+                    msg_param('p_sat_js', p_sat_js),
+                    msg_param('p_sat_is_editable', p_sat_is_editable),
+                    msg_param('p_sat_raise_recursive', p_sat_raise_recursive)));
+      
     -- maintain translatable item
     l_pti_id := 'SAT_' || p_sat_id;
     pit_admin.merge_translatable_item(
@@ -1588,6 +1829,10 @@ as
     p_row in sct_action_type_v%rowtype)
   as
   begin
+    pit.enter_mandatory;
+
+    validate_action_type(p_row);
+    
     merge_action_type(
       p_sat_id => p_row.sat_id,
       p_sat_stg_id => p_row.sat_stg_id,
@@ -1598,6 +1843,8 @@ as
       p_sat_js => p_row.sat_js,
       p_sat_is_editable => p_row.sat_is_editable,
       p_sat_raise_recursive => p_row.sat_raise_recursive);
+      
+    pit.leave_mandatory;
   end merge_action_type;
 
 
@@ -1605,8 +1852,14 @@ as
     p_sat_id in sct_action_type.sat_id%type)
   as
   begin
+    pit.enter_mandatory(
+      p_params => msg_params(
+                    msg_param('p_sat_id', p_sat_id)));
+                    
     delete from sct_action_type
      where sat_id = p_sat_id;
+      
+    pit.leave_mandatory;
   end delete_action_type;
 
 
@@ -1614,8 +1867,31 @@ as
     p_row in sct_action_type_v%rowtype)
   as
   begin
+    pit.enter_mandatory;
+
     delete_action_type(p_row.sat_id);
+      
+    pit.leave_mandatory;
   end delete_action_type;
+  
+
+  procedure validate_action_type(
+    p_row in sct_action_type_v%rowtype)
+  as
+  begin
+    pit.enter_mandatory;
+  
+    pit.assert_not_null(p_row.sat_id, msg.SCT_PARAM_MISSING, p_error_code => 'SAT_ID_MISSING');
+    pit.assert_not_null(p_row.sat_stg_id, msg.SCT_PARAM_MISSING, p_error_code => 'SAT_STG_ID_MISSING');
+    pit.assert_not_null(p_row.sat_sif_id, msg.SCT_PARAM_MISSING, p_error_code => 'SAT_SIF_ID_MISSING');
+    pit.assert_not_null(p_row.sat_name, msg.SCT_PARAM_MISSING, p_error_code => 'SAT_NAME_MISSING');
+    
+    pit.leave_mandatory;
+  exception
+    when others then
+      pit.leave_mandatory;
+      raise;
+  end validate_action_type;
 
 
   function export_action_types(
@@ -1625,7 +1901,7 @@ as
     C_UTTM_NAME constant utl_text_templates.uttm_name%type := 'EXPORT_ACTION_TYPE';
     C_WRAP_START constant varchar2(5) := 'q''{';
     C_WRAP_END constant varchar2(5) := '}''';
-    C_STMT constant varchar2(32767) := q'#
+    C_STMT constant utl_apex.max_char := q'#
          with params as (
                 select uttm_mode, uttm_text template, null sat_is_editable
                   from utl_text_templates
@@ -1746,6 +2022,17 @@ as
   as
     l_pti_id pit_translatable_item.pti_id%type;
   begin
+    pit.enter_mandatory(
+      p_params => msg_params(
+                    msg_param('p_sap_sat_id', p_sap_sat_id),
+                    msg_param('p_sap_spt_id', p_sap_spt_id),
+                    msg_param('p_sap_sort_seq', to_char(p_sap_sort_seq)),
+                    msg_param('p_sap_default', p_sap_default),
+                    msg_param('p_sap_description', p_sap_description),
+                    msg_param('p_sap_display_name', p_sap_display_name),
+                    msg_param('p_sap_mandatory', p_sap_mandatory),
+                    msg_param('p_sap_active', p_sap_active)));
+                    
     -- maintain translatable item
     select 'SAP_' || standard_hash(p_sap_sat_id || p_sap_spt_id || p_sap_sort_seq, 'MD5')
       into l_pti_id
@@ -1786,6 +2073,10 @@ as
     p_row in out nocopy sct_action_parameter_v%rowtype)
   as
   begin
+    pit.enter_mandatory;
+    
+    validate_action_parameter(p_row);
+    
     merge_action_parameter(
       p_sap_sat_id => p_row.sap_sat_id,
       p_sap_spt_id => p_row.sap_spt_id,
@@ -1795,18 +2086,55 @@ as
       p_sap_display_name => p_row.sap_display_name,
       p_sap_mandatory => p_row.sap_mandatory,
       p_sap_active => p_row.sap_active);
+    
+    pit.leave_mandatory;
   end merge_action_parameter;
+  
+  
+  procedure delete_action_parameter(
+    p_sap_sat_id in sct_action_parameter.sap_sat_id%type,
+    p_sap_spt_id in sct_action_parameter.sap_spt_id%type,
+    p_sap_sort_seq in sct_action_parameter.sap_sort_seq%type)
+  as
+  begin
+    pit.enter_mandatory(
+      p_params => msg_params(
+                    msg_param('p_sap_sat_id', p_sap_sat_id)));
+                    
+    delete from sct_action_parameter
+     where sap_sat_id = p_sap_sat_id
+       and sap_spt_id = p_sap_spt_id
+       and sap_sort_seq = p_sap_sort_seq;
+    
+    pit.leave_mandatory;
+  end delete_action_parameter;      
 
 
   procedure delete_action_parameter(
     p_row in sct_action_parameter_v%rowtype)
   as
   begin
-    delete from sct_action_parameter
-     where sap_sat_id = p_row.sap_sat_id
-       and sap_spt_id = p_row.sap_spt_id
-       and sap_sort_seq = p_row.sap_sort_seq;
+    pit.enter_mandatory;
+    
+    delete_action_parameter(
+      p_sap_sat_id => p_row.sap_sat_id,
+      p_sap_spt_id => p_row.sap_spt_id,
+      p_sap_sort_seq => p_row.sap_sort_seq);
+    
+    pit.leave_mandatory;
   end delete_action_parameter;
+  
+
+  procedure validate_action_parameter(
+    p_row in sct_action_parameter_v%rowtype)
+  as
+  begin
+    pit.enter_mandatory;
+    
+    /** TODO: Add validation */
+    
+    pit.leave_mandatory;
+  end validate_action_parameter;
 
 
   procedure merge_rule_action(
@@ -1825,7 +2153,21 @@ as
     p_sra_comment in sct_rule_action.sra_comment%type default null)
   as
   begin
-    pit.enter_mandatory;
+    pit.enter_mandatory(
+      p_params => msg_params(
+                    msg_param('p_sra_id', to_char(p_sra_id)),
+                    msg_param('p_sra_sru_id', to_char(p_sra_sru_id)),
+                    msg_param('p_sra_sgr_id', to_char(p_sra_sgr_id)),
+                    msg_param('p_sra_spi_id', p_sra_spi_id),
+                    msg_param('p_sra_sat_id', p_sra_sat_id),
+                    msg_param('p_sra_sort_seq', to_char(p_sra_sort_seq)),
+                    msg_param('p_sra_param_1', p_sra_param_1),
+                    msg_param('p_sra_param_2', p_sra_param_2),
+                    msg_param('p_sra_param_3', p_sra_param_3),
+                    msg_param('p_sra_on_error', p_sra_on_error),
+                    msg_param('p_sra_raise_recursive', p_sra_raise_recursive),
+                    msg_param('p_sra_active', p_sra_active),
+                    msg_param('p_sra_comment', p_sra_comment)));
 
     merge into sct_rule_action t
     using (select p_sra_id sra_id,
@@ -1873,6 +2215,8 @@ as
   as
   begin
     pit.enter_mandatory;
+    
+    validate_rule_action(p_row);
 
     merge_rule_action(
       p_sra_id => p_row.sra_id,
@@ -1897,7 +2241,9 @@ as
     p_sra_id in sct_rule_action.sra_id%type)
   as
   begin
-    pit.enter_mandatory;
+    pit.enter_mandatory(
+      p_params => msg_params(
+                    msg_param('p_sra_id', to_char(p_sra_id))));
 
     delete from sct_rule_action
      where sra_id = p_sra_id;
@@ -1907,12 +2253,31 @@ as
 
 
   procedure delete_rule_action(
-    p_row in out nocopy sct_rule_action%rowtype)
+    p_row in sct_rule_action%rowtype)
   as
   begin
+    pit.enter_optional;
+    
     delete_rule_action(
       p_sra_id => p_row.sra_id);
+    
+    pit.leave_optional;
   end delete_rule_action;
+  
+  
+  procedure validate_rule_action(
+    p_row in sct_rule_action%rowtype)
+  as
+  begin
+    pit.enter_optional;
+    
+    pit.assert_not_null(p_row.sra_sru_id, msg.SCT_PARAM_MISSING, p_error_code => 'SRA_SRU_ID_MISSING');
+    pit.assert_not_null(p_row.sra_sgr_id, msg.SCT_PARAM_MISSING, p_error_code => 'SRA_SGR_ID_MISSING');
+    pit.assert_not_null(p_row.sra_spi_id, msg.SCT_PARAM_MISSING, p_error_code => 'SRA_SPI_ID_MISSING');
+    pit.assert_not_null(p_row.sra_sat_id, msg.SCT_PARAM_MISSING, p_error_code => 'SRA_SAT_ID_MISSING');
+    
+    pit.leave_optional;
+  end validate_rule_action;
 
 
   procedure add_translation(

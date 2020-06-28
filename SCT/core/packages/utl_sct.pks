@@ -185,7 +185,7 @@ as
    * @param [p_raise_event] Flag indicating whether a Change Event should be triggered. (Default TRUE, event is triggered)
    */
   procedure set_item(
-    p_spi_idin varchar2 default C_DOCUMENT,
+    p_spi_id in varchar2 default C_DOCUMENT,
     p_item_value in varchar2,
     p_jquery_sel in varchar2 default null,
     p_raise_event in boolean default true);
@@ -231,12 +231,12 @@ as
 
 
   /** Display note only in message window (alert box)
-   * @param  p_focus_item_sel  Element which receives the focus after confirmation
-   * @param  p_msg_text        Message text in quotation marks or function that returns value
-   * @param [p_msg_type]       Message type in quotation marks: C_ERROR, C_WARNING, C_NOTE
+   * @param  p_spi_id_focus  Element which receives the focus after confirmation
+   * @param  p_msg_text      Message text in quotation marks or function that returns value
+   * @param [p_msg_type]     Message type in quotation marks: C_ERROR, C_WARNING, C_NOTE
    */
   procedure show_alert(
-    p_focus_item_sel in varchar2,
+    p_spi_id_focus in varchar2,
     p_msg_text in varchar2,
     p_msg_type in varchar2 default C_NOTE);
 
@@ -282,12 +282,12 @@ as
 
   /** Display note in message window and region
    *  The action must be linked to a specific element. This element receives the focus after confirmation of the message.
-   * @param  p_focus_item_sel  Element which receives the focus after confirmation
-   * @param  p_msg_text        Message text in quotation marks or function that returns value
-   * @param [p_msg_type]       Message type in quotation marks: C_ERROR, C_WARNING, C_NOTE
+   * @param  p_spi_id_focus  Element which receives the focus after confirmation
+   * @param  p_msg_text      Message text in quotation marks or function that returns value
+   * @param [p_msg_type]     Message type in quotation marks: C_ERROR, C_WARNING, C_NOTE
    */
   procedure show_message(
-    p_focus_item_sel in varchar2,
+    p_spi_id_focus in varchar2,
     p_msg_text in varchar2,
     p_msg_type in varchar2 default C_NOTE);
 

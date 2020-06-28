@@ -454,6 +454,33 @@ begin
     p_pms_pml_name => 'GERMAN',
     p_error_number => -20000);
 
+  pit_admin.merge_message(
+    p_pms_name => 'SCT_PARAM_LOV_MISSING',
+    p_pms_pmg_name => 'SCT',
+    p_pms_text => q'^Der Parametertyp #1# erfordert eine LOV-View des Namens #2#. Diese fehlt.^',
+    p_pms_description => q'^Ein Parametertyp, der eine LOV-Liste benötigt, erfordert eine entsprechende LOV-View, damit die erforderlichen Daten ermittelt werden können.^',
+    p_pms_pse_id => 30,
+    p_pms_pml_name => 'GERMAN',
+    p_error_number => -20000);
+
+  pit_admin.merge_message(
+    p_pms_name => 'SCT_PARAM_LOV_INCORRECT',
+    p_pms_pmg_name => 'SCT',
+    p_pms_text => q'^Die LOV-View #1# hat nicht die vorgegebenen Spalten D, R und SGR_ID.^',
+    p_pms_description => q'^Damit eine LOV-View genutzt werden kann, muss sie über genau 3 Spalten mit den Bezeichnern D, R und SGR_ID verfügen.^',
+    p_pms_pse_id => 30,
+    p_pms_pml_name => 'GERMAN',
+    p_error_number => -20000);
+
+  pit_admin.merge_message(
+    p_pms_name => 'SCT_PARAM_MISSING',
+    p_pms_pmg_name => 'SCT',
+    p_pms_text => q'^Feld #LABEL# ist ein Pflichtfeld.^',
+    p_pms_description => q'^Das Eingaefeld ist ein Pflichtparameter und muss daher belegt werden.^',
+    p_pms_pse_id => 30,
+    p_pms_pml_name => 'GERMAN',
+    p_error_number => -20000);
+
   commit;
   pit_admin.create_message_package;
 end;
