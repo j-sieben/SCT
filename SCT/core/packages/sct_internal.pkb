@@ -25,7 +25,7 @@ as
   C_BIND_JSON_ELEMENT constant sct_util.sql_char := '{"id":"#ID#","event":"#EVENT#","action":"#STATIC_ACTION#"}';
   C_PAGE_JSON_ELEMENT constant sct_util.sql_char := '{"id":"#ID#","value":"#VALUE#"}';  
   C_JS_NAMESPACE constant sct_util.ora_name_type := 'de.condes.plugin.sct';
-  C_JS_SCRIPT_FRAME constant sct_util.sql_char := q'^<script>#CR#  /** Init: #DURATION#hsec*/#CR#  #JS_FILE#.setItemValues(#ITEM_JSON#);#CR#  #JS_FILE#.setErrors(#ERROR_JSON#);#CR##SCRIPT##CR#</script>^';
+  C_JS_SCRIPT_FRAME constant sct_util.sql_char := q'^<script id="#ID#">#CR#  /** Init: #DURATION#hsec*/#CR#  #JS_FILE#.setItemValues(#ITEM_JSON#);#CR#  #JS_FILE#.setErrors(#ERROR_JSON#);#CR##SCRIPT##CR#</script>^';
 
   /** Private types */
   type item_stack_t is table of number index by varchar2(50);
@@ -733,6 +733,7 @@ as
     
     -- wrap JavaScript in <script> tag and add item value and error scripts
     l_js := utl_text.bulk_replace(C_JS_SCRIPT_FRAME, char_table(
+              'ID', 'S_' || trunc(dbms_random.value * 10000000),
               'SCRIPT', l_js,
               'CR', sct_util.C_CR,
               'ITEM_JSON', get_items_as_json,
@@ -1755,6 +1756,7 @@ as
     p_param_3 in sct_rule_action.sra_param_3%type default null)
   as
     l_row sct_action_type%rowtype;
+    l_java_script sct_util.max_char;
   begin
     -- Tracing done in SCT
     select *
@@ -1773,13 +1775,13 @@ as
     end if;
 
     if l_row.sat_js is not null then
-      utl_text.bulk_replace(l_row.sat_js, char_table(
-        'ITEM', p_spi_id,
-        'SELECTOR', analyze_parameter(p_spi_id, l_row.sat_js, '#SELECTOR#', p_param_2),
-        'PARAM_1', p_param_1,
-        'PARAM_2', p_param_2,
-        'PARAM_3', p_param_3));
-      add_java_script(l_row.sat_js);
+      l_java_script := utl_text.bulk_replace(l_row.sat_js, char_table(
+                         'ITEM', p_spi_id,
+                         'SELECTOR', analyze_parameter(p_spi_id, l_row.sat_js, '#SELECTOR#', p_param_2),
+                         'PARAM_1', p_param_1,
+                         'PARAM_2', p_param_2,
+                         'PARAM_3', p_param_3));
+      add_java_script(l_java_script);
     end if;
   exception
     when NO_DATA_FOUND then

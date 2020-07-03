@@ -8,14 +8,8 @@ as
    * @usage  This package implements the methods required to maintain SCT rule groups via an APEX application
    */
 
-  /** Method to copy a rule group to a different application or application page
-   * @usage  Is used after an APEX application has been copiued to a different ID within the same workspace
-   *         to copy all rule groups to the newly created application
-   */
-  procedure copy_sgr;
 
-
-  /** Method to export one or many rule groups as a zip or clob file to the application page as download
+  /** Method to download one or many rule groups as a zip file
    */
   procedure process_export_sgr;
 

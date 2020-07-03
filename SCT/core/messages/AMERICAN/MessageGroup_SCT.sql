@@ -463,6 +463,15 @@ begin
     p_pms_pml_name => 'AMERICAN',
     p_error_number => -20000);
 
+  pit_admin.merge_message(
+    p_pms_name => 'SCT_UNKNOWN_EXPORT_MODE',
+    p_pms_pmg_name => 'SCT',
+    p_pms_text => q'^Export type #1# is unknown.^',
+    p_pms_description => q'^An unsupported export type was requested. Only use the constants C_%_GROUP(S).^',
+    p_pms_pse_id => 30,
+    p_pms_pml_name => 'GERMAN',
+    p_error_number => -20000);
+
   commit;
   pit_admin.create_message_package;
 end;

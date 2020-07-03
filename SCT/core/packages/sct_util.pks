@@ -7,13 +7,22 @@ as
   subtype sql_char is varchar2(4000 byte);
   subtype max_char is varchar2(32767 byte);
   subtype flag_type is &FLAG_TYPE.;
+   
+  /* Record with environmental information about the actually executed rule
+   * @usage  Is used in sct_validation for checks against the meta data of SCT
+   */
+  type environment_rec is record(
+    sgr_id sct_rule_group.sgr_id%type,
+    app_id sct_rule_group.sgr_app_id%type,
+    page_id sct_rule_group.sgr_page_id%type);
   
-  C_WITH_UNIT_TESTS constant boolean := &WITH_UT.;
 
   /* Package constants */
+  C_WITH_UNIT_TESTS constant boolean := &WITH_UT.;
   C_NO_FIRING_ITEM constant varchar2(30 byte) := 'DOCUMENT';
   C_INITIALIZE_EVENT constant varchar2(25) := 'initialize';    
   
+  C_SCT constant ora_name_type := 'SCT';
   C_TRUE constant flag_type := &C_TRUE.;
   C_FALSE constant flag_type := &C_FALSE.;
   C_CR constant varchar2(2 byte) := chr(10);
@@ -73,6 +82,17 @@ as
    */
   function clean_sct_name(
     p_name in varchar2)
+    return varchar2;
+    
+  
+  /** Wrapper around PIT.get_trans_item_name that sets the trans item group to SCT
+   * @param  p_item      Item to translate
+   * @param [p_msg_args] Optional list of arguments to incorporate into the translated item name
+   * @return Translated item name
+   */
+  function get_trans_item_name(
+    p_item in varchar2,
+    p_msg_args in msg_args default null)
     return varchar2;
 
 end sct_util;

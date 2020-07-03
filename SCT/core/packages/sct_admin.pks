@@ -7,7 +7,12 @@ as
    **/
 
   /** Package constants */
-  C_VIEW_NAME_PREFIX constant varchar2(25) := 'SCT_RULES_GROUP_';
+  C_VIEW_NAME_PREFIX constant sct_util.ora_name_type := 'SCT_RULES_GROUP_';
+  
+  C_ALL_GROUPS constant sct_util.ora_name_type := 'ALL_GROUPS';
+  C_APP_GROUPS constant sct_util.ora_name_type := 'APP_GROUPS';
+  C_PAGE_GROUPS constant sct_util.ora_name_type := 'PAGE_GROUPS';
+  C_ONE_GROUP constant sct_util.ora_name_type := 'ONE_GROUP';
 
   /** Method to map technical IDs upon import or copying of rule groups
    * @param [p_id] ID to map to a new ID. If NULL, the mapping list is initialized
@@ -91,37 +96,39 @@ as
     p_sgr_id in sct_rule_group.sgr_id%type);
 
 
-  /** Method to copy a rule group between APEX applications
-   * @param  p_sgr_id          ID of the rule group to copy
-   * @param  p_sgr_app_id_to   APEX application id of the application the rule is to be copied to
-   * @param  p_sgr_page_id_to  APEX application page id of the application the rule is to be copied to
-   * @usage  Is used to copy an existing rule group between APEX applications of the same workspace.
-   */
-  procedure copy_rule_group(
-    p_sgr_id in sct_rule_group.sgr_id%type,
-    p_sgr_app_id_to in sct_rule_group.sgr_app_id%type,
-    p_sgr_page_id_to in sct_rule_group.sgr_page_id%type);
-
-
-  /** Method to export one or more rule groups
-   * @param [p_sgr_app_id]         APEX application ID of the application of which all rule groups are to be exported
-   * @param [p_sgr_id]             Rule group ID of the rule group that is to be exported
-   * @param [p_sgr_app_id_map_to]  If a rule group is copied, this parameter defines the target application id
-   * @param [p_sgr_page_id_map_to] If a rule group is copied, this parameter defines the target application page id
-   * @usage  Based on the parameters passed in this method will export one or more rule groups.
-   *         If no parameter is passed in, all existing rule groups are exported.
-   *         If parameter P_SGR_APP_ID is passed in and P_SGR_ID is null, all rule groups of the respective APEX application
-   *         will be exported.
-   *         If parameter P_SGR_ID is passed in and P_SGR_APP_ID is null, only the mentioned rule group is exported.
-   *         If parameter P_SGR_ID is not null and P_SGR_APP_ID is not null, P_SGR_APP_ID must point to the application in which
-   *         P_SGR_ID exists. Otherwise, no rule group is exported and an exception is thrown.
+  /** Method to export one rule group
+   * @param  p_sgr_id  Rule group ID of the rule group that is to be exported
+   * @usage  If called, the respective rule group is exported as a CLOB instance
+   * @return Script to import a rule group, including all necessary information, excluding action type definitions
    */
   function export_rule_group(
-    p_sgr_app_id in sct_rule_group.sgr_app_id%type default null,
-    p_sgr_id in sct_rule_group.sgr_id%type default null,
-    p_sgr_app_id_map_to in sct_rule_group.sgr_app_id%type default null,
-    p_sgr_page_id_map_to in sct_rule_group.sgr_id%type default null)
+    p_sgr_id in sct_rule_group.sgr_id%type)
     return clob;
+
+
+  /** Method to export one or many rule groups
+   * @param [p_sgr_app_id]  APEX application ID of the application of which all rule groups are to be exported
+   * @param [p_sgr_page_id] If a rule group is copied, this parameter defines the target application page id
+   * @param [p_sgr_id]      Rule group ID of the rule group that is to be exported
+   * @usage  Based on the parameters passed in this method will export one or more rule groups.
+   *         If no parameter is passed in, all existing rule groups are exported.
+   *         If only parameter P_SGR_APP_ID is passed in all rule groups of the respective APEX application are exported.
+   *         If parameters P_SGR_APP_ID and P_SGR_PAGE_ID is passed in only the rule group of the respecite APEX application page are exported.
+   *         If parameters P_SGR_APP_ID, P_SGR_PAGE_ID and P_SGR_ID is not null, only this specific rule group is exported.
+   * @return BLOB instance of all files, separated by rule group name as a ZIP file instance
+   * @throws Error Codes:
+   *         APP_ID_MISSING if export mode is set to C_APP_GROUPS or C_PAGE_GROUPS and no application id was provided
+   *         PAGE_ID_MISSING if export mode is set to C_PAGE_GROUPS and no application page id was provided
+   *         SGR_ID_MISSING if export mode is set to C_ONE_GROUP and no rule group id was provided
+   *         SGR_DOES_NOT_EXIST if export mode is set to C_ONE_GROUP but SGR_ID passed in does not exist
+   *         msg.SCT_UNKNOWN_EXPORT_MODE if an export mode other than C_ALL_GROUPS, C_APP_GROUPS, C_PAGE_GROUPS or C_ONE_GROUP was requested
+   */
+  function export_rule_groups(
+    p_sgr_app_id in sct_rule_group.sgr_app_id%type default null,
+    p_sgr_page_id in sct_rule_group.sgr_page_id%type default null,
+    p_sgr_id in sct_rule_group.sgr_id%type default null,
+    p_mode in varchar2 default C_ONE_GROUP)
+    return blob;
 
 
   /** Method to prepare a rule group import

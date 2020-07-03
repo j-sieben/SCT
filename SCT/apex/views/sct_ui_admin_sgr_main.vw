@@ -1,11 +1,11 @@
 create or replace view sct_ui_admin_sgr_main
 as 
 with params as (
-       select v('APP_ID') app_id,
-              v('P1_SGR_APP_ID') sgr_app_id,
-              v('P1_SGR_PAGE_ID') sgr_page_id,
+       select utl_apex.get_application_id app_id,
+              utl_apex.get_number('P1_SGR_APP_ID') sgr_app_id,
+              utl_apex.get_number('P1_SGR_PAGE_ID') sgr_page_id,
               sct_util.get_true is_true,
-              case when instr(apex_util.get_groups_user_belongs_to(v('APP_USER')), 'SCT_ADMIN') > 0 then sct_util.get_true else sct_util.get_false end is_sct_admin
+              utl_apex.current_user_is_in_group('SCT_ADMIN') is_sct_admin
          from dual
        ),
        rule_details as (

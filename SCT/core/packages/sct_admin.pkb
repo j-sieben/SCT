@@ -662,108 +662,21 @@ as
 
     pit.leave_mandatory;
   end propagate_rule_change;
-
-
-  procedure copy_rule_group(
-    p_sgr_id in sct_rule_group.sgr_id%type,
-    p_sgr_app_id_to in sct_rule_group.sgr_app_id%type,
-    p_sgr_page_id_to in sct_rule_group.sgr_page_id%type)
-  as
-    l_foo number;
-    l_sgr_id sct_rule_group.sgr_id%type;
-    l_sgr_name sct_rule_group.sgr_name%type;
-    l_stmt clob;
-  begin
-    pit.enter_mandatory(
-      p_params => msg_params(
-                    msg_param('p_sgr_id', to_char(p_sgr_id)),
-                    msg_param('p_sgr_app_id_to', to_char(p_sgr_app_id_to)),
-                    msg_param('p_sgr_page_id_to', to_char(p_sgr_page_id_to))));
-
-    -- Check whether source rule group exists
-    pit.assert_exists(
-      'select sgr_id ' ||
-      '  from sct_rule_group ' ||
-      ' where sgr_id = ' || p_sgr_id,
-      msg.SCT_RULE_DOES_NOT_EXIST,
-      msg_args(to_char(p_sgr_id)));
-
-    -- Check whether target page exists
-    pit.assert_exists(
-      'select null ' ||
-      '  from apex_application_pages ' ||
-      ' where application_id = ' || p_sgr_app_id_to ||
-      '   and page_id = ' || p_sgr_page_id_to,
-      msg.SCT_PAGE_DOES_NOT_EXIST,
-      msg_args(to_char(p_sgr_app_id_to)));
-
-    -- Check whether source page and target page are different
-    pit.assert_not_exists(
-      'select null ' ||
-      '  from sct_rule_group ' ||
-      ' where application_id = ' || p_sgr_app_id_to ||
-      '   and page_id = ' || p_sgr_page_id_to ||
-      '   and sgr_id = ' || p_sgr_id,
-      msg.SCT_TARGET_EQUALS_SOURCE,
-      msg_args(to_char(p_sgr_id), to_char(p_sgr_app_id_to), to_char(p_sgr_page_id_to)));
-
-    -- Initialize
-    select sgr_name
-      into l_sgr_name
-      from sct_rule_group
-     where sgr_id = p_sgr_id;
-
-    prepare_rule_group_import(
-      p_sgr_app_id => p_sgr_app_id_to,
-      p_sgr_page_id => p_sgr_page_id_to,
-      p_sgr_name => l_sgr_name);
-
-    l_stmt := export_rule_group(
-                p_sgr_id => p_sgr_id,
-                p_sgr_app_id_map_to => p_sgr_app_id_to,
-                p_sgr_page_id_map_to => p_sgr_page_id_to);
-    execute immediate l_stmt;
-
-    pit.leave_mandatory;
-  end copy_rule_group;
-
-
+  
+  
   function export_rule_group(
-    p_sgr_app_id in sct_rule_group.sgr_app_id%type default null,
-    p_sgr_id in sct_rule_group.sgr_id%type default null,
-    p_sgr_app_id_map_to in sct_rule_group.sgr_app_id%type default null,
-    p_sgr_page_id_map_to in sct_rule_group.sgr_id%type default null)
+    p_sgr_id in sct_rule_group.sgr_id%type)
     return clob
   as
-    cursor rule_group_cur(p_sgr_app_id in sct_rule_group.sgr_app_id%type) is
-      select sgr_id, sgr_app_id
-        from sct_rule_group
-       where sgr_app_id = p_sgr_app_id
-          or p_sgr_app_id is null;
-    l_stmt clob;
-    C_SGR_DELIMITER constant varchar2(20) := sct_util.C_CR || sct_util.C_CR || sct_util.C_CR;
     C_UTTM_NAME constant utl_text_templates.uttm_name%type := 'EXPORT_RULE_GROUP';
-  begin
-    pit.enter_mandatory(
-      p_params => msg_params(
-                    msg_param('p_sgr_app_id', to_char(p_sgr_app_id)),
-                    msg_param('p_sgr_id', to_char(p_sgr_id))));
-
-    dbms_lob.createTemporary(l_stmt, false, dbms_lob.call);
-
-    -- Create and append script for each rule group
-    if p_sgr_id is null then
-      for sgr in rule_group_cur(p_sgr_app_id) loop
-        dbms_lob.append(l_stmt, export_rule_group(p_sgr_id => sgr.sgr_id));
-      end loop;
-    else
-      -- Create export script based on UTL_TEXT export templates
+    l_stmt clob;
+  begin      -- Create export script based on UTL_TEXT export templates
       utl_text.set_secondary_anchor_char('&');
         with params as (
              select uttm_mode, uttm_text template,
                     sgr.sgr_id, sgr.sgr_name, sgr.sgr_description,
-                    coalesce(p_sgr_app_id_map_to, sgr_app_id) sgr_app_id,
-                    coalesce(p_sgr_page_id_map_to, sgr_page_id) sgr_page_id,
+                    sgr_app_id sgr_app_id,
+                    sgr_page_id sgr_page_id,
                     sct_util.to_bool(sgr_active) sgr_active,
                     sct_util.to_bool(sgr_with_recursion) sgr_with_recursion
                from utl_text_templates
@@ -822,11 +735,128 @@ as
         into l_stmt
         from params p
        where uttm_mode = C_DEFAULT;
-    end if;
-
-    pit.leave_mandatory(p_params => msg_params(msg_param('Return', limit_param_size(l_stmt))));
     return l_stmt;
   end export_rule_group;
+  
+  
+  /** Helper method to validate an export rule group request
+   * @param [p_sgr_app_id]  APEX application ID of the application of which all rule groups are to be exported
+   * @param [p_sgr_page_id] If a rule group is copied, this parameter defines the target application page id
+   * @param [p_sgr_id]      Rule group ID of the rule group that is to be exported
+   * @usage  Based on the parameters passed in this method will export one or more rule groups.
+   * @usage  Is used to check the export settings according to the P_MODE request
+   */
+  procedure validate_export_rule_groups(
+    p_sgr_app_id in out nocopy sct_rule_group.sgr_app_id%type,
+    p_sgr_page_id in out nocopy sct_rule_group.sgr_page_id%type,
+    p_sgr_id in out nocopy sct_rule_group.sgr_id%type,
+    p_mode in varchar2)
+  as
+    l_cur sys_refcursor;
+  begin
+    pit.enter_optional(
+      p_params => msg_params(
+                    msg_param('p_sgr_app_id', to_char(p_sgr_app_id)),
+                    msg_param('p_sgr_page_id', to_char(p_sgr_page_id)),
+                    msg_param('p_sgr_id', to_char(p_sgr_id))));
+    case p_mode
+      when C_ALL_GROUPS then
+        -- Reset unneeded restrictions
+        p_sgr_app_id := null;
+        p_sgr_page_id := null;
+        p_sgr_id := null;
+      when C_APP_GROUPS then
+        pit.assert_not_null(p_sgr_app_id, p_error_code => 'APP_ID_MISSING');
+        -- Reset unneeded restrictions
+        p_sgr_page_id := null;
+        p_sgr_id := null;
+      when C_PAGE_GROUPS then
+        pit.assert_not_null(p_sgr_app_id, p_error_code => 'APP_ID_MISSING');
+        pit.assert_not_null(p_sgr_page_id, p_error_code => 'PAGE_ID_MISSING');
+        -- Reset unneeded restrictions
+        p_sgr_id := null;
+      when C_ONE_GROUP then
+        pit.assert_not_null(p_sgr_id, p_error_code => 'SGR_ID_MISSING');
+        open l_cur for select null
+                         from sct_rule_group
+                        where sgr_id = p_sgr_id;
+        pit.assert_exists(l_cur, p_error_code => 'SGR_DOES_NOT_EXIST');
+      else
+        pit.error(msg.SCT_UNKNOWN_EXPORT_MODE, msg_args(p_mode));
+      end case;
+    pit.leave_optional;
+  exception
+    when others then
+      pit.stop;
+  end validate_export_rule_groups;
+
+
+  function export_rule_groups(
+    p_sgr_app_id in sct_rule_group.sgr_app_id%type default null,
+    p_sgr_page_id in sct_rule_group.sgr_page_id%type default null,
+    p_sgr_id in sct_rule_group.sgr_id%type default null,
+    p_mode in varchar2 default C_ONE_GROUP)
+    return blob
+  as
+    cursor rule_group_cur(
+      p_sgr_app_id in sct_rule_group.sgr_app_id%type,
+      p_sgr_page_id in sct_rule_group.sgr_page_id%type,
+      p_sgr_id in sct_rule_group.sgr_id%type) 
+    is
+      select sgr_id, lower(sgr_name) sgr_name
+        from sct_rule_group
+       where (sgr_app_id = p_sgr_app_id or p_sgr_app_id is null)
+         and (sgr_page_id = p_sgr_page_id or p_sgr_page_id is null)
+         and (sgr_id = p_sgr_id or p_sgr_id is null);
+    
+    C_FILE_NAME_PATTERN constant varchar2(100 byte) := 'merge_rule_group_#SGR_NAME#.sql';
+    C_ACTION_TYPE_FILE_NAME constant sct_util.ora_name_type := 'merge_action_types.sql';
+    
+    l_zip_file blob;
+    l_blob blob;
+    l_file_name varchar2(100);
+    
+    l_sgr_app_id sct_rule_group.sgr_app_id%type := p_sgr_app_id;
+    l_sgr_page_id sct_rule_group.sgr_page_id%type := p_sgr_page_id;
+    l_sgr_id sct_rule_group.sgr_id%type := p_sgr_id;
+  begin
+    pit.enter_mandatory(
+      p_params => msg_params(
+                    msg_param('p_sgr_app_id', to_char(p_sgr_app_id)),
+                    msg_param('p_sgr_page_id', to_char(p_sgr_page_id)),
+                    msg_param('p_sgr_id', to_char(p_sgr_id)),
+                    msg_param('p_mode', p_mode)));
+                    
+    validate_export_rule_groups(
+      p_sgr_app_id => l_sgr_app_id,
+      p_sgr_page_id => l_sgr_page_id,
+      p_sgr_id => l_sgr_id,
+      p_mode => p_mode);
+      
+    if p_mode = C_ALL_GROUPS then
+      -- only in this case integrate export of all action types
+      l_blob := utl_text.clob_to_blob(sct_admin.export_action_types);
+      apex_zip.add_file(
+        p_zipped_blob => l_zip_file,
+        p_file_name => C_ACTION_TYPE_FILE_NAME,
+        p_content => l_blob);
+    end if;
+        
+    for sgr in rule_group_cur(l_sgr_app_id, l_sgr_page_id, l_sgr_id) loop
+      l_blob := utl_text.clob_to_blob(sct_admin.export_rule_group(p_sgr_id => sgr.sgr_id));
+      l_file_name := replace(C_FILE_NAME_PATTERN, '#SGR_NAME#', sgr.sgr_name);
+     
+      apex_zip.add_file(
+        p_zipped_blob => l_zip_file,
+        p_file_name => l_file_name,
+        p_content => l_blob);
+    end loop;
+
+    apex_zip.finish(l_zip_file);
+
+    pit.leave_mandatory(p_params => msg_params(msg_param('ZIP file size', dbms_lob.getlength(l_zip_file))));
+    return l_zip_file;
+  end export_rule_groups;
 
 
   procedure prepare_rule_group_import(

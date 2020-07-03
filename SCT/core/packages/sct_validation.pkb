@@ -85,7 +85,7 @@ end;~';
   /* Private validators */
   procedure validate_is_apex_action(
     p_value in out nocopy varchar2,
-    p_environment in sct_internal.environment_rec)
+    p_environment in sct_util.environment_rec)
   as
     l_exists binary_integer;
   begin
@@ -239,7 +239,7 @@ end;~';
   procedure validate_is_selector(
     p_value in out nocopy varchar2,
     p_target in varchar2,
-    p_environment in sct_internal.environment_rec)
+    p_environment in sct_util.environment_rec)
   as
   begin
     p_value := trim(p_value);
@@ -264,7 +264,7 @@ end;~';
   procedure validate_is_page_item(
     p_value in out nocopy varchar2,
     p_target in varchar2,
-    p_environment in sct_internal.environment_rec)
+    p_environment in sct_util.environment_rec)
   as
   begin
     select spi_id
@@ -429,7 +429,7 @@ end;~';
     p_value in out nocopy sct_rule_action.sra_param_1%type,
     p_spt_id in sct_action_param_type.spt_id%type,
     p_spi_id in sct_page_item.spi_id%type,
-    p_environment in sct_internal.environment_rec)
+    p_environment in sct_util.environment_rec)
   as
   begin
     case p_spt_id

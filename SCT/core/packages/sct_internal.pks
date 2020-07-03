@@ -30,15 +30,6 @@ as
   procedure initialize_test;
   $END
 
-   
-  /* Record with environmental information about the actually executed rule
-   * @usage  Is used in sct_validation for checks against the meta data of SCT
-   */
-  type environment_rec is record(
-    sgr_id sct_rule_group.sgr_id%type,
-    app_id sct_rule_group.sgr_app_id%type,
-    page_id sct_rule_group.sgr_page_id%type);
-
   /* Internal methods to support the plugin functionality */
 
   /** Getter to retriece all elements that needs to be bound to an event handler as JSON

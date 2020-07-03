@@ -37,7 +37,7 @@ as
     p_value in out nocopy sct_rule_action.sra_param_1%type,
     p_spt_id in sct_action_param_type.spt_id%type,
     p_spi_id in sct_page_item.spi_id%type,
-    p_environment in sct_internal.environment_rec);
+    p_environment in sct_util.environment_rec);
     
 end sct_validation;
 /

@@ -851,69 +851,6 @@ begin
   );
 
   pit_admin.merge_translatable_item(
-    p_pti_id => 'SELECT_APP',
-    p_pti_pml_name => q'^GERMAN^',
-    p_pti_pmg_name => q'^SCT^',
-    p_pti_name => q'^Anwendung wählen^',
-    p_pti_display_name => q'^^',
-    p_pti_description => q'^^'
-  );
-
-  pit_admin.merge_translatable_item(
-    p_pti_id => 'SELECT_SGR',
-    p_pti_pml_name => q'^GERMAN^',
-    p_pti_pmg_name => q'^SCT^',
-    p_pti_name => q'^Regelgruppe wählen^',
-    p_pti_display_name => q'^^',
-    p_pti_description => q'^^'
-  );
-
-  pit_admin.merge_translatable_item(
-    p_pti_id => 'SGR_EXPORT_LABEL_ALL',
-    p_pti_pml_name => q'^GERMAN^',
-    p_pti_pmg_name => q'^SCT^',
-    p_pti_name => q'^Alle Regelgruppen exportieren^',
-    p_pti_display_name => q'^^',
-    p_pti_description => q'^^'
-  );
-
-  pit_admin.merge_translatable_item(
-    p_pti_id => 'SGR_EXPORT_LABEL_APP',
-    p_pti_pml_name => q'^GERMAN^',
-    p_pti_pmg_name => q'^SCT^',
-    p_pti_name => q'^Regelgruppen der Anwendung "#1#" exportieren^',
-    p_pti_display_name => q'^^',
-    p_pti_description => q'^^'
-  );
-
-  pit_admin.merge_translatable_item(
-    p_pti_id => 'SGR_EXPORT_LABEL_PAGE',
-    p_pti_pml_name => q'^GERMAN^',
-    p_pti_pmg_name => q'^SCT^',
-    p_pti_name => q'^Regelgruppen der Anwendungsseite "#1#" exportieren^',
-    p_pti_display_name => q'^^',
-    p_pti_description => q'^^'
-  );
-
-  pit_admin.merge_translatable_item(
-    p_pti_id => 'SGR_EXPORT_LABEL_SGR',
-    p_pti_pml_name => q'^GERMAN^',
-    p_pti_pmg_name => q'^SCT^',
-    p_pti_name => q'^Regelgruppe "#1#" exportieren^',
-    p_pti_display_name => q'^^',
-    p_pti_description => q'^^'
-  );
-
-  pit_admin.merge_translatable_item(
-    p_pti_id => 'SGR_REGION_HEADING',
-    p_pti_pml_name => q'^GERMAN^',
-    p_pti_pmg_name => q'^SCT^',
-    p_pti_name => q'^Regelübersicht »#1#« (#2#)^',
-    p_pti_display_name => q'^^',
-    p_pti_description => q'^^'
-  );
-
-  pit_admin.merge_translatable_item(
     p_pti_id => 'SIF_ALL',
     p_pti_pml_name => q'^GERMAN^',
     p_pti_pmg_name => q'^SCT^',

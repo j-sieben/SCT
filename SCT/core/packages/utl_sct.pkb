@@ -221,10 +221,7 @@ as
   as
   begin
     pit.enter_optional;
-    sct_internal.execute_action(
-      p_sat_id => 'JAVA_SCRIPT_CODE',
-      p_spi_id => C_DOCUMENT,
-      p_param_1 => p_js_code);
+    sct.add_javascript(p_js_code);
     pit.leave_optional;
   end java_script_code;
   
@@ -408,7 +405,7 @@ as
   begin
     pit.enter_optional;
     sct_internal.execute_action(
-      p_sat_id => 'SHOW_HIDE_ITEM',
+      p_sat_id => 'TOGGLE_ITEMS',
       p_spi_id => C_DOCUMENT,
       p_param_1 => p_jquery_sel_show,
       p_param_2 => p_jquery_sel_hide);

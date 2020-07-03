@@ -73,6 +73,16 @@ as
     l_name := upper(substr(l_name, 1, 50));
     return l_name;
   end clean_sct_name;
+  
+  
+  function get_trans_item_name(
+    p_item in varchar2,
+    p_msg_args in msg_args default null)
+    return varchar2
+  as
+  begin
+    return pit.get_trans_item_name(C_SCT, p_item, p_msg_args);
+  end get_trans_item_name;
 
 end sct_util;
 /
