@@ -286,25 +286,23 @@ as
     p_raise_event in boolean default true)
   as
     C_APOS constant varchar2(1 byte) := '''';
-    l_action sct_action_type.sat_id%TYPE;
     l_item_value utl_apex.max_char;
   begin
     pit.enter_optional;
     
     l_item_value := apex_escape.js_literal(p_item_value);
     if p_raise_event then
-      l_action := 'SET_ITEM';
+      sct.set_item(
+        p_spi_id => p_spi_id, 
+        p_value => l_item_value);
     else
-      l_action := 'SET_VALUE_ONLY';
-      l_item_value := trim(c_apos from l_item_value);
+      --l_item_value := trim(c_apos from l_item_value);
+      sct_internal.execute_action(
+        p_sat_id => 'SET_VALUE_ONLY',
+        p_spi_id => p_spi_id,
+        p_param_1 => l_item_value,
+        p_param_2 => p_jquery_sel);
     end if;
-    
-    sct_internal.execute_action(
-      p_sat_id => l_action,
-      p_spi_id => p_spi_id,
-      p_param_1 => p_item_value,
-      p_param_2 => p_jquery_sel);
-      
     pit.leave_optional;
   end set_item;
   
@@ -480,6 +478,7 @@ as
     l_message_list pit_message_table;
     l_message message_type;
     l_item utl_apex.item_rec;
+    l_processed_messages char_table := char_table();
   begin
     pit.enter_optional;
     l_message_list := pit.get_message_collection;
@@ -500,10 +499,14 @@ as
           if l_error_code_map.exists(l_message.error_code) then
             utl_apex.get_page_element(l_error_code_map(l_message.error_code), l_item);
           end if;
-          sct.register_error(
-            p_spi_id => coalesce(l_item.item_name, sct_util.C_NO_FIRING_ITEM),
-            p_error_msg => replace(l_message.message_text, '#LABEL#', l_item.item_label),
-            p_internal_error => l_message.message_description);
+          if l_message.error_code not member of l_processed_messages then
+            l_processed_messages.extend;
+            l_processed_messages(l_processed_messages.count) := l_message.error_code;
+            sct.register_error(
+              p_spi_id => coalesce(l_item.item_name, sct_util.C_NO_FIRING_ITEM),
+              p_error_msg => replace(l_message.message_text, '#LABEL#', l_item.item_label),
+              p_internal_error => l_message.message_description);
+          end if;
         end if;
       end loop;
     end if;

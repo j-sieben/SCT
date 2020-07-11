@@ -97,7 +97,7 @@ as
   $IF sct_util.C_WITH_UNIT_TESTS $THEN
   /*============ UNIT TEST ============*/ 
   g_test_mode boolean := false;
-  g_test_result sct_test_result;
+  g_test_result ut_sct_result;
   
   procedure set_test_mode(
     p_mode in boolean default false)
@@ -115,7 +115,7 @@ as
   
   
   function get_test_result
-    return sct_test_result
+    return ut_sct_result
   as
   begin
     return g_test_result;
@@ -196,31 +196,31 @@ as
   end to_char_table;
   
   
-  function to_sct_test_js_list(
+  function to_ut_sct_js_list(
     p_js_list js_list)
-    return sct_test_js_list
+    return ut_sct_js_list
   as
-    l_test_js_list sct_test_js_list := sct_test_js_list();
+    l_test_js_list ut_sct_js_list := ut_sct_js_list();
     l_js_rec js_rec;
-    l_test_js_rec sct_test_js_rec;
+    l_test_js_rec ut_sct_js_rec;
   begin
     for i in 1 .. p_js_list.count loop
       l_js_rec := p_js_list(i);
-      l_test_js_rec := sct_test_js_rec(substr(l_js_rec.script, 1, 4000), l_js_rec.hash, l_js_rec.debug_level);
+      l_test_js_rec := ut_sct_js_rec(substr(l_js_rec.script, 1, 4000), l_js_rec.hash, l_js_rec.debug_level);
       l_test_js_list.extend;
       l_test_js_list(l_test_js_list.count) := l_test_js_rec;
     end loop;
     return l_test_js_list;
-  end to_sct_test_js_list;
+  end to_ut_sct_js_list;
   
   
-  function to_sct_test_row(
+  function to_ut_sct_row(
     p_rule_rec rule_rec)
-    return sct_test_row
+    return ut_sct_row
   as
-    l_test_row sct_test_row;
+    l_test_row ut_sct_row;
   begin
-    l_test_row := sct_test_row(
+    l_test_row := ut_sct_row(
                     -- Rule
                     p_rule_rec.sru_id, p_rule_rec.sru_sort_seq, p_rule_rec.sru_name, p_rule_rec.sru_firing_items,
                     p_rule_rec.sru_fire_on_page_load, p_rule_rec.item, p_rule_rec.pl_sql, p_rule_rec.js, 
@@ -230,11 +230,11 @@ as
                     g_param.id, g_param.sgr_id, g_param.firing_item, g_param.firing_event, g_param.error_dependent_items,
                     to_char_table(g_param.bind_items), to_char_table(g_param.page_items), to_char_table(g_param.firing_items),
                     to_char_table(g_param.error_stack),  to_char_table(g_param.recursive_stack), g_param.is_recursive, 
-                    to_sct_test_js_list(g_param.js_action_stack), to_char_table(g_param.level_length),
+                    to_ut_sct_js_list(g_param.js_action_stack), to_char_table(g_param.level_length),
                     g_param.recursive_level, sct_util.bool_to_flag(g_param.allow_recursion), g_param.notification_stack, 
                     sct_util.bool_to_flag(g_param.stop_flag), g_param.now);
     return l_test_row;
-  end to_sct_test_row;
+  end to_ut_sct_row;
   $END
   
   
@@ -244,7 +244,7 @@ as
     null;
     $IF sct_util.C_WITH_UNIT_TESTS $THEN
     if g_test_mode then
-      g_test_result := sct_test_result();
+      g_test_result := ut_sct_result();
     end if;
     $END
   end initialize_test;
@@ -254,14 +254,14 @@ as
     p_rule in rule_rec default null)
   as
     $IF sct_util.C_WITH_UNIT_TESTS $THEN
-    l_test_row sct_test_row;
+    l_test_row ut_sct_row;
     $END
   begin
     null;
     $IF sct_util.C_WITH_UNIT_TESTS $THEN
     if g_test_mode then      
       if p_rule.sru_id is not null then
-        l_test_row := to_sct_test_row(p_rule);
+        l_test_row := to_ut_sct_row(p_rule);
         g_test_result.rule_list.extend;
         g_test_result.rule_list(g_test_result.rule_list.count) := l_test_row;
       end if;
@@ -774,7 +774,7 @@ as
           p_java_script => sct_util.C_CR || 
                            pit.get_message_text(
                              p_message_name => l_origin_msg, 
-                             p_arg_list => msg_args(
+                             p_msg_args => msg_args(
                                              to_char(l_actual_recursive_level), 
                                              to_char(p_rule.sru_sort_seq), 
                                              p_rule.sru_name, 
@@ -1416,6 +1416,7 @@ as
     return date
   as
     l_raw_value sct_util.max_char;
+    l_format_mask sct_util.ora_name_type;
     l_date date;
   begin
     pit.enter_detailed(
@@ -1426,7 +1427,8 @@ as
   
     /** TODO: Umbauen auf VALIDATE_CONVERSION, falls 12.2 vorausgesetzt werden kann und die Bugs hierzu behoben sind */
     l_raw_value := get_char(p_spi_id);
-    l_date := to_date(l_raw_value, p_format_mask);
+    l_format_mask := coalesce(P_format_mask, get_conversion(p_spi_id));
+    l_date := to_date(l_raw_value, l_format_mask);
     
     pit.leave_detailed(p_params => msg_params(msg_param('Result', to_char(l_date, 'yyyy-mm-dd'))));
     return l_date;
@@ -1447,6 +1449,13 @@ as
       return null;
     when msg.INVALID_YEAR_ERR or msg.INVALID_MONTH_ERR or msg.INVALID_DAY_ERR then
       register_error(p_spi_id, msg.INVALID_YEAR, msg_args(sqlerrm));
+      if p_throw_error = sct_util.C_TRUE then
+        raise;
+      end if;
+      pit.leave_detailed(p_params => msg_params(msg_param('Result', to_char(l_date, 'yyyy-mm-dd'))));
+      return null;
+    when others then
+      register_error(p_spi_id, msg.INVALID_DATE_FORMAT, msg_args(sqlerrm));
       if p_throw_error = sct_util.C_TRUE then
         raise;
       end if;
@@ -1489,6 +1498,7 @@ as
     return number
   as
     l_raw_value sct_util.max_char;
+    l_format_mask sct_util.ora_name_type;
     l_result number;
   begin
     pit.enter_detailed(
@@ -1499,7 +1509,8 @@ as
     
     l_raw_value := get_char(p_spi_id);
     l_raw_value := rtrim(ltrim(l_raw_value, ', '));
-    l_result := to_number(l_raw_value, p_format_mask);
+    l_format_mask := coalesce(P_format_mask, get_conversion(p_spi_id));
+    l_result := to_number(l_raw_value, l_format_mask);
     
     pit.leave_detailed(p_params => msg_params(msg_param('Result', to_char(l_result))));
     return l_result;

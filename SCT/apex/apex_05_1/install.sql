@@ -21,10 +21,10 @@ prompt &h3.Install APEX-application from folder apex_&APEX_VERSION.
 prompt &s1.Prepare installation
 @&apex_version_dir./prepare_apex_import.sql
 
-
 prompt &s1.Install application
 @&app_dir/sct.sql
 @&app_dir/sct_manual.sql
 
 prompt &s1;install Group Select List plugin
 @&script_dir.item_type_plugin_de_condes_plugin_group_select_list.sql
+

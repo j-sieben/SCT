@@ -115,5 +115,17 @@ prompt &s1.Create package Body SCT_UI
 show errors
 
 prompt &h2;Version specific installation
-@&apex_version_dir./prepare_apex_import.sql
+@&apex_version_dir./install.sql
+
+
+prompt &h3.Install SCT rules
+@&script_dir.merge_action_types.sql
+@&script_dir.merge_rule_group_sct_admin_sat.sql
+@&script_dir.merge_rule_group_sct_admin_sgr.sql
+@&script_dir.merge_rule_group_sct_copy_sgr.sql
+@&script_dir.merge_rule_group_sct_edit_saa.sql
+@&script_dir.merge_rule_group_sct_edit_sgr.sql
+@&script_dir.merge_rule_group_sct_edit_sra.sql
+@&script_dir.merge_rule_group_sct_edit_sru.sql
+@&script_dir.merge_rule_group_sct_export_sgr.sql
 

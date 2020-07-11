@@ -7,7 +7,13 @@ as
    * @headcom
    * @usage  This package implements the methods required to maintain SCT rule groups via an APEX application
    */
-
+  
+  /** Message to retreive a new primary key value from SCT
+   * @usage  Is called by the SCT_UI interface to pouplate newly created rules etc.
+   */
+  function get_pk
+    return number;
+  
 
   /** Method to download one or many rule groups as a zip file
    */
@@ -49,6 +55,10 @@ as
    */
   function validate_edit_sru
     return boolean;
+    
+  /** Method to check a rule condition
+   */
+  procedure validate_rule;
 
   /** Method to process page EDIT_SRU
    * @usage  Is called to process user data if the page is submitted

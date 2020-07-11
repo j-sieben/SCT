@@ -25,7 +25,7 @@ as
    * @return Object structure that contains the result of the process.
    */
   function get_test_result
-    return sct_test_result;
+    return ut_sct_result;
 
   procedure initialize_test;
   $END

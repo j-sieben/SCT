@@ -260,7 +260,7 @@ as
     p_sai_active in sct_apex_action_item.sai_active%type default sct_util.C_TRUE);
 
   procedure merge_apex_action_item(
-    p_row sct_apex_action_item%rowtype);
+    p_row in out nocopy sct_apex_action_item%rowtype);
 
   procedure delete_apex_action_item(
     p_sai_saa_id in sct_apex_action_item.sai_saa_id%type);
@@ -300,8 +300,8 @@ as
     p_row in sct_rule%rowtype);
 
   /** Method to validate a rule
-   * @throws msg.SQL_ERROR_ERR if any invalid conditions are entered
-   *         Error-Codes:
+   * @throws Error-Codes:
+   *         - msg.SQL_ERROR if any invalid conditions are entered
    *         - SRU_SGR_ID_MISSING, if Parameter SRU_SGR_ID IS NULL
    *         - SRU_NAME_MISSING, if Parameter SRU_NAME IS NULL
    *         - SRU_CONDITION_MISSING, if Parameter SRU_CONDITION IS NULL

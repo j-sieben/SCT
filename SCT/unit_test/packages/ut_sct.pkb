@@ -1,31 +1,55 @@
-create or replace package body sct_test 
+create or replace package body ut_sct 
 as
 
-  c_apex_page constant number := 1;
-  c_apex_user constant utl_apex.ora_name_type := $$PLSQL_UNIT_OWNER;
-  C_BASE_SGR constant utl_apex.ora_name_type := 'SCT_ADMIN_SGR';
-  g_sgr_id sct_rule_group.sgr_id%type;
-  g_application_id number := 120;
+  C_APEX_USER constant utl_apex.ora_name_type := $$PLSQL_UNIT_OWNER;
   
+  C_DATE constant date := timestamp '2020-05-31 10:30:00';
+  C_VALID_DATE_STRING constant utl_apex.ora_name_type := '31-05-2020 10:30';
+  C_INVALID_DATE_STRING constant utl_apex.ora_name_type := '31.05.2020 10:30:45';
+  C_NUMBER constant number := 123456.78;
+  C_VALID_NUMBER_STRING constant utl_apex.ora_name_type := to_char(C_NUMBER, 'fm999G999D00');
+  C_INVALID_NUMBER_STRING constant utl_apex.ora_name_type := '123 456:78';
+  
+  -- Aplication pages
+  C_PAGE_TEST constant number := 98;
+  C_PAGE_ADMIN_SGR constant number := 1;
+  
+  -- Rule groups
+  C_SGR_ADMIN_SGR constant utl_apex.ora_name_type := 'SCT_ADMIN_SGR';
+  C_SGR_EDIT_SRU constant utl_apex.ora_name_type := 'SCT_EDIT_SRU';
+  C_SGR_TEST constant utl_apex.ora_name_type := 'SCT_TEST';
+  
+  -- Events
+  C_EVENT_CHANGE constant utl_apex.ora_name_type := 'change';
+  C_EVENT_INITIALIZE constant utl_apex.ora_name_type := 'initialize';
+  
+  -- Items
+  C_NO_ITEM constant utl_apex.ora_name_type := 'DOCUMENT';
+  C_ITEM_SGR_ID constant utl_apex.ora_name_type := 'P1_SGR_ID';
+  C_ITEM_SRU_ACTIVE constant utl_apex.ora_name_type := 'P5_SRU_ACTIVE';
+  C_ITEM_TEST_DATE constant utl_apex.ora_name_type := 'P98_TEST_DATE';
+  C_ITEM_TEST_NUMBER constant utl_apex.ora_name_type := 'P98_TEST_NUMBER';
+  
+  g_sgr_id sct_rule_group.sgr_id%type;
+  g_application_id number;  
   g_da_type apex_plugin.t_dynamic_action;
   g_plugin_type apex_plugin.t_plugin;
   g_render_result apex_plugin.t_dynamic_action_render_result;
   g_ajax_result apex_plugin.t_dynamic_action_ajax_result;
   g_test_name varchar2(128 byte);
   g_test_run number;
-  
+  g_group_delimiter char(1 byte);
+  g_decimal_delimiter char(1 byte);
 
   procedure get_session(
-    p_page_id in number default c_apex_page)
+    p_page_id in number default C_PAGE_ADMIN_SGR)
   as
   begin
     rollback;
-    if apex_application.g_instance is null then
-      apex_session.create_session(
-         p_app_id => g_application_id,
-         p_page_id => p_page_id,
-         p_username => c_apex_user);
-    end if;
+    utl_dev_apex.create_session(
+       p_app_id => g_application_id,
+       p_app_page_id => p_page_id,
+       p_app_user => c_apex_user);
     apex_application.g_flow_step_id := p_page_id;
     commit;
   end get_session;
@@ -35,32 +59,73 @@ as
   as
   begin
     rollback;
-    if apex_application.g_instance is not null then
-      apex_session.delete_session;
-    end if;
-    commit;
+    $IF utl_apex.ver_le_05 $THEN
+    $ELSE
+    utl_dev_apex.drop_session;
+    $END
   end drop_session;
+  
+  
+  procedure before_all
+  as
+    pragma autonomous_transaction;
+  begin
+    delete ut_sct_outcome;
+    commit;
+    g_test_run := 0;
+    pit.initialize;
+    utl_dev_apex.init_owa;
+    sct.set_test_mode(true);
+    pit.set_context('DEBUG');
+    get_session;
+    null;
+  end before_all;
+  
+  
+  procedure after_all
+  as
+  begin
+    pit.reset_context;
+
+  end after_all;
+  
+  
+  procedure before_each
+  as
+  begin
+    null;
+  end before_each;
+  
+  
+  procedure after_each
+  as
+  begin
+    drop_session;
+  end after_each;
   
 
   /** Method to control the plugin environment of SCT. Sets apex_plugin.t_dynamic_action and apex_plugin.t_plugin instances
-   * @param  
+   * @param  p_rule_group_name  Name of the rule group to test
+   * @param  p_firing_item      Name of the page item that has caused SCT to react
+   * @param  p_event            Event such as CHANGE, CLICK, DIALOG_CLOSED etc.
    * @usage  Is used to set the call environment for the plugin to enable tests. Is used along with the session state
    */
   procedure set_environment(
     p_rule_group_name in varchar2,
     p_firing_item in varchar2,
-    p_event in varchar2,
-    p_error_dependent_items in varchar2 default null)
-  as
-    
+    p_event in varchar2)
+  as    
   begin
     g_da_type.attribute_01 := p_rule_group_name;
     apex_application.g_x01 := p_firing_item;
     apex_application.g_x02 := p_event;
-    g_da_type.attribute_02 := p_error_dependent_items;
+    g_da_type.attribute_02 := null;
   end set_environment;
   
   
+  /** Method to retrieve the actual number of the test
+   * @return Test number as stored in G_TEST_RUN
+   */
   function get_test_run
     return number
   as
@@ -69,6 +134,10 @@ as
     return g_test_run;
   end get_test_run;
   
+  
+  /** Method to initialize the test environment
+   * @usage  Is used to read some primary key information from the APEX meta data
+   */
   procedure initialize
   as
   begin
@@ -80,32 +149,19 @@ as
     select sgr_id
       into g_sgr_id
       from sct_rule_group
-     where sgr_name = C_BASE_SGR;
-     
+     where sgr_name = C_SGR_ADMIN_SGR;     
   end initialize;
-
-
-  procedure tear_up
-  as
-    pragma autonomous_transaction;
-  begin
-    delete sct_test_outcome;
-    commit;
-    g_test_run := 0;
-    pit.initialize;
-    utl_test_apex.init_owa;
-    sct.set_test_mode(true);
-    pit.set_context(70, 30, true, 'PIT_CONSOLE');
-    get_session;
-    null;
-  end tear_up;
   
   
+  /** Helper method to write the outcome of to table UT_SCT_OUTCOME
+   * @usage  Is used to log any movement of SCT and the outcome.
+   *         It is not called from within the test, but SCT writes to it if in test mode
+   */
   procedure persist_outcome
   as
     l_run number := get_test_run;
   begin
-    insert into sct_test_outcome(test_name, sort_seq, sru_id, sru_sort_seq, sru_name, sru_firing_items, sru_fire_on_page_load, 
+    insert into ut_sct_outcome(test_name, sort_seq, sru_id, sru_sort_seq, sru_name, sru_firing_items, sru_fire_on_page_load, 
              item, pl_sql, js, sra_sort_seq, sra_param_1, sra_param_2, sra_param_3, sra_on_error, sru_on_error, is_first_row, 
              id, sgr_id, firing_item, firing_event, error_dependent_items, bind_items, page_items, firing_items, error_stack, 
              recursive_stack, js_action_stack, is_recursive, level_length, allow_recursion, notification_stack, stop_flag, now)
@@ -139,29 +195,28 @@ as
   begin
     g_test_name := 'render_plugin';
     get_session;
-    set_environment(C_BASE_SGR, 'DOCUMENT', 'INITIALIZE');
+    set_environment(C_SGR_ADMIN_SGR, C_NO_ITEM, C_EVENT_INITIALIZE);
     
     g_render_result := plugin_sct.render(g_da_type, g_plugin_type);
     
     ut.expect(g_render_result.attribute_02).to_equal('P1_SGR_APP_ID,P1_SGR_ID,P1_SGR_PAGE_ID');
-    drop_session;
   end render_plugin;
   
   
   --
-  -- test get_char case 1: Checks whether setting P1_SGR_ID to 1 leads to 1 executed rule with 2 actions
+  -- test refresh_plugin: Checks whether setting P1_SGR_ID to 1 leads to 1 executed rule with 1 action
   --
   procedure refresh_plugin
   as
     l_action_count binary_integer;
     l_rule_count binary_integer;
-    l_result sct_test_result;
+    l_result ut_sct_result;
   begin
     -- populate actual
     g_test_name := 'refresh_plugin';
     get_session;
-    utl_apex.set_value('P1_SGR_ID', g_sgr_id);
-    set_environment(C_BASE_SGR, 'P1_SGR_ID', 'change');
+    utl_apex.set_value(C_ITEM_SGR_ID, g_sgr_id);
+    set_environment(C_SGR_ADMIN_SGR, C_ITEM_SGR_ID, C_EVENT_CHANGE);
     
     g_ajax_result := plugin_sct.ajax(g_da_type, g_plugin_type);
     l_result := sct.get_test_result;
@@ -172,109 +227,143 @@ as
       from table(l_result.rule_list);
       
     -- assert
-    ut.expect(l_action_count).to_equal(2);
+    ut.expect(l_action_count).to_equal(1);
     ut.expect(l_rule_count).to_equal(1);
-    
-    drop_session;
   end refresh_plugin;
 
   --
-  -- test get_char case 1: Checks whether a page is able to pass back the string value
-  --
-  procedure get_char is
-  begin
-    g_test_name := 'get_char';
-    get_session;
-    utl_apex.set_value('P1_SGR_ID', g_sgr_id);
-    set_environment(C_BASE_SGR, 'P1_SGR_ID', 'change');    
-    g_ajax_result := plugin_sct.ajax(g_da_type, g_plugin_type);
-    
-    ut.expect(sct.get_char('P1_SGR_ID')).to_equal(to_char(g_sgr_id));
-    drop_session;
-  end get_char;
-
-  --
-  -- test get_char case 1: Checks whether a page is able to pass back a default value on NULL
-  --
-  procedure get_char_default is
-  begin
-    g_test_name := 'get_char';
-    get_session;
-    set_environment('SCT_EDIT_SRU', 'DOCUMENT', 'INITIALIZE');    
-    g_ajax_result := plugin_sct.ajax(g_da_type, g_plugin_type);
-    ut.expect(sct.get_char('P5_SRU_ACTIVE')).to_equal(sct_util.C_TRUE);
-    drop_session;
-  end get_char_default;
-
-  --
-  -- test get_date case 1: ...
-  --
-  procedure get_date is
-  begin
-    g_test_name := 'get_date';
-    get_session;
-    set_environment('SCT_EDIT_SRU', 'DOCUMENT', 'INITIALIZE');    
-    g_ajax_result := plugin_sct.ajax(g_da_type, g_plugin_type);
-    --ut.expect(sct.get_date('P5_SRU_ACTIVE')).to_equal(sct_util.C_TRUE);
-    drop_session;
-  end get_date;
-
-  --
-  -- test get_event case 1: ...
+  -- test get_event: Checks if the event passed in gets read correctly
   --
   procedure get_event is
-    l_actual  integer := 0;
-    l_expected integer := 1;
   begin
     g_test_name := 'get_event';
-    -- populate actual
-    -- sct.get_event;
-
-    -- populate expected
-    -- ...
-
-    -- assert
-    ut.expect(l_actual).to_equal(l_expected);
+    get_session;
+    utl_apex.set_value(C_ITEM_SGR_ID, g_sgr_id);
+    set_environment(C_SGR_ADMIN_SGR, C_ITEM_SGR_ID, C_EVENT_CHANGE);    
+    g_ajax_result := plugin_sct.ajax(g_da_type, g_plugin_type);
+    
+    ut.expect(sct.get_event()).to_equal(C_EVENT_CHANGE);
   end get_event;
 
   --
-  -- test get_firing_item case 1: ...
+  -- test get_firing_item: Reads the firing item that is passed in
   --
   procedure get_firing_item is
     l_actual  integer := 0;
     l_expected integer := 1;
   begin
     g_test_name := 'get_firing_item';
-    -- populate actual
-    -- sct.get_firing_item;
-
-    -- populate expected
-    -- ...
-
-    -- assert
-    ut.expect(l_actual).to_equal(l_expected);
+    get_session;
+    utl_apex.set_value(C_ITEM_SGR_ID, g_sgr_id);
+    set_environment(C_SGR_ADMIN_SGR, C_ITEM_SGR_ID, C_EVENT_CHANGE);    
+    g_ajax_result := plugin_sct.ajax(g_da_type, g_plugin_type);
+    
+    ut.expect(sct.get_event()).to_equal(C_EVENT_CHANGE);
   end get_firing_item;
 
   --
-  -- test get_number case 1: ...
+  -- test get_char: Checks whether SCT is able to pass back the string value
+  --
+  procedure get_char is
+  begin
+    g_test_name := 'get_char';
+    get_session;
+    utl_apex.set_value(C_ITEM_SGR_ID, g_sgr_id);
+    set_environment(C_SGR_ADMIN_SGR, C_ITEM_SGR_ID, C_EVENT_CHANGE);    
+    g_ajax_result := plugin_sct.ajax(g_da_type, g_plugin_type);
+    
+    ut.expect(sct.get_char(C_ITEM_SGR_ID)).to_equal(to_char(g_sgr_id));
+  end get_char;
+
+  --
+  -- test get_char_default: Checks whether SCT is able to pass back a default value on NULL
+  --
+  procedure get_char_default is
+  begin
+    g_test_name := 'get_char_default';
+    get_session;
+    set_environment(C_SGR_EDIT_SRU, C_NO_ITEM, C_EVENT_INITIALIZE);    
+    g_ajax_result := plugin_sct.ajax(g_da_type, g_plugin_type);
+    ut.expect(sct.get_char(C_ITEM_SRU_ACTIVE)).to_equal(sct_util.C_TRUE);
+  end get_char_default;
+
+  --
+  -- test get_date: Reads a date with an unusual date format defined on the page
+  --
+  procedure get_date is
+  begin
+    g_test_name := 'get_date';
+    get_session(C_PAGE_TEST);
+    utl_apex.set_value(C_ITEM_TEST_DATE, C_VALID_DATE_STRING);
+    set_environment(C_SGR_TEST, C_ITEM_TEST_DATE, C_EVENT_CHANGE);    
+    g_ajax_result := plugin_sct.ajax(g_da_type, g_plugin_type);
+    ut.expect(sct.get_date(C_ITEM_TEST_DATE)).to_equal(C_DATE);
+  end get_date;
+
+  --
+  -- test check_date: Controls if a page item contains a date
+  --
+  procedure check_date is
+  begin
+    g_test_name := 'check_date';
+    get_session(C_PAGE_TEST);
+    utl_apex.set_value(C_ITEM_TEST_DATE, C_VALID_DATE_STRING);
+    set_environment(C_SGR_TEST, C_ITEM_TEST_DATE, C_EVENT_CHANGE);
+    g_ajax_result := plugin_sct.ajax(g_da_type, g_plugin_type);
+  end check_date;
+
+  --
+  -- test check_no_date: Throws an exception if a page item contains an invalid date
+  --
+  procedure check_no_date is
+    l_date date;
+  begin
+    g_test_name := 'check_no_date';
+    get_session(C_PAGE_TEST);
+    utl_apex.set_value(C_ITEM_TEST_DATE, C_INVALID_DATE_STRING);
+    set_environment(C_SGR_TEST, C_ITEM_TEST_DATE, C_EVENT_CHANGE);
+    g_ajax_result := plugin_sct.ajax(g_da_type, g_plugin_type);
+  end check_no_date;
+
+  --
+  -- test get_number: Reads a number with an unusual date format defined on the page
   --
   procedure get_number is
-    l_actual  integer := 0;
-    l_expected integer := 1;
   begin
     g_test_name := 'get_number';
-    -- populate actual
-    -- sct.get_number;
-
-    -- populate expected
-    -- ...
-
-    -- assert
-    ut.expect(l_actual).to_equal(l_expected);
+    get_session(C_PAGE_TEST);
+    utl_apex.set_value(C_ITEM_TEST_NUMBER, C_VALID_NUMBER_STRING);
+    set_environment(C_SGR_TEST, C_ITEM_TEST_NUMBER, C_EVENT_CHANGE);    
+    --g_ajax_result := plugin_sct.ajax(g_da_type, g_plugin_type);
+    ut.expect(sct.get_number(C_ITEM_TEST_NUMBER)).to_equal(C_NUMBER);
   end get_number;
 
   --
-  -- test add_javascript case 1: ...
+  -- test check_number: Controls if a page item contains a date
+  --
+  procedure check_number is
+  begin
+    g_test_name := 'check_number';
+    get_session(C_PAGE_TEST);
+    utl_apex.set_value(C_ITEM_TEST_NUMBER, C_VALID_NUMBER_STRING);
+    set_environment(C_SGR_TEST, C_ITEM_TEST_NUMBER, C_EVENT_CHANGE);
+    g_ajax_result := plugin_sct.ajax(g_da_type, g_plugin_type);
+  end check_number;
+
+  --
+  -- test check_no_number: Throws an exception if a page item contains an invalid date
+  --
+  procedure check_no_number is
+  begin
+    g_test_name := 'check_no_number';
+    get_session(C_PAGE_TEST);
+    utl_apex.set_value(C_ITEM_TEST_NUMBER, C_INVALID_NUMBER_STRING);
+    set_environment(C_SGR_TEST, C_ITEM_TEST_NUMBER, C_EVENT_CHANGE);
+    g_ajax_result := plugin_sct.ajax(g_da_type, g_plugin_type);
+  end check_no_number;
+
+  --
+  -- test add_javascript: If SCT adds a javascript chunk explicitily, it gets passed to the browser
   --
   procedure add_javascript is
     l_actual  integer := 0;
@@ -290,24 +379,6 @@ as
     -- assert
     ut.expect(l_actual).to_equal(l_expected);
   end add_javascript;
-
-  --
-  -- test check_date case 1: ...
-  --
-  procedure check_date is
-    l_actual  integer := 0;
-    l_expected integer := 1;
-  begin
-    g_test_name := 'check_date';
-    -- populate actual
-    -- sct.check_date;
-
-    -- populate expected
-    -- ...
-
-    -- assert
-    ut.expect(l_actual).to_equal(l_expected);
-  end check_date;
 
   --
   -- test check_mandatory case 1: ...
@@ -326,24 +397,6 @@ as
     -- assert
     ut.expect(l_actual).to_equal(l_expected);
   end check_mandatory;
-
-  --
-  -- test check_number case 1: ...
-  --
-  procedure check_number is
-    l_actual  integer := 0;
-    l_expected integer := 1;
-  begin
-    g_test_name := 'check_number';
-    -- populate actual
-    -- sct.check_number;
-
-    -- populate expected
-    -- ...
-
-    -- assert
-    ut.expect(l_actual).to_equal(l_expected);
-  end check_number;
 
   --
   -- test exclusive_or case 1: ...
@@ -801,10 +854,10 @@ as
   begin
     sct.set_test_mode(false);
     pit.reset_context;
-    drop_session;
+
   end tear_down;
 
 begin
   initialize;
-end sct_test;
+end ut_sct;
 /

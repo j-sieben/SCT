@@ -24,9 +24,15 @@ as
    * @return Object structure that contains the result of the process.
    */
   function get_test_result
-    return sct_test_result;
+    return ut_sct_result;
 
   $END
+  /** Message to retreive a new primary key value from SCT
+   * @usage  Is called by the SCT_UI interface to pouplate newly created rules etc.
+   */
+  function get_pk
+    return number;
+    
 
   /* CORE FUNCTIONALITY wrapper around SCT_INTERNAL */
   /** Method to retrieve the value of a page item as char
@@ -43,7 +49,8 @@ as
 
   /** Method to retrieve the value of a page item as char
    * @param  p_spi_id       ID of the page item
-   * @param  p_format_mask  Format mask that is used to convert the string representation within the session state
+   * @param [p_format_mask] Format mask that is used to convert the string representation within the session state.
+   *                        If NULL, SCT tries to get the format mask from the meta data
    * @param [p_throw_error] Flag to indicate whether a non successful conversion is treated as an error. Defaults to C_TRUE.
    *                        - C_TRUE: an error is registered and thrown
    *                        - C_FALSE: an error is registered but not thrown
@@ -55,7 +62,7 @@ as
    */
   function get_date(
     p_spi_id in sct_page_item.spi_id%type,
-    p_format_mask in varchar2,
+    p_format_mask in varchar2 default null,
     p_throw_error in sct_util.flag_type default sct_util.C_TRUE)
     return date;
     
@@ -80,11 +87,12 @@ as
 
   /** Method to retrieve the value of a page item as number
    * @param  p_spi_id       ID of the page item
-   * @param  p_format_mask  Format mask that is used to convert the string representation within the session state
+   * @param [p_format_mask] Format mask that is used to convert the string representation within the session state.
+   *                        If NULL, SCT tries to get the format mask from the meta data
    * @param [p_throw_error] Flag to indicate whether a non successful conversion is treated as an error. Defaults to C_FALSE.
    *                        - C_TRUE: an error is registered and thrown
    *                        - C_FALSE: an error is registered but not thrown
-   * @return DATE value
+   * @return NUMBER value
    * @usage  Is used to convert a session state string value into date
    *         Depending on parameter P_THROW_ERROR an error is not only register upon unsuccessful conversion but thrown as well.
    *         This is useful if a rule cannot be processed any further if the conversion is not successful.
@@ -92,7 +100,7 @@ as
    */
   function get_number(
     p_spi_id in sct_page_item.spi_id%type,
-    p_format_mask in varchar2,
+    p_format_mask in varchar2 default null,
     p_throw_error in sct_util.flag_type default sct_util.C_FALSE)
     return number;
   
@@ -107,12 +115,9 @@ as
     p_javascript in varchar2);
 
 
-  /** Methode prueft, ob ein Eingabefeld ein gueltiges Datum enthaelt.
-   * @param  p_spi_id Name des Eingabefeldes
-   * @usage  Wird verwendet, um zu pruefen, ob ein Eingabefeld ein gueltiges Datum
-   *         enthaelt. Hierzu schlaegt die Methode die Formatmaske des Eingabefeldes
-   *         nach und versucht eine entsprechende Konvertierung. Gelingt diese nicht,
-   *         wird ein entsprechender Fehler registriert.
+  /** Checks whether a page item contains a valid date according to its format mask
+   * @param  p_spi_id  ID of the page item
+   * @usage  CHecks the value of a page item against its format mask or against the application default format mask
    */
   procedure check_date(
     p_spi_id in sct_page_item.spi_id%type);
@@ -126,12 +131,9 @@ as
     p_spi_id in sct_page_item.spi_id%type);
 
 
-  /** Methode prueft, ob ein Eingabefeld einen gueltigen Zahlwert enthaelt.
-   * @param  p_spi_id Name des Eingabefeldes
-   * @usage  Wird verwendet, um zu pruefen, ob ein Eingabefeld einen numerischen Wert
-   *         enthaelt. Hierzu schlaegt die Methode die Formatmaske des Eingabefeldes
-   *         nach und versucht eine entsprechende Konvertierung. Gelingt diese nicht,
-   *         wird ein entsprechender Fehler registriert.
+  /** Checks whether a page item contains a valid number according to its format mask
+   * @param  p_spi_id  ID of the page item
+   * @usage  CHecks the value of a page item against its format mask or against the application default format mask
    */
   procedure check_number(
     p_spi_id in sct_page_item.spi_id%type);

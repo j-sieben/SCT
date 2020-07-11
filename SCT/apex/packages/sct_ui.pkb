@@ -3,6 +3,10 @@ as
 
   C_SRA_COLLECTION constant sct_util.ora_name_type := 'SCT_UI_EDIT_SRA';
   C_SAA_COLLECTION constant sct_util.ora_name_type := 'SCT_UI_EDIT_SAA';
+  
+  C_PAGE_ADMIN_SGR constant binary_integer := 1;
+  C_PAGE_EDIT_SGR constant binary_integer := 6;
+  C_PAGE_EDIT_SRU constant binary_integer := 5;
 
   g_page_values utl_apex.page_value_t;
   g_collection_seq_id binary_integer;
@@ -53,6 +57,9 @@ as
 
   procedure copy_edit_sra
   as
+    l_param_name_1 sct_util.ora_name_type;
+    l_param_name_2 sct_util.ora_name_type;
+    l_param_name_3 sct_util.ora_name_type;
   begin
     pit.enter_detailed;
     g_page_values := utl_apex.get_page_values;
@@ -63,13 +70,39 @@ as
     g_edit_sra_row.sra_sort_seq := to_number(utl_apex.get(g_page_values, 'SRA_SORT_SEQ'), '999990');
     g_edit_sra_row.sra_spi_id := utl_apex.get(g_page_values, 'SRA_SPI_ID');
     g_edit_sra_row.sra_sat_id := utl_apex.get(g_page_values, 'SRA_SAT_ID');
-    g_edit_sra_row.sra_param_1 := coalesce(utl_apex.get(g_page_values, 'SRA_PARAM_1'), utl_apex.get(g_page_values, 'SRA_PARAM_LOV_1'), utl_apex.get(g_page_values, 'SRA_PARAM_AREA_1'));
-    g_edit_sra_row.sra_param_2 := coalesce(utl_apex.get(g_page_values, 'SRA_PARAM_2'), utl_apex.get(g_page_values, 'SRA_PARAM_LOV_2'), utl_apex.get(g_page_values, 'SRA_PARAM_AREA_2'));
-    g_edit_sra_row.sra_param_3 := coalesce(utl_apex.get(g_page_values, 'SRA_PARAM_3'), utl_apex.get(g_page_values, 'SRA_PARAM_LOV_3'), utl_apex.get(g_page_values, 'SRA_PARAM_AREA_3'));
     g_edit_sra_row.sra_active := utl_apex.get(g_page_values, 'SRA_ACTIVE');
     g_edit_sra_row.sra_on_error := utl_apex.get(g_page_values, 'SRA_ON_ERROR');
     g_edit_sra_row.sra_raise_recursive := utl_apex.get(g_page_values, 'SRA_RAISE_RECURSIVE');
     g_edit_sra_row.sra_comment := utl_apex.get(g_page_values, 'SRA_COMMENT');
+    
+    -- Get the required parameter field
+    begin
+      with data as (
+           select sap_sat_id, sap_sort_seq, 
+                  'SRA_PARAM_' ||
+                  case spt_item_type
+                    when 'TEXT' then null
+                    when 'SELECT_LIST' then 'LOV_'
+                    when 'TEXT_AREA' then 'AREA_'
+                  end || sap_sort_seq item_name
+             from sct_action_parameter
+             join sct_action_param_type
+               on sap_spt_id = spt_id)
+      select max(decode(sap_sort_seq, 1, item_name)) item_name_1,
+             max(decode(sap_sort_seq, 2, item_name)) item_name_2,
+             max(decode(sap_sort_seq, 3, item_name)) item_name_3
+        into l_param_name_1, l_param_name_2, l_param_name_3
+        from data
+       where sap_sat_id = g_edit_sra_row.sra_sat_id
+       group by sap_sat_id;
+    exception
+      when no_data_found then
+        null; -- No parameter for action type, ignore
+    end;
+     
+    g_edit_sra_row.sra_param_1 := case when l_param_name_1 is not null then utl_apex.get(g_page_values, l_param_name_1) end;
+    g_edit_sra_row.sra_param_2 := case when l_param_name_2 is not null then utl_apex.get(g_page_values, l_param_name_2) end;
+    g_edit_sra_row.sra_param_3 := case when l_param_name_3 is not null then utl_apex.get(g_page_values, l_param_name_3) end;    
 
     pit.leave_detailed;
   end copy_edit_sra;
@@ -258,6 +291,14 @@ as
   
 
   /* INTERFACE */
+  function get_pk
+    return number
+  as
+  begin
+    return sct.get_pk;
+  end get_pk;
+  
+  
   procedure process_export_sgr
   as
     l_sgr_app_id sct_rule_group.sgr_app_id%type;
@@ -339,6 +380,7 @@ as
     l_sru_id := utl_apex.get_number('SRU_ID');
 
     apex_collection.create_or_truncate_collection(C_SRA_COLLECTION);
+    
     for sra in sra_cur(l_sru_id) loop
       apex_collection.add_member(
         p_collection_name => c_sra_collection,
@@ -380,6 +422,7 @@ as
     l_sgr_id := utl_apex.get_number('SGR_ID');
 
     apex_collection.create_or_truncate_collection(C_SAA_COLLECTION);
+    
     for saa in saa_cur(l_sgr_id) loop
       apex_collection.add_member(
         p_collection_name => C_SAA_COLLECTION,
@@ -459,17 +502,19 @@ as
       select *
         from sct_ui_edit_saa;
         
-    cursor existing_sai_cur is
+    cursor existing_sai_cur(p_saa_id in sct_ui_edit_saa.saa_id%type) is
       select sai_saa_id
         from sct_apex_action_item
-       where sai_saa_id in
-             (select saa_id
-                from sct_ui_edit_saa);
+       where sai_saa_id = p_saa_id;
                 
-    cursor sai_cur (p_saa_sai_list in varchar2) is
+    cursor sai_cur (
+      p_saa_id in sct_ui_edit_saa.saa_id%type,
+      p_saa_sai_list in varchar2) 
+    is
       select saa_id sai_saa_id, saa_sgr_id sai_spi_sgr_id, column_value sai_spi_id
         from sct_ui_edit_saa saa
-       cross join table(utl_text.string_to_table(p_saa_sai_list));
+       cross join table(utl_text.string_to_table(p_saa_sai_list))
+       where saa_id = p_saa_id;
     l_saa_rec sct_apex_action%rowtype;
     l_sai_rec sct_apex_action_item%rowtype;
   begin
@@ -485,11 +530,11 @@ as
       sct_admin.merge_apex_action(l_saa_rec);
 
       -- Copy data from Collection and merge into SCT_APEX_ACTION_ITEM
-      for sai in existing_sai_cur loop
+      for sai in existing_sai_cur(saa.saa_id) loop
         sct_admin.delete_apex_action_item(sai.sai_saa_id);
       end loop;
       
-      for sai in sai_cur(saa.saa_sai_list) loop
+      for sai in sai_cur(saa.saa_id, saa.saa_sai_list) loop
         -- Copy row to record locally
         l_sai_rec.sai_saa_id := sai.sai_saa_id;
         l_sai_rec.sai_spi_sgr_id := sai.sai_spi_sgr_id;
@@ -510,20 +555,19 @@ as
     
     copy_edit_sgr;
 
-    case when utl_apex.inserting or utl_apex.updating then
+    case when utl_apex.inserting then
       sct_admin.merge_rule_group(g_edit_sgr_row);
-      sct_admin.propagate_rule_change(g_edit_sgr_row.sgr_id);
+    when utl_apex.updating then
+      sct_admin.merge_rule_group(g_edit_sgr_row);
+      -- APEX actions can be created after creation of the rule group only
+      maintain_apex_actions;
     when utl_apex.deleting then
-      sct_admin.delete_rule_group(g_edit_sgr_row.sgr_id);
-      sct_admin.propagate_rule_change(g_edit_sgr_row.sgr_id);
+      sct_admin.delete_rule_group(g_edit_sgr_row);
     else
       pit.error(msg.APEX_UNHANDLED_REQUEST, msg_args(utl_apex.get_request));
     end case;
-
-    if utl_apex.updating then
-      -- APEX actions can be created after creation of the rule group only
-      maintain_apex_actions;
-    end if;
+    
+    sct_admin.propagate_rule_change(g_edit_sgr_row.sgr_id);
 
     pit.leave_mandatory;
   end process_edit_sgr;
@@ -554,6 +598,30 @@ as
     pit.leave_mandatory;
     return true;
   end validate_edit_sru;
+
+
+  procedure validate_rule
+  as
+  begin
+    pit.enter_mandatory;
+    
+    copy_edit_sru;
+
+    pit.start_message_collection;
+    sct_admin.validate_rule(g_edit_sru_row);
+    pit.stop_message_collection;
+
+    pit.leave_mandatory;
+  exception
+    when msg.PIT_BULK_ERROR_ERR or msg.PIT_BULK_FATAL_ERR then
+      utl_sct.handle_bulk_errors(char_table(
+        'SQL_ERROR', 'SRU_CONDITION',
+        'SRU_CONDITION_MISSING', 'SRU_CONDITION',
+        'SRU_SGR_ID_MISSING', 'SRU_SGR_ID',
+        'SRU_NAME_MISSING', 'SRU_NAME'));
+        
+    pit.leave_mandatory;
+  end validate_rule;
   
   
   /** Helper method to extract rule action maintenace from EDIT_SRU
@@ -648,6 +716,7 @@ as
     -- Initialize
     l_sat_id := utl_apex.get_value('SRA_SAT_ID');    
     utl_sct.hide_item(p_jquery_sel => '.sct-hide');
+ --   utl_sct.empty_field(p_jquery_sel => '.sct-param');
 
     -- Adjust Parameter settings to show only required parameters in the correct format
     for param in action_type_cur(l_sat_id) loop
@@ -726,7 +795,6 @@ as
     
     case
     when utl_apex.INSERTING then
-      g_edit_sra_row.sra_id := coalesce(g_edit_sra_row.sra_id, sct_seq.nextval);
       apex_collection.add_member(
         p_collection_name => C_SRA_COLLECTION,
         p_n001 => g_edit_sra_row.sra_id,
@@ -1004,17 +1072,18 @@ as
     l_sru_id := utl_apex.get_number('SRA_SRU_ID');
     l_sra_id := utl_apex.get_number('SRA_ID');
 
-    if l_sra_id is null then
-      select coalesce(max(trunc(sra_sort_seq, -1)) + 10, 10)
-        into l_sra_sort_seq
-        from sct_ui_edit_sra
-       where sra_sru_id = l_sru_id;
-    else
+    begin
       select sra_sort_seq
         into l_sra_sort_seq
         from sct_ui_edit_sra
        where sra_id = l_sra_id;
-    end if;
+    exception
+      when NO_DATA_FOUND then
+        select coalesce(max(trunc(sra_sort_seq, -1)) + 10, 10)
+          into l_sra_sort_seq
+          from sct_ui_edit_sra
+         where sra_sru_id = l_sru_id;
+    end;
 
     pit.leave_mandatory;
     return l_sra_sort_seq;
@@ -1068,25 +1137,30 @@ as
     pit.enter_optional;
 
     l_sgr_id := utl_apex.get_number('SGR_ID');
+    l_sgr_app_id := utl_apex.get_number('SGR_APP_ID');
+    l_sgr_page_id := utl_apex.get_number('SGR_PAGE_ID');
+    
+    -- Action CREATE_RULE_GROUP
+    utl_apex_action.action_init('create-rulegroup');
+    l_javascript := utl_apex.get_page_url(
+                      p_page => 'EDIT_SGR',
+                      p_param_items => 'P6_SGR_APP_ID:P6_SGR_PAGE_ID',
+                      p_value_items => 'P1_SGR_APP_ID:P1_SGR_PAGE_ID',
+                      p_triggering_element => 'R1_RULE_GROUP',
+                      p_clear_cache => C_PAGE_EDIT_SGR);
+    utl_apex_action.set_action(l_javascript);
+    utl_sct.java_script_code(utl_apex_action.get_action_script);
 
     -- Action CREATE_RULE
     utl_apex_action.action_init('create-rule');
 
     if l_sgr_id is not null then
-      -- persist APP_ID and PAGE_ID in case exporting this rule is called
-      select sgr_app_id, sgr_page_id
-        into l_sgr_app_id, l_sgr_page_id
-        from sct_rule_group
-       where sgr_id = l_sgr_id;
-      utl_apex.set_value('P1_SGR_APP_ID', l_sgr_app_id);
-      utl_apex.set_value('P1_SGR_PAGE_ID', l_sgr_page_id);
-
       l_javascript := utl_apex.get_page_url(
                         p_page => 'EDIT_SRU',
                         p_param_items => 'P5_SRU_SGR_ID',
                         p_value_items => 'P1_SGR_ID',
                         p_triggering_element => 'R1_RULE_OVERVIEW',
-                        p_clear_cache => 5);
+                        p_clear_cache => C_PAGE_EDIT_SRU);
       utl_apex_action.set_action(l_javascript);
       utl_apex_action.set_disabled(false);
     else

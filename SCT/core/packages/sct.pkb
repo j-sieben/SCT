@@ -85,7 +85,7 @@ as
   
   
   function get_test_result
-    return sct_test_result
+    return ut_sct_result
   as
   begin
     return sct_internal.get_test_result;
@@ -94,6 +94,14 @@ as
   
   
   /* CORE FUNCTIONALITY wrapper around SCT_INTERNAL */
+  function get_pk
+    return number
+  as
+  begin
+    return sct_seq.nextval;
+  end get_pk;
+  
+  
   function get_char(
     p_spi_id in sct_page_item.spi_id%type)
     return varchar2
