@@ -1064,7 +1064,7 @@ as
           -- Stop further execution for non exception handlers
           p_rule.sru_on_error := sct_util.C_TRUE;
           -- Display error
-          pit.sql_exception(msg.SCT_UNHANDLED_EXCEPTION, msg_args(l_plsql_code));
+          pit.handle_exception(msg.SCT_UNHANDLED_EXCEPTION, msg_args(l_plsql_code));
           register_error(p_rule.item, msg.SCT_UNHANDLED_EXCEPTION, msg_args(apex_escape.json(l_plsql_code)));
           -- surpress recursion
           stop_rule;
@@ -1159,10 +1159,10 @@ as
   exception
     when msg.CONVERSION_IMPOSSIBLE_ERR or VALUE_ERROR or INVALID_NUMBER then
       close l_action_cur;
-      pit.sql_exception;
+      pit.handle_exception;
     when others then
       close l_action_cur;
-      pit.sql_exception(msg.SQL_ERROR, msg_args(l_stmt));
+      pit.handle_exception(msg.SQL_ERROR, msg_args(l_stmt));
   end create_action;
   
     
@@ -1227,7 +1227,7 @@ as
         when others then
           register_error(l_processed_item, msg.SCT_INTERNAL_ERROR);
           g_param.recursive_stack.delete;
-          pit.sql_exception(msg.SCT_INTERNAL_ERROR, msg_args(sqlerrm));
+          pit.handle_exception(msg.SCT_INTERNAL_ERROR, msg_args(sqlerrm));
           exit;
       end;
     end loop;
@@ -1691,7 +1691,7 @@ as
       pit.leave_optional;
     when no_data_found then
       register_error(sct_util.C_NO_FIRING_ITEM, msg.SCT_RULE_DOES_NOT_EXIST, msg_args(p_rule_group_name));
-      pit.sql_exception(msg.SCT_RULE_DOES_NOT_EXIST, msg_args(p_rule_group_name));
+      pit.handle_exception(msg.SCT_RULE_DOES_NOT_EXIST, msg_args(p_rule_group_name));
   end read_settings;
     
     
@@ -1798,7 +1798,7 @@ as
     when NO_DATA_FOUND then
       register_error('DOCUMENT', msg.SCT_ACTION_DOES_NOT_EXIST, msg_args(p_sat_id));
     when others then
-      pit.sql_exception(msg.SQL_ERROR, msg_args(sqlerrm));
+      pit.handle_exception(msg.SQL_ERROR, msg_args(sqlerrm));
   end execute_action;
   
   

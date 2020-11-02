@@ -548,7 +548,7 @@ as
     pit.leave_mandatory;
   exception
     when others then
-      pit.sql_exception(msg.SCT_MERGE_RULE_GROUP, msg_args(to_char(p_row.sgr_id)));
+      pit.handle_exception(msg.SCT_MERGE_RULE_GROUP, msg_args(to_char(p_row.sgr_id)));
   end merge_rule_group;
 
 
@@ -1395,7 +1395,7 @@ as
     pit.leave_mandatory;
   exception
     when others then
-      pit.sql_exception(msg.SCT_MERGE_RULE, msg_args(p_row.sru_name));
+      pit.handle_exception(msg.SCT_MERGE_RULE, msg_args(p_row.sru_name));
   end merge_rule;
 
 

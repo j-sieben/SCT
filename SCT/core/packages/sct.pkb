@@ -270,7 +270,7 @@ as
     pit.leave_mandatory;
   exception
     when others then
-      pit.sql_exception(msg.SCT_UNHANDLED_EXCEPTION, msg_args(l_plsql));
+      pit.handle_exception(msg.SCT_UNHANDLED_EXCEPTION, msg_args(l_plsql));
       sct_internal.register_error(sct_util.C_NO_FIRING_ITEM, msg.SCT_UNHANDLED_EXCEPTION, msg_args(apex_escape.json(l_plsql)));
       -- surpress recursion
       sct_internal.stop_rule;
