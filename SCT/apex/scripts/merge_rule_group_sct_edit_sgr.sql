@@ -1,12 +1,12 @@
 
-set define ^
+set define #
 
 declare
   l_foo number;
   l_app_id number;
 begin
   l_foo := sct_admin.map_id;
-  l_app_id := coalesce(apex_application_install.get_application_id, ^APP_ID.);
+  l_app_id := coalesce(apex_application_install.get_application_id, #APP_ID.);
 
   dbms_output.put_line('#s1.Rulegroup SCT_EDIT_SGR');
 
@@ -16,7 +16,7 @@ begin
     p_sgr_name => 'SCT_EDIT_SGR');
 
   sct_admin.merge_rule_group(
-    p_sgr_id => sct_admin.map_id(101),
+    p_sgr_id => sct_admin.map_id(122),
     p_sgr_name => 'SCT_EDIT_SGR',
     p_sgr_description => q'|Regeln zur Dialogseite "Regelgruppe bearbeiten"|',
     p_sgr_app_id => l_app_id,
@@ -25,8 +25,8 @@ begin
     p_sgr_active => sct_util.C_TRUE);
   
   sct_admin.merge_rule(
-    p_sru_id => sct_admin.map_id(103),
-    p_sru_sgr_id => sct_admin.map_id(101),
+    p_sru_id => sct_admin.map_id(124),
+    p_sru_sgr_id => sct_admin.map_id(122),
     p_sru_name => 'Initialisierung',
     p_sru_condition => q'|initializing = 1|',
     p_sru_sort_seq => 10,
@@ -34,9 +34,9 @@ begin
     p_sru_active => sct_util.C_TRUE);
   
   sct_admin.merge_rule_action(
-    p_sra_id => sct_admin.map_id(105),
-    p_sra_sru_id => sct_admin.map_id(103),
-    p_sra_sgr_id => sct_admin.map_id(101),
+    p_sra_id => sct_admin.map_id(126),
+    p_sra_sru_id => sct_admin.map_id(124),
+    p_sra_sgr_id => sct_admin.map_id(122),
     p_sra_spi_id => 'R6_APEX_ACTION',
     p_sra_sat_id => 'DIALOG_CLOSED',
     p_sra_param_1 => q'||',
@@ -47,9 +47,9 @@ begin
     p_sra_raise_recursive => sct_util.C_TRUE,
     p_sra_active => sct_util.C_TRUE);
   sct_admin.merge_rule_action(
-    p_sra_id => sct_admin.map_id(107),
-    p_sra_sru_id => sct_admin.map_id(103),
-    p_sra_sgr_id => sct_admin.map_id(101),
+    p_sra_id => sct_admin.map_id(128),
+    p_sra_sru_id => sct_admin.map_id(124),
+    p_sra_sgr_id => sct_admin.map_id(122),
     p_sra_spi_id => 'P6_SGR_ACTIVE',
     p_sra_sat_id => 'SET_ITEM',
     p_sra_param_1 => q'|'Y'|',
@@ -60,9 +60,9 @@ begin
     p_sra_raise_recursive => sct_util.C_TRUE,
     p_sra_active => sct_util.C_TRUE);
   sct_admin.merge_rule_action(
-    p_sra_id => sct_admin.map_id(109),
-    p_sra_sru_id => sct_admin.map_id(103),
-    p_sra_sgr_id => sct_admin.map_id(101),
+    p_sra_id => sct_admin.map_id(130),
+    p_sra_sru_id => sct_admin.map_id(124),
+    p_sra_sgr_id => sct_admin.map_id(122),
     p_sra_spi_id => 'P6_SGR_WITH_RECURSION',
     p_sra_sat_id => 'SET_ITEM',
     p_sra_param_1 => q'|'Y'|',
@@ -73,8 +73,8 @@ begin
     p_sra_raise_recursive => sct_util.C_TRUE,
     p_sra_active => sct_util.C_TRUE);
   sct_admin.merge_rule(
-    p_sru_id => sct_admin.map_id(111),
-    p_sru_sgr_id => sct_admin.map_id(101),
+    p_sru_id => sct_admin.map_id(132),
+    p_sru_sgr_id => sct_admin.map_id(122),
     p_sru_name => 'APEX-Aktion editiert',
     p_sru_condition => q'|dialog_closed = 'R6_APEX_ACTION'|',
     p_sru_sort_seq => 20,
@@ -82,9 +82,9 @@ begin
     p_sru_active => sct_util.C_TRUE);
   
   sct_admin.merge_rule_action(
-    p_sra_id => sct_admin.map_id(113),
-    p_sra_sru_id => sct_admin.map_id(111),
-    p_sra_sgr_id => sct_admin.map_id(101),
+    p_sra_id => sct_admin.map_id(134),
+    p_sra_sru_id => sct_admin.map_id(132),
+    p_sra_sgr_id => sct_admin.map_id(122),
     p_sra_spi_id => 'R6_APEX_ACTION',
     p_sra_sat_id => 'REFRESH_ITEM',
     p_sra_param_1 => q'||',
@@ -95,7 +95,7 @@ begin
     p_sra_raise_recursive => sct_util.C_TRUE,
     p_sra_active => sct_util.C_TRUE);
   
-  sct_admin.propagate_rule_change(sct_admin.map_id(101));
+  sct_admin.propagate_rule_change(sct_admin.map_id(122));
 
   commit;
 end;

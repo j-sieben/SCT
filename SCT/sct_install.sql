@@ -1,34 +1,35 @@
 -- Parameters:
 -- 1: Owner of SCT, schema into which SCT will be installed
 -- 5: Default language of the messages
+define tool_dir=tools/
 
-@init.sql &1. &2.
+@&tool_dir.init.sql &1. &2.
 
 alter session set current_schema=sys;
 prompt
 prompt &section.
 prompt &h1.Checking whether required users exist
-@check_users_exist.sql
+@&tool_dir.check_users_exist.sql
 
 prompt &h2.grant user rights
 @set_grants.sql
 
 alter session set current_schema=&INSTALL_USER.;
-@set_compiler_flags.sql
+@&tool_dir.set_compiler_flags.sql
 
-@check_unit_test_exists.sql "unit_test/uninstall.sql" "clean up"
-@check_unit_test_exists.sql "unit_test/install.sql" "installation"
+@&tool_dir.check_unit_test_exists.sql "unit_test/uninstall.sql" "clean up"
+@&tool_dir.check_unit_test_exists.sql "unit_test/install.sql" "installation"
 
 prompt
 prompt &section.
 prompt &h1.State Chart Toolkit (SCT)) Installation at user &INSTALL_USER.
-@core/install.sql
+@&core_dir.install.sql
 
 
 prompt
 prompt &section.
 prompt &h1.PLUGIN SCT
-@plugin/install.sql
+@&plugin_dir.install.sql
 
 prompt
 prompt &section.

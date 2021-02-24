@@ -23,3 +23,4 @@ as
     return apex_plugin.t_dynamic_action_ajax_result;
 
 end plugin_sct;
+/

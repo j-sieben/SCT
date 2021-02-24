@@ -13,6 +13,10 @@ col install_user new_val INSTALL_USER format a30
 col default_language new_val DEFAULT_LANGUAGE format a30
 col pit_owner new_val PIT_OWNER format a30
 
+-- Common directory paths
+define core_dir=core/
+define plugin_dir=plugin/
+
 select user sys_user,
        upper('&1.') install_user,
        upper('&2.') default_language
@@ -26,18 +30,7 @@ select owner pit_owner
    and table_name = 'PIT'
  fetch first 1 row only;
 
-
-define FLAG_TYPE="char(1 byte)";
-define C_TRUE="'Y'";
-define C_FALSE="'N'";
-
---define FLAG_TYPE="number(1, 0)";
---define C_TRUE=1;
---define C_FALSE=0;
-
-define MIN_UT_VERSION="v3.1"
-define WITH_UT=false
-
+@settings.sql
    
 col ora_name_type new_val ORA_NAME_TYPE format a30
 select 'varchar2(' || data_length || ' byte)' ora_name_type

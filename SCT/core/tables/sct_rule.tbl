@@ -10,7 +10,7 @@ create table sct_rule(
 	sru_has_error &FLAG_TYPE. default &C_FALSE.,
   constraint pk_sct_rules primary key (sru_id),
   constraint fk_sru_sgr_id foreign key (sru_sgr_id)
-	  references sct_rule_group (sgr_id) on delete cascade
+	  references sct_rule_group (sgr_id) on delete cascade,
   constraint chk_sru_active check (sru_active in (&C_TRUE., &C_FALSE.)),
   constraint chk_sru_has_error check (sru_has_error in (&C_TRUE., &C_FALSE.)),
   constraint chk_sru_fire_on_page_load check (sru_fire_on_page_load in (&C_TRUE., &C_FALSE.))  

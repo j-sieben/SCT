@@ -12,7 +12,7 @@ declare
             from all_objects
            where object_name in (
                  '', -- Typen
-                 'SCT_UI', 'PLUGIN_GROUP_SELECT_LIST'. -- Packages
+                 'SCT_UI', 'PLUGIN_GROUP_SELECT_LIST', -- Packages
                  'SCT_UI_ADMIN_SAT', 'SCT_UI_ADMIN_SGR_MAIN', 'SCT_UI_ADMIN_SGR_RULES', 'SCT_UI_EDIT_GROUP_APEX_ACTION', 
                  'SCT_UI_EDIT_RULE', 'SCT_UI_EDIT_RULE_ACTION', 'SCT_UI_EDIT_SAA', 'SCT_UI_EDIT_SAT', 'SCT_UI_EDIT_SGR', 
                  'SCT_UI_EDIT_SGR_APEX_ACTION', 'SCT_UI_EDIT_SRA', 'SCT_UI_EDIT_SRU', 'SCT_UI_EDIT_SRU_ACTION', 
@@ -26,7 +26,7 @@ declare
                  '' -- Sequenzen
                  )
              and object_type not like '%BODY'
-             and owner = upper('&REMOTE_USER.')
+             and owner = upper('&INSTALL_USER.')
            order by object_type, object_name;
 begin
   for obj in delete_object_cur loop
@@ -46,6 +46,20 @@ begin
     end;
   end loop;
   
+end;
+/
+
+
+prompt &h3.Removing SCT groups
+declare
+  cursor sct_cur is
+    select sgr_id
+      from sct_rule_group
+     where sgr_name like 'SCT%';
+begin
+  for r in sct_cur loop
+    sct_admin.delete_rule_group(r.sgr_id);
+  end loop;
 end;
 /
 

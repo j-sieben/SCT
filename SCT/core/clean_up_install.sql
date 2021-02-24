@@ -28,7 +28,7 @@ declare
                  'SCT_SEQ' -- Sequenzen
                  )
              and object_type not like '%BODY'
-             and owner = upper('&REMOTE_USER.')
+             and owner = upper('&INSTALL_USER.')
            order by object_type, object_name;
 begin
   for obj in delete_object_cur loop
@@ -48,9 +48,9 @@ begin
     end;
   end loop;
   
-  pit_admin.delete_messag_group('SCT', true);
+  pit_admin.delete_message_group('SCT', true);
   
-  utl_text.remove_templates(SCT);
+  utl_text.remove_templates('SCT');
   
 end;
 /

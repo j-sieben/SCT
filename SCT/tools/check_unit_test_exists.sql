@@ -4,9 +4,10 @@ variable script_name varchar2(100);
 variable with_ut varchar2(5);
 variable comments varchar2(1000);
 
+
 declare
   l_pkg_exists pls_integer;
-  C_NULL_SCRIPT constant varchar2(10) := 'null.sql';
+  C_NULL_SCRIPT constant varchar2(100) := '&tool_dir.null.sql';
 begin
   select count(*)
     into l_pkg_exists
@@ -56,5 +57,6 @@ begin
   end if;
 end;
 /
-  
+
+
 @&script.

@@ -1,5 +1,5 @@
 define apex_dir=apex/
-define apex_version_dir=&apex_dir.apex_&APEX_VERSION.
+define apex_version_dir=&apex_dir.&APEX_PATH./
 define seq_dir=&apex_dir.sequences/
 define table_dir=&apex_dir.tables/
 define type_dir=&apex_dir.types/
@@ -9,7 +9,7 @@ define script_dir=&apex_dir.scripts/
 define msg_dir=&apex_dir.messages/&DEFAULT_LANGUAGE./
 
 prompt &h2.Remove existing installation
-@&apex_idr.clean_up_install.sql
+@&apex_dir.clean_up_install.sql
 
 prompt &h2.Create database objects
 prompt &h3.Create views
@@ -52,6 +52,9 @@ prompt &s1.Create view SCT_UI_EDIT_SRU
 
 prompt &s1.Create view SCT_UI_EDIT_SRU_ACTION
 @&view_dir.sct_ui_edit_sru_action.vw
+
+prompt &s1.Create view SCT_UI_EDIT_STG
+@&view_dir.sct_ui_edit_stg.vw
 
 prompt &s1.Create view SCT_UI_LIST_ACTION_TYPE
 @&view_dir.sct_ui_list_action_type.vw
@@ -100,29 +103,33 @@ prompt &s1.Create view SCT_UI_LOV_YES_NO
 
 
 prompt &h2.Create Translatable items
-@msg_dir.TranslatableItemGroup_SCT.sql
+@&msg_dir.TranslatableItemGroup_SCT.sql
 
 
 prompt &h2.Create PL/SQL objects
 prompt &h3.Create packages
 
 prompt &s1.Create package SCT_UI
-@&pkg_dir.sct_admin.pks
+@&pkg_dir.sct_ui.pks
 show errors
 
 prompt &s1.Create package Body SCT_UI
-@&pkg_dir.sct_util.pkb
+@&pkg_dir.sct_ui.pkb
 show errors
 
-prompt &h2;Version specific installation
-@&apex_version_dir./install.sql
+prompt &h2.Version specific installation
+@&apex_version_dir.install.sql
 
+-- Re-Init after APEX install
+@tools/re_init_apex.sql
 
 prompt &h3.Install SCT rules
+prompt &s1.Create action types
 @&script_dir.merge_action_types.sql
+
+prompt &s1.Create page rules
 @&script_dir.merge_rule_group_sct_admin_sat.sql
 @&script_dir.merge_rule_group_sct_admin_sgr.sql
-@&script_dir.merge_rule_group_sct_copy_sgr.sql
 @&script_dir.merge_rule_group_sct_edit_saa.sql
 @&script_dir.merge_rule_group_sct_edit_sgr.sql
 @&script_dir.merge_rule_group_sct_edit_sra.sql

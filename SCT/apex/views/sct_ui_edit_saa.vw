@@ -1,6 +1,6 @@
 create or replace editionable view sct_ui_edit_saa
 as 
-  select seq_id,
+select seq_id,
        n001 saa_id,
        n002 saa_sgr_id,
        c001 saa_sty_id,
@@ -27,3 +27,5 @@ as
        c022 saa_sai_list
   from apex_collections
  where collection_name = 'SCT_UI_EDIT_SAA';
+
+comment on table sct_ui_edit_saa is 'Collection View auf SCT_APEX_ACTION, nicht refaktorisieren, um zeitgleiche Erstellung von Regelgruppe und Seitenaktionen zu ermoeglichen.';

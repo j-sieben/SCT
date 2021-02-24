@@ -7,7 +7,7 @@ create table sct_apex_action_item(
   constraint fk_sai_saa_id foreign key (sai_saa_id)
 	  references sct_apex_action (saa_id) on delete cascade,
   constraint fk_sai_spi_id foreign key (sai_spi_sgr_id, sai_spi_id)
-	  references sct_page_item (spi_sgr_id, spi_id),
+	  references sct_page_item (spi_sgr_id, spi_id) on delete cascade,
   constraint chk_sai_active check (sai_active in (&C_TRUE., &C_FALSE.))
 ) organization index;
 

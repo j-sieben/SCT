@@ -8,7 +8,7 @@ begin
   l_foo := sct_admin.map_id;
   l_app_id := coalesce(apex_application_install.get_application_id, ^APP_ID.);
 
-  dbms_output.put_line('#s1.Rulegroup SCT_ADMIN_SAT');
+  dbms_output.put_line('^s1.Rulegroup SCT_ADMIN_SAT');
 
   sct_admin.prepare_rule_group_import(
     p_sgr_app_id => l_app_id,
@@ -46,6 +46,7 @@ begin
     p_sra_on_error => sct_util.C_FALSE,
     p_sra_raise_recursive => sct_util.C_TRUE,
     p_sra_active => sct_util.C_TRUE);
+    
   sct_admin.merge_rule_action(
     p_sra_id => sct_admin.map_id(485),
     p_sra_sru_id => sct_admin.map_id(486),

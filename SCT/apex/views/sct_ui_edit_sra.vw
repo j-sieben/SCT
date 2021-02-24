@@ -23,3 +23,5 @@ select seq_id,
        c010 sra_has_error
   from apex_collections
  where collection_name = 'SCT_UI_EDIT_SRA';
+ 
+comment on table sct_ui_edit_sra is 'Collection View auf SCT_RULE_ACTION, nicht refaktorisieren, um zeitgleiche Erstellung von Regel und Aktionen zu ermoeglichen.';

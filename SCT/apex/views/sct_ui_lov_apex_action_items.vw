@@ -4,7 +4,7 @@ select sit_name || ' »' || spi_label || '«' d, spi_id r, sgr_id, spi_sty_id
   from sct_page_item spi
   join sct_rule_group sgr
     on spi_sgr_id = sgr_id
-  join sct_page_item_type sit
+  join sct_page_item_type_v sit
     on spi_sit_id = sit_id
   join sct_apex_action_type
     on spi_sty_id = sty_id;

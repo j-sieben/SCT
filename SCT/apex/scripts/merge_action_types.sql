@@ -3,8 +3,6 @@ set sqlblanklines on
 
 begin
   
-  
-  
     sct_admin.merge_action_type(
     p_sat_id => 'AFTER_REFRESH',
     p_sat_stg_id => 'JAVA_SCRIPT',

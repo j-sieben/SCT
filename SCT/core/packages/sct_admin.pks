@@ -235,7 +235,8 @@ as
 
 
   procedure merge_apex_action(
-    p_row in out nocopy sct_apex_action%rowtype);
+    p_row in out nocopy sct_apex_action%rowtype,
+    p_saa_sai_list in char_table default null);
 
   procedure delete_apex_action(
     p_saa_id sct_apex_action.saa_id%type);
@@ -340,6 +341,12 @@ as
   procedure delete_action_type_group(
     p_row in sct_action_type_group_v%rowtype);
 
+  /**
+   * %throws  msg.SCT_PARAM_MISSING
+   *          error codes 
+   *            STG_ID_MISSING if parameter P_ROW.STG_ID is null
+   *            STG_NAME_MISSING if parameter P_ROW.STG_NAME is null
+   */
   procedure validate_action_type_group(
     p_row in sct_action_type_group_v%rowtype);
 
@@ -502,6 +509,34 @@ as
     p_row in sct_action_parameter_v%rowtype);
 
 
+  /** Administration of PAGE ITEM TYPES
+   * @param  p_sit_id               Technical ID of the item type
+   * @param  p_sit_name             Display name
+   * @param  p_sit_has_value        Flag to indicate whether this is an item containing a session state value
+   * @param  p_sit_include_in_view  Flag to indicate whether this item has to be included in the session state view
+   * @param  p_sit_event            Event thas has to be bound if a rule requires this item
+   * @param  p_sit_col_template     Template for the session state view to retrieve the session state value
+   * @param  p_sit_init_template    Template to get the initial session state value
+   */
+  procedure merge_page_item_type(
+    p_sit_id              in sct_page_item_type_v.sit_id%type,
+    p_sit_name            in sct_page_item_type_v.sit_name%type,
+    p_sit_has_value       in sct_page_item_type_v.sit_has_value%type,
+    p_sit_include_in_view in sct_page_item_type_v.sit_include_in_view%type,
+    p_sit_event           in sct_page_item_type_v.sit_event%type,
+    p_sit_col_template    in sct_page_item_type_v.sit_col_template%type,
+    p_sit_init_template   in sct_page_item_type_v.sit_init_template%type);
+    
+  procedure merge_page_item_type(
+    p_row in out nocopy sct_page_item_type_v%rowtype);
+
+  procedure delete_page_item_type(
+    p_row in sct_page_item_type_v%rowtype);
+    
+  procedure validate_page_item_type(
+    p_row in sct_page_item_type_v%rowtype);
+    
+
   /** Administration of RULE ACTIONS
    * @param  p_sra_id               ID of the rule action
    * @param  p_sra_sru_id           Reference to SCT_RULE
@@ -572,3 +607,4 @@ as
     p_description in pit_translatable_item.pti_description%type);
 
 end sct_admin;
+/

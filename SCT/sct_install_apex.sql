@@ -4,20 +4,20 @@
 -- 3: ALIAS of the APEX-application. 
 -- 4: APP_ID of the APEX-application.
 -- 5: Default language of the messages
-
-@init_apex.sql &1. &2. &3. &4. &5.
+define tool_dir=tools/
+@&tool_dir.init_apex.sql &1. &2. &3. &4. &5.
 
 alter session set current_schema=sys;
 prompt
 prompt &section.
 prompt &h1.Checking whether required users exist
-@check_users_exist.sql
+@&tool_dir.check_users_exist.sql
 
 prompt &h2.grant user rights
 @set_grants.sql
 
 alter session set current_schema=&INSTALL_USER.;
-@set_compiler_flags.sql
+@&tool_dir.set_compiler_flags.sql
 prompt
 prompt &section.
 prompt &h1.State Chart Toolkit (SCT)) APERX Application Installation at user &INSTALL_USER.

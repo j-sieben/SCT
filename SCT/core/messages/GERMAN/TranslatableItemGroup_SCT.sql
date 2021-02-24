@@ -1,3 +1,5 @@
+set define off
+
 begin
     
   pit_admin.merge_message_group(
@@ -914,6 +916,24 @@ begin
   );
 
   pit_admin.merge_translatable_item(
+    p_pti_id => 'SIF_DATE_ITEM',
+    p_pti_pml_name => q'^GERMAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Seitenelement (Datum)^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^<p>Alle Anwendungs- und Seitenelemente der aktuellen Anwendungsseite mit Datumsformatmasek</p>^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SIF_NUMBER_ITEM',
+    p_pti_pml_name => q'^GERMAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Seitenelement (Zahl)^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^<p>Alle Anwendungs- und Seitenelemente der aktuellen Anwendungsseite mit Zahlformatmaske</p>^'
+  );
+
+  pit_admin.merge_translatable_item(
     p_pti_id => 'SIF_PAGE_ITEM_OR_DOCUMENT',
     p_pti_pml_name => q'^GERMAN^',
     p_pti_pmg_name => q'^SCT^',
@@ -1168,3 +1188,5 @@ begin
   commit;
 end;
 /
+
+set define &

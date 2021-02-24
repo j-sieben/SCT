@@ -13,6 +13,8 @@ select /*+ no_merge(p) */
        sra_id,
        sra_sgr_id,
        sra_sru_id,
+       sra_sat_id,
+       sra_spi_id,
        coalesce(item_name, 'Dokument') item_name,
        sat_name,
        sra_sort_seq,

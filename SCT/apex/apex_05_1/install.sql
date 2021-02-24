@@ -1,5 +1,5 @@
 define apex_dir=apex/
-define apex_version_dir=&apex_dir.apex_&APEX_VERSION./
+define apex_version_dir=&apex_dir.&APEX_PATH./
 define app_dir=&apex_version_dir.application/
 define script_dir=&apex_version_dir.scripts/
 
@@ -17,13 +17,13 @@ show errors
 prompt &s1.Install action types
 @&script_dir.merge_action_types.sql
 
-prompt &h3.Install APEX-application from folder apex_&APEX_VERSION.
+prompt &h3.Install APEX-application from folder &APEX_PATH.
 prompt &s1.Prepare installation
-@&apex_version_dir./prepare_apex_import.sql
+@&apex_version_dir.prepare_apex_import.sql
 
 prompt &s1.Install application
-@&app_dir/sct.sql
-@&app_dir/sct_manual.sql
+@&app_dir.sct.sql
+@&app_dir.sct_manual.sql
 
 prompt &s1;install Group Select List plugin
 @&script_dir.item_type_plugin_de_condes_plugin_group_select_list.sql
