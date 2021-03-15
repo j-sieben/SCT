@@ -1,7 +1,7 @@
 set define off
 
 begin
-    
+
   pit_admin.merge_message_group(
     p_pmg_name => 'SCT',
     p_pmg_description => q'^Meldungen für das SCT Plugin^');
@@ -52,12 +52,48 @@ begin
   );
 
   pit_admin.merge_translatable_item(
+    p_pti_id => 'LOV_EXPORT_SGR_ALL_SGR',
+    p_pti_pml_name => q'^GERMAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Alle Regelgruppen^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'LOV_EXPORT_SGR_APP',
+    p_pti_pml_name => q'^GERMAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Alle Regelgruppen einer Anwendung^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'LOV_EXPORT_SGR_PAGE',
+    p_pti_pml_name => q'^GERMAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Alle Regelgruppen einer Anwendungsseite^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'LOV_EXPORT_SGR_SGR',
+    p_pti_pml_name => q'^GERMAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Eine Regelgruppe^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
     p_pti_id => 'SAP_AC3D4D849D3D3917E8CC2606FF68F6E2',
     p_pti_pml_name => q'^GERMAN^',
     p_pti_pmg_name => q'^SCT^',
     p_pti_name => q'^^',
     p_pti_display_name => q'^^',
-    p_pti_description => q'^<p>Optionale JavaScript-Aktion.<br> Dieser Parameter muss der Name einer JavaScript-Funktion oder eine anonyme Funktionsdefinition sein, die als Callback aufgerufen wird.<br/>Wird kein Parameter definiert, wird SCT aufgerufen und entsprechende Regeln ausgeführt, anderenfalls wird direkt die hier hinterlegte Funktion ausgeführt.</p>^'
+    p_pti_description => q'^<p>Optionale JavaScript-Aktion.<br>Dieser Parameter muss der Name einer JavaScript-Funktion oder eine anonyme Funktionsdefinition sein, die als Callback aufgerufen wird.<br>Wird kein Parameter definiert, wird SCT aufgerufen und entsprechende Regeln ausgeführt, anderenfalls wird direkt die hier hinterlegte Funktion ausgeführt.</p>^'
   );
 
   pit_admin.merge_translatable_item(
@@ -97,6 +133,15 @@ begin
   );
 
   pit_admin.merge_translatable_item(
+    p_pti_id => 'SAP_B62D45604A2D55BF5BCA1410CE0EF93B',
+    p_pti_pml_name => q'^GERMAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^<p>Name des Seitenelements, in das die Auswahl des IG gespeichert werden soll.</p>^'
+  );
+
+  pit_admin.merge_translatable_item(
     p_pti_id => 'SAP_B978A4138A030641A7462A678187CB20',
     p_pti_pml_name => q'^GERMAN^',
     p_pti_pmg_name => q'^SCT^',
@@ -124,12 +169,21 @@ begin
   );
 
   pit_admin.merge_translatable_item(
+    p_pti_id => 'SAP_DEB7F9B363DE45ED97D97891DF640704',
+    p_pti_pml_name => q'^GERMAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Seitenelemente^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^<p>Komma-separierte Liste von Elementnamen oder CSS-Klassen, die die Felder identifizieren, die zu einer Gruppe zusammengefasst werden. Innerhalb dieser Gruppe muss beim Prüfen der Werte genau ein Feld einen NOT NULL-Wert besitzen.<br>Sind alle Elemente NULL oder sind mehr al ein Element NOT NULL, wird ein Fehler geworfen</p>^'
+  );
+
+  pit_admin.merge_translatable_item(
     p_pti_id => 'SAP_D13D372C92172FF7A6D6DA4A430780CB',
     p_pti_pml_name => q'^GERMAN^',
     p_pti_pmg_name => q'^SCT^',
     p_pti_name => q'^^',
     p_pti_display_name => q'^^',
-    p_pti_description => q'^<p>Optionale JavaScript-Aktion.<br> Dieser Parameter muss der Name einer JavaScript-Funktion oder eine anonyme Funktionsdefinition sein, die als Callback aufgerufen wird.<br/>Wird kein Parameter definiert, wird SCT aufgerufen und entsprechende Regeln ausgeführt, anderenfalls wird direkt die hier hinterlegte Funktion ausgeführt.</p>^'
+    p_pti_description => q'^<p>Optionale JavaScript-Aktion.<br>Dieser Parameter muss der Name einer JavaScript-Funktion oder eine anonyme Funktionsdefinition sein, die als Callback aufgerufen wird.<br>Wird kein Parameter definiert, wird SCT aufgerufen und entsprechende Regeln ausgeführt, anderenfalls wird direkt die hier hinterlegte Funktion ausgeführt.</p>^'
   );
 
   pit_admin.merge_translatable_item(
@@ -223,12 +277,39 @@ begin
   );
 
   pit_admin.merge_translatable_item(
+    p_pti_id => 'SAP_117C7441334261A7FCBF4984E2AD73B4',
+    p_pti_pml_name => q'^GERMAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Ordinalzahl der Wertespalte^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^<p>1- basierte Ordinalzahl der Spalte, die im hinterlegten Element abgelegt werden soll. Die Reihenfolge richtet sich nach der Reihenfolge auf der APEX-Anwendungsseite.</p>^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SAP_15E7057159CD40FF351530D05667BE60',
+    p_pti_pml_name => q'^GERMAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^<p>Meldungsname, der ausgegeben werden soll, falls die Prüfung misslingt. Muss ein PIT-Meldungsname sein, in der Form MSG.&lt;Meldungsname&gt;</p>^'
+  );
+
+  pit_admin.merge_translatable_item(
     p_pti_id => 'SAP_177598894625ECABC760864A5E1C0A02',
     p_pti_pml_name => q'^GERMAN^',
     p_pti_pmg_name => q'^SCT^',
     p_pti_name => q'^^',
     p_pti_display_name => q'^^',
-    p_pti_description => q'^<p>Optionale JavaScript-Aktion.<br> Dieser Parameter muss der Name einer JavaScript-Funktion oder eine anonyme Funktionsdefinition sein, die als Callback aufgerufen wird.<br/>Wird kein Parameter definiert, wird SCT aufgerufen und entsprechende Regeln ausgeführt, anderenfalls wird direkt die hier hinterlegte Funktion ausgeführt.</p>^'
+    p_pti_description => q'^<p>Optionale JavaScript-Aktion.<br>Dieser Parameter muss der Name einer JavaScript-Funktion oder eine anonyme Funktionsdefinition sein, die als Callback aufgerufen wird.<br>Wird kein Parameter definiert, wird SCT aufgerufen und entsprechende Regeln ausgeführt, anderenfalls wird direkt die hier hinterlegte Funktion ausgeführt.</p>^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SAP_179D749A8A00A8832B7573AFA9E193F0',
+    p_pti_pml_name => q'^GERMAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Liste der Seitenelemente^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^<p>Komma-separierte Liste von Elementnamen oder CSS-Klassen, die die Felder identifizieren, die zu einer Gruppe zusammengefasst werden. Innerhalb dieser Gruppe muss beim Prüfen der Werte entweder genau ein Feld einen NOT NULL-Wert besitzen, oder alle Werte müssen leer sein</p>^'
   );
 
   pit_admin.merge_translatable_item(
@@ -336,7 +417,8 @@ begin
     p_pti_pmg_name => q'^SCT^',
     p_pti_name => q'^^',
     p_pti_display_name => q'^^',
-    p_pti_description => q'^<p>PL/SQL-Code, der ausgef&uuml;hrt werden soll.</p>^'
+    p_pti_description => q'^<p>PL/SQL-Code, der ausgef&uuml;hrt werden soll.</p>
+^'
   );
 
   pit_admin.merge_translatable_item(
@@ -390,7 +472,7 @@ begin
     p_pti_pmg_name => q'^SCT^',
     p_pti_name => q'^^',
     p_pti_display_name => q'^^',
-    p_pti_description => q'^<p>Wert, der gesetzt werden soll.</p>^'
+    p_pti_description => q'^<p>Wert, der gesetzt werden soll. Es stehen folgende Optionen zur Wahl:</p><ul><li>Konstante Zeichenkette, eingeschlossen in Hochkommata</li><li>JavaScript-Ausdruck, der clientseitig ausgewertet wird</li><li>NULL. In diesem Fall wird der aktuelle Sessionstatuswert des aktualisierten Seitenelements verwendet. Dieser Wert kann durch eine entsprechende Aktion vor Aufruf dieser Methode berechnet worden sein.</li></ul>^'
   );
 
   pit_admin.merge_translatable_item(
@@ -417,7 +499,7 @@ begin
     p_pti_pmg_name => q'^SCT^',
     p_pti_name => q'^^',
     p_pti_display_name => q'^^',
-    p_pti_description => q'^<p>Optionale JavaScript-Aktion.<br> Dieser Parameter muss der Name einer JavaScript-Funktion oder eine anonyme Funktionsdefinition sein, die als Callback aufgerufen wird.<br/>Wird kein Parameter definiert, wird SCT aufgerufen und entsprechende Regeln ausgeführt, anderenfalls wird direkt die hier hinterlegte Funktion ausgeführt.</p>^'
+    p_pti_description => q'^<p>Optionale JavaScript-Aktion.<br>Dieser Parameter muss der Name einer JavaScript-Funktion oder eine anonyme Funktionsdefinition sein, die als Callback aufgerufen wird.<br>Wird kein Parameter definiert, wird SCT aufgerufen und entsprechende Regeln ausgeführt, anderenfalls wird direkt die hier hinterlegte Funktion ausgeführt.</p>^'
   );
 
   pit_admin.merge_translatable_item(
@@ -430,12 +512,21 @@ begin
   );
 
   pit_admin.merge_translatable_item(
+    p_pti_id => 'SAP_9848E46D537D360B197740E74F10E043',
+    p_pti_pml_name => q'^GERMAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Meldungsname^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^<p>Medlungsname, der ausgegeben werden soll, falls die Prüfung misslingt. Muss ein PIT-Meldungsname sein, in der Form MSG.&lt;Meldungsname&gt;</p>^'
+  );
+
+  pit_admin.merge_translatable_item(
     p_pti_id => 'SAT_AFTER_REFRESH',
     p_pti_pml_name => q'^GERMAN^',
     p_pti_pmg_name => q'^SCT^',
     p_pti_name => q'^Ereignis "After Refresh" überwachen^',
     p_pti_display_name => q'^^',
-    p_pti_description => q'^<p>Registiert einen APEXAfterRefresh-Eventhandler. Wird das Ereignis ausgelöst, wird dies an SCT gemeldet und kann mit einer Regel AFTER_REFRESH = 1 gefangen werden.<br>Auslösendes Element ist das Element, dass in dieser Aktion als FIRING_ITEM registriert wird.</p>^'
+    p_pti_description => q'^<p>Registiert einen APEXAfterRefresh-Eventhandler. Wird das Ereignis ausgelöst, wird dies an SCT gemeldet und kann mit einer Regel AFTER_REFRESH = &lt;Name des Seitenelements&gt; gefangen werden.<br>Auslösendes Element ist das Element, dass in dieser Aktion als FIRING_ITEM registriert wird.</p>^'
   );
 
   pit_admin.merge_translatable_item(
@@ -462,7 +553,7 @@ begin
     p_pti_pmg_name => q'^SCT^',
     p_pti_name => q'^Ereignis "Dialog Close" überwachen^',
     p_pti_display_name => q'^^',
-    p_pti_description => q'^<p>Registiert einen APEXAfterDialogClose-Eventhandler.<br>Wird das Ereignis ausgel&ouml;st, wird dies an SCT gemeldet und kann mit einer Regel DIALOG_CLOSED = 1 gefangen werden.</br>Ausl&ouml;sendes Element ist das Element, dass in dieser Aktion als FIRING_ITEM registriert wird.</p>^'
+    p_pti_description => q'^<p>Registiert einen APEXAfterDialogClose-Eventhandler.<br>Wird das Ereignis ausgelöst, wird dies an SCT gemeldet und kann mit einer Regel DIALOG_CLOSED = &lt;Name des Seitenelements&gt; gefangen werden.<br>Auslösendes Element ist das Element, dass in dieser Aktion als FIRING_ITEM registriert wird.</p>^'
   );
 
   pit_admin.merge_translatable_item(
@@ -489,7 +580,7 @@ begin
     p_pti_pmg_name => q'^SCT^',
     p_pti_name => q'^Ereignis "Doppelklick" überwachen^',
     p_pti_display_name => q'^^',
-    p_pti_description => q'^<p>Registiert einen DoubleClick-Eventhandler.<br>Wird das Ereignis ausgel&ouml;st, wird dies an SCT gemeldet und kann mit einer Regel DOUBLE_CLICK = 1 gefangen werden. <br>Ausl&ouml;sendes Element ist das Element, dass in dieser Aktion als FIRING_ITEM registriert wird.</p>^'
+    p_pti_description => q'^<p>Registiert einen DoubleClick-Eventhandler.<br>Wird das Ereignis ausgelöst, wird dies an SCT gemeldet und kann mit einer Regel DOUBLE_CLICK = &lt;Name des Seitenelements&gt; gefangen werden.&nbsp;<br>Auslösendes Element ist das Element, dass in dieser Aktion als FIRING_ITEM registriert wird.</p>^'
   );
 
   pit_admin.merge_translatable_item(
@@ -534,7 +625,7 @@ begin
     p_pti_pmg_name => q'^SCT^',
     p_pti_name => q'^Ereignis "Enter-Taste" überwachen^',
     p_pti_display_name => q'^^',
-    p_pti_description => q'^<p>Registiert einen Enter-Taste-Eventhandler.<br>Wird das Ereignis ausgelöst, wird dies an SCT gemeldet und kann mit einer RegelENTER_KEY = 1 gefangen werden.<br>Auslösendes Element ist das Element, dass in dieser Aktion als FIRING_ITEM registriert wird.</p>^'
+    p_pti_description => q'^<p>Registiert einen Enter-Taste-Eventhandler.<br>Wird das Ereignis ausgelöst, wird dies an SCT gemeldet und kann mit einer Regel ENTER_KEY = &lt;Name des Seitenelements&gt; gefangen werden.<br>Auslösendes Element ist das Element, dass in dieser Aktion als FIRING_ITEM registriert wird.</p>^'
   );
 
   pit_admin.merge_translatable_item(
@@ -547,12 +638,49 @@ begin
   );
 
   pit_admin.merge_translatable_item(
+    p_pti_id => 'SAT_EXPORT_ALLE',
+    p_pti_pml_name => q'^GERMAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Alle Aktionstypen^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^Vom Benutzer angelegte und alle mitgelieferten Aktionstypen^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SAT_EXPORT_SYSTEM',
+    p_pti_pml_name => q'^GERMAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Integrierte Aktionstypen^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^Von SCT angelegte und mitgelieferte Aktionstypen^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SAT_EXPORT_USER',
+    p_pti_pml_name => q'^GERMAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Selbsterstellte Aktionstypen^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^Vom Benutzer angelegte Aktionstypen^'
+  );
+
+  pit_admin.merge_translatable_item(
     p_pti_id => 'SAT_GET_SEQ_VAL',
     p_pti_pml_name => q'^GERMAN^',
     p_pti_pmg_name => q'^SCT^',
     p_pti_name => q'^Sequenzwert ermitteln^',
     p_pti_display_name => q'^^',
     p_pti_description => q'^<p>Setzt das referenzierte Element auf einen neuen Sequenzwert.</p>^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SAT_HIDE_IR_IG_FILTER',
+    p_pti_pml_name => q'^GERMAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Filterbank von IR/IG ausblenden^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^<p>Blendet die Filterbank von Interactive Report/Grid aus.</p>
+^'
   );
 
   pit_admin.merge_translatable_item(
@@ -651,7 +779,8 @@ begin
     p_pti_pmg_name => q'^SCT^',
     p_pti_name => q'^PL/SQL-Code ausführen^',
     p_pti_display_name => q'^^',
-    p_pti_description => q'^<p>F&uuml;hrt den als Parameter &uuml;bergebenen PL/SQL-Code aus.</p>^'
+    p_pti_description => q'^<p>F&uuml;hrt den als Parameter &uuml;bergebenen PL/SQL-Code aus.</p>
+^'
   );
 
   pit_admin.merge_translatable_item(
@@ -718,12 +847,30 @@ begin
   );
 
   pit_admin.merge_translatable_item(
+    p_pti_id => 'SAT_SET_IG_SELECTION',
+    p_pti_pml_name => q'^GERMAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Auswahl in Feld speichern^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^<p>Legt die aktuell ausgewählten Zeilen-IDs im angegebenen Feld ab.</p>^'
+  );
+
+  pit_admin.merge_translatable_item(
     p_pti_id => 'SAT_SET_ITEM',
     p_pti_pml_name => q'^GERMAN^',
     p_pti_pmg_name => q'^SCT^',
     p_pti_name => q'^Feld auf Wert setzen^',
     p_pti_display_name => q'^^',
     p_pti_description => q'^<p>Setzt das referenzierte Seitenelement auf den als Parameter übergebenen Wert.</p>^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SAT_SET_ITEM_LABEL',
+    p_pti_pml_name => q'^GERMAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Feldbezeichner auf Wert setzen^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^<p>Setzt den Bezeichner des referenzierten Seitenelements auf den als Parameter übergebenen Wert.</p>^'
   );
 
   pit_admin.merge_translatable_item(
@@ -840,7 +987,7 @@ begin
     p_pti_pmg_name => q'^SCT^',
     p_pti_name => q'^Genau einen Wert wählen^',
     p_pti_display_name => q'^^',
-    p_pti_description => q'^<p>Stellt sicher, dass genau eines der Elemente aus Attribut 1 einen Wert enthält.</p> <dl><dt>Parameter 1</dt><dd>Komma-separierte Liste von Elementnamen oder CSS-Klassen, die die Felder identifizieren, die zu einer Gruppe zusammengefasst werden. Innerhalb dieser Gruppe muss beim Pr&uuml;fen der Werte entweder genau ein Feld einen NOT NULL-Wert besitzen, oder alle Werte m&uuml;ssen leer sein</dd> <dt>Parameter 2</dt><dd>Meldungsname, der ausgegeben werden soll, falls die Pr&uuml;fung misslingt. Muss ein PIT-Meldungsname sein, in der Form MSG.&lt;Meldungsname&gt;</dd></dl> ^'
+    p_pti_description => q'^<p>Stellt sicher, dass genau eines der Elemente aus Attribut 1 einen Wert enthält.</p>^'
   );
 
   pit_admin.merge_translatable_item(
@@ -849,7 +996,79 @@ begin
     p_pti_pmg_name => q'^SCT^',
     p_pti_name => q'^Genau einen Wert wählen, NOT_NULL^',
     p_pti_display_name => q'^^',
-    p_pti_description => q'^<p>Stellt sicher, dass genau eines der Elemente aus Attribut 1 einen Wert enthält. NULL wird nicht zugelassen</p> </p><dl><dt>Parameter 1</dt><dd>Komma-separierte Liste von Elementnamen oder CSS-Klassen, die die Felder identifizieren, die zu einer Gruppe zusammengefasst werden. Innerhalb dieser Gruppe muss beim Pr&uuml;fen der Werte genau ein Feld einen NOT NULL-Wert besitzen.<br>Sind alle Elemente NULL oder sind mehr al ein Element NOT NULL, wird ein Fehler geworfen</dd> <dt>Parameter 2</dt><dd>Medlungsname, der ausgegeben werden soll, falls die Pr&uuml;fung misslingt. Muss ein PIT-Meldungsname sein, in der Form MSG.&lt;Meldungsname&gt;</dd></dl> ^'
+    p_pti_description => q'^<p>Stellt sicher, dass genau eines der Elemente aus Attribut 1 einen Wert enthält. NULL wird nicht zugelassen</p>^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SELECT_APP',
+    p_pti_pml_name => q'^GERMAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Anwendung wählen^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SELECT_PAGE',
+    p_pti_pml_name => q'^GERMAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Anwendungsseite wählen^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SELECT_SGR',
+    p_pti_pml_name => q'^GERMAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Regelgruppe wählen^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SGR_EXPORT_LABEL_ALL',
+    p_pti_pml_name => q'^GERMAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Alle Regelgruppen exportieren^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SGR_EXPORT_LABEL_APP',
+    p_pti_pml_name => q'^GERMAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Regelgruppen der Anwendung "#1#" exportieren^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SGR_EXPORT_LABEL_PAGE',
+    p_pti_pml_name => q'^GERMAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Regelgruppen der Anwendungsseite "#1#" exportieren^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SGR_EXPORT_LABEL_SGR',
+    p_pti_pml_name => q'^GERMAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Regelgruppe "#1#" exportieren^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SGR_REGION_HEADING',
+    p_pti_pml_name => q'^GERMAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Regelübersicht »#1#« (#2#)^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
   );
 
   pit_admin.merge_translatable_item(
@@ -859,6 +1078,15 @@ begin
     p_pti_name => q'^Alle Seitenelemente^',
     p_pti_display_name => q'^^',
     p_pti_description => q'^Alle Seitenelemente der Anwendung^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SIF_DATE_ITEM',
+    p_pti_pml_name => q'^GERMAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Seitenelement (Datum)^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^<p>Alle Anwendungs- und Seitenelemente der aktuellen Anwendungsseite mit Datumsformatmasek</p>^'
   );
 
   pit_admin.merge_translatable_item(
@@ -889,6 +1117,15 @@ begin
   );
 
   pit_admin.merge_translatable_item(
+    p_pti_id => 'SIF_NUMBER_ITEM',
+    p_pti_pml_name => q'^GERMAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Seitenelement (Zahl)^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^<p>Alle Anwendungs- und Seitenelemente der aktuellen Anwendungsseite mit Zahlformatmaske</p>^'
+  );
+
+  pit_admin.merge_translatable_item(
     p_pti_id => 'SIF_PAGE',
     p_pti_pml_name => q'^GERMAN^',
     p_pti_pmg_name => q'^SCT^',
@@ -913,24 +1150,6 @@ begin
     p_pti_name => q'^Seitenelement^',
     p_pti_display_name => q'^^',
     p_pti_description => q'^<p>Alle Anwendungs- und Seitenelemente der aktuellen Anwendungsseite</p>^'
-  );
-
-  pit_admin.merge_translatable_item(
-    p_pti_id => 'SIF_DATE_ITEM',
-    p_pti_pml_name => q'^GERMAN^',
-    p_pti_pmg_name => q'^SCT^',
-    p_pti_name => q'^Seitenelement (Datum)^',
-    p_pti_display_name => q'^^',
-    p_pti_description => q'^<p>Alle Anwendungs- und Seitenelemente der aktuellen Anwendungsseite mit Datumsformatmasek</p>^'
-  );
-
-  pit_admin.merge_translatable_item(
-    p_pti_id => 'SIF_NUMBER_ITEM',
-    p_pti_pml_name => q'^GERMAN^',
-    p_pti_pmg_name => q'^SCT^',
-    p_pti_name => q'^Seitenelement (Zahl)^',
-    p_pti_display_name => q'^^',
-    p_pti_description => q'^<p>Alle Anwendungs- und Seitenelemente der aktuellen Anwendungsseite mit Zahlformatmaske</p>^'
   );
 
   pit_admin.merge_translatable_item(
@@ -967,6 +1186,141 @@ begin
     p_pti_name => q'^Seitenelemente, die aktualisiert werden können^',
     p_pti_display_name => q'^^',
     p_pti_description => q'^Alle Seitenelemente, die aktualisiert werden können^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SIT_AFTER_REFRESH',
+    p_pti_pml_name => q'^GERMAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Nach Refresh^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SIT_ALL',
+    p_pti_pml_name => q'^GERMAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Alle^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SIT_APP_ITEM',
+    p_pti_pml_name => q'^GERMAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Anwendungselement^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SIT_BUTTON',
+    p_pti_pml_name => q'^GERMAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Schaltfläche^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SIT_DATE_ITEM',
+    p_pti_pml_name => q'^GERMAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Element (Datum)^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SIT_DIALOG_CLOSED',
+    p_pti_pml_name => q'^GERMAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Dialog geschlossen^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SIT_DOCUMENT',
+    p_pti_pml_name => q'^GERMAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Dokument^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SIT_DOUBLE_CLICK',
+    p_pti_pml_name => q'^GERMAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Doppelklick^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SIT_ELEMENT',
+    p_pti_pml_name => q'^GERMAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Element^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SIT_ENTER_KEY',
+    p_pti_pml_name => q'^GERMAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Enter-Taste^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SIT_FIRING_ITEM',
+    p_pti_pml_name => q'^GERMAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Firing Item^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SIT_INITIALIZING',
+    p_pti_pml_name => q'^GERMAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Initialize Flag^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SIT_ITEM',
+    p_pti_pml_name => q'^GERMAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Element^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SIT_NUMBER_ITEM',
+    p_pti_pml_name => q'^GERMAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Element (Zahl)^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SIT_REGION',
+    p_pti_pml_name => q'^GERMAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Region^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
   );
 
   pit_admin.merge_translatable_item(
@@ -1114,6 +1468,15 @@ begin
   );
 
   pit_admin.merge_translatable_item(
+    p_pti_id => 'STG_IG',
+    p_pti_pml_name => q'^GERMAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Interactive Grid^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^Aktionen für das Interaktive Grid^'
+  );
+
+  pit_admin.merge_translatable_item(
     p_pti_id => 'STG_ITEM',
     p_pti_pml_name => q'^GERMAN^',
     p_pti_pmg_name => q'^SCT^',
@@ -1189,4 +1552,4 @@ begin
 end;
 /
 
-set define &
+set define on

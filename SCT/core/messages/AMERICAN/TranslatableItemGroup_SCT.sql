@@ -1,5 +1,5 @@
 begin
-    
+
   pit_admin.merge_message_group(
     p_pmg_name => 'SCT',
     p_pmg_description => q'^SCT Plugin messages^');
@@ -50,6 +50,42 @@ begin
   );
 
   pit_admin.merge_translatable_item(
+    p_pti_id => 'LOV_EXPORT_SGR_ALL_SGR',
+    p_pti_pml_name => q'^AMERICAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^All rule groups^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'LOV_EXPORT_SGR_APP',
+    p_pti_pml_name => q'^AMERICAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^All control groups of an application^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'LOV_EXPORT_SGR_PAGE',
+    p_pti_pml_name => q'^AMERICAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^All rule groups of an application page^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'LOV_EXPORT_SGR_SGR',
+    p_pti_pml_name => q'^AMERICAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^One rule group^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
     p_pti_id => 'SAP_AC3D4D849D3D3917E8CC2606FF68F6E2',
     p_pti_pml_name => q'^AMERICAN^',
     p_pti_pmg_name => q'^SCT^',
@@ -95,6 +131,16 @@ begin
   );
 
   pit_admin.merge_translatable_item(
+    p_pti_id => 'SAP_B62D45604A2D55BF5BCA1410CE0EF93B',
+    p_pti_pml_name => q'^AMERICAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^<p>Name of the page element where the IG selection should be saved.</p>
+^'
+  );
+
+  pit_admin.merge_translatable_item(
     p_pti_id => 'SAP_B978A4138A030641A7462A678187CB20',
     p_pti_pml_name => q'^AMERICAN^',
     p_pti_pmg_name => q'^SCT^',
@@ -119,6 +165,15 @@ begin
     p_pti_name => q'^Message^',
     p_pti_display_name => q'^^',
     p_pti_description => q'^<p>Message text</p>^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SAP_DEB7F9B363DE45ED97D97891DF640704',
+    p_pti_pml_name => q'^AMERICAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^<p>Comma-separated list of element names or CSS classes that identify the fields that will be grouped together. Within this group, exactly one field must have a NOT NULL value when checking the values.<br>If all elements are NULL or if more than one element is NOT NULL, an error is thrown</p>.^'
   );
 
   pit_admin.merge_translatable_item(
@@ -221,12 +276,49 @@ begin
   );
 
   pit_admin.merge_translatable_item(
+    p_pti_id => 'SAP_117C7441334261A7FCBF4984E2AD73B4',
+    p_pti_pml_name => q'^AMERICAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Ordinal number of the value column^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^<p>1- based ordinal number of the column to be stored in the deposited element. The order will be based on the order on the APEX application page.</p>.
+^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SAP_15E7057159CD40FF351530D05667BE60',
+    p_pti_pml_name => q'^AMERICAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^<p>Message name to be output if the check fails. Must be a PIT message name, in the form MSG.&lt;messagename&gt;</p>.^'
+  );
+
+  pit_admin.merge_translatable_item(
     p_pti_id => 'SAP_177598894625ECABC760864A5E1C0A02',
     p_pti_pml_name => q'^AMERICAN^',
     p_pti_pmg_name => q'^SCT^',
     p_pti_name => q'^^',
     p_pti_display_name => q'^^',
     p_pti_description => q'^<p>Optional JavaScript action.<br>This parameter must be the name of a JavaScript function or an anonymous function definition that is called as a callback.<br/>If no parameter is defined, SCT is called and the corresponding rules are executed, otherwise the function stored here is executed directly.</p>^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SAP_179D749A8A00A8832B7573AFA9E193F0',
+    p_pti_pml_name => q'^AMERICAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^List of page elements^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^<p>Comma-separated list of element names or CSS classes that identify the fields that will be grouped together. Within this group, when checking values, either exactly one field must have a NOT NULL value, or all values must be empty</p>.^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SAP_20B544876D535AB8292D6753CB3D9DFE',
+    p_pti_pml_name => q'^AMERICAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^<p>The page command to be executed.</p>^'
   );
 
   pit_admin.merge_translatable_item(
@@ -428,6 +520,15 @@ begin
   );
 
   pit_admin.merge_translatable_item(
+    p_pti_id => 'SAP_9848E46D537D360B197740E74F10E043',
+    p_pti_pml_name => q'^AMERICAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Message name^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^<p>Message name to be output if the check fails. Must be a PIT message name, in the form MSG.&lt;messagename&gt;</p>.^'
+  );
+
+  pit_admin.merge_translatable_item(
     p_pti_id => 'SAT_AFTER_REFRESH',
     p_pti_pml_name => q'^AMERICAN^',
     p_pti_pmg_name => q'^SCT^',
@@ -545,6 +646,42 @@ begin
   );
 
   pit_admin.merge_translatable_item(
+    p_pti_id => 'SAT_EXECUTE_COMMAND',
+    p_pti_pml_name => q'^AMERICAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Execute page command^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^<p>Executes a page command.</p>^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SAT_EXPORT_ALLE',
+    p_pti_pml_name => q'^AMERICAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^All Action types^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^Action types created by the user and all supplied action types^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SAT_EXPORT_SYSTEM',
+    p_pti_pml_name => q'^AMERICAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Supplied Action types^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^Action types created and supplied by SCT^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SAT_EXPORT_USER',
+    p_pti_pml_name => q'^AMERICAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^User-created action types^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^User created Action types^'
+  );
+
+  pit_admin.merge_translatable_item(
     p_pti_id => 'SAT_GET_SEQ_VAL',
     p_pti_pml_name => q'^AMERICAN^',
     p_pti_pmg_name => q'^SCT^',
@@ -554,12 +691,31 @@ begin
   );
 
   pit_admin.merge_translatable_item(
+    p_pti_id => 'SAT_HIDE_IR_IG_FILTER',
+    p_pti_pml_name => q'^AMERICAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Hide filter from IR/IG^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^<p>Hides the filter bank of Interactive Report/Grid.</p>
+^'
+  );
+
+  pit_admin.merge_translatable_item(
     p_pti_id => 'SAT_HIDE_ITEM',
     p_pti_pml_name => q'^AMERICAN^',
     p_pti_pmg_name => q'^SCT^',
     p_pti_name => q'^Hide target^',
     p_pti_display_name => q'^^',
     p_pti_description => q'^<p>Hides the referenced page element</p>^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SAT_IG_ALIGN_VERTICAL',
+    p_pti_pml_name => q'^AMERICAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Format table cells vertically top^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^<p>Changes the formatting of an interactive grid/report so that the table cells are vertically aligned at the top.</p>^'
   );
 
   pit_admin.merge_translatable_item(
@@ -624,7 +780,7 @@ begin
     p_pti_display_name => q'^^',
     p_pti_description => q'^^'
   );
-  
+
   pit_admin.merge_translatable_item(
     p_pti_id => 'SAT_NOTIFY',
     p_pti_pml_name => q'^AMERICAN^',
@@ -716,12 +872,30 @@ begin
   );
 
   pit_admin.merge_translatable_item(
+    p_pti_id => 'SAT_SET_IG_SELECTION',
+    p_pti_pml_name => q'^AMERICAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Save selection in field^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^<p>Drops the currently selected line IDs in the specified field.</p>^'
+  );
+
+  pit_admin.merge_translatable_item(
     p_pti_id => 'SAT_SET_ITEM',
     p_pti_pml_name => q'^AMERICAN^',
     p_pti_pmg_name => q'^SCT^',
     p_pti_name => q'^Set page item to value^',
     p_pti_display_name => q'^^',
     p_pti_description => q'^<p>Sets the referenced page item to the value passed as parameter.</p>^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SAT_SET_ITEM_LABEL',
+    p_pti_pml_name => q'^AMERICAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Set field identifier to value^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^<p>Sets the identifier of the referenced page element to the value passed as parameter.</p>^'
   );
 
   pit_admin.merge_translatable_item(
@@ -838,7 +1012,7 @@ begin
     p_pti_pmg_name => q'^SCT^',
     p_pti_name => q'^Choose exactly one value^',
     p_pti_display_name => q'^^',
-    p_pti_description => q'^<p>Make sure that exactly one of the elements from attribute 1 contains a value.</p> <dl><dt>Parameter 1</dt><dd>Comma-separated list of element names or CSS classes that identify the fields that are combined into a group. Within this group, either exactly one field must have a NOT NULL value when checking the values, or all values must be empty </dd> <dt>parameter 2</dt><dd> message name to be output if the check fails. Must be a PIT message name, in the form MSG.&lt;message name;</dd></dl> ^'
+    p_pti_description => q'^<p>Makes sure that exactly one of the elements from attribute 1 contains a value.</p>^'
   );
 
   pit_admin.merge_translatable_item(
@@ -847,7 +1021,79 @@ begin
     p_pti_pmg_name => q'^SCT^',
     p_pti_name => q'^Select exactly one value, NOT_NULL^',
     p_pti_display_name => q'^^',
-    p_pti_description => q'^<p>Make sure that exactly one of the elements from attribute 1 contains a value. NULL is not allowed</p> </p><dl><dt>parameter 1</dt><dd>Comma-separated list of element names or CSS classes that identify the fields that will be combined into a group. Within this group, exactly one field must have a NOT NULL value when the values are checked.<br>If all elements are NULL or more than one element is NOT NULL, an error is thrown </dd> <dt>parameter 2</dt><dd>medium name to be output if the check fails. Must be a PIT message name, in the form MSG.&lt;message name;</dd></dl> ^'
+    p_pti_description => q'^<p>Makes sure that exactly one of the elements from attribute 1 contains a value. NULL is not allowed</p>^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SELECT_APP',
+    p_pti_pml_name => q'^AMERICAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Select application^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SELECT_PAGE',
+    p_pti_pml_name => q'^AMERICAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Select application page^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SELECT_SGR',
+    p_pti_pml_name => q'^AMERICAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Select rule group^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SGR_EXPORT_LABEL_ALL',
+    p_pti_pml_name => q'^AMERICAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Export all rule groups^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SGR_EXPORT_LABEL_APP',
+    p_pti_pml_name => q'^AMERICAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Export rule groups of application "#1#"^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SGR_EXPORT_LABEL_PAGE',
+    p_pti_pml_name => q'^AMERICAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Export rule groups of application  page "#1#"^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SGR_EXPORT_LABEL_SGR',
+    p_pti_pml_name => q'^AMERICAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Export rule Group #1#^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SGR_REGION_HEADING',
+    p_pti_pml_name => q'^AMERICAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Rule overview »#1#« (#2#)^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
   );
 
   pit_admin.merge_translatable_item(
@@ -860,12 +1106,30 @@ begin
   );
 
   pit_admin.merge_translatable_item(
+    p_pti_id => 'SIF_DATE_ITEM',
+    p_pti_pml_name => q'^AMERICAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Page item (date)^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^All page items that contain a date^'
+  );
+
+  pit_admin.merge_translatable_item(
     p_pti_id => 'SIF_DOCUMENT',
     p_pti_pml_name => q'^AMERICAN^',
     p_pti_pmg_name => q'^SCT^',
     p_pti_name => q'^No page items^',
     p_pti_display_name => q'^^',
     p_pti_description => q'^The action is not assigned to a specific page element^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SIF_ENABLE_DISABLE',
+    p_pti_pml_name => q'^AMERICAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Page items that can be activated and deactivated^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^All page items that can be activated and deactivated^'
   );
 
   pit_admin.merge_translatable_item(
@@ -884,6 +1148,15 @@ begin
     p_pti_name => q'^No page items^',
     p_pti_display_name => q'^^',
     p_pti_description => q'^No page items^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SIF_NUMBER_ITEM',
+    p_pti_pml_name => q'^AMERICAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Page item (number)^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^All page items containing a number^'
   );
 
   pit_admin.merge_translatable_item(
@@ -950,6 +1223,141 @@ begin
   );
 
   pit_admin.merge_translatable_item(
+    p_pti_id => 'SIT_AFTER_REFRESH',
+    p_pti_pml_name => q'^AMERICAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^After refresh^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SIT_ALL',
+    p_pti_pml_name => q'^AMERICAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^All^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SIT_APP_ITEM',
+    p_pti_pml_name => q'^AMERICAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Application item^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SIT_BUTTON',
+    p_pti_pml_name => q'^AMERICAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Button^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SIT_DATE_ITEM',
+    p_pti_pml_name => q'^AMERICAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Page item (date)^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SIT_DIALOG_CLOSED',
+    p_pti_pml_name => q'^AMERICAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Dialog closed^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SIT_DOCUMENT',
+    p_pti_pml_name => q'^AMERICAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Document^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SIT_DOUBLE_CLICK',
+    p_pti_pml_name => q'^AMERICAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Double click^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SIT_ELEMENT',
+    p_pti_pml_name => q'^AMERICAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Item^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SIT_ENTER_KEY',
+    p_pti_pml_name => q'^AMERICAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Enter key^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SIT_FIRING_ITEM',
+    p_pti_pml_name => q'^AMERICAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Firing Item^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SIT_INITIALIZING',
+    p_pti_pml_name => q'^AMERICAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Initialize Flag^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SIT_ITEM',
+    p_pti_pml_name => q'^AMERICAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Item^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SIT_NUMBER_ITEM',
+    p_pti_pml_name => q'^AMERICAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Page item (number)^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SIT_REGION',
+    p_pti_pml_name => q'^AMERICAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Region^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^^'
+  );
+
+  pit_admin.merge_translatable_item(
     p_pti_id => 'SPT_APEX_ACTION',
     p_pti_pml_name => q'^AMERICAN^',
     p_pti_pmg_name => q'^SCT^',
@@ -991,7 +1399,7 @@ begin
     p_pti_pmg_name => q'^SCT^',
     p_pti_name => q'^jQuery selector^',
     p_pti_display_name => q'^^',
-    p_pti_description => q'^<p>jQuery expression to edit multiple elements. If this parameter is used, <code>DOCUMENT</code> must be entered as the sender element.^'
+    p_pti_description => q'^<p>jQuery expression to handle multiple elements. If this parameter is used, <code>DOCUMENT</code> must be entered as the outgoing element.</p>.^'
   );
 
   pit_admin.merge_translatable_item(
@@ -1094,10 +1502,19 @@ begin
   );
 
   pit_admin.merge_translatable_item(
+    p_pti_id => 'STG_IG',
+    p_pti_pml_name => q'^AMERICAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Interactive Grid^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^Actions for the Interactive Grid^'
+  );
+
+  pit_admin.merge_translatable_item(
     p_pti_id => 'STG_ITEM',
     p_pti_pml_name => q'^AMERICAN^',
     p_pti_pmg_name => q'^SCT^',
-    p_pti_name => q'^Input fields^',
+    p_pti_name => q'^Page items^',
     p_pti_display_name => q'^^',
     p_pti_description => q'^Actions for input fields^'
   );

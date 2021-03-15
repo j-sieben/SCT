@@ -16,17 +16,17 @@ begin
     p_sgr_name => 'SCT_EDIT_SAA');
 
   sct_admin.merge_rule_group(
-    p_sgr_id => sct_admin.map_id(94),
+    p_sgr_id => sct_admin.map_id(147),
     p_sgr_name => 'SCT_EDIT_SAA',
-    p_sgr_description => q'|Regeln zur Dialogseite "APEX-Aktionen editieren"|',
+    p_sgr_description => q'|Regeln zur Dialogseite "Seitenaktionen editieren"|',
     p_sgr_app_id => l_app_id,
     p_sgr_page_id => 9,
-    p_sgr_with_recursion => sct_util.C_FALSE,
+    p_sgr_with_recursion => sct_util.C_TRUE,
     p_sgr_active => sct_util.C_TRUE);
   
   sct_admin.merge_rule(
-    p_sru_id => sct_admin.map_id(96),
-    p_sru_sgr_id => sct_admin.map_id(94),
+    p_sru_id => sct_admin.map_id(149),
+    p_sru_sgr_id => sct_admin.map_id(147),
     p_sru_name => 'Initialisierung',
     p_sru_condition => q'|initializing = 1|',
     p_sru_sort_seq => 10,
@@ -34,9 +34,9 @@ begin
     p_sru_active => sct_util.C_TRUE);
   
   sct_admin.merge_rule_action(
-    p_sra_id => sct_admin.map_id(98),
-    p_sra_sru_id => sct_admin.map_id(96),
-    p_sra_sgr_id => sct_admin.map_id(94),
+    p_sra_id => sct_admin.map_id(151),
+    p_sra_sru_id => sct_admin.map_id(149),
+    p_sra_sgr_id => sct_admin.map_id(147),
     p_sra_spi_id => 'P9_SAA_STY_ID',
     p_sra_sat_id => 'SET_ITEM',
     p_sra_param_1 => q'|'ACTION'|',
@@ -47,9 +47,9 @@ begin
     p_sra_raise_recursive => sct_util.C_TRUE,
     p_sra_active => sct_util.C_TRUE);
   sct_admin.merge_rule_action(
-    p_sra_id => sct_admin.map_id(100),
-    p_sra_sru_id => sct_admin.map_id(96),
-    p_sra_sgr_id => sct_admin.map_id(94),
+    p_sra_id => sct_admin.map_id(153),
+    p_sra_sru_id => sct_admin.map_id(149),
+    p_sra_sgr_id => sct_admin.map_id(147),
     p_sra_spi_id => 'P9_SAA_STY_ID',
     p_sra_sat_id => 'DISABLE_ITEM',
     p_sra_param_1 => q'||',
@@ -60,8 +60,8 @@ begin
     p_sra_raise_recursive => sct_util.C_TRUE,
     p_sra_active => sct_util.C_TRUE);
   sct_admin.merge_rule(
-    p_sru_id => sct_admin.map_id(102),
-    p_sru_sgr_id => sct_admin.map_id(94),
+    p_sru_id => sct_admin.map_id(155),
+    p_sru_sgr_id => sct_admin.map_id(147),
     p_sru_name => 'Aktionstyp ACTION gewählt',
     p_sru_condition => q'|P9_SAA_STY_ID = 'ACTION'|',
     p_sru_sort_seq => 20,
@@ -69,9 +69,9 @@ begin
     p_sru_active => sct_util.C_TRUE);
   
   sct_admin.merge_rule_action(
-    p_sra_id => sct_admin.map_id(104),
-    p_sra_sru_id => sct_admin.map_id(102),
-    p_sra_sgr_id => sct_admin.map_id(94),
+    p_sra_id => sct_admin.map_id(157),
+    p_sra_sru_id => sct_admin.map_id(155),
+    p_sra_sgr_id => sct_admin.map_id(147),
     p_sra_spi_id => 'DOCUMENT',
     p_sra_sat_id => 'IS_MANDATORY',
     p_sra_param_1 => q'||',
@@ -82,9 +82,9 @@ begin
     p_sra_raise_recursive => sct_util.C_TRUE,
     p_sra_active => sct_util.C_TRUE);
   sct_admin.merge_rule_action(
-    p_sra_id => sct_admin.map_id(106),
-    p_sra_sru_id => sct_admin.map_id(102),
-    p_sra_sgr_id => sct_admin.map_id(94),
+    p_sra_id => sct_admin.map_id(159),
+    p_sra_sru_id => sct_admin.map_id(155),
+    p_sra_sgr_id => sct_admin.map_id(147),
     p_sra_spi_id => 'DOCUMENT',
     p_sra_sat_id => 'TOGGLE_ITEMS',
     p_sra_param_1 => q'|.sct-ui-action|',
@@ -95,9 +95,9 @@ begin
     p_sra_raise_recursive => sct_util.C_TRUE,
     p_sra_active => sct_util.C_TRUE);
   sct_admin.merge_rule_action(
-    p_sra_id => sct_admin.map_id(108),
-    p_sra_sru_id => sct_admin.map_id(102),
-    p_sra_sgr_id => sct_admin.map_id(94),
+    p_sra_id => sct_admin.map_id(161),
+    p_sra_sru_id => sct_admin.map_id(155),
+    p_sra_sgr_id => sct_admin.map_id(147),
     p_sra_spi_id => 'P9_SAA_SAI_LIST',
     p_sra_sat_id => 'REFRESH_AND_SET_VALUE',
     p_sra_param_1 => q'||',
@@ -108,8 +108,8 @@ begin
     p_sra_raise_recursive => sct_util.C_TRUE,
     p_sra_active => sct_util.C_TRUE);
   sct_admin.merge_rule(
-    p_sru_id => sct_admin.map_id(110),
-    p_sru_sgr_id => sct_admin.map_id(94),
+    p_sru_id => sct_admin.map_id(163),
+    p_sru_sgr_id => sct_admin.map_id(147),
     p_sru_name => 'Aktionstyp TOGGLE gewählt',
     p_sru_condition => q'|P9_SAA_STY_ID = 'TOGGLE'|',
     p_sru_sort_seq => 30,
@@ -117,9 +117,9 @@ begin
     p_sru_active => sct_util.C_TRUE);
   
   sct_admin.merge_rule_action(
-    p_sra_id => sct_admin.map_id(112),
-    p_sra_sru_id => sct_admin.map_id(110),
-    p_sra_sgr_id => sct_admin.map_id(94),
+    p_sra_id => sct_admin.map_id(165),
+    p_sra_sru_id => sct_admin.map_id(163),
+    p_sra_sgr_id => sct_admin.map_id(147),
     p_sra_spi_id => 'DOCUMENT',
     p_sra_sat_id => 'TOGGLE_ITEMS',
     p_sra_param_1 => q'|.sct-ui-toggle|',
@@ -130,9 +130,9 @@ begin
     p_sra_raise_recursive => sct_util.C_TRUE,
     p_sra_active => sct_util.C_TRUE);
   sct_admin.merge_rule_action(
-    p_sra_id => sct_admin.map_id(114),
-    p_sra_sru_id => sct_admin.map_id(110),
-    p_sra_sgr_id => sct_admin.map_id(94),
+    p_sra_id => sct_admin.map_id(167),
+    p_sra_sru_id => sct_admin.map_id(163),
+    p_sra_sgr_id => sct_admin.map_id(147),
     p_sra_spi_id => 'P9_SAA_SAI_LIST',
     p_sra_sat_id => 'REFRESH_AND_SET_VALUE',
     p_sra_param_1 => q'||',
@@ -143,8 +143,8 @@ begin
     p_sra_raise_recursive => sct_util.C_TRUE,
     p_sra_active => sct_util.C_TRUE);
   sct_admin.merge_rule(
-    p_sru_id => sct_admin.map_id(116),
-    p_sru_sgr_id => sct_admin.map_id(94),
+    p_sru_id => sct_admin.map_id(169),
+    p_sru_sgr_id => sct_admin.map_id(147),
     p_sru_name => 'Aktionstyp RADIO_GROUP gewählt',
     p_sru_condition => q'|P9_SAA_STY_ID = 'RADIO_GROUP'|',
     p_sru_sort_seq => 40,
@@ -152,9 +152,9 @@ begin
     p_sru_active => sct_util.C_TRUE);
   
   sct_admin.merge_rule_action(
-    p_sra_id => sct_admin.map_id(118),
-    p_sra_sru_id => sct_admin.map_id(116),
-    p_sra_sgr_id => sct_admin.map_id(94),
+    p_sra_id => sct_admin.map_id(171),
+    p_sra_sru_id => sct_admin.map_id(169),
+    p_sra_sgr_id => sct_admin.map_id(147),
     p_sra_spi_id => 'DOCUMENT',
     p_sra_sat_id => 'TOGGLE_ITEMS',
     p_sra_param_1 => q'|.sct-ui-list|',
@@ -165,9 +165,9 @@ begin
     p_sra_raise_recursive => sct_util.C_TRUE,
     p_sra_active => sct_util.C_TRUE);
   sct_admin.merge_rule_action(
-    p_sra_id => sct_admin.map_id(120),
-    p_sra_sru_id => sct_admin.map_id(116),
-    p_sra_sgr_id => sct_admin.map_id(94),
+    p_sra_id => sct_admin.map_id(173),
+    p_sra_sru_id => sct_admin.map_id(169),
+    p_sra_sgr_id => sct_admin.map_id(147),
     p_sra_spi_id => 'P9_SAA_SAI_LIST',
     p_sra_sat_id => 'REFRESH_AND_SET_VALUE',
     p_sra_param_1 => q'||',
@@ -178,7 +178,7 @@ begin
     p_sra_raise_recursive => sct_util.C_TRUE,
     p_sra_active => sct_util.C_TRUE);
   
-  sct_admin.propagate_rule_change(sct_admin.map_id(94));
+  sct_admin.propagate_rule_change(sct_admin.map_id(147));
 
   commit;
 end;

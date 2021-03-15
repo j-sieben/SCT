@@ -1,27 +1,5 @@
 create or replace package body utl_sct 
 as
-
-  /* Helper methods */
-  /** Method to retrieve a message text from a pit-method, if it is contained in P_MSG, and P_MSG otherwise
-  */
-  function get_msg(
-    p_msg in varchar2)
-  return varchar2
-  as
-    c_cmd_template varchar2(200) := 'begin :x := #COMMAND#; end;';
-    s_cmd varchar2(32767);
-    s_msg varchar2(32767);
-  begin
-    s_msg := p_msg;
-    
-    if instr(p_msg, 'pit.') <> 0 then
-      s_cmd := replace(c_cmd_template, '#COMMAND#', replace(trim(p_msg), ';'));
-      execute immediate s_cmd using out s_msg;
-    end if;
-    
-    return s_msg;
-  end get_msg;
-  
   
   procedure clear_tip
   as
@@ -228,14 +206,15 @@ as
   
   procedure refresh_and_set_value(
     p_spi_id in varchar2,
-    p_item_val in varchar2)
+    p_item_val in varchar2 default null)
   as
+    c_null varchar2(2 byte) := '''''';
   begin
     pit.enter_optional;
     sct_internal.execute_action(
       p_sat_id => 'REFRESH_AND_SET_VALUE',
       p_spi_id => p_spi_id,
-      p_param_1 => p_item_val);
+      p_param_1 => coalesce(p_item_val, c_null));
     pit.leave_optional;
   end refresh_and_set_value;
   

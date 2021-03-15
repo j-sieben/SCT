@@ -1,0 +1,24 @@
+.sct-error {
+  color:red;
+}
+
+.sct-on-error {
+  color:blue;
+}
+
+.sct-disabled{
+  color:grey;
+}
+
+.sct-dt{
+  border-top:grey solid thin;
+  font-weight:bold;
+  font-size:1.2em;
+  padding-top: 3px;
+  padding-bottom: 3px;
+  margin-top:18px;
+}
+
+.sct-carousel-hasError{
+  background:rgba(255, 0, 0, 0.3)
+}

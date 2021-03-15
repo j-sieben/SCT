@@ -16,7 +16,7 @@ begin
     p_sgr_name => 'SCT_EDIT_SRU');
 
   sct_admin.merge_rule_group(
-    p_sgr_id => sct_admin.map_id(156),
+    p_sgr_id => sct_admin.map_id(213),
     p_sgr_name => 'SCT_EDIT_SRU',
     p_sgr_description => q'|Regeln zur Dialogseite "Regel bearbeiten"|',
     p_sgr_app_id => l_app_id,
@@ -25,8 +25,8 @@ begin
     p_sgr_active => sct_util.C_TRUE);
   
   sct_admin.merge_rule(
-    p_sru_id => sct_admin.map_id(158),
-    p_sru_sgr_id => sct_admin.map_id(156),
+    p_sru_id => sct_admin.map_id(215),
+    p_sru_sgr_id => sct_admin.map_id(213),
     p_sru_name => 'Initialisierung',
     p_sru_condition => q'|initializing = 1|',
     p_sru_sort_seq => 10,
@@ -34,12 +34,12 @@ begin
     p_sru_active => sct_util.C_TRUE);
   
   sct_admin.merge_rule_action(
-    p_sra_id => sct_admin.map_id(160),
-    p_sra_sru_id => sct_admin.map_id(158),
-    p_sra_sgr_id => sct_admin.map_id(156),
+    p_sra_id => sct_admin.map_id(217),
+    p_sra_sru_id => sct_admin.map_id(215),
+    p_sra_sgr_id => sct_admin.map_id(213),
     p_sra_spi_id => 'R5_ACTION',
-    p_sra_sat_id => 'AFTER_REFRESH',
-    p_sra_param_1 => q'|de.condes.plugin.sct.ui.HideIRControlPanel('R5_ACTION');|',
+    p_sra_sat_id => 'HIDE_IR_IG_FILTER',
+    p_sra_param_1 => q'||',
     p_sra_param_2 => q'||',
     p_sra_param_3 => q'||',
     p_sra_sort_seq => 20,
@@ -47,9 +47,9 @@ begin
     p_sra_raise_recursive => sct_util.C_TRUE,
     p_sra_active => sct_util.C_TRUE);
   sct_admin.merge_rule_action(
-    p_sra_id => sct_admin.map_id(162),
-    p_sra_sru_id => sct_admin.map_id(158),
-    p_sra_sgr_id => sct_admin.map_id(156),
+    p_sra_id => sct_admin.map_id(219),
+    p_sra_sru_id => sct_admin.map_id(215),
+    p_sra_sgr_id => sct_admin.map_id(213),
     p_sra_spi_id => 'R5_ACTION',
     p_sra_sat_id => 'DIALOG_CLOSED',
     p_sra_param_1 => q'||',
@@ -60,8 +60,8 @@ begin
     p_sra_raise_recursive => sct_util.C_FALSE,
     p_sra_active => sct_util.C_TRUE);
   sct_admin.merge_rule(
-    p_sru_id => sct_admin.map_id(164),
-    p_sru_sgr_id => sct_admin.map_id(156),
+    p_sru_id => sct_admin.map_id(223),
+    p_sru_sgr_id => sct_admin.map_id(213),
     p_sru_name => 'Aktion editiert',
     p_sru_condition => q'|dialog_closed = 'R5_ACTION'|',
     p_sru_sort_seq => 30,
@@ -69,9 +69,9 @@ begin
     p_sru_active => sct_util.C_TRUE);
   
   sct_admin.merge_rule_action(
-    p_sra_id => sct_admin.map_id(166),
-    p_sra_sru_id => sct_admin.map_id(164),
-    p_sra_sgr_id => sct_admin.map_id(156),
+    p_sra_id => sct_admin.map_id(225),
+    p_sra_sru_id => sct_admin.map_id(223),
+    p_sra_sgr_id => sct_admin.map_id(213),
     p_sra_spi_id => 'R5_ACTION',
     p_sra_sat_id => 'REFRESH_ITEM',
     p_sra_param_1 => q'||',
@@ -82,8 +82,8 @@ begin
     p_sra_raise_recursive => sct_util.C_TRUE,
     p_sra_active => sct_util.C_TRUE);
   sct_admin.merge_rule(
-    p_sru_id => sct_admin.map_id(168),
-    p_sru_sgr_id => sct_admin.map_id(156),
+    p_sru_id => sct_admin.map_id(227),
+    p_sru_sgr_id => sct_admin.map_id(213),
     p_sru_name => 'Inititialisierung, neue Regel',
     p_sru_condition => q'|P5_SRU_ID is null and initializing = 1|',
     p_sru_sort_seq => 20,
@@ -91,9 +91,9 @@ begin
     p_sru_active => sct_util.C_TRUE);
   
   sct_admin.merge_rule_action(
-    p_sra_id => sct_admin.map_id(170),
-    p_sra_sru_id => sct_admin.map_id(168),
-    p_sra_sgr_id => sct_admin.map_id(156),
+    p_sra_id => sct_admin.map_id(229),
+    p_sra_sru_id => sct_admin.map_id(227),
+    p_sra_sgr_id => sct_admin.map_id(213),
     p_sra_spi_id => 'P5_SRU_SORT_SEQ',
     p_sra_sat_id => 'SET_ITEM',
     p_sra_param_1 => q'|sct_ui.get_sru_sort_seq|',
@@ -104,12 +104,12 @@ begin
     p_sra_raise_recursive => sct_util.C_TRUE,
     p_sra_active => sct_util.C_TRUE);
   sct_admin.merge_rule_action(
-    p_sra_id => sct_admin.map_id(172),
-    p_sra_sru_id => sct_admin.map_id(168),
-    p_sra_sgr_id => sct_admin.map_id(156),
+    p_sra_id => sct_admin.map_id(231),
+    p_sra_sru_id => sct_admin.map_id(227),
+    p_sra_sgr_id => sct_admin.map_id(213),
     p_sra_spi_id => 'P5_SRU_ACTIVE',
     p_sra_sat_id => 'SET_ITEM',
-    p_sra_param_1 => q'|'Y'|',
+    p_sra_param_1 => q'|sct_ui.c_true|',
     p_sra_param_2 => q'||',
     p_sra_param_3 => q'||',
     p_sra_sort_seq => 20,
@@ -117,21 +117,21 @@ begin
     p_sra_raise_recursive => sct_util.C_TRUE,
     p_sra_active => sct_util.C_TRUE);
   sct_admin.merge_rule(
-    p_sru_id => sct_admin.map_id(174),
-    p_sru_sgr_id => sct_admin.map_id(156),
-    p_sru_name => 'Regelbedingung geaendert',
+    p_sru_id => sct_admin.map_id(233),
+    p_sru_sgr_id => sct_admin.map_id(213),
+    p_sru_name => 'Regelbedingung geändert',
     p_sru_condition => q'|P5_SRU_CONDITION is not null|',
     p_sru_sort_seq => 40,
     p_sru_fire_on_page_load => sct_util.C_FALSE,
     p_sru_active => sct_util.C_TRUE);
   
   sct_admin.merge_rule_action(
-    p_sra_id => sct_admin.map_id(176),
-    p_sra_sru_id => sct_admin.map_id(174),
-    p_sra_sgr_id => sct_admin.map_id(156),
+    p_sra_id => sct_admin.map_id(235),
+    p_sra_sru_id => sct_admin.map_id(233),
+    p_sra_sgr_id => sct_admin.map_id(213),
     p_sra_spi_id => 'P5_SRU_CONDITION',
     p_sra_sat_id => 'PLSQL_CODE',
-    p_sra_param_1 => q'|sct_ui.validate_rule;|',
+    p_sra_param_1 => q'|sct_ui.validate_rule_condition;|',
     p_sra_param_2 => q'||',
     p_sra_param_3 => q'||',
     p_sra_sort_seq => 10,
@@ -139,36 +139,7 @@ begin
     p_sra_raise_recursive => sct_util.C_TRUE,
     p_sra_active => sct_util.C_TRUE);
   
-  sct_admin.merge_apex_action(    
-    p_saa_id => sct_admin.map_id(178),
-    p_saa_sgr_id => sct_admin.map_id(156),
-    p_saa_sty_id => 'ACTION',
-    p_saa_name => 'create-action',
-    p_saa_label => 'Aktion erstellen',
-    p_saa_context_label => '',
-    p_saa_icon => '',
-    p_saa_icon_type => '',
-    p_saa_title => '',
-    p_saa_shortcut => '',
-    p_saa_initially_disabled => sct_util.C_FALSE,
-    p_saa_initially_hidden => sct_util.C_FALSE,
-    p_saa_href => '',
-    p_saa_action => '');
-  
-  sct_admin.merge_apex_action_item(
-    p_sai_saa_id => sct_admin.map_id(178),
-    p_sai_spi_sgr_id => sct_admin.map_id(156),
-    p_sai_spi_id => 'B5_CREATE_ACTION',
-    p_sai_active => sct_util.C_TRUE);
-
-  sct_admin.merge_apex_action_item(
-    p_sai_saa_id => sct_admin.map_id(178),
-    p_sai_spi_sgr_id => sct_admin.map_id(156),
-    p_sai_spi_id => 'B5_CREATE_ACTION_1',
-    p_sai_active => sct_util.C_TRUE);
-
-
-  sct_admin.propagate_rule_change(sct_admin.map_id(156));
+  sct_admin.propagate_rule_change(sct_admin.map_id(213));
 
   commit;
 end;

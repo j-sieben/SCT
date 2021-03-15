@@ -39,6 +39,5 @@ begin
     end;
   end loop;
   
-  param_admin.delete_parameter_group('SCT', true);
 end;
 /

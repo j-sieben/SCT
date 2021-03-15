@@ -1148,6 +1148,15 @@ Sind alle Elemente NULL oder sind mehr al ein Element NOT NULL, wird ein Fehler 
   );
 
   pit_admin.merge_translatable_item(
+    p_pti_id => 'SIF_ENABLE_DISABLE',
+    p_pti_pml_name => q'^GERMAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Seitenelemente, die aktiviert und deaktiviert werden können^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^Alle Seitenelemente, die aktiviert und deaktiviert werden können^'
+  );
+
+  pit_admin.merge_translatable_item(
     p_pti_id => 'SIT_AFTER_REFRESH',
     p_pti_pml_name => q'^GERMAN^',
     p_pti_pmg_name => q'^SCT^',
@@ -1505,6 +1514,33 @@ Sind alle Elemente NULL oder sind mehr al ein Element NOT NULL, wird ein Fehler 
     p_pti_name => q'^Schalter^',
     p_pti_display_name => q'^^',
     p_pti_description => q'^Wahlschalter (JA|NEIN)^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SAT_EXPORT_SYSTEM',
+    p_pti_pml_name => q'^GERMAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Integrierte Aktionstypen^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^Von SCT angelegte und mitgelieferte Aktionstypen^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SAT_EXPORT_USER',
+    p_pti_pml_name => q'^GERMAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Selbsterstellte Aktionstypen^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^Vom Benutzer angelegte Aktionstypen^'
+  );
+
+  pit_admin.merge_translatable_item(
+    p_pti_id => 'SAT_EXPORT_ALLE',
+    p_pti_pml_name => q'^GERMAN^',
+    p_pti_pmg_name => q'^SCT^',
+    p_pti_name => q'^Alle Aktionstypen^',
+    p_pti_display_name => q'^^',
+    p_pti_description => q'^Vom Benutzer angelegte und alle mitgelieferten Aktionstypen^'
   );
 
   commit;

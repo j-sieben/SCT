@@ -26,7 +26,7 @@ create table sct_apex_action(
   constraint fk_saa_sgr_id foreign key (saa_sgr_id)
 	  references sct_rule_group (sgr_id) on delete cascade,
   constraint fk_saa_sty_id foreign key (saa_sty_id)
-	  references sct_apex_action_type (sty_id),
+	  references sct_apex_action_type (sty_id) on delete cascade,
   constraint chk_saa_initially_disabled check (saa_initially_disabled in (&C_TRUE., &C_FALSE.)),
   constraint chk_saa_initially_hidden check (saa_initially_hidden in (&C_TRUE., &C_FALSE.))
 );

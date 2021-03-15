@@ -1,20 +1,20 @@
 create or replace package body sct_util
 as
 
-  function get_true
+  function c_true
     return flag_type
   as
   begin
-    return C_TRUE;
-  end get_true;
+    return &C_TRUE.;
+  end c_true;
 
 
-  function get_false
+  function c_false
     return flag_type
   as
   begin
-    return C_FALSE;
-  end get_false;
+    return &C_FALSE.;
+  end c_false;
 
 
   function get_boolean(

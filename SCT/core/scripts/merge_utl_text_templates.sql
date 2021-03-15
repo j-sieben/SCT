@@ -91,7 +91,7 @@ q'{}}',
     p_uttm_name => 'JSON_ERRORS',
     p_uttm_type => 'SCT',
     p_uttm_mode => 'ERROR',
-    p_uttm_text => q'{{"type":"error","item":"#PAGE_ITEM#","message":"#MESSAGE#","location":#LOCATION#,"additionalInfo":"#ADDITIONAL_INFO#","unsafe":"false"}}',
+    p_uttm_text => q'{{"type":"error","pageItem":"#PAGE_ITEM#","message":#MESSAGE#,"location":#LOCATION#,"additionalInfo":"#ADDITIONAL_INFO#","unsafe":"false"}}',
     p_uttm_log_text => q'{}',
     p_uttm_log_severity => 70
   );
@@ -101,21 +101,21 @@ q'{}}',
     p_uttm_type => 'SCT',
     p_uttm_mode => 'DEFAULT',
     p_uttm_text => q'{  with params as (\CR\}' || 
-q'{       select sct_util.get_true is_true,\CR\}' || 
-q'{                 sct_util.get_false is_false\CR\}' || 
+q'{       select sct_util.c_true c_true,\CR\}' || 
+q'{                 sct_util.c_false c_false\CR\}' || 
 q'{            from dual)\CR\}' || 
 q'{select /*+ no_merge(p) */sru.sru_id, sru.sru_sort_seq, sru.sru_name, sru.sru_firing_items, sru_fire_on_page_load,\CR\}' || 
 q'{       sra_spi_id item, sat_pl_sql pl_sql, sat_js js, sra_sort_seq, sra_param_1 param_1, sra_param_2 param_2, sra_param_3 param_3, sra_on_error,\CR\}' || 
 q'{       max(sra_on_error) over (partition by sru_sort_seq) sru_on_error,\CR\}' || 
-q'{       case row_number() over (partition by sru_sort_seq, sra_on_error order by srg.sra_sort_seq) when 1 then is_true else is_false end is_first_row\CR\}' || 
+q'{       case row_number() over (partition by sru_sort_seq, sra_on_error order by srg.sra_sort_seq) when 1 then c_true else c_false end is_first_row\CR\}' || 
 q'{  from #RULE_VIEW# srg\CR\}' || 
 q'{  join sct_rule sru\CR\}' || 
 q'{    on srg.sru_id = sru.sru_id\CR\}' || 
 q'{  join sct_action_type sat\CR\}' || 
 q'{    on srg.sra_sat_id = sat.sat_id\CR\}' || 
 q'{ cross join params p\CR\}' || 
-q'{ where sat.sat_raise_recursive in (is_true, '#IS_RECURSIVE#')\CR\}' || 
-q'{   and srg.sra_raise_recursive in (is_true, '#IS_RECURSIVE#')\CR\}' || 
+q'{ where sat.sat_raise_recursive in (c_true, '#IS_RECURSIVE#')\CR\}' || 
+q'{   and srg.sra_raise_recursive in (c_true, '#IS_RECURSIVE#')\CR\}' || 
 q'{ order by sru.sru_sort_seq desc, srg.sra_sort_seq}',
     p_uttm_log_text => q'{}',
     p_uttm_log_severity => 70
@@ -177,18 +177,18 @@ q'{}',
     p_uttm_text => q'{create or replace force view #PREFIX##SGR_ID# as\CR\}' || 
 q'{  with session_state as(\CR\}' || 
 q'{       select #COLUMN_LIST#,\CR\}' || 
-q'{              sct_util.get_true is_true,\CR\}' || 
-q'{              sct_util.get_false is_false\CR\}' || 
+q'{              sct_util.c_true c_true,\CR\}' || 
+q'{              sct_util.c_false c_false\CR\}' || 
 q'{         from dual),\CR\}' || 
 q'{       data as (\CR\}' || 
 q'{       select /*+ NO_MERGE(s) */\CR\}' || 
 q'{              r.sru_id, r.sru_name, r.sru_firing_items, r.sru_fire_on_page_load,\CR\}' || 
 q'{              r.sra_spi_id, r.sra_sat_id, r.sra_sort_seq, r.sra_param_1, r.sra_param_2, r.sra_param_3, r.sra_on_error, r.sra_raise_recursive,\CR\}' || 
-q'{              rank() over (order by r.sru_sort_seq) rang, case s.initializing when 1 then s.is_true else s.is_false end initializing\CR\}' || 
+q'{              rank() over (order by r.sru_sort_seq) rang, case s.initializing when 1 then s.c_true else s.c_false end initializing\CR\}' || 
 q'{         from sct_bl_rules r\CR\}' || 
 q'{         join session_state s\CR\}' || 
 q'{           on instr(r.sru_firing_items, ',' || s.firing_item || ',') > 0\CR\}' || 
-q'{           or sru_fire_on_page_load = s.is_true\CR\}' || 
+q'{           or sru_fire_on_page_load = s.c_true\CR\}' || 
 q'{        where r.sgr_id = #SGR_ID#\CR\}' || 
 q'{          and (#WHERE_CLAUSE#))\CR\}' || 
 q'{select sru_id, sru_name, sra_spi_id, sra_sat_id, sra_param_1, sra_param_2, sra_param_3, sra_on_error, sra_raise_recursive, sra_sort_seq\CR\}' || 

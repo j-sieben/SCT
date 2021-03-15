@@ -1,7 +1,7 @@
 create or replace editionable view sct_bl_rules
 as 
 with params as(
-       select sct_util.get_true is_true
+       select sct_util.c_true c_true
          from dual)
        -- get all rules and items denormalized
 select /*+ no_merge(p) */
@@ -18,7 +18,7 @@ select /*+ no_merge(p) */
     on sgr.sgr_id = spi.spi_sgr_id
    and sra.sra_spi_id = spi.spi_id
   join params p
-    on sgr.sgr_active = p.is_true
-   and sru.sru_active = p.is_true
-   and sra.sra_active = p.is_true
+    on sgr.sgr_active = p.c_true
+   and sru.sru_active = p.c_true
+   and sra.sra_active = p.c_true
  where sra.sra_spi_id != 'ALL';

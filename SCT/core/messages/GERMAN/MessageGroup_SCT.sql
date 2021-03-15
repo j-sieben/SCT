@@ -1,5 +1,5 @@
 begin
-    
+
   pit_admin.merge_message_group(
     p_pmg_name => 'SCT',
     p_pmg_description => q'^Meldungen für das SCT Plugin^');
@@ -12,15 +12,6 @@ begin
     p_pms_pse_id => 70,
     p_pms_pml_name => 'GERMAN',
     p_error_number => null);
-
-  pit_admin.merge_message(
-    p_pms_name => 'CONVERSION_IMPOSSIBLE',
-    p_pms_pmg_name => 'SCT',
-    p_pms_text => q'^Eine Umwandlung konnte nicht ausgeführt werden^',
-    p_pms_description => q'^^',
-    p_pms_pse_id => 20,
-    p_pms_pml_name => 'GERMAN',
-    p_error_number => -20000);
 
   pit_admin.merge_message(
     p_pms_name => 'SCT_ACTION_DOES_NOT_EXIST',
@@ -160,7 +151,7 @@ begin
   pit_admin.merge_message(
     p_pms_name => 'SCT_ITEM_IS_MANDATORY',
     p_pms_pmg_name => 'SCT',
-    p_pms_text => q'^Element #1# ist ein Pflichtelement. Bitte tragen Sie einen Wert ein.^',
+    p_pms_text => q'^Element #LABEL# ist ein Pflichtelement. Bitte tragen Sie einen Wert ein.^',
     p_pms_description => q'^^',
     p_pms_pse_id => 70,
     p_pms_pml_name => 'GERMAN',
@@ -282,6 +273,33 @@ begin
     p_pms_pse_id => 70,
     p_pms_pml_name => 'GERMAN',
     p_error_number => null);
+
+  pit_admin.merge_message(
+    p_pms_name => 'SCT_PARAM_LOV_INCORRECT',
+    p_pms_pmg_name => 'SCT',
+    p_pms_text => q'^Die LOV-View #1# hat nicht die vorgegebenen Spalten D, R und SGR_ID.^',
+    p_pms_description => q'^Damit eine LOV-View genutzt werden kann, muss sie über genau 3 Spalten mit den Bezeichnern D, R und SGR_ID verfügen.^',
+    p_pms_pse_id => 30,
+    p_pms_pml_name => 'GERMAN',
+    p_error_number => -20000);
+
+  pit_admin.merge_message(
+    p_pms_name => 'SCT_PARAM_LOV_MISSING',
+    p_pms_pmg_name => 'SCT',
+    p_pms_text => q'^Der Parametertyp #1# erfordert eine LOV-View des Namens #2#. Diese fehlt.^',
+    p_pms_description => q'^Ein Parametertyp, der eine LOV-Liste benötigt, erfordert eine entsprechende LOV-View, damit die erforderlichen Daten ermittelt werden können.^',
+    p_pms_pse_id => 30,
+    p_pms_pml_name => 'GERMAN',
+    p_error_number => -20000);
+
+  pit_admin.merge_message(
+    p_pms_name => 'SCT_PARAM_MISSING',
+    p_pms_pmg_name => 'SCT',
+    p_pms_text => q'^Feld #LABEL# ist ein Pflichtfeld.^',
+    p_pms_description => q'^Das Eingaefeld ist ein Pflichtparameter und muss daher belegt werden.^',
+    p_pms_pse_id => 30,
+    p_pms_pml_name => 'GERMAN',
+    p_error_number => -20000);
 
   pit_admin.merge_message(
     p_pms_name => 'SCT_PROCESSING_RULE',
@@ -419,6 +437,15 @@ begin
     p_error_number => -20000);
 
   pit_admin.merge_message(
+    p_pms_name => 'SCT_UNKNOWN_EXPORT_MODE',
+    p_pms_pmg_name => 'SCT',
+    p_pms_text => q'^Der Exporttyp #1# ist unbekannt.^',
+    p_pms_description => q'^Es wurde ein nicht unterstützter Exporttyp angefordert. Verwenden Sie nur die Konstanten C_%_GROUP(S).^',
+    p_pms_pse_id => 30,
+    p_pms_pml_name => 'GERMAN',
+    p_error_number => -20000);
+
+  pit_admin.merge_message(
     p_pms_name => 'SCT_UNKNOWN_SPT',
     p_pms_pmg_name => 'SCT',
     p_pms_text => q'^Unbekannter Parametertyp: #1#^',
@@ -450,42 +477,6 @@ begin
     p_pms_pmg_name => 'SCT',
     p_pms_text => q'^Fehler beim Erzeugen der WHERE-Klausel: #SQLERRM#^',
     p_pms_description => q'^^',
-    p_pms_pse_id => 30,
-    p_pms_pml_name => 'GERMAN',
-    p_error_number => -20000);
-
-  pit_admin.merge_message(
-    p_pms_name => 'SCT_PARAM_LOV_MISSING',
-    p_pms_pmg_name => 'SCT',
-    p_pms_text => q'^Der Parametertyp #1# erfordert eine LOV-View des Namens #2#. Diese fehlt.^',
-    p_pms_description => q'^Ein Parametertyp, der eine LOV-Liste benötigt, erfordert eine entsprechende LOV-View, damit die erforderlichen Daten ermittelt werden können.^',
-    p_pms_pse_id => 30,
-    p_pms_pml_name => 'GERMAN',
-    p_error_number => -20000);
-
-  pit_admin.merge_message(
-    p_pms_name => 'SCT_PARAM_LOV_INCORRECT',
-    p_pms_pmg_name => 'SCT',
-    p_pms_text => q'^Die LOV-View #1# hat nicht die vorgegebenen Spalten D, R und SGR_ID.^',
-    p_pms_description => q'^Damit eine LOV-View genutzt werden kann, muss sie über genau 3 Spalten mit den Bezeichnern D, R und SGR_ID verfügen.^',
-    p_pms_pse_id => 30,
-    p_pms_pml_name => 'GERMAN',
-    p_error_number => -20000);
-
-  pit_admin.merge_message(
-    p_pms_name => 'SCT_PARAM_MISSING',
-    p_pms_pmg_name => 'SCT',
-    p_pms_text => q'^Feld #LABEL# ist ein Pflichtfeld.^',
-    p_pms_description => q'^Das Eingaefeld ist ein Pflichtparameter und muss daher belegt werden.^',
-    p_pms_pse_id => 30,
-    p_pms_pml_name => 'GERMAN',
-    p_error_number => -20000);
-
-  pit_admin.merge_message(
-    p_pms_name => 'SCT_UNKNOWN_EXPORT_MODE',
-    p_pms_pmg_name => 'SCT',
-    p_pms_text => q'^Der Exporttyp #1# ist unbekannt.^',
-    p_pms_description => q'^Es wurde ein nicht unterstützter Exporttyp angefordert. Verwenden Sie nur die Konstanten C_%_GROUP(S).^',
     p_pms_pse_id => 30,
     p_pms_pml_name => 'GERMAN',
     p_error_number => -20000);

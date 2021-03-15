@@ -10,6 +10,7 @@ create table sct_rule_action(
 	sra_param_3 varchar2(4000 byte), 
 	sra_comment varchar2(200 char), 
 	sra_raise_recursive &FLAG_TYPE. default &C_TRUE., 
+	sra_raise_on_validation &FLAG_TYPE. default &C_TRUE., 
 	sra_sort_seq number, 
 	sra_active &FLAG_TYPE. default &C_TRUE., 
 	sra_has_error &FLAG_TYPE. default &C_FALSE.,
@@ -44,6 +45,7 @@ comment on column sct_rule_action.sra_param_2 is 'Optional second parameter, pas
 comment on column sct_rule_action.sra_param_3 is 'Optional third parameter, passed to ACTION_TYPE';
 comment on column sct_rule_action.sra_comment is 'Optional comment to describe the action. Used if something unusual happens.';
 comment on column sct_rule_action.sra_raise_recursive is 'Flag to indicate whether RULE_ACTION triggers recursive rul execution';
+comment on column sct_rule_action.sra_raise_recursive is 'Flag to indicate whether this action is executed when validating a page';
 comment on column sct_rule_action.sra_sort_seq is 'Sorting criteria to control execution flow';
 comment on column sct_rule_action.sra_active is 'Flag to indicate whether RULE_ACTION is in use actually';
 comment on column sct_rule_action.sra_has_error is 'Flag to indicate whether RULE_ACTION has got an error';

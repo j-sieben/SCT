@@ -143,16 +143,16 @@ as
 
 
   /** Updates an element and sets the session state
-   * @param  p_spi_id  element to be updated
-   * @param  p_item_val  Value of the element in the following format:
+   * @param  p_spi_id    Page item to be updated
+   * @param [p_item_val] Value of the element in the following format:
    *                     - constant in quotation marks or 
    *                     - JavaScript expression, which is calculated at runtime or 
-   *                     - empty character string (''). In this case the value of the session state is used
+   *                     - NULL In this case the value of the session state is used
    *                       (this can be calculated in advance)
    */
   procedure refresh_and_set_value(
     p_spi_id in varchar2,
-    p_item_val in varchar2);
+    p_item_val in varchar2 default null);
 
 
   /** Initiate APEX-refresh on the referenced page element

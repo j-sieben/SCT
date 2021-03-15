@@ -3,4 +3,5 @@ as
 select page_name || ' (' || page_id || ')' d,
        page_id r,
        application_id
-  from apex_application_pages;
+  from apex_application_pages
+ where page_id > 0;

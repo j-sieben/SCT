@@ -1,12 +1,12 @@
-create or replace editionable view sct_ui_edit_sru_action
+create or replace view sct_ui_edit_sru_action
 as 
 with params as(
        select v('P5_SRU_ID') sru_id,
               v('P5_SRU_SGR_ID') sru_sgr_id,
               'fa-check' flg_yes,
               'fa-times' flg_no,
-              utl_apex.get_true c_true,
-              utl_apex.get_false c_false
+              utl_apex.c_true c_true,
+              utl_apex.c_false c_false
          from dual)
 select /*+ no_merge(p) */
        max(sra_id) over () + 1 seq_id,
@@ -39,3 +39,5 @@ select /*+ no_merge(p) */
   join params p
     on sra_sgr_id = sru_sgr_id
    and (sra_sru_id = sru_id or sra_sru_id is null);
+
+comment on table sct_ui_edit_sru_action is 'UI-View for page SCT_UI_EDIT_SRU, report ACTION';

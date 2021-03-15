@@ -34,21 +34,6 @@ as
   end get_key;
 
 
-  /** Method to limit the size of a parameter to 4000 byte max to allow for storage in VARCHAR2(4000 BYTE) variables
-   * @param  p_param  Parameter value to shrink to 4000 byte
-   * @return Parameter value, limited to 4000 byte max
-   * @usage  Tracing parameters are limited to 4000 byte length. This method assures that not more bytes are passed in
-   *         to the constructor functions of MSG_PARAM calls
-   */
-  function limit_param_size(
-    p_param in clob)
-    return varchar2
-  as
-  begin
-    return substrb(to_char(dbms_lob.substr(p_param, 4000, 1)), 1, 4000);
-  end limit_param_size;
-
-
   /** Method to generate initialization code that copies initial page item values to the session state
    * @param  p_sgr_id  Rule group ID
    * @return Anonymous PL/SQL block that copies the actual session state values into the session state
@@ -63,7 +48,7 @@ as
   begin
     pit.enter_optional(
       p_params => msg_params(
-                    msg_param('p_sgr_id', to_char(p_sgr_id))));
+                    msg_param('p_sgr_id', p_sgr_id)));
 
       with params as (
            -- Get common values, depending on whether the page contains a DML_FETCH_ROW process
@@ -125,7 +110,7 @@ as
    *         The resulting values are used as the basis for a single rule.
    *         Additionally, this method is called if a new rule is created to check whether the condition
    *         is syntactically plausible. Therefore, the new condition (which is not stored in the tables yet)
-   *         must be added to idnetify any new page items referenced within this rule.
+   *         must be added to identify any new page items referenced within this rule.
    *         Attention: Method removes non existing page items from the table and deletes any rule actions
    *                    attached to these page items!
    */
@@ -138,18 +123,19 @@ as
   begin
     pit.enter_optional(
       p_params => msg_params(
-                    msg_param('p_sgr_id', to_char(p_sgr_id))));
+                    msg_param('p_sgr_id', p_sgr_id)));
 
-      -- Step 1: remove REQUIRED flags
+      -- Step 1: remove REQUIRED flags and mark any element as erroneus, will be cleared later on
       update sct_page_item
          set spi_is_required = sct_util.C_FALSE,
-              -- mark any element as erroneus, will be cleared later on
              spi_has_error = sct_util.C_TRUE
        where spi_sgr_id = p_sgr_id;
 
       pit.verbose(msg.ALLG_PASS_INFORMATION, msg_args('REQUIRED flags set'));
 
       -- Step 2: Merge APEX page items into SCT_PAGE_ITEMS
+      --         Mark any item with a conversion or mandatory as required to enable SCT to dynamically validate the format
+      --         Mark any item with a required label as mandatory to dynamically check for NOT NULL
       merge into sct_page_item t
       using (select spi_sgr_id,
                     spi_sit_id,
@@ -159,7 +145,9 @@ as
                     spi_conversion,
                     spi_item_default,
                     spi_css,
-                    sct_util.C_FALSE spi_has_error
+                    sct_util.C_FALSE spi_has_error,
+                    spi_is_required,
+                    spi_is_mandatory
                from sct_bl_page_targets
               where spi_sgr_id = p_sgr_id) s
          on (t.spi_id = s.spi_id and t.spi_sgr_id = s.spi_sgr_id)
@@ -170,9 +158,11 @@ as
             t.spi_conversion = s.spi_conversion,
             t.spi_item_default = s.spi_item_default,
             t.spi_css = s.spi_css,
-            t.spi_has_error = s.spi_has_error
-       when not matched then insert(spi_id, spi_sit_id, spi_sty_id, spi_label, spi_sgr_id, spi_conversion, spi_item_default, spi_css)
-            values(s.spi_id, s.spi_sit_id, s.spi_sty_id, s.spi_label, s.spi_sgr_id, s.spi_conversion, s.spi_item_default, s.spi_css);
+            t.spi_has_error = s.spi_has_error,
+            t.spi_is_required = s.spi_is_required,
+            t.spi_is_mandatory = s.spi_is_mandatory
+       when not matched then insert(spi_id, spi_sit_id, spi_sty_id, spi_label, spi_sgr_id, spi_conversion, spi_item_default, spi_css, spi_is_required, spi_is_mandatory)
+            values(s.spi_id, s.spi_sit_id, s.spi_sty_id, s.spi_label, s.spi_sgr_id, s.spi_conversion, s.spi_item_default, s.spi_css, s.spi_is_required, s.spi_is_mandatory);
 
       pit.verbose(msg.ALLG_PASS_INFORMATION, msg_args('APEX items merged into SCT_PAGE_ITEMS'));
 
@@ -262,7 +252,7 @@ as
     pit.leave_optional;
   exception
     when others then
-      pit.stop(msg.SCT_INITIALZE_SGR_FAILED, msg_args(to_char(p_sgr_id), sqlerrm));
+      pit.stop(msg.SCT_INITIALZE_SGR_FAILED, msg_args(to_char(p_sgr_id),sqlerrm));
   end harmonize_sct_page_item;
 
 
@@ -277,7 +267,7 @@ as
   begin
     pit.enter_detailed(
       p_params => msg_params(
-                    msg_param('p_sgr_id', to_char(p_sgr_id))));
+                    msg_param('p_sgr_id', p_sgr_id)));
 
     merge into sct_rule t
     using (select sru.sru_id,
@@ -332,7 +322,7 @@ as
     C_UTTM_NAME constant utl_text_templates.uttm_name%type := 'RULE_VIEW';
     l_stmt clob;
   begin
-    pit.enter_optional(p_params => msg_params(msg_param('p_sgr_id', to_char(p_sgr_id))));
+    pit.enter_optional(p_params => msg_params(msg_param('p_sgr_id', p_sgr_id)));
 
     delete_pending_rule_views;
 
@@ -395,7 +385,7 @@ as
     p_sgr_id in sct_rule_group.sgr_id%type)
   as
   begin
-    pit.enter_optional(p_params => msg_params(msg_param('p_sgr_id', to_char(p_sgr_id))));
+    pit.enter_optional(p_params => msg_params(msg_param('p_sgr_id', p_sgr_id)));
 
     -- resequence rules
     merge into sct_rule t
@@ -433,8 +423,8 @@ as
   begin
     pit.enter_mandatory(
       p_params => msg_params(
-                    msg_param('p_sgr_app_id', to_char(p_sgr_app_id)),
-                    msg_param('p_sgr_page_id', to_char(p_sgr_page_id)),
+                    msg_param('p_sgr_app_id', p_sgr_app_id),
+                    msg_param('p_sgr_page_id', p_sgr_page_id),
                     msg_param('p_sgr_name', p_sgr_name)));
 
     -- Recursively delete any existing rulegroup with same APP_ID, PAGE_ID and NAME
@@ -474,7 +464,7 @@ as
       l_new_id := g_id_map(p_id);
     end if;
 
-    pit.leave_mandatory(p_params => msg_params(msg_param('Return', to_char(l_new_id))));
+    pit.leave_mandatory(p_params => msg_params(msg_param('Return', l_new_id)));
     return l_new_id;
   end map_id;
 
@@ -493,13 +483,13 @@ as
   begin
     pit.enter_mandatory(
       p_params => msg_params(
-                    msg_param('p_sgr_app_id', to_char(p_sgr_app_id)),
-                    msg_param('p_sgr_page_id', to_char(p_sgr_page_id)),
-                    msg_param('p_sgr_id', to_char(p_sgr_id)),
+                    msg_param('p_sgr_app_id', p_sgr_app_id),
+                    msg_param('p_sgr_page_id', p_sgr_page_id),
+                    msg_param('p_sgr_id', p_sgr_id),
                     msg_param('p_sgr_name', p_sgr_name),
                     msg_param('p_sgr_description', p_sgr_description),
-                    msg_param('p_sgr_with_recursion', to_char(p_sgr_with_recursion)),
-                    msg_param('p_sgr_active', to_char(p_sgr_active))));
+                    msg_param('p_sgr_with_recursion', p_sgr_with_recursion),
+                    msg_param('p_sgr_active', p_sgr_active)));
                     
     l_row.sgr_app_id := p_sgr_app_id + g_offset;
     l_row.sgr_page_id := p_sgr_page_id;
@@ -560,7 +550,7 @@ as
   begin
     pit.enter_mandatory(
       p_params => msg_params(
-                    msg_param('p_sgr_id', to_char(p_sgr_id))));
+                    msg_param('p_sgr_id', p_sgr_id)));
                     
     l_row.sgr_id := p_sgr_id;
     
@@ -629,7 +619,7 @@ as
   begin
     pit.enter_mandatory(
       p_params => msg_params(
-                    msg_param('p_sgr_id', to_char(p_sgr_id))));
+                    msg_param('p_sgr_id', p_sgr_id)));
 
     harmonize_sct_page_item(p_sgr_id);
 
@@ -674,7 +664,7 @@ as
   begin
     pit.enter_mandatory(
       p_params => msg_params(
-                    msg_param('p_sgr_id', to_char(p_sgr_id))));
+                    msg_param('p_sgr_id', p_sgr_id)));
 
     harmonize_firing_items(p_sgr_id);
     harmonize_sct_page_item(p_sgr_id);
@@ -777,9 +767,9 @@ as
   begin
     pit.enter_optional(
       p_params => msg_params(
-                    msg_param('p_sgr_app_id', to_char(p_sgr_app_id)),
-                    msg_param('p_sgr_page_id', to_char(p_sgr_page_id)),
-                    msg_param('p_sgr_id', to_char(p_sgr_id))));
+                    msg_param('p_sgr_app_id', p_sgr_app_id),
+                    msg_param('p_sgr_page_id', p_sgr_page_id),
+                    msg_param('p_sgr_id', p_sgr_id)));
     case p_mode
       when C_ALL_GROUPS then
         -- Reset unneeded restrictions
@@ -843,9 +833,9 @@ as
   begin
     pit.enter_mandatory(
       p_params => msg_params(
-                    msg_param('p_sgr_app_id', to_char(p_sgr_app_id)),
-                    msg_param('p_sgr_page_id', to_char(p_sgr_page_id)),
-                    msg_param('p_sgr_id', to_char(p_sgr_id)),
+                    msg_param('p_sgr_app_id', p_sgr_app_id),
+                    msg_param('p_sgr_page_id', p_sgr_page_id),
+                    msg_param('p_sgr_id', p_sgr_id),
                     msg_param('p_mode', p_mode)));
                     
     validate_export_rule_groups(
@@ -853,18 +843,12 @@ as
       p_sgr_page_id => l_sgr_page_id,
       p_sgr_id => l_sgr_id,
       p_mode => p_mode);
-      
-    if p_mode = C_ALL_GROUPS then
-      -- only in this case integrate export of all action types
-      l_blob := utl_text.clob_to_blob(sct_admin.export_action_types);
-      apex_zip.add_file(
-        p_zipped_blob => l_zip_file,
-        p_file_name => C_ACTION_TYPE_FILE_NAME,
-        p_content => l_blob);
-    end if;
         
     for sgr in rule_group_cur(l_sgr_app_id, l_sgr_page_id, l_sgr_id) loop
-      l_blob := utl_text.clob_to_blob(sct_admin.export_rule_group(p_sgr_id => sgr.sgr_id));
+      l_blob := utl_text.clob_to_blob(
+                  sct_admin.export_rule_group(
+                    p_sgr_id => sgr.sgr_id));
+                    
       l_file_name := replace(C_FILE_NAME_PATTERN, '#SGR_NAME#', sgr.sgr_name);
      
       apex_zip.add_file(
@@ -875,7 +859,9 @@ as
 
     apex_zip.finish(l_zip_file);
 
-    pit.leave_mandatory(p_params => msg_params(msg_param('ZIP file size', dbms_lob.getlength(l_zip_file))));
+    pit.leave_mandatory(
+      p_params => msg_params(
+                    msg_param('ZIP file size', dbms_lob.getlength(l_zip_file))));
     return l_zip_file;
   end export_rule_groups;
 
@@ -918,7 +904,7 @@ as
     pit.enter_mandatory(
       p_params => msg_params(
                     msg_param('p_workspace', p_workspace),
-                    msg_param('p_app_id', to_char(p_app_id))));
+                    msg_param('p_app_id', p_app_id)));
 
     select workspace_id
       into l_ws_id
@@ -1356,12 +1342,12 @@ as
   begin
     pit.enter_mandatory(
       p_params => msg_params(
-                    msg_param('p_sru_id', to_char(p_sru_id)),
-                    msg_param('p_sru_sgr_id', to_char(p_sru_sgr_id)),
+                    msg_param('p_sru_id', p_sru_id),
+                    msg_param('p_sru_sgr_id', p_sru_sgr_id),
                     msg_param('p_sru_name', p_sru_name),
                     msg_param('p_sru_condition', p_sru_condition),
                     msg_param('p_sru_fire_on_page_load', p_sru_fire_on_page_load),
-                    msg_param('p_sru_sort_seq', to_char(p_sru_sort_seq)),
+                    msg_param('p_sru_sort_seq', p_sru_sort_seq),
                     msg_param('p_sru_active', p_sru_active)));
                     
       l_row.sru_id := p_sru_id;
@@ -1441,9 +1427,9 @@ as
 
     pit.leave_mandatory;
   end delete_rule;
-
-
-  procedure validate_rule(
+  
+  
+  procedure validate_rule_condition(
     p_row in sct_rule%rowtype)
   as
     C_UTTM_NAME constant utl_text_templates.uttm_name%type := 'RULE_VALIDATION';
@@ -1453,8 +1439,6 @@ as
   begin
     pit.enter_mandatory;
     
-    pit.assert_not_null(p_row.sru_sgr_id, msg.SCT_PARAM_MISSING, p_error_code => 'SRU_SGR_ID_MISSING');
-    pit.assert_not_null(p_row.sru_name, msg.SCT_PARAM_MISSING, p_error_code => 'SRU_NAME_MISSING');
     pit.assert_not_null(p_row.sru_condition, msg.SCT_PARAM_MISSING, p_error_code => 'SRU_CONDITION_MISSING');
 
     harmonize_sct_page_item(p_row.sru_sgr_id, p_row.sru_condition);
@@ -1492,11 +1476,26 @@ as
     l_ctx := dbms_sql.open_cursor;
     dbms_sql.parse(l_ctx, l_stmt, dbms_sql.native);
     dbms_sql.close_cursor(l_ctx);
-
+    
     pit.leave_mandatory;
   exception
     when others then
       pit.stop(msg.SQL_ERROR);
+  end validate_rule_condition;
+  
+
+  procedure validate_rule(
+    p_row in sct_rule%rowtype)
+  as
+  begin
+    pit.enter_mandatory;
+    
+    pit.assert_not_null(p_row.sru_sgr_id, msg.SCT_PARAM_MISSING, p_error_code => 'SRU_SGR_ID_MISSING');
+    pit.assert_not_null(p_row.sru_name, msg.SCT_PARAM_MISSING, p_error_code => 'SRU_NAME_MISSING');
+
+    validate_rule_condition(p_row);
+    
+    pit.leave_mandatory;
   end validate_rule;
 
 
@@ -1504,7 +1503,7 @@ as
     p_sru_id in sct_rule.sru_id%type)
   as
   begin
-    pit.enter_optional(p_params => msg_params(msg_param('p_sru_id', to_char(p_sru_id))));
+    pit.enter_optional(p_params => msg_params(msg_param('p_sru_id', p_sru_id)));
 
     -- resequence rule actions
     merge into sct_rule_action t
@@ -1867,7 +1866,8 @@ as
     p_sat_pl_sql in sct_action_type.sat_pl_sql%type,
     p_sat_js in sct_action_type.sat_js%type,
     p_sat_is_editable in sct_action_type.sat_is_editable%type default sct_util.C_TRUE,
-    p_sat_raise_recursive in sct_action_type.sat_raise_recursive%type default sct_util.C_TRUE)
+    p_sat_raise_recursive in sct_action_type.sat_raise_recursive%type default sct_util.C_TRUE,
+    p_sat_active in sct_action_type.sat_active%type default sct_util.C_TRUE)
   as
     l_row sct_action_type_v%rowtype;
   begin
@@ -1881,7 +1881,8 @@ as
                     msg_param('p_sat_pl_sql', p_sat_pl_sql),
                     msg_param('p_sat_js', p_sat_js),
                     msg_param('p_sat_is_editable', p_sat_is_editable),
-                    msg_param('p_sat_raise_recursive', p_sat_raise_recursive)));
+                    msg_param('p_sat_raise_recursive', p_sat_raise_recursive),
+                    msg_param('p_sat_active', p_sat_active)));
     
     l_row.sat_id := p_sat_id;
     l_row.sat_stg_id := p_sat_stg_id;
@@ -1892,6 +1893,7 @@ as
     l_row.sat_js := utl_text.unwrap_string(p_sat_js);
     l_row.sat_is_editable := sct_util.get_boolean(p_sat_is_editable);
     l_row.sat_raise_recursive := sct_util.get_boolean(p_sat_raise_recursive);
+    l_row.sat_active := sct_util.get_boolean(p_sat_active);
     
     merge_action_type(l_row);
     
@@ -1927,7 +1929,8 @@ as
                   p_row.sat_pl_sql sat_pl_sql,
                   p_row.sat_js sat_js,
                   p_row.sat_is_editable sat_is_editable,
-                  p_row.sat_raise_recursive sat_raise_recursive
+                  p_row.sat_raise_recursive sat_raise_recursive,
+                  p_row.sat_active sat_active
              from dual) s
        on (t.sat_id = s.sat_id)
      when matched then update set
@@ -1936,13 +1939,14 @@ as
           t.sat_pl_sql = s.sat_pl_sql,
           t.sat_js = s.sat_js,
           t.sat_is_editable = s.sat_is_editable,
-          t.sat_raise_recursive = s.sat_raise_recursive
+          t.sat_raise_recursive = s.sat_raise_recursive,
+          t.sat_active = s.sat_active
      when not matched then insert(
             sat_id, sat_stg_id, sat_sif_id, sat_pti_id, sat_pmg_name, sat_pl_sql, sat_js,
-            sat_is_editable, sat_raise_recursive)
+            sat_is_editable, sat_raise_recursive, sat_active)
           values (
             s.sat_id, s.sat_stg_id, s.sat_sif_id, s.sat_pti_id, s.sat_pmg_name, s.sat_pl_sql, s.sat_js,
-            s.sat_is_editable, s.sat_raise_recursive);
+            s.sat_is_editable, s.sat_raise_recursive, s.sat_active);
       
     pit.leave_mandatory;
   end merge_action_type;
@@ -1999,7 +2003,7 @@ as
 
   function export_action_types(
     p_sat_is_editable in sct_action_type.sat_is_editable%type default sct_util.C_TRUE)
-    return clob
+    return blob
   as
     C_UTTM_NAME constant utl_text_templates.uttm_name%type := 'EXPORT_ACTION_TYPE';
     C_WRAP_START constant varchar2(5) := 'q''{';
@@ -2013,8 +2017,19 @@ as
     l_apex_action_types clob;
     l_cur sys_refcursor;
     l_stmt clob;
+    l_zip_file blob;
+    l_zip_file_name sct_util.ora_name_type;
   begin
-    pit.enter_mandatory(p_params => msg_params(msg_param('p_sat_is_editable', to_char(p_sat_is_editable))));
+    pit.enter_mandatory(p_params => msg_params(msg_param('p_sat_is_editable', p_sat_is_editable)));
+    
+    case p_sat_is_editable
+    when sct_util.C_TRUE then
+      l_zip_file_name := 'action_types_user.sql';
+    when sct_util.C_FALSE then
+      l_zip_file_name := 'action_types_system.sql';
+    else
+      l_zip_file_name := 'action_types_all.sql';
+    end case;
 
     select utl_text.generate_text(cursor(
             select p.uttm_text template,
@@ -2137,9 +2152,17 @@ as
      where uttm_type = C_SCT
        and uttm_name = C_UTTM_NAME
        and uttm_mode = C_FRAME;
+       
+    
+    apex_zip.add_file(
+      p_zipped_blob => l_zip_file,
+      p_file_name => l_zip_file_name,
+      p_content => utl_text.clob_to_blob(l_stmt));
 
-    pit.leave_mandatory(p_params => msg_params(msg_param('Return', limit_param_size(l_stmt))));
-    return l_stmt;
+    apex_zip.finish(l_zip_file);
+
+    pit.leave_mandatory(p_params => msg_params(msg_param('ZIP file size', dbms_lob.getlength(l_zip_file))));
+    return l_zip_file;
   end export_action_types;
 
 
@@ -2392,12 +2415,12 @@ as
   begin
     pit.enter_mandatory(
       p_params => msg_params(
-                    msg_param('p_sra_id', to_char(p_sra_id)),
-                    msg_param('p_sra_sru_id', to_char(p_sra_sru_id)),
-                    msg_param('p_sra_sgr_id', to_char(p_sra_sgr_id)),
+                    msg_param('p_sra_id', p_sra_id),
+                    msg_param('p_sra_sru_id', p_sra_sru_id),
+                    msg_param('p_sra_sgr_id', p_sra_sgr_id),
                     msg_param('p_sra_spi_id', p_sra_spi_id),
                     msg_param('p_sra_sat_id', p_sra_sat_id),
-                    msg_param('p_sra_sort_seq', to_char(p_sra_sort_seq)),
+                    msg_param('p_sra_sort_seq', p_sra_sort_seq),
                     msg_param('p_sra_param_1', p_sra_param_1),
                     msg_param('p_sra_param_2', p_sra_param_2),
                     msg_param('p_sra_param_3', p_sra_param_3),
@@ -2515,7 +2538,7 @@ as
     
     pit.assert_not_null(p_row.sra_sru_id, msg.SCT_PARAM_MISSING, p_error_code => 'SRA_SRU_ID_MISSING');
     pit.assert_not_null(p_row.sra_sgr_id, msg.SCT_PARAM_MISSING, p_error_code => 'SRA_SGR_ID_MISSING');
-    pit.assert_not_null(p_row.sra_spi_id, msg.SCT_PARAM_MISSING, p_error_code => 'SRA_SPI_ID_MISSING');
+    --pit.assert_not_null(p_row.sra_spi_id, msg.SCT_PARAM_MISSING, p_error_code => 'SRA_SPI_ID_MISSING');
     pit.assert_not_null(p_row.sra_sat_id, msg.SCT_PARAM_MISSING, p_error_code => 'SRA_SAT_ID_MISSING');
     
     pit.leave_optional;

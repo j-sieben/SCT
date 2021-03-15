@@ -23,16 +23,14 @@ as
   C_INITIALIZE_EVENT constant varchar2(25) := 'initialize';    
   
   C_SCT constant ora_name_type := 'SCT';
-  C_TRUE constant flag_type := &C_TRUE.;
-  C_FALSE constant flag_type := &C_FALSE.;
   C_CR constant varchar2(2 byte) := chr(10);
   
   /* Methode zur Ermittlung von Wahrheitswerten
    */
-  function get_true
+  function C_TRUE
     return flag_type;
     
-  function get_false
+  function C_FALSE
     return flag_type;
   
   /* Helper to map different boolean values to TRUE or FALSE 

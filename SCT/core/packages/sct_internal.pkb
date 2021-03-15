@@ -6,6 +6,7 @@ as
   C_MAX_LENGTH binary_integer := 32000;
   C_MODE_FRAME constant sct_util.ora_name_type := 'FRAME';
   C_MODE_DEFAULT constant sct_util.ora_name_type := 'DEFAULT';
+  C_COLLECTION_NAME constant sct_util.ora_name_type := C_PARAM_GROUP || '_SGR_STATUS_';
 
   C_PAGE_ITEMS constant binary_integer := 1;
   C_FIRING_ITEMS constant binary_integer := 2;
@@ -53,7 +54,6 @@ as
     sgr_id sct_rule_group.sgr_id%type,               -- actual SGR_ID
     firing_item sct_page_item.spi_id%type,           -- actual firing item (or sct_util.C_NO_FIRING_ITEM)
     firing_event sct_page_item_type.sit_event%type,  -- actual firing event (normally change or click, but can be any event)
-    error_dependent_items varchar2(2000),            -- List of items to deactivate if the page contains errors
     bind_items item_stack_t,                         -- List of items for which SCT binds event handlers
     page_items item_stack_t,                         -- List of items that changed their value in the session state
     firing_items item_stack_t,                       -- List of items which are connected with firing item within their rules
@@ -66,7 +66,8 @@ as
     allow_recursion boolean,                         -- Flag to indicate whether recursive calls are allowed for the active rule
     notification_stack sct_util.max_char,            -- List of notifications to be shown in the browser console
     stop_flag boolean,                               -- Flag to indicate that all rule execution has to be stopped
-    now binary_integer                               -- timestamp, used to calculate the execution duration
+    now binary_integer,                              -- timestamp, used to calculate the execution duration
+    collection_name sct_util.ora_name_type            -- Collection used to maintain a list of mandatory items
   );
   
   
@@ -227,7 +228,7 @@ as
                     p_rule_rec.sra_sort_seq, p_rule_rec.sra_param_1, p_rule_rec.sra_param_2, p_rule_rec.sra_param_3, 
                     p_rule_rec.sra_on_error, p_rule_rec.sru_on_error, p_rule_rec.is_first_row,
                     -- Parameters
-                    g_param.id, g_param.sgr_id, g_param.firing_item, g_param.firing_event, g_param.error_dependent_items,
+                    g_param.id, g_param.sgr_id, g_param.firing_item, g_param.firing_event, null,
                     to_char_table(g_param.bind_items), to_char_table(g_param.page_items), to_char_table(g_param.firing_items),
                     to_char_table(g_param.error_stack),  to_char_table(g_param.recursive_stack), g_param.is_recursive, 
                     to_ut_sct_js_list(g_param.js_action_stack), to_char_table(g_param.level_length),
@@ -271,7 +272,7 @@ as
   
   /*============ HELPER ============*/ 
   
-  /* Method to incorporate a JavaScript chiunk into the response
+  /* Method to incorporate a JavaScript chunk into the response
    * @param  p_script       JavaScript chunk to add
    * @param [p_debug_level] Optional level indicator to control the output
    * @usage  Is used to add a JavaScript chunk to an internal JavaScript collection.
@@ -549,7 +550,6 @@ as
     select utl_text.generate_text(cursor(
              select uttm_text template,
                     to_char(l_count) error_count,
-                    g_param.error_dependent_items dependent_items,
                     l_json json_errors
                from utl_text_templates
               where uttm_type = C_PARAM_GROUP
@@ -631,7 +631,7 @@ as
         l_json,
         utl_text.bulk_replace(c_page_json_element, char_table(
           'ID', l_item,
-          'VALUE', htf.escape_sc(get_char(l_item)))),
+          'VALUE', htf.escape_sc(get_string(l_item)))),
         C_DELIMITER, true);
       l_item := g_param.page_items.next(l_item);
     end loop;
@@ -914,7 +914,7 @@ as
     l_number_val number;
     l_date_val date;
   begin
-    pit.enter_detailed;
+    pit.enter_detailed('format_firing_item');
     
     -- get the format mask for the firing item
     select spi_sit_id, spi_conversion
@@ -927,14 +927,14 @@ as
     case l_spi_sit_id
       when C_NUMBER_ITEM then
         -- convert to number
-        l_number_val := get_number(g_param.firing_item, l_spi_conversion);        
+        l_number_val := get_number(g_param.firing_item, l_spi_conversion, sct_util.C_FALSE);        
         -- conversion successful, set formatted string in session state
-        set_session_state(g_param.firing_item, to_char(l_number_val, l_spi_conversion), sct_util.C_TRUE, null);
+        set_session_state(g_param.firing_item, coalesce(to_char(l_number_val, l_spi_conversion), get_string(g_param.firing_item)), sct_util.C_TRUE, null);
       when C_DATE_ITEM then
         -- convert to date
-        l_date_val := get_date(g_param.firing_item, l_spi_conversion);
+        l_date_val := get_date(g_param.firing_item, l_spi_conversion, sct_util.C_FALSE);
         -- conversion successful, set formatted string in session state
-        set_session_state(g_param.firing_item, to_char(l_date_val, l_spi_conversion), sct_util.C_TRUE, null);
+        set_session_state(g_param.firing_item, coalesce(to_char(l_date_val, l_spi_conversion), get_string(g_param.firing_item)), sct_util.C_TRUE, null);
       else
         pit.stop(msg.SCT_UNEXPECTED_CONV_TYPE, msg_args(l_spi_sit_id));
     end case;
@@ -1196,6 +1196,10 @@ as
 
     while g_param.firing_item is not null loop
       begin
+
+        -- Check in any case if the triggering element is a mandatory field
+        check_mandatory(g_param.firing_item);
+        
         --  raise all »events« on active recursion level
         if g_param.recursive_stack(g_param.firing_item) = l_actual_recursive_level then
           -- save item to pop it from the recursion stack later
@@ -1335,7 +1339,80 @@ as
       end if;
     end if;
     pit.leave_detailed;
-  end register_item;
+  end register_item;  function get_mandatory_default(
+    p_spi_id in varchar2)
+    return varchar2
+  as
+    l_default sct_page_item.spi_item_default%type;
+  begin
+    pit.enter_mandatory(
+      p_params => msg_params(
+                    msg_param('p_spi_id', p_spi_id)));
+
+    select spi_item_default
+      into l_default
+      from sct_page_item
+     where spi_id = p_spi_id
+       and spi_sgr_id = g_param.sgr_id;
+
+    if l_default is not null then
+      execute immediate 'begin :x := ' || coalesce(rtrim(l_default, ';'), 'null') || '; end;' using out l_default;
+    end if;
+    
+    pit.leave_mandatory(
+      p_params => msg_params(
+                    msg_param('Default value, normal execution', l_default)));
+    return l_default;
+  exception
+    when NO_DATA_FOUND then
+      pit.leave_mandatory;
+      return null;
+    when others then
+      -- Execute immediate did not work but a value was present, so return this.
+      pit.leave_mandatory(
+        p_params => msg_params(
+                      msg_param('Default value, exception occurred', l_default)));
+      return l_default;
+  end get_mandatory_default;
+  
+  
+  procedure check_mandatory(
+    p_spi_id in sct_page_item.spi_id%type)
+  as
+    l_message sct_page_item.spi_mandatory_message%type;
+    l_item_value sct_util.max_char;
+  begin
+    pit.enter_mandatory(
+      p_params => msg_params(
+                    msg_param('p_spi_id', p_spi_id)));
+                    
+    select coalesce(srs_spi_mandatory_message, to_char(pit.get_message_text(msg.SCT_ITEM_IS_MANDATORY)))
+      into l_message
+      from sct_rule_group_status
+     where collection_name = g_param.collection_name
+       and srs_spi_id = p_spi_id;
+       
+    -- Is mandatory, get session value or default value
+    l_item_value := trim(coalesce(utl_apex.get_value(p_spi_id), get_mandatory_default(p_spi_id)));
+    
+    if l_item_value is not null then
+      -- Mandatory field has a value, register to remove possible error message
+      pit.verbose(msg.PIT_PASS_MESSAGE, msg_args('Value: "' || l_item_value || '"'));
+      push_firing_item(g_param.firing_item);
+    else
+      register_error(g_param.firing_item, l_message, '');
+    end if;
+      
+    pit.leave_mandatory;
+  exception
+    when no_data_found then
+      -- not mandatory, ignore
+      null;
+    when too_many_rows then 
+      htp.p(sqlerrm);
+      
+    pit.leave_mandatory;
+  end check_mandatory;
   
   
   procedure initialize
@@ -1343,11 +1420,39 @@ as
   begin
     g_recursion_loop_is_error := param.get_boolean('RAISE_RECURSION_LOOP', C_PARAM_GROUP);
     g_recursion_limit := param.get_integer('RECURSION_LIMIT', C_PARAM_GROUP);
+    g_param.collection_name := param.get_string('COLLECTION_NAME', C_PARAM_GROUP);
   end initialize;
 
 
   /*============ INTERFACE ============*/  
   /* PLUGIN FUNCTIONALITY */
+  function get_error_flag
+    return boolean
+  as
+  begin
+    -- Tracing done in PLUGIN_SCT
+    return g_has_errors;
+  end get_error_flag;
+  
+    
+  function get_event
+    return varchar2
+  as
+  begin
+    -- Tracing done in PLUGIN_SCT
+    return g_param.firing_event;
+  end get_event;
+  
+  
+  function get_firing_item
+    return varchar2
+  as
+  begin
+    -- Tracing done in PLUGIN_SCT
+    return g_param.firing_item;
+  end get_firing_item;
+  
+  
   function get_bind_items_as_json
     return clob
   as
@@ -1394,7 +1499,7 @@ as
   end get_bind_items_as_json; 
   
   
-  function get_char(
+  function get_string(
     p_spi_id in sct_page_item.spi_id%type)
     return varchar2
   as
@@ -1406,7 +1511,7 @@ as
     
     pit.leave_detailed(p_params => msg_params(msg_param('Result', l_char)));
     return l_char;
-  end get_char;
+  end get_string;
     
     
   function get_date(
@@ -1426,7 +1531,7 @@ as
                     msg_param('p_throw_error', to_char(p_throw_error))));
   
     /** TODO: Umbauen auf VALIDATE_CONVERSION, falls 12.2 vorausgesetzt werden kann und die Bugs hierzu behoben sind */
-    l_raw_value := get_char(p_spi_id);
+    l_raw_value := get_string(p_spi_id);
     l_format_mask := coalesce(P_format_mask, get_conversion(p_spi_id));
     l_date := to_date(l_raw_value, l_format_mask);
     
@@ -1462,33 +1567,6 @@ as
       pit.leave_detailed(p_params => msg_params(msg_param('Result', to_char(l_date, 'yyyy-mm-dd'))));
       return null;
   end get_date;
-
-
-  function get_error_flag
-    return boolean
-  as
-  begin
-    -- Tracing done in PLUGIN_SCT
-    return g_has_errors;
-  end get_error_flag;
-  
-    
-  function get_event
-    return varchar2
-  as
-  begin
-    -- Tracing done in PLUGIN_SCT
-    return g_param.firing_event;
-  end get_event;
-  
-  
-  function get_firing_item
-    return varchar2
-  as
-  begin
-    -- Tracing done in PLUGIN_SCT
-    return g_param.firing_item;
-  end get_firing_item;
   
   
   function get_number(
@@ -1507,9 +1585,9 @@ as
                     msg_param('p_format_mask', p_format_mask),
                     msg_param('p_throw_error', to_char(p_throw_error))));
     
-    l_raw_value := get_char(p_spi_id);
+    l_raw_value := get_string(p_spi_id);
     l_raw_value := rtrim(ltrim(l_raw_value, ', '));
-    l_format_mask := coalesce(P_format_mask, get_conversion(p_spi_id));
+    l_format_mask := replace(coalesce(p_format_mask, get_conversion(p_spi_id)), 'G');
     l_result := to_number(l_raw_value, l_format_mask);
     
     pit.leave_detailed(p_params => msg_params(msg_param('Result', to_char(l_result))));
@@ -1529,6 +1607,8 @@ as
       end if;
       pit.leave_detailed(p_params => msg_params(msg_param('Result', to_char(l_result))));
       return null;
+    when others then
+      register_error(p_spi_id, msg.SQL_ERROR, msg_args(substr(sqlerrm, 12)));
   end get_number;
 
 
@@ -1554,6 +1634,22 @@ as
     if l_initialization_code is not null then
       execute immediate l_initialization_code;
     end if;
+    
+    -- Initialize internal APEX mandatory item collection
+    begin
+      apex_collection.create_or_truncate_collection(g_param.collection_name);
+    exception
+      when DUP_VAL_ON_INDEX then
+        -- This error can occur with hectic, multiple clicks, ignore.
+        null;
+    end;
+    
+    -- Register all permanen mandatory items
+    register_mandatory(
+      p_spi_id => sct_util.C_NO_FIRING_ITEM,
+      p_spi_mandatory_message => null,
+      p_is_mandatory => null);
+    
   exception
     when no_data_found then
       null;
@@ -1568,6 +1664,7 @@ as
     pit.enter_optional;
     
       process_rule;
+      
       l_js_script := get_java_script;
       
     pit.leave_optional;
@@ -1639,8 +1736,7 @@ as
   procedure read_settings(
     p_firing_item in varchar2,
     p_event in varchar2,
-    p_rule_group_name in varchar2,
-    p_error_dependent_items in varchar2)
+    p_rule_group_name in varchar2)
   as
     l_allow_recursion sct_util.flag_type;
   begin
@@ -1648,8 +1744,7 @@ as
       p_params => msg_params(
                     msg_param('p_firing_item', p_firing_item),
                     msg_param('p_event', p_event),
-                    msg_param('p_rule_group_name', p_rule_group_name),
-                    msg_param('p_error_dependent_items', p_error_dependent_items)));
+                    msg_param('p_rule_group_name', p_rule_group_name)));
                     
     -- Read rule group
     select sgr_id, coalesce(sgr_with_recursion, sct_util.C_TRUE)
@@ -1671,12 +1766,12 @@ as
     g_param.level_length(C_JS_RULE_ORIGIN) := 0;
     g_param.level_length(C_JS_DEBUG) := 0;
     g_param.level_length(C_JS_COMMENT) := 0;
-    g_param.error_dependent_items := replace(p_error_dependent_items, ' ');
     g_param.firing_item := coalesce(p_firing_item, sct_util.C_NO_FIRING_ITEM);
     g_param.firing_event := coalesce(p_event, sct_util.C_INITIALIZE_EVENT);
     g_param.recursive_level := 1;
     g_param.now := dbms_utility.get_time;
     g_param.stop_flag := false;
+    g_param.collection_name := C_COLLECTION_NAME || g_param.sgr_id;
     
     format_firing_item;
     
@@ -1716,36 +1811,8 @@ as
                p_format_mask => get_conversion(p_spi_id), 
                p_throw_error => sct_util.C_FALSE);
   end check_date;
-  
-  
-  procedure check_mandatory(
-    p_spi_id in sct_page_item.spi_id%type,
-    p_push_item out nocopy sct_page_item.spi_id%type)
-  as
-    l_message sct_page_item.spi_mandatory_message%type;
-  begin
-    -- Tracing done in PLUGIN_SCT
-    -- Die Abfrage registriert eine Fehlermeldung, wenn
-    -- - Das Element aktuell Pflichtfeld ist
-    -- - Das Element keinen Wert im Session State besitzt
-    -- - Das Element keinen Defaultwert definiert hat
-    select spi_mandatory_message
-      into l_message
-      from sct_page_item
-     where spi_id = p_spi_id
-       and spi_sgr_id = g_param.sgr_id
-       and spi_is_mandatory = sct_util.C_TRUE
-       and (select coalesce(v(g_param.firing_item), spi_item_default) from dual) is null;
-    register_error(g_param.firing_item, l_message, '');
-  exception
-    when no_data_found then
-      -- Pflichtfeld hat einen Wert, registrieren um eventuelle Fehlermeldung zu entfernen
-      p_push_item := g_param.firing_item;
-    when too_many_rows then 
-      htp.p(sqlerrm);
-  end check_mandatory;
-  
-  
+
+
   procedure check_number(
     p_spi_id in sct_page_item.spi_id%type)
   as
@@ -1918,6 +1985,22 @@ as
   end not_null;
   
   
+  procedure prepare_message(
+    p_message in out nocopy varchar2,
+    p_spi_id in varchar2)
+  as
+    C_LABEL_ANCHOR constant sct_util.ora_name_type := '#LABEL#';
+  begin
+    if instr(p_message, C_LABEL_ANCHOR) > 0 then
+      select replace(p_message, C_LABEL_ANCHOR, spi_label)
+        into p_message
+        from sct_page_item
+       where spi_sgr_id = g_param.sgr_id
+         and spi_id = p_spi_id;
+    end if;
+  end prepare_message;
+  
+  
   procedure register_error(
     p_spi_id in varchar2,
     p_error_msg in varchar2,
@@ -1932,6 +2015,7 @@ as
     l_error.message := p_error_msg;
     
     if l_error.message is not null then
+      prepare_message(l_error.message, p_spi_id);
       l_error.page_item_name := p_spi_id;
       l_error.additional_info := p_internal_error || replace(dbms_utility.format_error_backtrace, chr(10), '<br/>');
       push_error(l_error);
@@ -1948,7 +2032,7 @@ as
     l_error apex_error.t_error;  -- APEX-Fehler-Record
   begin
     -- Tracing done in PLUGIN_SCT
-    -- Register item to enable the browser to rmove old errors for that item
+    -- Register item to enable the browser to remove old errors for that item
     push_firing_item(p_spi_id);
     
     -- Create the message
@@ -1960,6 +2044,7 @@ as
                    p_session_id => null,
                    p_user_name => v('APP_USER'),
                    p_arg_list => p_arg_list);
+    prepare_message(l_message.message_text, p_spi_id);
     
     -- And convert to APEX error type
     if l_message.message_text is not null then
@@ -1981,31 +2066,59 @@ as
     l_mandatory_message sct_page_item.spi_mandatory_message%type;
     l_label varchar2(100 char);
     l_item_list char_table;
+    l_srs_row sct_rule_group_status%rowtype;
+    
+    cursor mandatory_items_cur is
+      select spi_id, spi_label, spi_mandatory_message
+        from sct_page_item
+       where spi_sgr_id = g_param.sgr_id
+         and spi_is_mandatory = sct_util.C_TRUE;
   begin
     -- Tracing done in PLUGIN_SCT
     pit.assert_not_null(g_param.sgr_id);
     
     case
+    when p_spi_id = sct_util.C_NO_FIRING_ITEM then
+      -- Called during initialization phase. Register permanent mandatory fields
+      for item in mandatory_items_cur loop
+        apex_collection.add_member(
+          p_collection_name => g_param.collection_name,
+          p_c001 => item.spi_id,
+          p_c002 => item.spi_label,
+          p_c003 => item.spi_mandatory_message,
+          p_generate_md5 => 'NO');
+      end loop;
     when p_spi_id != sct_util.C_NO_FIRING_ITEM then
-      if p_is_mandatory then 
-        l_is_mandatory := sct_util.C_TRUE;
-        l_mandatory_message := get_mandatory_message(p_spi_id, p_spi_mandatory_message);
-      else 
-        l_is_mandatory := sct_util.C_FALSE;
-        l_mandatory_message := null;
-      end if;
-      
-      update sct_page_item
-         set spi_is_required = greatest(spi_is_required, l_is_mandatory),
-             spi_is_mandatory = l_is_mandatory,
-             spi_mandatory_message = l_mandatory_message
+      -- Item name directly passed in
+      select collection_name, srs_id, spi_id, spi_label, srs_spi_mandatory_message
+        into l_srs_row
+        from sct_page_item
+        left join (
+             select *
+               from sct_rule_group_status
+              where collection_name = g_param.collection_name)
+          on spi_id = srs_spi_id
        where spi_sgr_id = g_param.sgr_id
          and spi_id = p_spi_id;
-      if sql%rowcount = 0 then
-        raise msg.SCT_ITEM_DOES_NOT_EXIST_ERR;
-      end if;
+
+      case when p_is_mandatory and l_srs_row.srs_id is null then
+        apex_collection.add_member(
+          p_collection_name => g_param.collection_name,
+          p_c001 => l_srs_row.srs_spi_id,
+          p_c002 => l_srs_row.srs_spi_label,
+          p_c003 => p_spi_mandatory_message,
+          p_generate_md5 => 'NO');
+      when not p_is_mandatory and l_srs_row.srs_id is not null then
+        -- Element must be removed from the list of mandatory elements
+        apex_collection.delete_member(
+          p_seq => l_srs_row.srs_id,
+          p_collection_name => g_param.collection_name);
+      else
+        -- Status has not changed
+        null;
+      end case;
     when p_param_2 is not null then
-      -- Lese alle Elemente, die durch diese Aktion betroffen sind
+      -- jQuery selector passed in. Read all elements affected by this selector
       l_item_list := get_firing_items(p_spi_id, p_param_2);
       for i in 1 .. l_item_list.count loop
         register_mandatory(
@@ -2014,8 +2127,13 @@ as
           p_is_mandatory => p_is_mandatory);
       end loop;
     else
+      -- wrong parameterization, ignore
       null;
     end case;
+  exception
+    when NO_DATA_FOUND then
+      -- Item is not in mandatory list and is requested to be optional. Ignore
+      null;
   end register_mandatory;
   
   
@@ -2075,8 +2193,52 @@ as
     -- Tracing done in PLUGIN_SCT
     l_stmt := replace(c_stmt, '#STMT#', p_stmt);
     execute immediate l_stmt into l_result;
-    set_session_state(p_spi_id, l_result, utl_apex.C_TRUE, null);
+    set_session_state(p_spi_id, l_result, sct_util.C_TRUE, null);
   end set_list_from_stmt;
+
+
+  procedure submit_page(
+    p_execute_validations in boolean default true)
+  as
+    cursor mandatory_item_cur is
+      select srs_spi_id, srs_spi_mandatory_message
+        from sct_rule_group_status
+       where collection_name = g_param.collection_name;
+
+    cursor validation_action_cur is
+      select sra_sat_id, sra_spi_id, sra_param_1, sra_param_2, sra_param_3
+        from sct_rule_action
+       where sra_sgr_id = g_param.sgr_id
+         and sra_raise_on_validation = sct_util.C_TRUE;
+  begin
+    pit.enter_mandatory(
+      p_params => msg_params(
+                    msg_param('p_execute_validations', utl_apex.get_bool(p_execute_validations))));
+
+    if p_execute_validations then
+      -- Check all mandatory fields (elements may not have triggered a CHANGE event)
+      for itm in mandatory_item_cur loop
+        -- Register all required fields so that any error messages are correctly removed
+        push_firing_item(itm.srs_spi_id);
+        if get_string(itm.srs_spi_id) is null then
+          -- Mandatory field has no session status, throw error
+          register_error(itm.srs_spi_id, get_mandatory_message(itm.srs_spi_id, itm.srs_spi_mandatory_message), '');
+        end if;
+      end loop;
+
+      -- Check all validations of the current SCT group
+      for sra in validation_action_cur loop
+        execute_action(
+          p_sat_id => sra.sra_sat_id,
+          p_spi_Id => sra.sra_spi_id,
+          p_param_1 => sra.sra_param_1,
+          p_param_2 => sra.sra_param_2,
+          p_param_3 => sra.sra_param_3);
+      end loop;
+    end if;
+
+    pit.leave_mandatory;
+  end submit_page;
   
   
   procedure set_session_state(
@@ -2145,12 +2307,12 @@ as
     else
       -- Konkretes Element angefordert, laut Konvention ist nur eine Spalte enthalten
       execute immediate l_stmt into l_result;
-      set_session_state(p_spi_id, l_result, utl_apex.C_TRUE, null);
+      set_session_state(p_spi_id, l_result, sct_util.C_TRUE, null);
     end if;
   exception
     when others then
       register_notification(msg.SCT_NO_DATA_FOR_ITEM, msg_args(p_spi_id));
-      set_session_state(p_spi_id, '', utl_apex.C_TRUE, null);
+      set_session_state(p_spi_id, '', sct_util.C_TRUE, null);
   end set_value_from_stmt;
   
   
@@ -2174,7 +2336,7 @@ as
     for itm in mandatory_items(g_param.sgr_id) loop
       -- Registriere alle Pflichtfelder, damit eventuelle Fehlermeldungen korrekt entfernt werden
       push_firing_item(itm.spi_id);
-      if get_char(itm.spi_id) is null then
+      if get_string(itm.spi_id) is null then
         -- Pflichtfeld hat keinen Sessionstatus, Fehler werfen
         register_error(itm.spi_id, itm.spi_mandatory_message, '');
       end if;

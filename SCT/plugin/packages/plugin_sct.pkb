@@ -27,8 +27,7 @@ as
     sct_internal.read_settings(
       p_firing_item => apex_application.g_x01,
       p_event => apex_application.g_x02,
-      p_rule_group_name => p_dynamic_action.attribute_01,
-      p_error_dependent_items => p_dynamic_action.attribute_02);
+      p_rule_group_name => p_dynamic_action.attribute_01);
     
     -- Initialize session status with page item default values
     sct_internal.process_initialization_code;
@@ -74,8 +73,7 @@ as
     sct_internal.read_settings(
       p_firing_item => apex_application.g_x01,
       p_event => apex_application.g_x02,
-      p_rule_group_name => p_dynamic_action.attribute_01,
-      p_error_dependent_items => p_dynamic_action.attribute_02);
+      p_rule_group_name => p_dynamic_action.attribute_01);
     
     -- Process best matching rule of SCT for the actual page state. Response is a JavaScript that is executed on the page
     l_java_script := sct_internal.process_request;

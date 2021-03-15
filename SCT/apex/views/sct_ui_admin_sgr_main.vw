@@ -4,7 +4,7 @@ with params as (
        select utl_apex.get_application_id app_id,
               utl_apex.get_number('P1_SGR_APP_ID') sgr_app_id,
               utl_apex.get_number('P1_SGR_PAGE_ID') sgr_page_id,
-              sct_util.get_true is_true,
+              sct_util.c_true is_true,
               utl_apex.current_user_in_group('SCT_ADMIN') is_sct_admin
          from dual
        ),

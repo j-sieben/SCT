@@ -14,33 +14,38 @@ select sgr_id spi_sgr_id,
        label spi_label,
        format_mask spi_conversion,
        item_default spi_item_default,
-       '|' || replace(trim(item_css_classes), ' ', '|') || '|' || replace(trim(html_form_element_css_classes), ' ', '|') || '|' spi_css
+       '|' || replace(trim(item_css_classes), ' ', '|') || '|' || replace(trim(html_form_element_css_classes), ' ', '|') || '|' spi_css,
+       -- Default mandatory items
+       case when instr(upper(item_label_template), 'REQUIRED') > 0 then sct_util.C_TRUE else sct_util.C_FALSE end spi_is_mandatory,
+       -- default required items
+       case
+         when format_mask is not null or instr(upper(item_label_template), 'REQUIRED') > 0 then sct_util.C_TRUE 
+         else sct_util.C_FALSE end  spi_is_required
   from apex_application_page_items aai
   join sct_rule_group sgr
     on application_id = sgr.sgr_app_id
    and page_id = sgr.sgr_page_id
  union all
-select sgr_id, item_name, 'APP_ITEM', null, null, null, null, null
+select sgr_id, item_name, 'APP_ITEM', null, null, null, null, null, sct_util.C_FALSE, sct_util.C_FALSE
   from apex_application_items
   join sct_rule_group sgr
     on application_id = sgr.sgr_app_id
  union all
-select sgr_id, button_static_id, 'BUTTON', 'ACTION', label, null, null, null
+select sgr_id, button_static_id, 'BUTTON', 'ACTION', label, null, null, null, sct_util.C_FALSE, sct_util.C_FALSE
   from apex_application_page_buttons
   join sct_rule_group sgr
     on application_id = sgr.sgr_app_id
    and page_id = sgr.sgr_page_id
- where button_static_id is not null
  union all
-select sgr_id, static_id, 'REGION', null, region_name, null, null, null
+select sgr_id, static_id, 'REGION', null, region_name, null, null, null, sct_util.C_FALSE, sct_util.C_FALSE
   from apex_application_page_regions
   join sct_rule_group sgr
     on application_id = sgr.sgr_app_id
    and page_id = sgr.sgr_page_id
  where static_id is not null
  union all
-select sgr_id, 'DOCUMENT', 'DOCUMENT', null, null, null, null, null
+select sgr_id, 'DOCUMENT', 'DOCUMENT', null, null, null, null, null, sct_util.C_FALSE, sct_util.C_FALSE
   from sct_rule_group
  union all
-select sgr_id, 'ALL', 'ALL', null, null, null, null, null
+select sgr_id, 'ALL', 'ALL', null, null, null, null, null, sct_util.C_FALSE, sct_util.C_FALSE
   from sct_rule_group;

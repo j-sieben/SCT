@@ -7,12 +7,23 @@ as
    * @headcom
    * %usage  This package implements the methods required to maintain SCT rule groups via an APEX application
    */
+   
+   
+  /** Method for determining truth values
+   */
+  function C_TRUE
+    return sct_util.flag_type;
+    
+  function C_FALSE
+    return sct_util.flag_type;
+    
   
   /** Message to retreive a new primary key value from SCT
    * %usage  Is called by the SCT_UI interface to pouplate newly created rules etc.
    */
   function get_pk
     return number;
+    
     
   /** Determine the ID of the websheet helper application
    * %return ID fo the websheet helper application
@@ -25,6 +36,11 @@ as
   /** Method to download one or many rule groups as a zip file
    */
   procedure process_export_sgr;
+  
+  
+  /** Method to download action type definitions as a zip file
+   */
+  procedure process_export_sat;
   
 
   /** Method to calculate the initial export state based on session state settings
@@ -66,7 +82,7 @@ as
     
   /** Method to check a rule condition
    */
-  procedure validate_rule;
+  procedure validate_rule_condition;
 
   /** Method to process page EDIT_SRU
    * %usage  Is called to process user data if the page is submitted
@@ -120,6 +136,18 @@ as
    * %usage  Is called to process user data if the page is submitted
    */
   procedure process_edit_saa;
+  
+  
+  /** Method to validate page EDIT_SIF
+   * %usage  Is called to validate user data if the page is submitted
+   */
+  function validate_edit_sif
+    return boolean;
+
+  /** Method to process page EDIT_SIF
+   * %usage  Is called to process user data if the page is submitted
+   */
+  procedure process_edit_sif;
 
 
   /** Method to validate page EDIT_STG

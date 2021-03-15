@@ -14,6 +14,9 @@ as
   as
     l_item_type sct_page_item_type.sit_id%type;
   begin
+    pit.enter_detailed('get_item_type',
+      p_params => msg_params(msg_param('p_selector', p_selector)));
+      
       with params as(
            select apex_application.g_flow_id app_id,
                   apex_application.g_flow_step_id page_id
@@ -27,6 +30,9 @@ as
         on sgr_app_id = app_id
        and sgr_page_id = page_id
      where spi_id = p_selector;
+     
+    pit.leave_detailed(
+      p_params => msg_params(msg_param('Type', l_item_type)));
     return l_item_type;
   end get_item_type;
   
@@ -50,7 +56,7 @@ as
     p_param_3 in sct_rule_action.sra_param_3%type default null)
   as
   begin
-    pit.enter_mandatory(
+    pit.enter_mandatory('execute_action',
       p_params => msg_params(
                     msg_param('p_sat_id', p_sat_id),
                     msg_param('p_spi_id', p_spi_id),
@@ -102,14 +108,14 @@ as
   end get_pk;
   
   
-  function get_char(
+  function get_string(
     p_spi_id in sct_page_item.spi_id%type)
     return varchar2
   as
   begin
-    return sct_internal.get_char(
+    return sct_internal.get_string(
              p_spi_id => p_spi_id);
-  end get_char;
+  end get_string;
 
 
   function get_date(
@@ -124,6 +130,20 @@ as
              p_format_mask => p_format_mask,
              p_throw_error => p_throw_error);
   end get_date;
+
+
+  function get_number(
+    p_spi_id in sct_page_item.spi_id%type,
+    p_format_mask in varchar2,
+    p_throw_error in sct_util.flag_type default sct_util.c_false)
+    return number
+  as
+  begin
+    return sct_internal.get_number(
+             p_spi_id => p_spi_id,
+             p_format_mask => p_format_mask,
+             p_throw_error => p_throw_error);
+  end get_number;
     
     
   function get_event
@@ -140,20 +160,6 @@ as
   begin
     return sct_internal.get_firing_item;
   end get_firing_item;
-
-
-  function get_number(
-    p_spi_id in sct_page_item.spi_id%type,
-    p_format_mask in varchar2,
-    p_throw_error in sct_util.flag_type default sct_util.c_false)
-    return number
-  as
-  begin
-    return sct_internal.get_number(
-             p_spi_id => p_spi_id,
-             p_format_mask => p_format_mask,
-             p_throw_error => p_throw_error);
-  end get_number;
   
   
   /* ADDITIONAL SCT FUNCTIONALITY */
@@ -184,15 +190,11 @@ as
   procedure check_mandatory(
     p_spi_id in sct_page_item.spi_id%type)
   as
-    l_push_item sct_page_item.spi_id%type;
   begin
     pit.enter_mandatory(p_params => msg_params(msg_param('p_spi_id', p_spi_id)));
 
     sct_internal.check_mandatory(
-      p_spi_id => p_spi_id,
-      p_push_item => l_push_item);
-
-    sct_internal.push_firing_item(l_push_item);
+      p_spi_id => p_spi_id);
 
     pit.leave_mandatory;
   end check_mandatory;
@@ -275,14 +277,25 @@ as
       -- surpress recursion
       sct_internal.stop_rule;
   end execute_plsql;
+  
+  procedure submit_page(
+    p_execute_validations in boolean default true)
+  as
+  begin
+    pit.enter_mandatory;
+    
+    sct_internal.submit_page(p_execute_validations);
 
-
+    pit.leave_mandatory;
+  end submit_page;
+  
+  
   function has_errors
     return boolean
   as
     l_bool boolean;
   begin
-    pit.enter_mandatory;
+    pit.enter_mandatory('has_errors');
 
     l_bool := sct_internal.get_error_flag;
 
@@ -351,21 +364,17 @@ as
   as
     l_error apex_error.t_error;
   begin
-    pit.enter_mandatory(
+    pit.enter_mandatory('register_error',
       p_params => msg_params(
                     msg_param('p_spi_id', p_spi_id),
-                    msg_param('p_error_msg', substr(p_error_msg, 1, 4000)),
-                    msg_param('p_internal_error', substr(p_internal_error, 1, 4000))));
+                    msg_param('p_error_msg', p_error_msg),
+                    msg_param('p_internal_error', p_internal_error)));
 
-    sct_internal.push_firing_item(p_spi_id);
-    l_error.message := p_error_msg;
-
-    if l_error.message is not null then
-      l_error.page_item_name := p_spi_id;
-      l_error.additional_info := apex_escape.json(p_internal_error || pit_util.get_call_stack);
-      sct_internal.push_error(l_error);
-    end if;
-
+    sct_internal.register_error(
+      p_spi_id => p_spi_id,
+      p_error_msg => p_error_msg,
+      p_internal_error => p_internal_error);
+      
     pit.leave_mandatory;
   end register_error;
 
@@ -381,7 +390,10 @@ as
                     msg_param('p_spi_id', p_spi_id),
                     msg_param('p_message_name', p_message_name)));
 
-    sct_internal.register_error(p_spi_id, p_message_name, p_arg_list);
+    sct_internal.register_error(
+      p_spi_id => p_spi_id, 
+      p_message_name => p_message_name, 
+      p_arg_list => p_arg_list);
 
     pit.leave_mandatory;
   end register_error;
@@ -461,7 +473,7 @@ as
     p_selector in sct_rule_action.sra_param_1%type default null)
   as
   begin
-    pit.enter_mandatory(
+    pit.enter_mandatory('set_session_state',
       p_params => msg_params(
                     msg_param('p_spi_id', p_spi_id),
                     msg_param('p_value', substr(p_value, 1, 4000)),
@@ -554,12 +566,12 @@ as
     end if;
     
     if p_mandatory then
-      sct.execute_action(
+      execute_action(
         p_sat_id => 'IS_MANDATORY', 
         p_spi_id => l_spi_id, 
         p_param_2 => l_selector);
     else
-      sct.execute_action(
+      execute_action(
         p_sat_id => 'IS_OPTIONAL', 
         p_spi_id => l_spi_id, 
         p_param_2 => l_selector);
@@ -590,24 +602,24 @@ as
     case
     when p_enabled then
       -- Only one common method to show items
-      sct.execute_action(
+      execute_action(
         p_sat_id => 'ENABLE_ITEM', 
         p_spi_id => l_spi_id, 
         p_param_2 => l_selector);
     when l_is_button then
       -- disable button
-      sct.execute_action(
+      execute_action(
         p_sat_id => 'DISABLE_BUTTON', 
         p_spi_id => l_spi_id);
     when p_set_null then
       -- disable and set null
-      sct.execute_action(
+      execute_action(
         p_sat_id => 'SET_NULL_DISABLE', 
         p_spi_id => l_spi_id, 
         p_param_2 => l_selector);
     else
       -- simply disable a page item
-      sct.execute_action(
+      execute_action(
         p_sat_id => 'DISABLE_ITEM', 
         p_spi_id => l_spi_id, 
         p_param_2 => l_selector);

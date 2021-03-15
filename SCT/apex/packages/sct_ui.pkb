@@ -10,11 +10,12 @@ as
 
   g_page_values utl_apex.page_value_t;
   g_collection_seq_id binary_integer;
-  g_edit_sgr_row sct_rule_group%rowtype;
-  g_edit_sru_row sct_rule%rowtype;
-  g_edit_sra_row sct_rule_action%rowtype;
   g_edit_saa_row sct_ui_edit_saa%rowtype;
   g_edit_sat_row sct_ui_edit_sat%rowtype;
+  g_edit_sgr_row sct_rule_group%rowtype;
+  g_edit_sif_row sct_action_item_focus_v%rowtype;
+  g_edit_sra_row sct_rule_action%rowtype;
+  g_edit_sru_row sct_rule%rowtype;
   g_edit_stg_row sct_action_type_group_v%rowtype;
 
 
@@ -164,16 +165,42 @@ as
     g_edit_sat_row.sap_spt_id_1 := utl_apex.get(g_page_values, 'SAP_SPT_ID_1');
     g_edit_sat_row.sap_display_name_1 := utl_apex.get(g_page_values, 'SAP_DISPLAY_NAME_1');
     g_edit_sat_row.sap_description_1 := utl_apex.get(g_page_values, 'SAP_DESCRIPTION_1');
+    g_edit_sat_row.sap_default_1 := utl_apex.get(g_page_values, 'SAP_DEFAULT_1');
+    g_edit_sat_row.sap_mandatory_1 := utl_apex.get(g_page_values, 'SAP_MANDATORY_1');
+    g_edit_sat_row.sap_active_1 := utl_apex.get(g_page_values, 'SAP_ACTIVE_1');
     g_edit_sat_row.sap_spt_id_2 := utl_apex.get(g_page_values, 'SAP_SPT_ID_2');
     g_edit_sat_row.sap_display_name_2 := utl_apex.get(g_page_values, 'SAP_DISPLAY_NAME_2');
     g_edit_sat_row.sap_description_2 := utl_apex.get(g_page_values, 'SAP_DESCRIPTION_2');
+    g_edit_sat_row.sap_default_2 := utl_apex.get(g_page_values, 'SAP_DEFAULT_2');
+    g_edit_sat_row.sap_mandatory_2 := utl_apex.get(g_page_values, 'SAP_MANDATORY_2');
+    g_edit_sat_row.sap_active_2 := utl_apex.get(g_page_values, 'SAP_ACTIVE_2');
     g_edit_sat_row.sap_spt_id_3 := utl_apex.get(g_page_values, 'SAP_SPT_ID_3');
     g_edit_sat_row.sap_display_name_3 := utl_apex.get(g_page_values, 'SAP_DISPLAY_NAME_3');
     g_edit_sat_row.sap_description_3 := utl_apex.get(g_page_values, 'SAP_DESCRIPTION_3');
+    g_edit_sat_row.sap_default_3 := utl_apex.get(g_page_values, 'SAP_DEFAULT_3');
+    g_edit_sat_row.sap_mandatory_3 := utl_apex.get(g_page_values, 'SAP_MANDATORY_3');
+    g_edit_sat_row.sap_active_3 := utl_apex.get(g_page_values, 'SAP_ACTIVE_3');
     
     pit.leave_detailed;
   end copy_edit_sat;
 
+
+  procedure copy_edit_sif
+  as
+  begin
+    pit.enter_detailed('copy_edit_sif');
+  
+    g_page_values := utl_apex.get_page_values('EDIT_SIF_FORM');
+    g_edit_sif_row.sif_id := utl_apex.get(g_page_values, 'sif_id');
+    g_edit_sif_row.sif_name := utl_apex.get(g_page_values, 'sif_name');
+    g_edit_sif_row.sif_description := utl_apex.get(g_page_values, 'sif_description');
+    g_edit_sif_row.sif_item_types := utl_apex.get(g_page_values, 'sif_item_types');
+    g_edit_sif_row.sif_actual_page_only := utl_apex.get(g_page_values, 'sif_actual_page_only');
+    g_edit_sif_row.sif_active := utl_apex.get(g_page_values, 'sif_active');
+  
+    pit.leave_detailed;
+  end copy_edit_sif;
+  
 
   procedure copy_edit_stg
   as
@@ -322,6 +349,22 @@ as
   
 
   /* INTERFACE */
+  function c_true
+    return sct_util.flag_type
+  as
+  begin
+    return sct_util.C_TRUE;
+  end c_true;
+  
+    
+  function c_false
+    return sct_util.flag_type
+  as
+  begin
+    return sct_util.C_FALSE;
+  end c_false;
+  
+  
   function get_pk
     return number
   as
@@ -333,18 +376,44 @@ as
   function get_help_websheet_id
     return pls_integer
   as
-    l_app_id pls_integer;
+  begin
+    return utl_apex.get_help_websheet_id;
+  end get_help_websheet_id;
+  
+  
+  procedure process_export_sat
+  as
+    l_export_type pit_translatable_item_v.pti_id%type;
+    l_sat_is_editable sct_action_type.sat_is_editable%type;
+    l_zip_file blob;
+    l_zip_file_name sct_util.sql_char := 'action_types.zip';
+    
+    C_EXPORT_ALL constant pit_translatable_item_v.pti_id%type := 'SAT_EXPORT_ALL';
+    C_EXPORT_USER constant pit_translatable_item_v.pti_id%type := 'SAT_EXPORT_USER';
+    C_EXPORT_SYSTEM constant pit_translatable_item_v.pti_id%type := 'SAT_EXPORT_SYSTEM';
   begin
     pit.enter_mandatory;
     
-    select application_id
-      into l_app_id
-      from apex_ws_applications
-     where application_name = (select utl_apex.get_application_alias from dual);
-     
-    pit.leave_mandatory(msg_params(msg_param('ID', l_app_id)));
-    return l_app_id;
-  end get_help_websheet_id;
+    l_export_type := utl_apex.get_value('EXPORT_TYPE');
+    
+    case l_export_type
+    when C_EXPORT_ALL then
+      l_sat_is_editable := null;
+    when C_EXPORT_USER then
+      l_sat_is_editable := C_TRUE;
+    when C_EXPORT_SYSTEM then
+      l_sat_is_editable := C_FALSE;
+    else
+      null;
+    end case;
+    
+    -- generate ZIP with the requested action types and download.
+    l_zip_file := sct_admin.export_action_types(
+                    p_sat_is_editable => l_sat_is_editable);
+    utl_apex.download_blob(l_zip_file, l_zip_file_name);
+    
+    pit.leave_mandatory;
+  end process_export_sat;
   
   
   procedure process_export_sgr
@@ -356,7 +425,7 @@ as
     l_zip_file_name sct_util.sql_char;
     l_zip_file blob;
 
-    C_ZIP_SGR_FILE_NAME constant varchar2(100 byte) := 'single_rule_group_#SGR_ID#.zip';
+    C_ZIP_SGR_FILE_NAME constant sct_util.ora_name_type := 'single_rule_group_#SGR_ID#.zip';
     C_ZIP_PAGE_RULES_NAME constant sct_util.ora_name_type := 'app_#APP_ID#_page_#PAGE_ID#_rule_groups.zip';
     C_ZIP_APP_RULES_NAME constant sct_util.ora_name_type := 'application_#APP_ID#_rule_groups.zip';
     C_ZIP_ALL_RULES_NAME constant sct_util.ora_name_type := 'all_rule_groups.zip';
@@ -370,10 +439,11 @@ as
     -- map request to export mode and set zip file name accordingly
     case when utl_apex.request_is('EXPORT_SGR') then
       l_mode := sct_admin.C_ONE_GROUP;
-      l_zip_file_name := replace(C_ZIP_SGR_FILE_NAME, '#APP_ID#', l_sgr_id);
+      l_zip_file_name := replace(C_ZIP_SGR_FILE_NAME, '#SGR_ID#', l_sgr_id);
     when utl_apex.request_is('EXPORT_PAGE') then
       l_mode := sct_admin.C_PAGE_GROUPS;
       l_zip_file_name := replace(C_ZIP_PAGE_RULES_NAME, '#APP_ID#', l_sgr_app_id);
+      l_zip_file_name := replace(C_ZIP_PAGE_RULES_NAME, '#PAGE_ID#', l_sgr_page_id);
     when utl_apex.request_is('EXPORT_APP') then
       l_mode := sct_admin.C_APP_GROUPS;
       l_zip_file_name := replace(C_ZIP_APP_RULES_NAME, '#APP_ID#', l_sgr_app_id);
@@ -388,9 +458,16 @@ as
                     p_sgr_page_id => l_sgr_page_id,
                     p_sgr_id => l_sgr_id,
                     p_mode => l_mode);
-    utl_apex.download_blob(l_zip_file, l_zip_file_name);
-    
+                    
     pit.leave_mandatory;
+    
+    utl_apex.download_blob(
+      p_blob => l_zip_file, 
+      p_file_name => l_zip_file_name);
+  exception
+    when others then
+      pit.handle_exception(msg.SQL_ERROR, msg_args(substr(sqlerrm, 12)));
+      raise;
   end process_export_sgr;
 
 
@@ -445,7 +522,7 @@ as
         p_c007 => sra.sra_on_error,
         p_c008 => sra.sra_raise_recursive,
         p_c009 => sra.sra_active,
-        p_generate_md5 => sct_util.C_FALSE);
+        p_generate_md5 => C_FALSE);
     end loop;
 
     pit.leave_optional;
@@ -498,7 +575,7 @@ as
         p_c020 => saa.saa_label_end_classes,
         p_c021 => saa.saa_item_wrap_class,
         p_c022 => saa.saa_sai_list,
-        p_generate_md5 => sct_util.C_FALSE);
+        p_generate_md5 => C_FALSE);
     end loop;
 
     pit.leave_optional;
@@ -622,6 +699,44 @@ as
 
     pit.leave_mandatory;
   end process_edit_sgr;
+  
+  
+  function validate_edit_sif
+    return boolean
+  as
+  begin
+    pit.enter_mandatory;
+  
+    copy_edit_sif;
+    
+    pit.start_message_collection;
+    sct_admin.validate_action_item_focus(g_edit_sif_row);
+    pit.stop_message_collection;
+  
+    pit.leave_mandatory;
+    return true;
+  exception
+    when msg.PIT_BULK_ERROR_ERR or msg.PIT_BULK_FATAL_ERR then
+      utl_apex.handle_bulk_errors(char_table(
+        'ERROR_CODE', 'ASSIGNED_ITEM'));
+      return true;
+  end validate_edit_sif;
+  
+  
+  procedure process_edit_sif
+  as
+  begin
+    pit.enter_mandatory;
+    
+    copy_edit_sif;
+    case when utl_apex.inserting or utl_apex.updating then
+      sct_admin.merge_action_item_focus(g_edit_sif_row);
+    else
+      sct_admin.delete_action_item_focus(g_edit_sif_row);
+    end case;
+    
+    pit.leave_mandatory;
+  end process_edit_sif;
 
 
   function validate_edit_sru
@@ -651,7 +766,7 @@ as
   end validate_edit_sru;
 
 
-  procedure validate_rule
+  procedure validate_rule_condition
   as
   begin
     pit.enter_mandatory;
@@ -659,7 +774,7 @@ as
     copy_edit_sru;
 
     pit.start_message_collection;
-    sct_admin.validate_rule(g_edit_sru_row);
+    sct_admin.validate_rule_condition(g_edit_sru_row);
     pit.stop_message_collection;
 
     pit.leave_mandatory;
@@ -667,12 +782,10 @@ as
     when msg.PIT_BULK_ERROR_ERR or msg.PIT_BULK_FATAL_ERR then
       utl_sct.handle_bulk_errors(char_table(
         'SQL_ERROR', 'SRU_CONDITION',
-        'SRU_CONDITION_MISSING', 'SRU_CONDITION',
-        'SRU_SGR_ID_MISSING', 'SRU_SGR_ID',
-        'SRU_NAME_MISSING', 'SRU_NAME'));
+        'SRU_CONDITION_MISSING', 'SRU_CONDITION'));
         
     pit.leave_mandatory;
-  end validate_rule;
+  end validate_rule_condition;
   
   
   /** Helper method to extract rule action maintenace from EDIT_SRU
@@ -738,54 +851,51 @@ as
     C_SET_SAT_HELP constant varchar2(100) := q'^$('^R11_SAT_HELP .t-Region-body').html('#HELP_TEXT#');^';
     
     cursor action_type_cur(p_sat_id in sct_action_type.sat_id%type) is
-        with params as(
-             select sct_util.get_true is_active,
+      with params as(
+             select C_TRUE c_active,
                     p_sat_id sat_id
                from dual)
       select /*+ no_merge (p) */
-             sat.sat_id, sat_sif_id, sap_sort_seq, spt_id, spt_item_type,
+             sat.sat_id, sat_sif_id, sap_sort_seq, sap_mandatory,
+             spt_id, spt_item_type,
              coalesce(sap_display_name, spt_name) spt_name
         from sct_action_type_v sat
         join params p
           on sat.sat_id = p.sat_id
-         and sat_active = p.is_active
+         and sat_active = p.c_active
         left join sct_action_parameter_v
           on sat.sat_id = sap_sat_id
-         and p.is_active = sap_active
+         and p.c_active = sap_active
         left join sct_action_param_type_v
           on sap_spt_id = spt_id
-         and p.is_active = spt_active
+         and p.c_active = spt_active
        order by sat_id, sap_sort_seq;
        
-    l_region_id sct_util.ora_name_type;
-    l_lov_param_id sct_util.ora_name_type;
     l_item_id sct_util.ora_name_type;
     l_help_text sct_util.max_char;
     l_sat_id sct_action_type.sat_id%type;
-    
-    l_prefix sct_util.ora_name_type := utl_apex.get_page_prefix;
+    l_mandatory_message sct_util.max_char;
   begin
     pit.enter_mandatory;
     
     -- Initialize
-    l_sat_id := utl_apex.get_value('SRA_SAT_ID');    
+    l_sat_id := utl_apex.get_string('SRA_SAT_ID');  
+    l_mandatory_message := pit.get_message_text(msg.SCT_ITEM_IS_MANDATORY);
+    
+    utl_sct.log_console('"caluclated at configure_edit_sra"');
     utl_sct.hide_item(p_jquery_sel => '.sct-hide');
- --   utl_sct.empty_field(p_jquery_sel => '.sct-param');
 
     -- Adjust Parameter settings to show only required parameters in the correct format
     for param in action_type_cur(l_sat_id) loop
-      l_region_id := 'R11_PARAMETER_' || param.sap_sort_seq;
-
       -- Show parameter region
-      utl_sct.show_item(l_region_id);
+      utl_sct.show_item('R11_PARAMETER_' || param.sap_sort_seq);
 
       -- UI visibility and label of the parameter item
       case param.spt_item_type
       when 'SELECT_LIST' then
-        l_lov_param_id := 'P11_LOV_PARAM_' || param.sap_sort_seq;
         l_item_id := 'P11_SRA_PARAM_LOV_' || param.sap_sort_seq;
-        utl_sct.set_item(l_lov_param_id, param.spt_id);
-        -- utl_sct.refresh_item(l_item_id);
+        utl_sct.set_item('P11_LOV_PARAM_' || param.sap_sort_seq, param.spt_id);
+        utl_sct.refresh_item(l_item_id);
       when 'TEXT_AREA' then
         l_item_id := 'P11_SRA_PARAM_AREA_' || param.sap_sort_seq;
       else
@@ -794,10 +904,20 @@ as
 
       utl_sct.show_item(l_item_id);        
       utl_sct.set_item_label(l_item_id, param.spt_name);
+      if param.sap_mandatory = C_TRUE then
+        utl_sct.is_mandatory(
+          p_spi_id => l_item_id,
+          p_msg_text => replace(l_mandatory_message, '#LABEL#', param.spt_name));
+      else
+        utl_sct.is_optional(
+          p_spi_id => l_item_id);
+      end if;
     end loop;
+    
+    utl_sct.refresh_and_set_value('P11_SRA_SPI_ID');
 
     -- Generate Help text for action type
-    select apex_escape.json(help_text)
+    select trim('''' from apex_escape.js_literal(help_text))
       into l_help_text
       from sct_bl_sat_help
      where sat_id = l_sat_id;
@@ -807,7 +927,7 @@ as
   exception
     when NO_DATA_FOUND then
       -- no help found, generate generic help text
-      utl_sct.java_script_code(replace(C_SET_SAT_HELP, '#HELP_TEXT#', sct_util.get_trans_item_name('SRA_NO_HELP')));
+      utl_sct.java_script_code(replace(C_SET_SAT_HELP, '#HELP_TEXT#', trim('''' from apex_escape.js_literal(sct_util.get_trans_item_name('SRA_NO_HELP')))));
       
       pit.leave_mandatory;
   end configure_edit_sra;
@@ -864,7 +984,7 @@ as
         p_c007 => g_edit_sra_row.sra_on_error,
         p_c008 => g_edit_sra_row.sra_raise_recursive,
         p_c009 => g_edit_sra_row.sra_active,
-        p_generate_md5 => sct_util.c_false);
+        p_generate_md5 => C_FALSE);
     when utl_apex.updating then
       apex_collection.update_member(
         p_seq => g_collection_seq_id,
@@ -1058,7 +1178,7 @@ as
         p_c020 => g_edit_saa_row.saa_label_end_classes,
         p_c021 => g_edit_saa_row.saa_item_wrap_class,
         p_c022 => g_edit_saa_row.saa_sai_list,
-        p_generate_md5 => sct_util.C_FALSE);
+        p_generate_md5 => C_FALSE);
     when utl_apex.updating then
       apex_collection.update_member(
         p_seq => g_edit_saa_row.seq_id,
@@ -1208,7 +1328,7 @@ as
                     utl_text.generate_text(cursor(
                       select p.template,
                              sat_name, sat_description,
-                             case sat_is_editable when sct_util.C_FALSE then l_not_editable end sat_is_editable
+                             case sat_is_editable when C_FALSE then l_not_editable end sat_is_editable
                          from sct_action_type_v
                         cross join params p
                         where uttm_mode = 'HELP'

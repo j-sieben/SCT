@@ -5,6 +5,7 @@ define view_dir=&core_dir.views/
 define pkg_dir=&core_dir.packages/
 define script_dir=&core_dir.scripts/
 define msg_dir=&core_dir.messages/&DEFAULT_LANGUAGE./
+define apex_version=&core_dir.&apex_path./
 
 prompt &h2.Check installation prerequisites
 @&core_dir.check_prerequisites.sql
@@ -115,10 +116,13 @@ prompt &s1.Create view SCT_PARAM_LOV_PIT_MESSAGE
 prompt &s1.Create view SCT_PARAM_LOV_SEQUENCE
 @&view_dir.sct_param_lov_sequence.vw
 
+prompt &s1.Create view SCT_RULE_GROUP_STATUS
+@&view_dir.sct_rule_group_status.vw
+
 
 prompt &h2.Merge default data
 prompt &h3.Create SCT parameters
-@&plugin_dir.scripts/ParameterGroup_SCT.sql
+@&script_dir.ParameterGroup_SCT.sql
 
 prompt &h3.Create SCT messages
 @&msg_dir.MessageGroup_SCT.sql
@@ -195,22 +199,8 @@ prompt &s1.Create SCT parameters
 
 prompt &h2.Merge initial data
 prompt &s1.Create SCT Action types
-@&script_dir.ActionTypes_SCT.sql
+@&script_dir.action_types_system.sql
 
---prompt &s1.Create internal SCT page item 
---@&script_dir.merge_sct_page_item.sql
-
---prompt &s1.Create Action Parameter types 
---@&script_dir.merge_sct_action_param_type.sql
-
---prompt &s1.Create Action Item Focus
---@&script_dir.merge_sct_action_item_focus.sql
-
---prompt &s1.Create SCT sct_action_type_group
---@&script_dir.merge_sct_action_type_group.sql
-
---prompt &s1.Create SCT action types
---@&script_dir.merge_sct_action_type.sql
-
---prompt &s1.Create APEX action types
---@&script_dir.merge_sct_apex_action_type.sql
+-- Additional installation for pecific APEX versions
+prompt &h2.Installation for specific APEX versions
+@@apex_version.install.sql

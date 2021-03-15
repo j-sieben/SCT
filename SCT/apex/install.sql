@@ -20,6 +20,9 @@ prompt &s1.Create view SCT_UI_ADMIN_SAT
 prompt &s1.Create view SCT_UI_ADMIN_SGR_MAIN
 @&view_dir.sct_ui_admin_sgr_main.vw
 
+prompt &s1.Create view SCT_UI_ADMIN_SIF
+@&view_dir.sct_ui_admin_sif.vw
+
 prompt &s1.Create view SCT_UI_ADMIN_SGR_RULES
 @&view_dir.sct_ui_admin_sgr_rules.vw
 
@@ -53,6 +56,9 @@ prompt &s1.Create view SCT_UI_EDIT_SRU
 prompt &s1.Create view SCT_UI_EDIT_SRU_ACTION
 @&view_dir.sct_ui_edit_sru_action.vw
 
+prompt &s1.Create view SCT_UI_EDIT_SIF
+@&view_dir.sct_ui_edit_sif.vw
+
 prompt &s1.Create view SCT_UI_EDIT_STG
 @&view_dir.sct_ui_edit_stg.vw
 
@@ -85,6 +91,12 @@ prompt &s1.Create view SCT_UI_LOV_APP_PAGES
 
 prompt &s1.Create view SCT_UI_LOV_EXPORT_TYPES
 @&view_dir.sct_ui_lov_export_types.vw
+
+prompt &s1.Create view SCT_UI_LOV_EXPORT_SAT
+@&view_dir.sct_ui_lov_export_sat.vw
+
+prompt &s1.Create view SCT_UI_LOV_PAGE_ITEM_TYPE
+@&view_dir.sct_ui_lov_page_item_type.vw
 
 prompt &s1.Create view SCT_UI_LOV_PAGE_ITEMS
 @&view_dir.sct_ui_lov_page_items.vw
@@ -125,14 +137,14 @@ prompt &h2.Version specific installation
 
 prompt &h3.Install SCT rules
 prompt &s1.Create action types
-@&script_dir.merge_action_types.sql
+@&script_dir.action_types_system.sql
 
 prompt &s1.Create page rules
-@&script_dir.merge_rule_group_sct_admin_sat.sql
 @&script_dir.merge_rule_group_sct_admin_sgr.sql
 @&script_dir.merge_rule_group_sct_edit_saa.sql
 @&script_dir.merge_rule_group_sct_edit_sgr.sql
 @&script_dir.merge_rule_group_sct_edit_sra.sql
 @&script_dir.merge_rule_group_sct_edit_sru.sql
+@&script_dir.merge_rule_group_sct_export_sat.sql
 @&script_dir.merge_rule_group_sct_export_sgr.sql
 

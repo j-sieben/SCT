@@ -30,8 +30,6 @@ as
   procedure initialize_test;
   $END
 
-  /* Internal methods to support the plugin functionality */
-
   /** Getter to retriece all elements that needs to be bound to an event handler as JSON
    * @return JSON instance containing name and event of all relevant page items
    * @usage  Is called during plugin initialization.
@@ -42,8 +40,8 @@ as
     return clob;
     
     
-  /* @see sct.get_char */
-  function get_char(
+  /* @see sct.get_string */
+  function get_string(
     p_spi_id in sct_page_item.spi_id%type)
     return varchar2;
     
@@ -54,6 +52,14 @@ as
     p_format_mask in varchar2,
     p_throw_error in sct_util.flag_type default sct_util.C_TRUE)
     return date;
+  
+  
+  /* @see sct.get_number */
+  function get_number(
+    p_spi_id in sct_page_item.spi_id%type,
+    p_format_mask in varchar2,
+    p_throw_error in sct_util.flag_type default sct_util.c_false)
+    return number;
 
 
   /* Getter to read the error status
@@ -75,14 +81,6 @@ as
    */
   function get_firing_item
     return varchar2;
-  
-  
-  /* @see sct.get_number */
-  function get_number(
-    p_spi_id in sct_page_item.spi_id%type,
-    p_format_mask in varchar2,
-    p_throw_error in sct_util.flag_type default sct_util.c_false)
-    return number;
     
 
   /** Getter to retrieve a list of elements that potentially have changed during execution of SCT
@@ -131,15 +129,13 @@ as
    * @param  p_firing_item           Firing item
    * @param  p_event                 Firing event
    * @param  p_rule_group_name       Name of the rule group
-   * @param  p_error_dependent_items List of page items that have to be deactivated if an error is on the page
    * @usage  Is called before the actual rule action takes place (at the beginning of render and AJAX methods)
    *         to copy the status to a package record.
    */
   procedure read_settings(
     p_firing_item in varchar2,
     p_event in varchar2,
-    p_rule_group_name in varchar2,
-    p_error_dependent_items in varchar2);
+    p_rule_group_name in varchar2);
 
 
   /* Methods to implement the SCT specific functionality */
@@ -155,9 +151,8 @@ as
 
   /* @see sct.execute_action */
   procedure check_mandatory(
-    p_spi_id in sct_page_item.spi_id%type,
-    p_push_item out nocopy sct_page_item.spi_id%type);
-
+    p_spi_id in sct_page_item.spi_id%type);
+    
 
   /* @see sct.execute_action */
   procedure check_number(
@@ -252,6 +247,11 @@ as
   procedure set_list_from_stmt(
     p_spi_id in sct_page_item.spi_id%type,
     p_stmt in varchar2);
+    
+    
+  /* @see sct.set_submit_page */
+  procedure submit_page(
+    p_execute_validations in boolean default true);
 
 
   /* @see sct.set_session_state */
