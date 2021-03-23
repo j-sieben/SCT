@@ -1,4 +1,4 @@
-create or replace view sct_action_item_folcus as
+create or replace view sct_action_item_focus_vw as
 select sif_id, pti_name sif_name, to_char(pti_description) sif_description, sif_actual_page_only, sif_item_types, sif_active
   from sct_action_item_focus
   join pit_translatable_item_v
