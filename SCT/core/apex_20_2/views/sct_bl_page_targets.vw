@@ -17,7 +17,7 @@ select sgr_id spi_sgr_id,
        coalesce(
          format_mask, 
          case item_source_data_type
-           when 'NUMBER' then '999999999999999999D9999999999999999'
+           when 'NUMBER' then 'fm999999999999999990'
            when 'DATE' then
              (select date_format
                 from apex_applications app

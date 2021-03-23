@@ -14,6 +14,52 @@ prompt &h2.Remove existing installation
 prompt &h2.Create database objects
 prompt &h3.Create views
 
+prompt &s1.Create view SCT_UI_LOV_ACTION_ITEM_FOCUS
+@&view_dir.sct_ui_lov_action_item_focus.vw
+
+prompt &s1.Create view SCT_UI_LOV_ACTION_PARAM_TYPE
+@&view_dir.sct_ui_lov_action_param_type.vw
+
+prompt &s1.Create view SCT_UI_LOV_ACTION_TYPE_GROUP
+@&view_dir.sct_ui_lov_action_type_group.vw
+
+prompt &s1.Create view SCT_UI_LOV_APEX_ACTION_ITEMS
+@&view_dir.sct_ui_lov_apex_action_items.vw
+
+prompt &s1.Create view SCT_UI_LOV_APEX_ACTION_TYPE
+@&view_dir.sct_ui_lov_apex_action_type.vw
+
+prompt &s1.Create view SCT_UI_LOV_APPLICATIONS
+@&view_dir.sct_ui_lov_applications.vw
+
+prompt &s1.Create view SCT_UI_LOV_APP_PAGES
+@&view_dir.sct_ui_lov_app_pages.vw
+
+prompt &s1.Create view SCT_UI_LOV_EXPORT_TYPES
+@&view_dir.sct_ui_lov_export_types.vw
+
+prompt &s1.Create view SCT_UI_LOV_EXPORT_SAT
+@&view_dir.sct_ui_lov_export_sat.vw
+
+prompt &s1.Create view SCT_UI_LOV_PAGE_ITEM_TYPE
+@&view_dir.sct_ui_lov_page_item_type.vw
+
+prompt &s1.Create view SCT_UI_LOV_PAGE_ITEMS
+@&view_dir.sct_ui_lov_page_items.vw
+
+prompt &s1.Create view SCT_UI_LOV_SGR_APPLICATIONS
+@&view_dir.sct_ui_lov_sgr_applications.vw
+
+prompt &s1.Create view SCT_UI_LOV_SGR_APP_PAGES
+@&view_dir.sct_ui_lov_sgr_app_pages.vw
+
+prompt &s1.Create view SCT_UI_LOV_SGR_PAGE_ITEMS
+@&view_dir.sct_ui_lov_sgr_page_items.vw
+
+prompt &s1.Create view SCT_UI_LOV_YES_NO
+@&view_dir.sct_ui_lov_yes_no.vw
+
+
 prompt &s1.Create view SCT_UI_ADMIN_SAT
 @&view_dir.sct_ui_admin_sat.vw
 
@@ -67,52 +113,6 @@ prompt &s1.Create view SCT_UI_LIST_ACTION_TYPE
 
 prompt &s1.Create view SCT_UI_LIST_PAGE_ITEMS
 @&view_dir.sct_ui_list_page_items.vw
-
-prompt &s1.Create view SCT_UI_LOV_ACTION_ITEM_FOCUS
-@&view_dir.sct_ui_lov_action_item_focus.vw
-
-prompt &s1.Create view SCT_UI_LOV_ACTION_PARAM_TYPE
-@&view_dir.sct_ui_lov_action_param_type.vw
-
-prompt &s1.Create view SCT_UI_LOV_ACTION_TYPE_GROUP
-@&view_dir.sct_ui_lov_action_type_group.vw
-
-prompt &s1.Create view SCT_UI_LOV_APEX_ACTION_ITEMS
-@&view_dir.sct_ui_lov_apex_action_items.vw
-
-prompt &s1.Create view SCT_UI_LOV_APEX_ACTION_TYPE
-@&view_dir.sct_ui_lov_apex_action_type.vw
-
-prompt &s1.Create view SCT_UI_LOV_APPLICATIONS
-@&view_dir.sct_ui_lov_applications.vw
-
-prompt &s1.Create view SCT_UI_LOV_APP_PAGES
-@&view_dir.sct_ui_lov_app_pages.vw
-
-prompt &s1.Create view SCT_UI_LOV_EXPORT_TYPES
-@&view_dir.sct_ui_lov_export_types.vw
-
-prompt &s1.Create view SCT_UI_LOV_EXPORT_SAT
-@&view_dir.sct_ui_lov_export_sat.vw
-
-prompt &s1.Create view SCT_UI_LOV_PAGE_ITEM_TYPE
-@&view_dir.sct_ui_lov_page_item_type.vw
-
-prompt &s1.Create view SCT_UI_LOV_PAGE_ITEMS
-@&view_dir.sct_ui_lov_page_items.vw
-
-prompt &s1.Create view SCT_UI_LOV_SGR_APPLICATIONS
-@&view_dir.sct_ui_lov_sgr_applications.vw
-
-prompt &s1.Create view SCT_UI_LOV_SGR_APP_PAGES
-@&view_dir.sct_ui_lov_sgr_app_pages.vw
-
-prompt &s1.Create view SCT_UI_LOV_SGR_PAGE_ITEMS
-@&view_dir.sct_ui_lov_sgr_page_items.vw
-
-prompt &s1.Create view SCT_UI_LOV_YES_NO
-@&view_dir.sct_ui_lov_yes_no.vw
-
 
 prompt &h2.Create Translatable items
 @&msg_dir.TranslatableItemGroup_SCT.sql

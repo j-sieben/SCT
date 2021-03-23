@@ -357,6 +357,15 @@ as
   end notify;
 
 
+  procedure register_item(
+    p_spi_id in varchar2,
+    p_allow_recursion in sct_util.flag_type default sct_util.C_TRUE)
+  as
+  begin
+    sct_internal.register_item(p_spi_id, p_allow_recursion);
+  end register_item;
+  
+  
   procedure register_error(
     p_spi_id in sct_page_item.spi_id%type,
     p_error_msg in varchar2,

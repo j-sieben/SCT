@@ -124,6 +124,19 @@ as
   procedure push_firing_item(
     p_spi_id in varchar2);
     
+  
+  /** Method to register items which have changed their value in the session state. If recursion is set to true, those elements
+   *  will cause SCT to evaluate rules for that element by imitating that an event has thrown on that element.
+   * @param  p_spi_id             ID of the page item to register
+   * @param [p_allow_recursion] Flag to indicate whether this element is allowed to cause a recursive SCT rule call
+   * @usage  Is used to register page items that changed their value because of code executed in SCT. Two things have to happen:
+   *         - Return the changed value to the browser to harmonize the UI with the session state
+   *         - Have SCT evaluate any rules that fire based on the new value. This is true only if P_ALLOW_RECURSION is true.
+   */
+  procedure register_item(
+    p_spi_id in varchar2,
+    p_allow_recursion in sct_util.flag_type default sct_util.C_TRUE);
+    
     
   /** Helper to copy plugin settings to an internal record G_PARAM
    * @param  p_firing_item           Firing item
